@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="library\nameof.hpp" />
+    <ClInclude Include="source\matching_server\match_making_server.hpp" />
+    <ClInclude Include="source\message\message_handler\list_room_request_message_handler.hpp" />
+    <ClInclude Include="source\message\message_handler.hpp" />
+    <ClInclude Include="source\message\message_handler_container.hpp" />
+    <ClInclude Include="source\message\message_handler_container_factory.hpp" />
+    <ClInclude Include="source\message\messages.hpp" />
+    <ClInclude Include="source\network\network_layer.hpp" />
+    <ClInclude Include="source\network\transport_layer.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\matching_server\match_making_server.cpp" />
+    <ClCompile Include="source\message\message_handler\list_room_request_message_handler.cpp" />
+    <ClCompile Include="source\message\message_handler.cpp" />
+    <ClCompile Include="source\message\message_handler_container.cpp" />
+    <ClCompile Include="source\message\message_handler_container_factory.cpp" />
+    <ClCompile Include="source\network\transport_layer.cpp" />
+    <ClCompile Include="source\main.cpp" />
+  </ItemGroup>
+</Project>
