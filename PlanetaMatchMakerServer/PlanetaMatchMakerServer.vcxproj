@@ -158,6 +158,7 @@
     <ClInclude Include="source\matching_server\match_making_server.hpp" />
     <ClInclude Include="source\message\messages.hpp" />
     <ClInclude Include="source\message\message_handler.hpp" />
+    <ClInclude Include="source\message\message_handlers\create_room_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handlers\join_room_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handlers\list_room_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handler_container.hpp" />
@@ -169,6 +170,7 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\matching_server\match_making_server.cpp" />
     <ClCompile Include="source\message\message_handler.cpp" />
+    <ClCompile Include="source\message\message_handlers\create_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\join_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\list_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handler_container.cpp" />

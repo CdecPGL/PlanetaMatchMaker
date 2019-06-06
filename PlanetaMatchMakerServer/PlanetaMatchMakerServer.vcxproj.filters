@@ -11,6 +11,7 @@
     <ClInclude Include="source\network\transport_layer.hpp" />
     <ClInclude Include="source\message\message_handlers\list_room_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handlers\join_room_request_message_handler.hpp" />
+    <ClInclude Include="source\message\message_handlers\create_room_request_message_handler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\matching_server\match_making_server.cpp" />
@@ -21,5 +22,6 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\message\message_handlers\list_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\join_room_request_message_handler.cpp" />
+    <ClCompile Include="source\message\message_handlers\create_room_request_message_handler.cpp" />
   </ItemGroup>
 </Project>

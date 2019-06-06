@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include <boost/asio.hpp>
+#include <boost/noncopyable.hpp>
 
 #include "network/transport_layer.hpp"
 
