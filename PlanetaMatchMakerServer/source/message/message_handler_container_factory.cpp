@@ -1,6 +1,6 @@
 ﻿#include "message_handler_container_factory.hpp"
 #include "message_handler_container.hpp"
-#include "message_handler/list_room_request_message_handler.hpp"
+#include "message_handlers/list_room_request_message_handler.hpp"
 
 namespace pgl {
 	std::shared_ptr<message_handler_container> message_handler_container_factory::
