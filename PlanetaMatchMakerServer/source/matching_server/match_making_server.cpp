@@ -91,7 +91,7 @@ namespace pgl {
 
 			//メッセージ本体の処理
 			const auto* data = asio::buffer_cast<const char*>(receive_buff_.data());
-			(*message_handler)(data);
+			(*message_handler)(data, yield);
 			receive_buff_.consume(receive_buff_.size());
 		});
 	}

@@ -9,7 +9,7 @@
 namespace pgl {
 	class message_handler_container;
 
-	class match_making_server final {
+	class match_making_server final : boost::noncopyable {
 	public:
 		match_making_server(std::shared_ptr<message_handler_container> message_handler_container,
 		                    boost::asio::io_service& io_service, const ip_version ip_version,

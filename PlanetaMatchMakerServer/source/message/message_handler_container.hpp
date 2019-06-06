@@ -7,7 +7,7 @@
 #include "message_handler.hpp"
 
 namespace pgl {
-	class message_handler_container final {
+	class message_handler_container final : boost::noncopyable {
 	public:
 		template <message_type VMessageType, class TMessageHandler>
 		void register_handler() {
