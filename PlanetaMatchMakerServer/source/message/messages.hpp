@@ -3,6 +3,18 @@
 #include <cstdint>
 
 namespace pgl {
+	constexpr int room_name_size = 24; // at least 8 characters with UFC-8
+	constexpr int room_password_size = 16; //16 characters with ASCII
+
+	struct room_flags_bit_mask final {
+		using flags_type = uint8_t;
+		const static flags_type is_private = 1;
+		const static flags_type is_open = 2;
+	};
+
+
+	using room_id_type = uint32_t;
+
 	enum class message_type : uint8_t {
 		create_room_request,
 		create_room_reply,
@@ -15,11 +27,6 @@ namespace pgl {
 		random_match_request
 	};
 
-	constexpr int room_name_size = 24; // at least 8 characters with UFC-8
-	constexpr int room_password_size = 16; //16 characters with ASCII
-
-	using room_id_type = uint32_t;
-
 	// 1 bytes
 	struct message_header {
 		message_type message_type;
@@ -31,11 +38,9 @@ namespace pgl {
 	// 42 bytes
 	struct create_room_request_message final : message {
 		uint8_t name[room_name_size];
-		uint8_t flags; //configurations about room
+		room_flags_bit_mask::flags_type flags;
 		uint8_t password[room_password_size];
 		uint8_t max_player_count;
-
-		const static uint8_t flags_is_private_bit_mask = 1;
 	};
 
 	// 5 bytes
@@ -77,7 +82,7 @@ namespace pgl {
 		struct room_info {
 			room_id_type room_id;
 			uint8_t name[room_name_size];
-			uint8_t flags;
+			room_flags_bit_mask::flags_type flags;
 			uint8_t max_player_count;
 			uint8_t current_player_count;
 			uint64_t date;

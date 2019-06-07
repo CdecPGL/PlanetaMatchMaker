@@ -155,6 +155,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="library\nameof.hpp" />
+    <ClInclude Include="source\data\room_data_container.hpp" />
+    <ClInclude Include="source\data\room_data.hpp" />
+    <ClInclude Include="source\data\server_data.hpp" />
     <ClInclude Include="source\matching_server\match_making_server.hpp" />
     <ClInclude Include="source\message\messages.hpp" />
     <ClInclude Include="source\message\message_handler.hpp" />
@@ -167,6 +170,7 @@
     <ClInclude Include="source\network\transport_layer.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\data\room_data_container.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\matching_server\match_making_server.cpp" />
     <ClCompile Include="source\message\message_handler.cpp" />

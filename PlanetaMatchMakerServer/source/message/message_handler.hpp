@@ -6,6 +6,8 @@
 #include <boost/asio/spawn.hpp>
 
 namespace pgl {
+	struct server_data;
+
 	class message_handler {
 	public:
 		message_handler() = default;
@@ -14,7 +16,8 @@ namespace pgl {
 		virtual ~message_handler() = default;
 		message_handler& operator=(const message_handler& message_handler) = delete;
 		message_handler& operator=(message_handler&& message_handler) = delete;
-		virtual void operator()(const char* data, boost::asio::yield_context& yield) = 0;
+		virtual void operator()(const char* data, const std::shared_ptr<server_data>& server_data,
+		                        boost::asio::yield_context& yield) = 0;
 		[[nodiscard]] virtual int get_message_size() const = 0;
 	};
 
@@ -33,12 +36,14 @@ namespace pgl {
 			return sizeof(TMessage);
 		}
 
-		void operator()(const char* data, boost::asio::yield_context& yield) override final {
+		void operator()(const char* data, const std::shared_ptr<server_data>& server_data,
+		                boost::asio::yield_context& yield) override final {
 			decltype(auto) message = reinterpret_cast<const TMessage*>(data);
-			handle_message(*message, yield);
+			handle_message(*message, server_data, yield);
 		}
 
 	private:
-		virtual void handle_message(const TMessage& message, boost::asio::yield_context& yield) = 0;
+		virtual void handle_message(const TMessage& message, const std::shared_ptr<server_data>& server_data,
+		                            boost::asio::yield_context& yield) = 0;
 	};
 }

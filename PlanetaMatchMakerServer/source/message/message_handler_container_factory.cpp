@@ -5,8 +5,7 @@
 #include "message_handlers/list_room_request_message_handler.hpp"
 
 namespace pgl {
-	std::shared_ptr<message_handler_container> message_handler_container_factory::
-	make_standard_message_handler_container() {
+	std::shared_ptr<message_handler_container> message_handler_container_factory::make_standard() {
 		auto container = std::make_shared<message_handler_container>();
 		container->register_handler<message_type::create_room_request, create_room_request_message_handler>();
 		container->register_handler<message_type::join_room_request, join_room_request_message_handler>();

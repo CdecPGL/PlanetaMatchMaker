@@ -16,10 +16,12 @@ namespace pgl {
 	constexpr int buffer_size = 128;
 
 	match_making_server::
-	match_making_server(std::shared_ptr<message_handler_container> message_handler_container,
+	match_making_server(std::shared_ptr<server_data> server_data,
+	                    std::shared_ptr<message_handler_container> message_handler_container,
 	                    asio::io_service& io_service, const ip_version ip_version,
 	                    const std::uint16_t port_number,
-	                    const std::uint32_t time_out_seconds) : message_handler_container_(
+	                    const std::uint32_t time_out_seconds) : server_data_(std::move(server_data)),
+	                                                            message_handler_container_(
 		                                                            std::move(message_handler_container)),
 	                                                            io_service_(io_service),
 	                                                            acceptor_(io_service,
@@ -91,7 +93,7 @@ namespace pgl {
 
 			//メッセージ本体の処理
 			const auto* data = asio::buffer_cast<const char*>(receive_buff_.data());
-			(*message_handler)(data, yield);
+			(*message_handler)(data, server_data_, yield);
 			receive_buff_.consume(receive_buff_.size());
 		});
 	}
