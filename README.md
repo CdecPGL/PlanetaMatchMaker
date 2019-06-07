@@ -2,6 +2,11 @@
 
 A match making server and client for network game.
 
+## Functions
+
+- Create rooms and join rooms
+- Random match making (not implemented)
+
 ## Server
 
 ## Requirement
