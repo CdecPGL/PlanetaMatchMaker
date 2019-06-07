@@ -7,6 +7,14 @@ participant GameHost
 participant Client1
 participant Client2
 
+group Authentication
+GameHost -> MatchingServer : authentication_request
+activate MatchingServer
+MatchingServer -> MatchingServer: authentication
+MatchingServer --> GameHost : authentication_reply[ok or error]
+deactivate MatchingServer
+end
+
 GameHost -> MatchingServer : create_room_request
 activate MatchingServer
 MatchingServer -> MatchingServer : create room
@@ -21,11 +29,19 @@ loop every seconds
 GameHost -> MatchingServer : update_room_status_request[open room, player count]
 activate MatchingServer
 MatchingServer --> GameHost : update_room_status_reply[ok or error]
-end
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
+end
 
 group Join Client1
+
+group Authentication
+Client1 -> MatchingServer : authentication_request
+activate MatchingServer
+MatchingServer -> MatchingServer: authentication
+MatchingServer --> Client1 : authentication_reply[ok or error]
+deactivate MatchingServer
+end
 
 Client1->MatchingServer : list_room_request
 activate MatchingServer
@@ -44,26 +60,10 @@ end
 
 GameHost<->Client1 : send and receive game data
 
-loop every seconds
-GameHost -> MatchingServer : update_room_status_request[open room, player count]
-activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
-end
-MatchingServer -> MatchingServer : update room information
-deactivate MatchingServer
-
 group Join Client2
 
-Client2->MatchingServer : list_room_request
-activate MatchingServer
-MatchingServer --> Client2 : list_room_reply
-deactivate MatchingServer
-
-Client2->MatchingServer : join_room_request
-activate MatchingServer
-MatchingServer --> Client2 : join_room_reply
-deactivate MatchingServer
-Client2->GameHost : connect
+note over MatchingServer, Client2: Client join process...
+...
 
 end
 
@@ -87,23 +87,15 @@ MatchingServer --> GameHost : update_room_status_reply[ok or error]
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
 
-loop every seconds
-GameHost -> MatchingServer : update_room_status_request[open room, player count]
-activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
-end
-MatchingServer -> MatchingServer : update room information
-deactivate MatchingServer
-
 ==Start Game==
 
 loop every seconds
 GameHost -> MatchingServer : update_room_status_request[open room, player count]
 activate MatchingServer
 MatchingServer --> GameHost : update_room_status_reply[ok or error]
-end
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
+end
 
 GameHost<->Client1 : send and receive game data
 
@@ -113,9 +105,9 @@ loop every seconds
 GameHost -> MatchingServer : update_room_status_request[open room, player count]
 activate MatchingServer
 MatchingServer --> GameHost : update_room_status_reply[ok or error]
-end
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
+end
 
 GameHost<->Client1 : send and receive game data
 

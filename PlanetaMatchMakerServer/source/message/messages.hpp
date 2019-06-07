@@ -12,10 +12,12 @@ namespace pgl {
 		const static flags_type is_open = 2;
 	};
 
-
+	using version_type = uint16_t;
 	using room_id_type = uint32_t;
 
 	enum class message_type : uint8_t {
+		authentication_request,
+		authentication_reply,
 		create_room_request,
 		create_room_reply,
 		list_room_request,
@@ -34,6 +36,25 @@ namespace pgl {
 
 	// size of message should be less than 256 bytes
 	struct message {};
+
+	// 2 bytes
+	struct authentication_request_message final : message {
+		version_type version;
+	};
+
+	// 3 bytes
+	struct authentication_reply_message final : message {
+		enum class error_code : uint8_t {
+			ok,
+			unknown_error,
+			version_mismatch,
+			authentication_error,
+			denied // when in black list
+		};
+
+		error_code error_code;
+		version_type version;
+	};
 
 	// 42 bytes
 	struct create_room_request_message final : message {
