@@ -24,6 +24,10 @@
     <ClInclude Include="source\message\message_handler_invoker_factory.hpp" />
     <ClInclude Include="source\message\message_handle_parameter.hpp" />
     <ClInclude Include="source\async\timer.hpp" />
+    <ClInclude Include="source\message\message_handle_error.hpp" />
+    <ClInclude Include="source\message\message_handle_error_code.hpp" />
+    <ClInclude Include="source\utilities\string_utility.hpp" />
+    <ClInclude Include="source\utilities\io_utility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\matching_server\match_making_server.cpp" />
@@ -40,5 +44,7 @@
     <ClCompile Include="source\message\message_handler_invoker.cpp" />
     <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />
     <ClCompile Include="source\async\timer.cpp" />
+    <ClCompile Include="source\message\message_handle_error.cpp" />
+    <ClCompile Include="source\message\message_handle_error_code.cpp" />
   </ItemGroup>
 </Project>

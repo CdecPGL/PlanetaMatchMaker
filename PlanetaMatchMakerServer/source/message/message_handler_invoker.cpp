@@ -1,13 +1,13 @@
 ﻿#include "message_handler_invoker.hpp"
 
-#include <iostream>
-
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 
 #include "nameof.hpp"
 
 #include "async/timer.hpp"
+#include "utilities/io_utility.hpp"
+#include "message_handle_error.hpp"
 
 using namespace std;
 using namespace boost;
@@ -36,13 +36,11 @@ namespace pgl {
 			});
 		} catch (const system::system_error& e) {
 			if (e.code() == asio::error::operation_aborted) {
-				std::cerr << "Time out" << std::endl;
-				return;
+				throw message_handle_error(message_handle_error_code::message_reception_timeout);
 			}
 
 			if (e.code() && e.code() != asio::error::eof) {
-				cerr << "Failed to receive message header: " << e.code().message() << endl;
-				return;
+				throw message_handle_error(message_handle_error_code::message_header_reception_error);
 			}
 		}
 
@@ -50,20 +48,19 @@ namespace pgl {
 		auto header = asio::buffer_cast<const message_header*>(param.receive_buff.data());
 		param.receive_buff.consume(sizeof(message_header));
 		if (!is_handler_exist(header->message_type)) {
-			cerr << "Invalid message type received: " << static_cast<int>(header->message_type) << endl;
-			return;
+			throw message_handle_error(message_handle_error_code::invalid_message_type,
+			                           generate_string(static_cast<int>(header->message_type)));
 		}
 
 		if (enable_message_specification && header->message_type != specified_message_type) {
-			cerr << NAMEOF_ENUM(specified_message_type) << " is expected, but " << NAMEOF_ENUM(header->message_type) <<
-				" is received." << endl;
-			return;
+			throw message_handle_error(message_handle_error_code::message_type_mismatch,
+			                           generate_string("expected: ", NAMEOF_ENUM(specified_message_type), ", actual: ",
+			                                           NAMEOF_ENUM(header->message_type)));
 		}
 
 		const auto message_handler = make_message_handler(header->message_type);
 		const auto message_size = message_handler->get_message_size();
-		std::cout << "message type: " << NAMEOF_ENUM(header->message_type) << endl;
-		std::cout << "message size: " << message_size << endl;
+		print_line("Message header received. (type: ", NAMEOF_ENUM(header->message_type), "size: ", message_size);
 
 		// Receive a body of message
 		try {
@@ -74,13 +71,11 @@ namespace pgl {
 			});
 		} catch (const system::system_error& e) {
 			if (e.code() == asio::error::operation_aborted) {
-				std::cerr << "time out" << std::endl;
-				return;
+				throw message_handle_error(message_handle_error_code::message_reception_timeout);
 			}
 
 			if (e.code() && e.code() != asio::error::eof) {
-				cerr << "failed to receive message: " << e.code().message() << endl;
-				return;
+				throw message_handle_error(message_handle_error_code::message_body_reception_error);
 			}
 		}
 
@@ -88,5 +83,6 @@ namespace pgl {
 		const auto* data = asio::buffer_cast<const char*>(param.receive_buff.data());
 		(*message_handler)(data, param);
 		param.receive_buff.consume(param.receive_buff.size());
+		print_line("Message processed. (type: ", NAMEOF_ENUM(header->message_type), "size: ", message_size);
 	}
 }

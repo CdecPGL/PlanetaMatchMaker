@@ -7,6 +7,7 @@
 #include "nameof.hpp"
 
 #include "message/message_handler_invoker.hpp"
+#include "utilities/io_utility.hpp"
 #include "match_making_server.hpp"
 
 using namespace std;
@@ -29,23 +30,23 @@ namespace pgl {
 		  receive_buff_(buffer_size),
 		  timer_(io_service),
 		  time_out_seconds_(time_out_seconds) {
-		cout << "Server instance is generated with ip version " << NAMEOF_ENUM(ip_version) << " and port number " <<
-			port_number << "." << endl;
+		print_line("Server instance is generated with ip version ", NAMEOF_ENUM(ip_version), " and port number ",
+		           port_number);
 	}
 
 	void match_making_server::start() {
 		spawn(io_service_, [&](asio::yield_context yield)
 		{
-			cout << "Start to accept." << endl;
+			print_line("Start to accept.");
 			system::error_code error;
 			acceptor_.async_accept(socket_, yield[error]);
 			if (error) {
-				cerr << "Accept failed: " << error.message() << endl;
+				print_error_line("Accept failed: ", error.message());
 				start();
 				return;
 			}
 
-			cout << "Accepted new connection. Start to receive message." << endl;
+			print_line("Accepted new connection. Start to receive message.");
 
 			// Authenticate client
 			auto message_handler_param = message_handle_parameter{
