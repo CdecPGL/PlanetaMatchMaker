@@ -9,9 +9,9 @@
 namespace pgl {
 	struct room_data final {
 		room_id_type room_id{};
-		uint8_t name[room_name_size]{};
+		room_name_type name{};
 		uint8_t setting_flags{};
-		uint8_t password[room_password_size]{};
+		room_password_type password{};
 		uint8_t max_player_count{};
 		datetime create_datetime{};
 		client_address host_address{};

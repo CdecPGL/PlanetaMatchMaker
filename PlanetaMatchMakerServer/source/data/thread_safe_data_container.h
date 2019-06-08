@@ -8,7 +8,7 @@
 #include <boost/call_traits.hpp>
 
 namespace pgl {
-	// A thread safe container of room data
+	// A thread safe container of data
 	template <typename TId, typename TData>
 	class thread_safe_data_container final : boost::noncopyable {
 	public:

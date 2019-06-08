@@ -7,7 +7,7 @@
 #include "room/room_constants.hpp"
 #include "client/client_constants.hpp"
 
-namespace pgl {	
+namespace pgl {
 	enum class message_type : uint8_t {
 		authentication_request,
 		authentication_reply,
@@ -51,9 +51,9 @@ namespace pgl {
 
 	// 42 bytes
 	struct create_room_request_message final : message {
-		uint8_t name[room_name_size]{};
+		room_name_type name{};
 		room_flags_bit_mask::flags_type flags{};
-		uint8_t password[room_password_size]{};
+		room_password_type password{};
 		uint8_t max_player_count{};
 	};
 
@@ -95,7 +95,7 @@ namespace pgl {
 		//39 bytes
 		struct room_info {
 			room_id_type room_id{};
-			uint8_t name[room_name_size]{};
+			room_name_type name{};
 			room_flags_bit_mask::flags_type flags{};
 			uint8_t max_player_count{};
 			uint8_t current_player_count{};
@@ -111,7 +111,7 @@ namespace pgl {
 	// 20 bytes
 	struct join_room_request_message final : message {
 		room_id_type room_id{};
-		uint8_t password[room_password_size]{};
+		room_password_type password{};
 	};
 
 	//19 bytes
