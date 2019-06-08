@@ -2,8 +2,6 @@
 
 #include <type_traits>
 
-#include <boost/asio/spawn.hpp>
-
 #include "messages.hpp"
 #include "message_handle_parameter.hpp"
 

@@ -1,6 +1,5 @@
 ﻿#include <iostream>
 
-#include <boost/bind.hpp>
 #include <boost/asio/spawn.hpp>
 #include <utility>
 
@@ -9,6 +8,7 @@
 #include "message/message_handler_invoker.hpp"
 #include "utilities/io_utility.hpp"
 #include "match_making_server.hpp"
+#include "server_error.hpp"
 
 using namespace std;
 using namespace boost;
@@ -37,45 +37,45 @@ namespace pgl {
 	void match_making_server::start() {
 		spawn(io_service_, [&](asio::yield_context yield)
 		{
-			print_line("Start to accept.");
-			system::error_code error;
-			acceptor_.async_accept(socket_, yield[error]);
-			if (error) {
-				print_error_line("Accept failed: ", error.message());
-				start();
-				return;
+			try {
+				print_line("Start to accept.");
+				try {
+					acceptor_.async_accept(socket_, yield);
+				} catch (system::system_error& e) {
+					const auto remote = socket_.remote_endpoint();
+					const auto extra_message = generate_string(e.code().message(), " @", "IP address: ",
+					                                           remote.address().to_string(),
+					                                           ", port number: ", remote.port());
+					throw server_error(server_error_code::acception_failed, extra_message);
+				}
+
+				print_line("Accepted new connection. Start to receive message.");
+
+				// Authenticate client
+				auto message_handler_param = message_handle_parameter{
+					io_service_, socket_, receive_buff_, server_data_, yield, chrono::seconds(time_out_seconds_)
+				};
+				message_handler_container_->handle_specific_message(message_type::authentication_request,
+				                                                    message_handler_param);
+
+				// Receive message
+				while (true) {
+					message_handler_container_->handle_message(message_handler_param);
+				}
+			} catch (system::system_error& e) {
+				print_error_line("Unhandled error: ", e.code().message());
+				restart();
 			}
-
-			print_line("Accepted new connection. Start to receive message.");
-
-			// Authenticate client
-			auto message_handler_param = message_handle_parameter{
-				io_service_, socket_, receive_buff_, server_data_, yield, chrono::seconds(time_out_seconds_)
-			};
-			message_handler_container_->handle_specific_message(message_type::authentication_request,
-			                                                    message_handler_param);
-
-			// Receive message
-			while (true) {
-				message_handler_container_->handle_message(message_handler_param);
+			catch (server_error& e) {
+				print_error_line("Message handling error: ", e.get_message());
+				restart();
 			}
 		});
 	}
 
-	void match_making_server::start_timer() {
-		is_canceled_ = false;
-		timer_.expires_from_now(chrono::seconds(time_out_seconds_));
-		timer_.async_wait(boost::bind(&match_making_server::on_timer, this, _1));
-	}
-
-	void match_making_server::cancel_timer() {
-		timer_.cancel();
-		is_canceled_ = true;
-	}
-
-	void match_making_server::on_timer(const system::error_code& error) {
-		if (!error && !is_canceled_) {
-			socket_.cancel(); // 通信処理をキャンセルする。受信ハンドラがエラーになる
-		}
+	void match_making_server::restart() {
+		print_error_line("Restart server instance.");
+		socket_.close();
+		start();
 	}
 }

@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <boost/asio.hpp>
+#include <boost/asio/spawn.hpp>
 
 namespace pgl {
 	struct server_data;

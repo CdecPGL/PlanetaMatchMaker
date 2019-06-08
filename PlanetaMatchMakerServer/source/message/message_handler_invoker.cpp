@@ -7,7 +7,7 @@
 
 #include "async/timer.hpp"
 #include "utilities/io_utility.hpp"
-#include "message_handle_error.hpp"
+#include "matching_server/server_error.hpp"
 
 using namespace std;
 using namespace boost;
@@ -36,11 +36,11 @@ namespace pgl {
 			});
 		} catch (const system::system_error& e) {
 			if (e.code() == asio::error::operation_aborted) {
-				throw message_handle_error(message_handle_error_code::message_reception_timeout);
+				throw server_error(server_error_code::message_reception_timeout, e.code().message());
 			}
 
 			if (e.code() && e.code() != asio::error::eof) {
-				throw message_handle_error(message_handle_error_code::message_header_reception_error);
+				throw server_error(server_error_code::message_header_reception_error, e.code().message());
 			}
 		}
 
@@ -48,14 +48,14 @@ namespace pgl {
 		auto header = asio::buffer_cast<const message_header*>(param.receive_buff.data());
 		param.receive_buff.consume(sizeof(message_header));
 		if (!is_handler_exist(header->message_type)) {
-			throw message_handle_error(message_handle_error_code::invalid_message_type,
-			                           generate_string(static_cast<int>(header->message_type)));
+			throw server_error(server_error_code::invalid_message_type,
+			                   generate_string(static_cast<int>(header->message_type)));
 		}
 
 		if (enable_message_specification && header->message_type != specified_message_type) {
-			throw message_handle_error(message_handle_error_code::message_type_mismatch,
-			                           generate_string("expected: ", NAMEOF_ENUM(specified_message_type), ", actual: ",
-			                                           NAMEOF_ENUM(header->message_type)));
+			throw server_error(server_error_code::message_type_mismatch,
+			                   generate_string("expected: ", NAMEOF_ENUM(specified_message_type), ", actual: ",
+			                                   NAMEOF_ENUM(header->message_type)));
 		}
 
 		const auto message_handler = make_message_handler(header->message_type);
@@ -71,11 +71,11 @@ namespace pgl {
 			});
 		} catch (const system::system_error& e) {
 			if (e.code() == asio::error::operation_aborted) {
-				throw message_handle_error(message_handle_error_code::message_reception_timeout);
+				throw server_error(server_error_code::message_reception_timeout, e.code().message());
 			}
 
 			if (e.code() && e.code() != asio::error::eof) {
-				throw message_handle_error(message_handle_error_code::message_body_reception_error);
+				throw server_error(server_error_code::message_body_reception_error, e.code().message());
 			}
 		}
 
