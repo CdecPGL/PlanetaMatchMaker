@@ -3,26 +3,11 @@
 #include <cstdint>
 
 #include "datetime/datetime.hpp"
+#include "client/client_address.hpp"
+#include "room/room_constants.hpp"
+#include "client/client_constants.hpp"
 
-namespace pgl {
-	constexpr int room_name_size = 24; // at least 8 characters with UFC-8
-	constexpr int room_password_size = 16; //16 characters with ASCII
-
-	struct room_flags_bit_mask final {
-		using flags_type = uint8_t;
-		const static flags_type is_private = 1;
-		const static flags_type is_open = 2;
-	};
-
-	using version_type = uint16_t;
-	using room_id_type = uint32_t;
-
-	// 18 bytes
-	struct client_address {
-		uint64_t ip_address[2]{};
-		uint16_t port_number{};
-	};
-
+namespace pgl {	
 	enum class message_type : uint8_t {
 		authentication_request,
 		authentication_reply,

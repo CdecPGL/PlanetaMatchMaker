@@ -2,7 +2,9 @@
 #include <cstdint>
 
 #include "datetime/datetime.hpp"
-#include "message/messages.hpp"
+#include "client/client_address.hpp"
+
+#include "room_constants.hpp"
 
 namespace pgl {
 	struct room_data final {
