@@ -22,6 +22,7 @@
     <ClInclude Include="source\message\message_handlers\authentication_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handler_invoker.hpp" />
     <ClInclude Include="source\message\message_handler_invoker_factory.hpp" />
+    <ClInclude Include="source\message\message_handle_parameter.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\matching_server\match_making_server.cpp" />

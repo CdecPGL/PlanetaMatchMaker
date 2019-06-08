@@ -6,10 +6,9 @@
 #include <shared_mutex>
 
 #include "message_handler.hpp"
+#include "message_handle_parameter.hpp"
 
 namespace pgl {
-	struct server_data;
-
 	// A thread safe container of message handler
 	class message_handler_invoker final : boost::noncopyable {
 	public:
@@ -24,14 +23,9 @@ namespace pgl {
 			handler_generator_map_.emplace(VMessageType, []() { return std::make_unique<TMessageHandler>(); });
 		}
 
-		void handle_message(boost::asio::ip::tcp::socket& socket, boost::asio::streambuf& receive_buff,
-		                    const std::shared_ptr<server_data>& server_data,
-		                    boost::asio::yield_context& yield) const;
+		void handle_message(message_handle_parameter& param) const;
 
-		void handle_specific_message(message_type specified_message_type, boost::asio::ip::tcp::socket& socket,
-		                             boost::asio::streambuf& receive_buff,
-		                             const std::shared_ptr<server_data>& server_data,
-		                             boost::asio::yield_context& yield) const;
+		void handle_specific_message(message_type specified_message_type, message_handle_parameter& param) const;
 
 	private:
 		std::unordered_map<message_type, message_handler_generator_type> handler_generator_map_;
@@ -48,9 +42,6 @@ namespace pgl {
 		}
 
 		void handle_specific_message_impl(bool enable_message_specification, message_type specified_message_type,
-		                                  boost::asio::ip::tcp::socket& socket,
-		                                  boost::asio::streambuf& receive_buff,
-		                                  const std::shared_ptr<server_data>& server_data,
-		                                  boost::asio::yield_context& yield) const;
+		                                  message_handle_parameter& param) const;
 	};
 }

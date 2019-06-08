@@ -48,12 +48,15 @@ namespace pgl {
 			cout << "Accepted new connection. Start to receive message." << endl;
 
 			// Authenticate client
-			message_handler_container_->handle_specific_message(message_type::authentication_request, socket_,
-			                                                    receive_buff_, server_data_, yield);
+			auto message_handler_param = message_handle_parameter{
+				io_service_, socket_, receive_buff_, server_data_, yield
+			};
+			message_handler_container_->handle_specific_message(message_type::authentication_request,
+			                                                    message_handler_param);
 
 			// Receive message
 			while (true) {
-				message_handler_container_->handle_message(socket_, receive_buff_, server_data_, yield);
+				message_handler_container_->handle_message(message_handler_param);
 			}
 		});
 	}
@@ -69,7 +72,7 @@ namespace pgl {
 		is_canceled_ = true;
 	}
 
-	void match_making_server::on_timer(const boost::system::error_code& error) {
+	void match_making_server::on_timer(const system::error_code& error) {
 		if (!error && !is_canceled_) {
 			socket_.cancel(); // 通信処理をキャンセルする。受信ハンドラがエラーになる
 		}
