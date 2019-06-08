@@ -5,9 +5,9 @@
 #include <boost/asio.hpp>
 
 namespace pgl {
-	template <typename... TTimeParams>
+	template <typename... TimeParams>
 	void execute_timed_async_operation(boost::asio::io_service& io_service, boost::asio::ip::tcp::socket& socket,
-	                                   const std::chrono::duration<TTimeParams...>& time,
+	                                   const std::chrono::duration<TimeParams...>& time,
 	                                   std::function<void()>&& proc) {
 		boost::asio::steady_timer timer(io_service);
 		timer.expires_after(time);

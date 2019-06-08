@@ -20,9 +20,9 @@ namespace pgl {
 		[[nodiscard]] virtual int get_message_size() const = 0;
 	};
 
-	template <class TMessage>
+	template <class Message>
 	class message_handler_base : public message_handler {
-		static_assert(std::is_base_of_v<message, TMessage>, "TMessage must be a child class of message.");
+		static_assert(std::is_base_of_v<message, Message>, "Message must be a child class of message.");
 	public:
 		message_handler_base() = default;
 		message_handler_base(const message_handler_base& message_handler_base) = delete;
@@ -32,15 +32,15 @@ namespace pgl {
 		message_handler_base& operator=(message_handler_base&& message_handler_base) = delete;
 
 		[[nodiscard]] int get_message_size() const override final {
-			return sizeof(TMessage);
+			return sizeof(Message);
 		}
 
 		void operator()(const char* data, message_handle_parameter& param) override final {
-			decltype(auto) message = reinterpret_cast<const TMessage*>(data);
+			decltype(auto) message = reinterpret_cast<const Message*>(data);
 			handle_message(*message, param);
 		}
 
 	private:
-		virtual void handle_message(const TMessage& message, message_handle_parameter& param) = 0;
+		virtual void handle_message(const Message& message, message_handle_parameter& param) = 0;
 	};
 }
