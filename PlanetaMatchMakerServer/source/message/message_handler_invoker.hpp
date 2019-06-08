@@ -41,7 +41,7 @@ namespace pgl {
 			return handler_generator_map_.at(message_type)();
 		}
 
-		void handle_specific_message_impl(bool enable_message_specification, message_type specified_message_type,
+		void handle_message_impl(bool enable_message_specification, message_type specified_message_type,
 		                                  message_handle_parameter& param) const;
 	};
 }

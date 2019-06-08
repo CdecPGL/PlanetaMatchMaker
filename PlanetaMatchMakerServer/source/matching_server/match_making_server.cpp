@@ -49,7 +49,7 @@ namespace pgl {
 
 			// Authenticate client
 			auto message_handler_param = message_handle_parameter{
-				io_service_, socket_, receive_buff_, server_data_, yield
+				io_service_, socket_, receive_buff_, server_data_, yield, chrono::seconds(time_out_seconds_)
 			};
 			message_handler_container_->handle_specific_message(message_type::authentication_request,
 			                                                    message_handler_param);

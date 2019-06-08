@@ -155,6 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="library\nameof.hpp" />
+    <ClInclude Include="source\async\timer.hpp" />
     <ClInclude Include="source\client\client_address.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\client\client_data.hpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="source\room\room_data_container.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\async\timer.cpp" />
     <ClCompile Include="source\client\client_data.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main.cpp" />

@@ -13,5 +13,6 @@ namespace pgl {
 		boost::asio::streambuf& receive_buff;
 		const std::shared_ptr<server_data> server_data;
 		boost::asio::yield_context& yield;
+		std::chrono::seconds timeout_seconds;
 	};
 }
