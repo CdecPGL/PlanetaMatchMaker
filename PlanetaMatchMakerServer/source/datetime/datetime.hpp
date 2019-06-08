@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-#include <boost/functional/hash.hpp>
 #include "client/client_address.hpp"
 
 namespace pgl {

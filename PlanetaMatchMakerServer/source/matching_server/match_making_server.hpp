@@ -6,23 +6,23 @@
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 
-#include "network/transport_layer.hpp"
+#include "network/network_layer.hpp"
 
 namespace pgl {
-	class message_handler_container;
+	class message_handler_invoker;
 	struct server_data;
 
 	class match_making_server final : boost::noncopyable {
 	public:
 		match_making_server(std::shared_ptr<server_data> server_data,
-		                    std::shared_ptr<message_handler_container> message_handler_container,
+		                    std::shared_ptr<message_handler_invoker> message_handler_container,
 		                    boost::asio::io_service& io_service, const ip_version ip_version,
 		                    const std::uint16_t port_number, const std::uint32_t time_out_seconds);
 
 		void start();
 	private:
 		std::shared_ptr<server_data> server_data_;
-		std::shared_ptr<message_handler_container> message_handler_container_;
+		std::shared_ptr<message_handler_invoker> message_handler_container_;
 		boost::asio::io_service& io_service_;
 		boost::asio::ip::tcp::acceptor acceptor_;
 		boost::asio::ip::tcp::socket socket_;

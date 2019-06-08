@@ -164,12 +164,12 @@
     <ClInclude Include="source\matching_server\server_data.hpp" />
     <ClInclude Include="source\message\messages.hpp" />
     <ClInclude Include="source\message\message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\authentication_request.hpp" />
+    <ClInclude Include="source\message\message_handlers\authentication_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handlers\create_room_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handlers\join_room_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handlers\list_room_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handler_container.hpp" />
-    <ClInclude Include="source\message\message_handler_container_factory.hpp" />
+    <ClInclude Include="source\message\message_handler_invoker.hpp" />
+    <ClInclude Include="source\message\message_handler_invoker_factory.hpp" />
     <ClInclude Include="source\network\network_layer.hpp" />
     <ClInclude Include="source\network\transport_layer.hpp" />
     <ClInclude Include="source\room\room_constants.hpp" />
@@ -182,12 +182,12 @@
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\matching_server\match_making_server.cpp" />
     <ClCompile Include="source\message\message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\authentication_request.cpp" />
+    <ClCompile Include="source\message\message_handlers\authentication_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\create_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\join_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\list_room_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handler_container.cpp" />
-    <ClCompile Include="source\message\message_handler_container_factory.cpp" />
+    <ClCompile Include="source\message\message_handler_invoker.cpp" />
+    <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />
     <ClCompile Include="source\room\room_data_container.cpp" />
   </ItemGroup>
