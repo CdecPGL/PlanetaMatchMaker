@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="library\nameof.hpp" />
-    <ClInclude Include="source\matching_server\match_making_server.hpp" />
     <ClInclude Include="source\message\message_handler.hpp" />
     <ClInclude Include="source\message\messages.hpp" />
     <ClInclude Include="source\network\network_layer.hpp" />
@@ -15,7 +14,6 @@
     <ClInclude Include="source\client\client_data.hpp" />
     <ClInclude Include="source\room\room_data.hpp" />
     <ClInclude Include="source\room\room_data_container.hpp" />
-    <ClInclude Include="source\matching_server\server_data.hpp" />
     <ClInclude Include="source\client\client_address.hpp" />
     <ClInclude Include="source\room\room_constants.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
@@ -26,11 +24,12 @@
     <ClInclude Include="source\async\timer.hpp" />
     <ClInclude Include="source\utilities\string_utility.hpp" />
     <ClInclude Include="source\utilities\io_utility.hpp" />
-    <ClInclude Include="source\matching_server\server_error.hpp" />
-    <ClInclude Include="source\matching_server\server_error_code.hpp" />
+    <ClInclude Include="source\server\match_making_server.hpp" />
+    <ClInclude Include="source\server\server_data.hpp" />
+    <ClInclude Include="source\server\server_error.hpp" />
+    <ClInclude Include="source\server\server_error_code.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\matching_server\match_making_server.cpp" />
     <ClCompile Include="source\message\message_handler.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />
     <ClCompile Include="source\main.cpp" />
@@ -44,7 +43,8 @@
     <ClCompile Include="source\message\message_handler_invoker.cpp" />
     <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />
     <ClCompile Include="source\async\timer.cpp" />
-    <ClCompile Include="source\matching_server\server_error.cpp" />
-    <ClCompile Include="source\matching_server\server_error_code.cpp" />
+    <ClCompile Include="source\server\match_making_server.cpp" />
+    <ClCompile Include="source\server\server_error.cpp" />
+    <ClCompile Include="source\server\server_error_code.cpp" />
   </ItemGroup>
 </Project>

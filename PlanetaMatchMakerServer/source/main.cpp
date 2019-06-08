@@ -1,6 +1,6 @@
-#include "matching_server/match_making_server.hpp"
+#include "server/match_making_server.hpp"
+#include "server/server_data.hpp"
 #include "message/message_handler_invoker_factory.hpp"
-#include "matching_server/server_data.hpp"
 
 using namespace pgl;
 using namespace boost;

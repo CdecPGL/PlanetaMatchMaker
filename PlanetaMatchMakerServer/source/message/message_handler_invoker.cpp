@@ -7,7 +7,7 @@
 
 #include "async/timer.hpp"
 #include "utilities/io_utility.hpp"
-#include "matching_server/server_error.hpp"
+#include "server/server_error.hpp"
 
 using namespace std;
 using namespace boost;
