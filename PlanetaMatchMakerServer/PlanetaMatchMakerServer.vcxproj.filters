@@ -15,6 +15,9 @@
     <ClInclude Include="source\data\room_data.hpp" />
     <ClInclude Include="source\data\room_data_container.hpp" />
     <ClInclude Include="source\data\server_data.hpp" />
+    <ClInclude Include="source\message\message_handlers\authentication_request.hpp" />
+    <ClInclude Include="source\data\client_data.hpp" />
+    <ClInclude Include="source\datetime\datetime.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\matching_server\match_making_server.cpp" />
@@ -27,5 +30,8 @@
     <ClCompile Include="source\message\message_handlers\join_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\create_room_request_message_handler.cpp" />
     <ClCompile Include="source\data\room_data_container.cpp" />
+    <ClCompile Include="source\message\message_handlers\authentication_request.cpp" />
+    <ClCompile Include="source\data\client_data.cpp" />
+    <ClCompile Include="source\datetime\datetime.cpp" />
   </ItemGroup>
 </Project>

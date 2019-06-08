@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "datetime/datetime.hpp"
+
 namespace pgl {
 	constexpr int room_name_size = 24; // at least 8 characters with UFC-8
 	constexpr int room_password_size = 16; //16 characters with ASCII
@@ -14,6 +16,12 @@ namespace pgl {
 
 	using version_type = uint16_t;
 	using room_id_type = uint32_t;
+
+	// 18 bytes
+	struct client_address {
+		uint64_t ip_address[2]{};
+		uint16_t port_number{};
+	};
 
 	enum class message_type : uint8_t {
 		authentication_request,
@@ -31,7 +39,7 @@ namespace pgl {
 
 	// 1 bytes
 	struct message_header {
-		message_type message_type;
+		message_type message_type{};
 	};
 
 	// size of message should be less than 256 bytes
@@ -39,7 +47,7 @@ namespace pgl {
 
 	// 2 bytes
 	struct authentication_request_message final : message {
-		version_type version;
+		version_type version{};
 	};
 
 	// 3 bytes
@@ -52,16 +60,16 @@ namespace pgl {
 			denied // when in black list
 		};
 
-		error_code error_code;
-		version_type version;
+		error_code error_code{};
+		version_type version{};
 	};
 
 	// 42 bytes
 	struct create_room_request_message final : message {
-		uint8_t name[room_name_size];
-		room_flags_bit_mask::flags_type flags;
-		uint8_t password[room_password_size];
-		uint8_t max_player_count;
+		uint8_t name[room_name_size]{};
+		room_flags_bit_mask::flags_type flags{};
+		uint8_t password[room_password_size]{};
+		uint8_t max_player_count{};
 	};
 
 	// 5 bytes
@@ -73,8 +81,8 @@ namespace pgl {
 			room_count_reaches_limit
 		};
 
-		error_code error_code;
-		room_id_type room_id;
+		error_code error_code{};
+		room_id_type room_id{};
 	};
 
 	// 4 bytes
@@ -82,14 +90,14 @@ namespace pgl {
 		enum class sort_kind : uint8_t {
 			name_ascending,
 			name_descending,
-			date_ascending,
-			date_descending
+			create_datetime_ascending,
+			create_datetime_descending
 		};
 
-		uint8_t start_index;
-		uint8_t end_index;
-		sort_kind sort_kind;
-		uint8_t flags; //filter conditions about room
+		uint8_t start_index{};
+		uint8_t end_index{};
+		sort_kind sort_kind{};
+		uint8_t flags{}; //filter conditions about room
 	};
 
 	// 237 bytes
@@ -101,27 +109,27 @@ namespace pgl {
 
 		//39 bytes
 		struct room_info {
-			room_id_type room_id;
-			uint8_t name[room_name_size];
-			room_flags_bit_mask::flags_type flags;
-			uint8_t max_player_count;
-			uint8_t current_player_count;
-			uint64_t date;
+			room_id_type room_id{};
+			uint8_t name[room_name_size]{};
+			room_flags_bit_mask::flags_type flags{};
+			uint8_t max_player_count{};
+			uint8_t current_player_count{};
+			datetime create_datetime{};
 		};
 
-		error_code error_code;
-		uint8_t total_room_count;
-		uint8_t reply_room_count;
-		room_info room_info_list[6];
+		error_code error_code{};
+		uint8_t total_room_count{};
+		uint8_t reply_room_count{};
+		room_info room_info_list[6]{};
 	};
 
 	// 20 bytes
 	struct join_room_request_message final : message {
-		room_id_type room_id;
-		uint8_t password[room_password_size];
+		room_id_type room_id{};
+		uint8_t password[room_password_size]{};
 	};
 
-	// 23 bytes
+	//19 bytes
 	struct join_room_reply_message final : message {
 		enum class error_code : uint8_t {
 			ok,
@@ -132,18 +140,16 @@ namespace pgl {
 			player_count_reaches_limit
 		};
 
-		error_code error_code;
-		uint32_t ip_v4_address;
-		uint64_t ip_v6_address[2];
-		uint16_t port_number;
+		error_code error_code{};
+		client_address host_address{};
 	};
 
 	// 5 bytes
 	struct update_room_status_request_message final : message {
 		enum class status : uint8_t { open, close, remove };
 
-		room_id_type room_id;
-		status status;
+		room_id_type room_id{};
+		status status{};
 	};
 
 	// 1 bytes
@@ -154,7 +160,7 @@ namespace pgl {
 			room_not_exist
 		};
 
-		error_code error_code;
+		error_code error_code{};
 	};
 
 	struct random_match_request_message final : message {
@@ -163,6 +169,6 @@ namespace pgl {
 			unknown_error
 		};
 
-		error_code error_code;
+		error_code error_code{};
 	};
 }

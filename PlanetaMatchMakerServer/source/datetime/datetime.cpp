@@ -1,0 +1,60 @@
+#include "datetime.hpp"
+
+namespace pgl {
+	constexpr int second_start_bit = 0;
+	constexpr int second_bit_count = 6;
+	constexpr int minuit_start_bit = second_start_bit + second_bit_count;
+	constexpr int minuit_bit_count = 6;
+	constexpr int hour_start_bit = minuit_start_bit + minuit_bit_count;
+	constexpr int hour_bit_count = 5;
+	constexpr int day_start_bit = hour_start_bit + hour_bit_count;
+	constexpr int day_bit_count = 5;
+	constexpr int month_start_bit = day_start_bit + day_bit_count;
+	constexpr int month_bit_count = 4;
+	constexpr int year_start_bit = month_start_bit + month_bit_count;
+	constexpr int year_bit_count = 31;
+
+	uint64_t get_located_data(const uint64_t value, const int start_bit, const int bit_count) {
+		return (value & ((1ll << bit_count) - 1)) << start_bit;
+	}
+
+	datetime::datetime(const int year, const int month, const int day): datetime(year, month, day, 0, 0, 0) {}
+
+	datetime::datetime(const int year, const int month, const int day, const int hour, const int minuit,
+	                   const int second): date_(
+		get_located_data(year, year_start_bit, year_bit_count) &
+		get_located_data(month, month_start_bit, month_bit_count) &
+		get_located_data(day, day_start_bit, day_bit_count) &
+		get_located_data(hour, hour_start_bit, hour_bit_count) &
+		get_located_data(minuit, minuit_start_bit, minuit_bit_count) &
+		get_located_data(second, second_start_bit, second_bit_count)
+	) {}
+
+	int datetime::get_year() const {
+		return get_from_date(year_start_bit, year_bit_count);
+	}
+
+	int datetime::get_month() const {
+		return get_from_date(month_start_bit, month_bit_count);
+	}
+
+	int datetime::get_day() const {
+		return get_from_date(day_start_bit, day_bit_count);
+	}
+
+	int datetime::get_hour() const {
+		return get_from_date(hour_start_bit, hour_bit_count);
+	}
+
+	int datetime::get_minuit() const {
+		return get_from_date(minuit_start_bit, minuit_bit_count);
+	}
+
+	int datetime::get_second() const {
+		return get_from_date(second_start_bit, second_bit_count);
+	}
+
+	int datetime::get_from_date(const int start_bit, const int bit_count) const {
+		return static_cast<int>(date_ << start_bit) & ((1 << bit_count) - 1);
+	}
+}
