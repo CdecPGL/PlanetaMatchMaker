@@ -8,19 +8,21 @@ namespace pgl {
 		case server_error_code::acception_failed:
 			return "Failed to accept new client.";
 		case server_error_code::message_reception_timeout:
-			return "Failed to receive message because of time out.";
+			return "Failed to receive a message because of time out.";
 		case server_error_code::message_header_reception_error:
-			return "Failed to receive message header.";
+			return "Failed to receive a message header.";
 		case server_error_code::message_body_reception_error:
-			return "Failed to receive message body.";
+			return "Failed to receive a message body.";
 		case server_error_code::invalid_message_type:
-			return "Message type is invalid.";
+			return "The message type is invalid.";
 		case server_error_code::message_type_mismatch:
-			return "Message type does not match to expected one.";
+			return "The message type does not match to expected one.";
 		case server_error_code::version_mismatch:
-			return "Client version does not match to server version.";
+			return "The client version does not match to the server version.";
 		case server_error_code::message_send_error:
-			return "Failed to send message to client.";
+			return "Failed to send a message to client.";
+		case server_error_code::permission_error:
+			return "A client without permission try to connect.";
 		default:
 			return "Unknown";
 		}

@@ -14,6 +14,7 @@ namespace pgl {
 		message_type_mismatch,
 		version_mismatch,
 		message_send_error,
+		permission_error,
 	};
 
 	std::string get_server_error_message(server_error_code error_code);

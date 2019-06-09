@@ -12,7 +12,7 @@ namespace pgl {
 		generate_string2(oss, std::forward<Rest>(rest)...);
 	}
 
-	// Convert parameters to string and concatenate them to one string
+	// Convert parameters to string and concatenate them to one string. This is thread safe.
 	template <typename ... Params>
 	std::string generate_string(Params&& ... params) {
 		std::ostringstream oss;
