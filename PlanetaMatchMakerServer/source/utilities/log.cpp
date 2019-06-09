@@ -1,4 +1,5 @@
 #include <iostream>
+#include <shared_mutex>
 
 #include "nameof.hpp"
 
@@ -10,29 +11,39 @@ using namespace boost;
 
 namespace pgl {
 	static log_level output_log_level = log_level::info;
+	static shared_mutex output_log_level_mutex;
+	static mutex output_mutex;
 
-	void set_output_log_level(const log_level level) {
-		output_log_level = level;
-		log_impl(log_level::info, true, "",
-		         generate_string("Output log level is set to \"", NAMEOF_ENUM(level), "\"."));
-	}
-
-	void log_impl(const log_level level, const bool force, string&& log_header, string&& log_body) {
-		if (!force && level < output_log_level) {
-			return;
-		}
-
+	void log_impl_without_mutex(const log_level level, string&& log_header, string&& log_body) {
 		ostream* os = nullptr;
 		switch (level) {
 		case log_level::info:
 		case log_level::debug:
 			os = &cout;
 			break;
-		default: 
+		default:
 			os = &cerr;
 			break;
 		}
 
 		*os << "[" << get_time_string() << "] " << NAMEOF_ENUM(level) << log_header << ": " << log_body << endl;
+	}
+
+	void set_output_log_level(const log_level level) {
+		std::scoped_lock locks{output_log_level_mutex, output_mutex};
+		output_log_level = level;
+		log_impl_without_mutex(log_level::info, "",
+		                       generate_string("Output log level is set to \"", NAMEOF_ENUM(level), "\"."));
+	}
+
+	void log_impl(const log_level level, string&& log_header, string&& log_body) {
+		if (level < output_log_level) {
+			return;
+		}
+
+		shared_lock output_log_level_lock(output_log_level_mutex);
+		lock_guard output_lock(output_mutex);
+
+		log_impl_without_mutex(level, std::move(log_header), std::move(log_body));
 	}
 }
