@@ -5,8 +5,7 @@
 #include <cassert>
 #include <shared_mutex>
 
-#include <boost/noncopyable.hpp>
-
+#include "messages.hpp"
 #include "message_handler.hpp"
 #include "message_handle_parameter.hpp"
 

@@ -1,12 +1,12 @@
-﻿#include <iostream>
-
-#include <boost/asio/spawn.hpp>
+﻿#include <boost/asio/spawn.hpp>
 #include <utility>
 
 #include "nameof.hpp"
 
 #include "message/message_handler_invoker.hpp"
+#include "message/messages.hpp"
 #include "utilities/io_utility.hpp"
+#include "utilities/asio_stream_compatibility.hpp"
 #include "match_making_server.hpp"
 #include "server_error.hpp"
 
@@ -14,7 +14,7 @@ using namespace std;
 using namespace boost;
 
 namespace pgl {
-	constexpr int buffer_size = 256;
+	constexpr int buffer_size{256};
 
 	match_making_server::
 	match_making_server(std::shared_ptr<server_data> server_data,
@@ -31,7 +31,7 @@ namespace pgl {
 		  timer_(io_service),
 		  time_out_seconds_(time_out_seconds) {
 		print_line("Server instance is generated with ip version ", NAMEOF_ENUM(ip_version), " and port number ",
-		           port_number);
+		           port_number, ".");
 	}
 
 	void match_making_server::start() {
@@ -42,17 +42,14 @@ namespace pgl {
 				try {
 					acceptor_.async_accept(socket_, yield);
 				} catch (system::system_error& e) {
-					const auto remote = socket_.remote_endpoint();
-					const auto extra_message = generate_string(e.code().message(), " @", "IP address: ",
-					                                           remote.address().to_string(),
-					                                           ", port number: ", remote.port());
+					const auto extra_message = generate_string(e, " @", socket_.remote_endpoint());
 					throw server_error(server_error_code::acception_failed, extra_message);
 				}
 
-				print_line("Accepted new connection. Start to receive message.");
+				print_line("Accepted new connection. Start to receive message. @", socket_.remote_endpoint());
 
 				// Authenticate client
-				auto message_handler_param = message_handle_parameter{
+				message_handle_parameter message_handler_param{
 					io_service_, socket_, receive_buff_, server_data_, yield, chrono::seconds(time_out_seconds_)
 				};
 				message_handler_container_->handle_specific_message(message_type::authentication_request,
@@ -63,11 +60,11 @@ namespace pgl {
 					message_handler_container_->handle_message(message_handler_param);
 				}
 			} catch (system::system_error& e) {
-				print_error_line("Unhandled error: ", e.code().message());
+				print_error_line("Unhandled error @", socket_.remote_endpoint(), ": ", e);
 				restart();
 			}
 			catch (server_error& e) {
-				print_error_line("Message handling error: ", e.get_message());
+				print_error_line("Message handling error @", socket_.remote_endpoint(), ": ", e);
 				restart();
 			}
 		});

@@ -16,4 +16,6 @@ namespace pgl {
 		server_error_code error_code_;
 		std::string extra_message_;
 	};
+
+	std::ostream& operator <<(std::ostream& os, const server_error& error);
 }

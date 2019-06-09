@@ -1,8 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
-#include "messages.hpp"
 #include "message_handle_parameter.hpp"
 
 namespace pgl {
@@ -20,7 +17,6 @@ namespace pgl {
 
 	template <class Message>
 	class message_handler_base : public message_handler {
-		static_assert(std::is_base_of_v<message, Message>, "Message must be a child class of message.");
 	public:
 		message_handler_base() = default;
 		message_handler_base(const message_handler_base& message_handler_base) = delete;

@@ -5,7 +5,7 @@
 #include "datetime/datetime.hpp"
 #include "client/client_address.hpp"
 #include "room/room_constants.hpp"
-#include "client/client_constants.hpp"
+#include "data/data_constants.hpp"
 
 namespace pgl {
 	enum class message_type : uint8_t {
@@ -23,20 +23,19 @@ namespace pgl {
 	};
 
 	// 1 bytes
-	struct message_header {
+	struct message_header final {
 		message_type message_type{};
 	};
 
 	// size of message should be less than 256 bytes
-	struct message {};
 
 	// 2 bytes
-	struct authentication_request_message final : message {
+	struct authentication_request_message final {
 		version_type version{};
 	};
 
 	// 3 bytes
-	struct authentication_reply_message final : message {
+	struct authentication_reply_message final {
 		enum class error_code : uint8_t {
 			ok,
 			unknown_error,
@@ -50,7 +49,7 @@ namespace pgl {
 	};
 
 	// 42 bytes
-	struct create_room_request_message final : message {
+	struct create_room_request_message final {
 		room_name_type name{};
 		room_flags_bit_mask::flags_type flags{};
 		room_password_type password{};
@@ -58,7 +57,7 @@ namespace pgl {
 	};
 
 	// 5 bytes
-	struct create_room_reply final : message {
+	struct create_room_reply final {
 		enum class error_code : uint8_t {
 			ok,
 			unknown_error,
@@ -71,7 +70,7 @@ namespace pgl {
 	};
 
 	// 4 bytes
-	struct list_room_request_message final : message {
+	struct list_room_request_message final {
 		enum class sort_kind : uint8_t {
 			name_ascending,
 			name_descending,
@@ -86,7 +85,7 @@ namespace pgl {
 	};
 
 	// 237 bytes
-	struct list_room_reply final : message {
+	struct list_room_reply final {
 		enum class error_code : uint8_t {
 			ok,
 			unknown_error,
@@ -109,13 +108,13 @@ namespace pgl {
 	};
 
 	// 20 bytes
-	struct join_room_request_message final : message {
+	struct join_room_request_message final {
 		room_id_type room_id{};
 		room_password_type password{};
 	};
 
 	//19 bytes
-	struct join_room_reply_message final : message {
+	struct join_room_reply_message final {
 		enum class error_code : uint8_t {
 			ok,
 			unknown_error,
@@ -130,7 +129,7 @@ namespace pgl {
 	};
 
 	// 5 bytes
-	struct update_room_status_request_message final : message {
+	struct update_room_status_request_message final {
 		enum class status : uint8_t { open, close, remove };
 
 		room_id_type room_id{};
@@ -138,7 +137,7 @@ namespace pgl {
 	};
 
 	// 1 bytes
-	struct update_room_status_reply_message final : message {
+	struct update_room_status_reply_message final {
 		enum class error_code : uint8_t {
 			ok,
 			unknown_error,
@@ -148,7 +147,7 @@ namespace pgl {
 		error_code error_code{};
 	};
 
-	struct random_match_request_message final : message {
+	struct random_match_request_message final {
 		enum class error_code : uint8_t {
 			ok,
 			unknown_error

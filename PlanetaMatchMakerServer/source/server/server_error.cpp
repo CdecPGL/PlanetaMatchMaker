@@ -22,4 +22,9 @@ namespace pgl {
 		}
 		return get_server_error_message(error_code_);
 	}
+
+	std::ostream& operator<<(std::ostream& os, const server_error& error) {
+		os << error.get_message();
+		return os;
+	}
 }

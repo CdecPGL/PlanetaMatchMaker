@@ -12,7 +12,7 @@ int main() {
 	// prevent to stop server when all request are processed
 	asio::io_service::work work(io_service);
 	match_making_server server(server_dat, message_handler_invkr, io_service, ip_version::v4, 7777, 30);
-	for (auto i = 0; i < 10; ++i) {
+	for (auto i = 0; i < 1; ++i) {
 		server.start();
 	}
 	io_service.run();

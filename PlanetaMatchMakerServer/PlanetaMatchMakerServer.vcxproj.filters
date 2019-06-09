@@ -28,6 +28,9 @@
     <ClInclude Include="source\server\server_data.hpp" />
     <ClInclude Include="source\server\server_error.hpp" />
     <ClInclude Include="source\server\server_error_code.hpp" />
+    <ClInclude Include="source\server\server_constants.hpp" />
+    <ClInclude Include="source\data\data_constants.hpp" />
+    <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />
@@ -46,5 +49,6 @@
     <ClCompile Include="source\server\match_making_server.cpp" />
     <ClCompile Include="source\server\server_error.cpp" />
     <ClCompile Include="source\server\server_error_code.cpp" />
+    <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
   </ItemGroup>
 </Project>

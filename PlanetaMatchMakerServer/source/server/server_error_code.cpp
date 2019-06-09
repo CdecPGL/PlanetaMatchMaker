@@ -17,8 +17,17 @@ namespace pgl {
 			return "Message type is invalid.";
 		case server_error_code::message_type_mismatch:
 			return "Message type does not match to expected one.";
+		case server_error_code::version_mismatch:
+			return "Client version does not match to server version.";
+		case server_error_code::message_send_error:
+			return "Failed to send message to client.";
 		default:
 			return "Unknown";
 		}
+	}
+
+	std::ostream& operator<<(std::ostream& os, const server_error_code& error_code) {
+		os << get_server_error_message(error_code);
+		return os;
 	}
 }

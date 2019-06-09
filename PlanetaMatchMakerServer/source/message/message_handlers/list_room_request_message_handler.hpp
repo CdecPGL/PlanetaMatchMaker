@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "../messages.hpp"
 #include "../message_handler.hpp"
 
 namespace pgl {
