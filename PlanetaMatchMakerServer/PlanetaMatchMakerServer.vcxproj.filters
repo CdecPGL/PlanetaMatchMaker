@@ -31,6 +31,7 @@
     <ClInclude Include="source\server\server_constants.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
+    <ClInclude Include="source\utilities\log.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />
@@ -50,5 +51,6 @@
     <ClCompile Include="source\server\server_error.cpp" />
     <ClCompile Include="source\server\server_error_code.cpp" />
     <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
+    <ClCompile Include="source\utilities\log.cpp" />
   </ItemGroup>
 </Project>

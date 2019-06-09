@@ -2,6 +2,13 @@
 
 A match making server and client for network game.
 
+## Dependencies
+
+- Boost Library 1.70 (from vcpgk)
+- Date ed0368f (from vcpgk): https://github.com/HowardHinnant/date
+
+In Date ed0368f, add -DHAS_UNCAUGHT_EXCEPTIONS=1 to command line option to avoid an error in VS2019. Refer https://github.com/HowardHinnant/date/issues/435 .
+
 ## Functions
 
 - Create rooms and join rooms

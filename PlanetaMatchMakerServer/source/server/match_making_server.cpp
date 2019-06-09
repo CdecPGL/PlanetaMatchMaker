@@ -5,8 +5,7 @@
 
 #include "message/message_handler_invoker.hpp"
 #include "message/messages.hpp"
-#include "utilities/io_utility.hpp"
-#include "utilities/asio_stream_compatibility.hpp"
+#include "utilities/log.hpp"
 #include "match_making_server.hpp"
 #include "server_error.hpp"
 
@@ -30,15 +29,15 @@ namespace pgl {
 		  receive_buff_(buffer_size),
 		  timer_(io_service),
 		  time_out_seconds_(time_out_seconds) {
-		print_line("Server instance is generated with ip version ", NAMEOF_ENUM(ip_version), " and port number ",
-		           port_number, ".");
+		log(log_level::info, "Server instance is generated with IP ", NAMEOF_ENUM(ip_version),
+		    " and port ", port_number, ".");
 	}
 
 	void match_making_server::start() {
 		spawn(io_service_, [&](asio::yield_context yield)
 		{
 			try {
-				print_line("Start to accept.");
+				log(log_level::debug, "Start to accept.");
 				try {
 					acceptor_.async_accept(socket_, yield);
 				} catch (system::system_error& e) {
@@ -46,7 +45,8 @@ namespace pgl {
 					throw server_error(server_error_code::acception_failed, extra_message);
 				}
 
-				print_line("Accepted new connection. Start to receive message. @", socket_.remote_endpoint());
+				log_with_endpoint(log_level::info, socket_.remote_endpoint(),
+				                  "Accepted new connection. Start to receive message.");
 
 				// Authenticate client
 				message_handle_parameter message_handler_param{
@@ -59,19 +59,30 @@ namespace pgl {
 				while (true) {
 					message_handler_container_->handle_message(message_handler_param);
 				}
-			} catch (system::system_error& e) {
-				print_error_line("Unhandled error @", socket_.remote_endpoint(), ": ", e);
+			} catch (const system::system_error& e) {
+				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Unhandled error: ", e);
 				restart();
 			}
-			catch (server_error& e) {
-				print_error_line("Message handling error @", socket_.remote_endpoint(), ": ", e);
+			catch (const server_error& e) {
+				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
 				restart();
+			}catch (const logic_error& e) {
+				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Unhandled logic error: ", e.what());
+				restart();
+			}
+			catch (const std::exception& e) {
+				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), "Unknown error: ", e.what());
+				throw;
+			}
+			catch (...) {
+				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), "Unknown error.");
+				throw;
 			}
 		});
 	}
 
 	void match_making_server::restart() {
-		print_error_line("Restart server instance.");
+		log(log_level::error, "Restart server instance.");
 		socket_.close();
 		start();
 	}

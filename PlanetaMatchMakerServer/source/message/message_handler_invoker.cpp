@@ -6,7 +6,7 @@
 #include "nameof.hpp"
 
 #include "async/timer.hpp"
-#include "utilities/io_utility.hpp"
+#include "utilities/log.hpp"
 #include "server/server_error.hpp"
 
 using namespace std;
@@ -60,8 +60,8 @@ namespace pgl {
 
 		const auto message_handler = make_message_handler(header->message_type);
 		const auto message_size = message_handler->get_message_size();
-		print_line("Message header received. (type: ", NAMEOF_ENUM(header->message_type), ", size: ", message_size,
-		           ")");
+		log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Message header received. (type: ",
+		                  NAMEOF_ENUM(header->message_type), ", size: ", message_size, ")");
 
 		// Receive a body of message
 		try {
@@ -84,6 +84,7 @@ namespace pgl {
 		const auto* data = asio::buffer_cast<const char*>(param.receive_buff.data());
 		(*message_handler)(data, param);
 		param.receive_buff.consume(param.receive_buff.size());
-		print_line("Message processed. (type: ", NAMEOF_ENUM(header->message_type), ", size: ", message_size, ")");
+		log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Message processed. (type: ",
+		                  NAMEOF_ENUM(header->message_type), ", size: ", message_size, ")");
 	}
 }

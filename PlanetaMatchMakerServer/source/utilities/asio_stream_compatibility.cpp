@@ -3,7 +3,7 @@
 namespace pgl {
 	std::ostream& operator<<(std::ostream& os,
 	                         const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint) {
-		os << "IP address: " << endpoint.address().to_string() << ", port number: " << endpoint.port();
+		os << "IP address=" << endpoint.address().to_string() << ", port=" << endpoint.port();
 		return os;
 	}
 

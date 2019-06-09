@@ -6,7 +6,7 @@
 #include "utilities/string_utility.hpp"
 
 #include "authentication_request_message_handler.hpp"
-#include "utilities/io_utility.hpp"
+#include "utilities/log.hpp"
 
 using namespace boost;
 
@@ -19,9 +19,9 @@ namespace pgl {
 				server_version
 			};
 			if (message.version == server_version) {
-				print_line("Authentication succeeded.");
+				log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Authentication succeeded.");
 			} else {
-				print_line("Authentication failed.");
+				log_with_endpoint(log_level::error, param.socket.remote_endpoint(), "Authentication failed.");
 				reply.error_code = authentication_reply_message::error_code::version_mismatch;
 			}
 
@@ -29,7 +29,7 @@ namespace pgl {
 			{
 				async_write(param.socket, asio::buffer(&reply, sizeof(reply)), param.yield);
 			});
-			print_line("Reply authentication message.");
+			log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Reply authentication message.");
 		} catch (const system::system_error& e) {
 			throw server_error(server_error_code::message_send_error, e.code().message());
 		}
