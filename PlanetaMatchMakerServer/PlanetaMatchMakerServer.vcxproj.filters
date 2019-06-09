@@ -32,6 +32,8 @@
     <ClInclude Include="source\data\data_constants.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
     <ClInclude Include="source\utilities\log.hpp" />
+    <ClInclude Include="source\message\message_error_code.hpp" />
+    <ClInclude Include="source\async\read_write.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />

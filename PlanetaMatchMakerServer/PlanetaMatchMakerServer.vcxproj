@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="library\nameof.hpp" />
+    <ClInclude Include="source\async\read_write.hpp" />
     <ClInclude Include="source\async\timer.hpp" />
     <ClInclude Include="source\client\client_address.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="source\data\data_constants.hpp" />
     <ClInclude Include="source\data\thread_safe_data_container.h" />
     <ClInclude Include="source\datetime\datetime.hpp" />
+    <ClInclude Include="source\message\message_error_code.hpp" />
     <ClInclude Include="source\server\match_making_server.hpp" />
     <ClInclude Include="source\server\server_constants.hpp" />
     <ClInclude Include="source\server\server_data.hpp" />

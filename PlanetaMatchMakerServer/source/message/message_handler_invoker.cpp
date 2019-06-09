@@ -31,7 +31,7 @@ namespace pgl {
 		try {
 			execute_timed_async_operation(param.io_service, param.socket, param.timeout_seconds, [&]()
 			{
-				async_read(param.socket, param.receive_buff, asio::transfer_exactly(sizeof(message_header)),
+				async_read(param.socket, param.receive_buff, asio::transfer_exactly(sizeof(request_message_header)),
 				           param.yield);
 			});
 		} catch (const system::system_error& e) {
@@ -45,8 +45,8 @@ namespace pgl {
 		}
 
 		// Analyze received message header
-		auto header = asio::buffer_cast<const message_header*>(param.receive_buff.data());
-		param.receive_buff.consume(sizeof(message_header));
+		auto header = asio::buffer_cast<const request_message_header*>(param.receive_buff.data());
+		param.receive_buff.consume(sizeof(request_message_header));
 		if (!is_handler_exist(header->message_type)) {
 			throw server_error(server_error_code::invalid_message_type,
 			                   generate_string(static_cast<int>(header->message_type)));

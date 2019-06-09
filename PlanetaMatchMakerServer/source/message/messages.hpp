@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "message/message_error_code.hpp"
 #include "datetime/datetime.hpp"
 #include "client/client_address.hpp"
 #include "room/room_constants.hpp"
@@ -23,8 +24,14 @@ namespace pgl {
 	};
 
 	// 1 bytes
-	struct message_header final {
+	struct request_message_header final {
 		message_type message_type{};
+	};
+
+	// 2 bytes
+	struct reply_message_header final {
+		message_type message_type{};
+		message_error_code error_code{};
 	};
 
 	// size of message should be less than 256 bytes
@@ -34,17 +41,8 @@ namespace pgl {
 		version_type version{};
 	};
 
-	// 3 bytes
+	// 2 bytes
 	struct authentication_reply_message final {
-		enum class error_code : uint8_t {
-			ok,
-			unknown_error,
-			version_mismatch,
-			authentication_error,
-			denied // when in black list
-		};
-
-		error_code error_code{};
 		version_type version{};
 	};
 
@@ -56,16 +54,8 @@ namespace pgl {
 		uint8_t max_player_count{};
 	};
 
-	// 5 bytes
+	// 4 bytes
 	struct create_room_reply final {
-		enum class error_code : uint8_t {
-			ok,
-			unknown_error,
-			room_name_duplicated,
-			room_count_reaches_limit
-		};
-
-		error_code error_code{};
 		room_id_type room_id{};
 	};
 
@@ -84,13 +74,8 @@ namespace pgl {
 		uint8_t flags{}; //filter conditions about room
 	};
 
-	// 237 bytes
+	// 236 bytes
 	struct list_room_reply final {
-		enum class error_code : uint8_t {
-			ok,
-			unknown_error,
-		};
-
 		//39 bytes
 		struct room_info {
 			room_id_type room_id{};
@@ -101,7 +86,6 @@ namespace pgl {
 			datetime create_datetime{};
 		};
 
-		error_code error_code{};
 		uint8_t total_room_count{};
 		uint8_t reply_room_count{};
 		room_info room_info_list[6]{};
@@ -113,18 +97,8 @@ namespace pgl {
 		room_password_type password{};
 	};
 
-	//19 bytes
+	//18 bytes
 	struct join_room_reply_message final {
-		enum class error_code : uint8_t {
-			ok,
-			unknown_error,
-			room_not_exist,
-			permission_denied,
-			join_rejected,
-			player_count_reaches_limit
-		};
-
-		error_code error_code{};
 		client_address host_address{};
 	};
 
@@ -138,21 +112,7 @@ namespace pgl {
 
 	// 1 bytes
 	struct update_room_status_reply_message final {
-		enum class error_code : uint8_t {
-			ok,
-			unknown_error,
-			room_not_exist
-		};
-
-		error_code error_code{};
 	};
 
-	struct random_match_request_message final {
-		enum class error_code : uint8_t {
-			ok,
-			unknown_error
-		};
-
-		error_code error_code{};
-	};
+	struct random_match_request_message final { };
 }
