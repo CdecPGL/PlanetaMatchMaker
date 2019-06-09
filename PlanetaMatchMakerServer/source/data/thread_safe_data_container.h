@@ -10,7 +10,7 @@
 namespace pgl {
 	// A thread safe container of data
 	template <typename TId, typename TData>
-	class thread_safe_data_container final : boost::noncopyable {
+	class thread_safe_data_container : boost::noncopyable {
 	public:
 		using id_param_type = typename boost::call_traits<TId>::param_type;
 		using data_param_type = typename boost::call_traits<TData>::param_type;
@@ -33,6 +33,19 @@ namespace pgl {
 		void update_data(id_param_type id, data_param_type data) {
 			std::shared_lock<decltype(mutex_)> lock(mutex_);
 			data_map_.at(id) = data;
+		}
+
+	protected:
+		const std::unordered_map<TId, std::atomic<TData>>& get_data_map() const {
+			return data_map_;
+		}
+
+		std::shared_mutex& get_mutex() {
+			return mutex_;
+		}
+
+		const std::shared_mutex& get_mutex() const {
+			return mutex_;
 		}
 
 	private:
