@@ -1,6 +1,10 @@
 #include "client_address.hpp"
 
 namespace pgl {
+	bool client_address::operator==(const client_address& other) const {
+		return ip_address == other.ip_address && port_number == other.port_number;
+	}
+
 	client_address client_address::make_from_endpoint(
 		const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint) {
 		client_address client_address;
