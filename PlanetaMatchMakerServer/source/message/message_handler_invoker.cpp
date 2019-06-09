@@ -61,7 +61,7 @@ namespace pgl {
 		const auto message_handler = make_message_handler(header->message_type);
 		const auto message_size = message_handler->get_message_size();
 		log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Message header received. (type: ",
-		                  NAMEOF_ENUM(header->message_type), ", size: ", message_size, ")");
+		                  NAMEOF_ENUM(header->message_type), ", size: ", sizeof(header), ")");
 
 		// Receive a body of message
 		try {

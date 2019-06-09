@@ -35,7 +35,9 @@ namespace pgl {
 				1
 			};
 			reply.room_id = param.server_data->room_data_container.assign_id_and_add_data(room_data);
-			log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "New room is created with id: ",
+			log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "New room \"",
+			                  std::string(reinterpret_cast<const char*>(room_data.name.data())),
+			                  "\" is created with id: ",
 			                  reply.room_id);
 		}
 
