@@ -14,8 +14,8 @@ namespace pgl {
 namespace boost {
 	inline size_t hash_value(const pgl::client_data& client_data) {
 		size_t seed = 0;
-		boost::hash_combine(seed, boost::hash_value(client_data.address));
-		boost::hash_combine(seed, boost::hash_value(client_data.last_communicate_datetime));
+		hash_combine(seed, hash_value(client_data.address));
+		hash_combine(seed, hash_value(client_data.last_communicate_datetime));
 		return seed;
 	}
 }

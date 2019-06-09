@@ -165,6 +165,7 @@
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\client\client_data.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
+    <ClInclude Include="source\data\random_id_generator.hpp" />
     <ClInclude Include="source\data\thread_safe_data_container.h" />
     <ClInclude Include="source\datetime\datetime.hpp" />
     <ClInclude Include="source\message\message_error_code.hpp" />
@@ -186,7 +187,6 @@
     <ClInclude Include="source\network\transport_layer.hpp" />
     <ClInclude Include="source\room\room_constants.hpp" />
     <ClInclude Include="source\room\room_data.hpp" />
-    <ClInclude Include="source\room\room_data_container.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
     <ClInclude Include="source\utilities\io_utility.hpp" />
     <ClInclude Include="source\utilities\log.hpp" />
@@ -209,7 +209,6 @@
     <ClCompile Include="source\server\server_error.cpp" />
     <ClCompile Include="source\server\server_error_code.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />
-    <ClCompile Include="source\room\room_data_container.cpp" />
     <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
     <ClCompile Include="source\utilities\log.cpp" />
   </ItemGroup>
