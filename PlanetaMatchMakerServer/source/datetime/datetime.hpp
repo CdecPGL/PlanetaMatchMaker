@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
-#include "client/client_address.hpp"
+#include <boost/functional/hash.hpp>
 
 namespace pgl {
 	// 8 bytes
@@ -24,14 +25,18 @@ namespace pgl {
 		[[nodiscard]] int get_second() const;
 
 		[[nodiscard]] size_t get_hash() const {
-			return boost::hash_value(date_);
+			return boost::hash_value(data_);
 		}
 
+		static datetime now();
+
 	private:
-		uint64_t date_{};
+		uint64_t data_{};
 
 		[[nodiscard]] int get_from_date(int start_bit, int bit_count) const;
 	};
+
+	std::string get_time_string();
 }
 
 namespace boost {

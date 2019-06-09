@@ -1,22 +1,15 @@
-#include <chrono>
-#include <ctime>
 #include <iostream>
 
 #include "nameof.hpp"
 
+#include "datetime/datetime.hpp"
 #include "log.hpp"
-#include "date/date.h"
 
 using namespace std;
 using namespace boost;
 
 namespace pgl {
 	static log_level output_log_level = log_level::info;
-
-	string get_time_string() {
-		const auto now_time = std::chrono::system_clock::now();
-		return date::format("%F %T %Z", now_time);
-	}
 
 	void set_output_log_level(const log_level level) {
 		output_log_level = level;

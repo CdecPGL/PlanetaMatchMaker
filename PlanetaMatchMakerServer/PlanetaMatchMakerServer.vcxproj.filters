@@ -54,5 +54,6 @@
     <ClCompile Include="source\server\server_error_code.cpp" />
     <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
     <ClCompile Include="source\utilities\log.cpp" />
+    <ClCompile Include="source\client\client_address.cpp" />
   </ItemGroup>
 </Project>

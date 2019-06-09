@@ -6,7 +6,6 @@
 namespace pgl {
 	enum class log_level { debug, info, warning, error, fatal };
 
-	std::string get_time_string();
 	void set_output_log_level(log_level level);
 
 	void log_impl(log_level level, bool force, std::string&& log_header, std::string&& log_body);

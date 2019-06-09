@@ -194,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\async\timer.cpp" />
+    <ClCompile Include="source\client\client_address.cpp" />
     <ClCompile Include="source\client\client_data.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main.cpp" />
