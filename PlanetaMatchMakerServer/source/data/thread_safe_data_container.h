@@ -48,7 +48,7 @@ namespace pgl {
 			return id;
 		}
 
-		std::vector<Data> get_range_data(const int start_idx, int count,
+		std::vector<Data> get_range_data(const size_t start_idx, size_t count,
 		                                 std::function<bool(data_param_type,
 		                                                    data_param_type)>&& compare_function) const {
 			std::shared_lock lock(mutex_);
@@ -58,7 +58,7 @@ namespace pgl {
 				data.push_back(pair.second.load());
 			}
 			std::sort(data.begin(), data.end(), compare_function);
-			count = std::min(count, static_cast<int>(data.size()) - start_idx - 1);
+			count = std::min(count, data.size() - start_idx - 1);
 			std::vector<Data> result(count);
 			const auto end_idx = start_idx + count - 1;
 			for (auto i = start_idx; i <= end_idx; ++i) {
