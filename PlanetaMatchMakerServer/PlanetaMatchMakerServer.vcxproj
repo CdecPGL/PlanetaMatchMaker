@@ -199,6 +199,7 @@
     <ClCompile Include="source\client\client_data.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\room\room_data.cpp" />
     <ClCompile Include="source\room\room_data_container.cpp" />
     <ClCompile Include="source\server\match_making_server.cpp" />
     <ClCompile Include="source\message\message_handler.cpp" />

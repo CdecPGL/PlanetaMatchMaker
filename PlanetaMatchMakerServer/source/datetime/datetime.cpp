@@ -63,6 +63,18 @@ namespace pgl {
 		return get_from_date(second_start_bit, second_bit_count);
 	}
 
+	size_t datetime::get_hash() const {
+		return boost::hash_value(data_);
+	}
+
+	bool datetime::operator<(const datetime& other) const {
+		return data_ < other.data_;
+	}
+
+	bool datetime::operator==(const datetime& other) const {
+		return data_ == other.data_;
+	}
+
 	datetime datetime::now() {
 		const auto date_time = boost::posix_time::second_clock::universal_time();
 		const auto date = date_time.date();

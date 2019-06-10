@@ -8,7 +8,7 @@
 
 namespace pgl {
 	struct room_data final {
-		room_id_type room_id;
+		room_id_type room_id{};
 		room_name_type name{};
 		uint8_t flags{};
 		room_password_type password{};
@@ -17,4 +17,13 @@ namespace pgl {
 		client_address host_address{};
 		uint8_t current_player_count{};
 	};
+
+	enum class room_data_sort_kind : uint8_t {
+		name_ascending,
+		name_descending,
+		create_datetime_ascending,
+		create_datetime_descending
+	};
+
+	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(room_data_sort_kind sort_kind);
 }

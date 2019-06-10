@@ -7,6 +7,7 @@
 #include "client/client_address.hpp"
 #include "room/room_constants.hpp"
 #include "data/data_constants.hpp"
+#include "room/room_data.hpp"
 
 namespace pgl {
 	enum class message_type : uint8_t {
@@ -61,16 +62,9 @@ namespace pgl {
 
 	// 4 bytes
 	struct list_room_request_message final {
-		enum class sort_kind : uint8_t {
-			name_ascending,
-			name_descending,
-			create_datetime_ascending,
-			create_datetime_descending
-		};
-
 		uint8_t start_index{};
 		uint8_t end_index{};
-		sort_kind sort_kind{};
+		room_data_sort_kind sort_kind{};
 		uint8_t flags{}; //filter conditions about room
 	};
 
@@ -111,8 +105,7 @@ namespace pgl {
 	};
 
 	// 1 bytes
-	struct update_room_status_reply_message final {
-	};
+	struct update_room_status_reply_message final { };
 
 	struct random_match_request_message final { };
 }

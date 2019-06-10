@@ -56,5 +56,6 @@
     <ClCompile Include="source\utilities\log.cpp" />
     <ClCompile Include="source\client\client_address.cpp" />
     <ClCompile Include="source\room\room_data_container.cpp" />
+    <ClCompile Include="source\room\room_data.cpp" />
   </ItemGroup>
 </Project>

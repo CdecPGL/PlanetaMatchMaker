@@ -5,6 +5,7 @@
 #include <shared_mutex>
 #include <functional>
 #include <vector>
+#include <algorithm>
 
 #include <boost/noncopyable.hpp>
 #include <boost/call_traits.hpp>
@@ -47,10 +48,24 @@ namespace pgl {
 			return id;
 		}
 
-		/*std::vector<Data> get_data_range(int start_idx, int count, std::function<bool()>&& compare_function) const {
+		std::vector<Data> get_range_data(const int start_idx, int count,
+		                                 std::function<bool(data_param_type,
+		                                                    data_param_type)>&& compare_function) const {
 			std::shared_lock lock(mutex_);
-
-		}*/
+			std::vector<Data> data;
+			data.reserve(data_map_.size());
+			for (auto&& pair : data_map_) {
+				data.push_back(pair.second.load());
+			}
+			std::sort(data.begin(), data.end(), compare_function);
+			count = std::min(count, static_cast<int>(data.size()) - start_idx - 1);
+			std::vector<Data> result(count);
+			const auto end_idx = start_idx + count - 1;
+			for (auto i = start_idx; i <= end_idx; ++i) {
+				result[i - start_idx] = data[i];
+			}
+			return result;
+		}
 
 		void update_data(id_param_type id, data_param_type data) {
 			std::shared_lock lock(mutex_);

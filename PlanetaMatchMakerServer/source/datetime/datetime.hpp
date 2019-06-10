@@ -4,10 +4,11 @@
 #include <string>
 
 #include <boost/functional/hash.hpp>
+#include <boost/operators.hpp>
 
 namespace pgl {
 	// 8 bytes
-	struct datetime final {
+	struct datetime final : private boost::less_than_comparable<datetime>, boost::equality_comparable<datetime> {
 		datetime() = default;
 		datetime(int year, int month, int day);
 		datetime(int year, int month, int day, int hour, int minuit, int second);
@@ -24,9 +25,11 @@ namespace pgl {
 
 		[[nodiscard]] int get_second() const;
 
-		[[nodiscard]] size_t get_hash() const {
-			return boost::hash_value(data_);
-		}
+		[[nodiscard]] size_t get_hash() const;
+
+		bool operator<(const datetime& other) const;
+
+		bool operator==(const datetime& other) const;
 
 		static datetime now();
 
