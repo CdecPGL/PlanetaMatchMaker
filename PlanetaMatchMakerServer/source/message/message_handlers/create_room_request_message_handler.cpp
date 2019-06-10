@@ -25,7 +25,8 @@ namespace pgl {
 			header.error_code = message_error_code::permission_denied;
 		} else {
 			// Create room
-			const room_data room_data{
+			room_data room_data{
+				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
 				message.name,
 				message.flags,
 				message.password,

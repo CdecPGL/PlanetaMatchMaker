@@ -8,6 +8,7 @@
 
 namespace pgl {
 	struct room_data final {
+		room_id_type room_id;
 		room_name_type name{};
 		uint8_t flags{};
 		room_password_type password{};

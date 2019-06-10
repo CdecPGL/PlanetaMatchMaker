@@ -34,6 +34,7 @@
     <ClInclude Include="source\message\message_error_code.hpp" />
     <ClInclude Include="source\async\read_write.hpp" />
     <ClInclude Include="source\data\random_id_generator.hpp" />
+    <ClInclude Include="source\room\room_data_container.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />
@@ -54,5 +55,6 @@
     <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
     <ClCompile Include="source\utilities\log.cpp" />
     <ClCompile Include="source\client\client_address.cpp" />
+    <ClCompile Include="source\room\room_data_container.cpp" />
   </ItemGroup>
 </Project>
