@@ -37,6 +37,7 @@
     <ClInclude Include="source\room\room_data_container.hpp" />
     <ClInclude Include="source\message\message_constants.hpp" />
     <ClInclude Include="source\utilities\fixed_string.hpp" />
+    <ClInclude Include="source\message\message_handlers\list_room_group_request_message_handler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />
@@ -60,5 +61,6 @@
     <ClCompile Include="source\room\room_data_container.cpp" />
     <ClCompile Include="source\room\room_data.cpp" />
     <ClCompile Include="source\server\server_data.cpp" />
+    <ClCompile Include="source\message\message_handlers\list_room_group_request_message_handler.cpp" />
   </ItemGroup>
 </Project>
