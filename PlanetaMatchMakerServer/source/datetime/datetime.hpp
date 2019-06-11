@@ -13,17 +13,17 @@ namespace pgl {
 		datetime(int year, int month, int day);
 		datetime(int year, int month, int day, int hour, int minuit, int second);
 
-		[[nodiscard]] int get_year() const;
+		[[nodiscard]] int year() const;
 
-		[[nodiscard]] int get_month() const;
+		[[nodiscard]] int month() const;
 
-		[[nodiscard]] int get_day() const;
+		[[nodiscard]] int day() const;
 
-		[[nodiscard]] int get_hour() const;
+		[[nodiscard]] int hour() const;
 
-		[[nodiscard]] int get_minuit() const;
+		[[nodiscard]] int minuit() const;
 
-		[[nodiscard]] int get_second() const;
+		[[nodiscard]] int second() const;
 
 		[[nodiscard]] size_t get_hash() const;
 

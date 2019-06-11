@@ -39,27 +39,27 @@ namespace pgl {
 		get_located_data(second, second_start_bit, second_bit_count)
 	) {}
 
-	int datetime::get_year() const {
+	int datetime::year() const {
 		return get_from_date(year_start_bit, year_bit_count);
 	}
 
-	int datetime::get_month() const {
+	int datetime::month() const {
 		return get_from_date(month_start_bit, month_bit_count);
 	}
 
-	int datetime::get_day() const {
+	int datetime::day() const {
 		return get_from_date(day_start_bit, day_bit_count);
 	}
 
-	int datetime::get_hour() const {
+	int datetime::hour() const {
 		return get_from_date(hour_start_bit, hour_bit_count);
 	}
 
-	int datetime::get_minuit() const {
+	int datetime::minuit() const {
 		return get_from_date(minuit_start_bit, minuit_bit_count);
 	}
 
-	int datetime::get_second() const {
+	int datetime::second() const {
 		return get_from_date(second_start_bit, second_bit_count);
 	}
 
