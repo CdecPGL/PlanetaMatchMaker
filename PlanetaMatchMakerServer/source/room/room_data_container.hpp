@@ -8,10 +8,11 @@
 namespace pgl {
 	// A thread safe container of room data
 	class room_data_container final {
+	public:
 		using container_type = thread_safe_data_container<room_id_type, room_data>;
 		using id_param_type = container_type::id_param_type;
 		using data_param_type = container_type::data_param_type;
-	public:
+
 		[[nodiscard]] bool is_data_exist(id_param_type id) const {
 			return container_.is_data_exist(id);
 		}

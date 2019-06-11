@@ -10,7 +10,7 @@
 
 namespace pgl {
 	class message_handler_invoker;
-	struct server_data;
+	class server_data;
 
 	class match_making_server final : boost::noncopyable {
 	public:

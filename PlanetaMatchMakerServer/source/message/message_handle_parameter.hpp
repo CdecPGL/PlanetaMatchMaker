@@ -6,7 +6,7 @@
 #include <boost/asio/spawn.hpp>
 
 namespace pgl {
-	struct server_data;
+	class server_data;
 
 	struct message_handle_parameter final {
 		boost::asio::io_service& io_service;

@@ -18,6 +18,11 @@ namespace pgl {
 		uint8_t current_player_count{};
 	};
 
+	// 24 bytes
+	struct room_group_data final {
+		room_group_name_type name{};
+	};
+
 	enum class room_data_sort_kind : uint8_t {
 		name_ascending,
 		name_descending,
@@ -25,5 +30,6 @@ namespace pgl {
 		create_datetime_descending
 	};
 
-	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(room_data_sort_kind sort_kind);
+	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(
+		room_data_sort_kind sort_kind);
 }

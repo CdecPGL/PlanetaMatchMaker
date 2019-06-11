@@ -168,6 +168,7 @@
     <ClInclude Include="source\data\random_id_generator.hpp" />
     <ClInclude Include="source\data\thread_safe_data_container.h" />
     <ClInclude Include="source\datetime\datetime.hpp" />
+    <ClInclude Include="source\message\message_constants.hpp" />
     <ClInclude Include="source\message\message_error_code.hpp" />
     <ClInclude Include="source\room\room_data_container.hpp" />
     <ClInclude Include="source\server\match_making_server.hpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="source\room\room_constants.hpp" />
     <ClInclude Include="source\room\room_data.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
+    <ClInclude Include="source\utilities\fixed_string.hpp" />
     <ClInclude Include="source\utilities\io_utility.hpp" />
     <ClInclude Include="source\utilities\log.hpp" />
     <ClInclude Include="source\utilities\string_utility.hpp" />
@@ -209,6 +211,7 @@
     <ClCompile Include="source\message\message_handlers\list_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handler_invoker.cpp" />
     <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />
+    <ClCompile Include="source\server\server_data.cpp" />
     <ClCompile Include="source\server\server_error.cpp" />
     <ClCompile Include="source\server\server_error_code.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />

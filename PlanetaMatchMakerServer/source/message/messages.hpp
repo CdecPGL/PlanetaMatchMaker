@@ -8,11 +8,14 @@
 #include "room/room_constants.hpp"
 #include "data/data_constants.hpp"
 #include "room/room_data.hpp"
+#include "message_constants.hpp"
 
 namespace pgl {
 	enum class message_type : uint8_t {
 		authentication_request,
 		authentication_reply,
+		list_room_group_request,
+		list_room_group_reply,
 		create_room_request,
 		create_room_reply,
 		list_room_request,
@@ -35,7 +38,7 @@ namespace pgl {
 		message_error_code error_code{};
 	};
 
-	// size of message should be less than 256 bytes
+	// size of message should be less than (256 bytes - header size)
 
 	// 2 bytes
 	struct authentication_request_message final {
@@ -47,8 +50,24 @@ namespace pgl {
 		version_type version{};
 	};
 
-	// 42 bytes
+	// 1 bytes
+	struct list_room_group_request_message final {
+		uint8_t dummy{};
+	};
+
+	// 241 bytes
+	struct list_room_group_reply_message final {
+		struct room_group_info {
+			room_group_name_type name;
+		};
+
+		uint8_t room_group_count{};
+		std::array<room_group_info, room_group_max_count> room_group_info_list{};
+	};
+
+	// 43 bytes
 	struct create_room_request_message final {
+		uint8_t group_index{};
 		room_name_type name{};
 		room_flags_bit_mask::flags_type flags{};
 		room_password_type password{};
@@ -60,8 +79,9 @@ namespace pgl {
 		room_id_type room_id{};
 	};
 
-	// 4 bytes
+	// 5 bytes
 	struct list_room_request_message final {
+		uint8_t group_index{};
 		uint8_t start_index{};
 		uint8_t end_index{};
 		room_data_sort_kind sort_kind{};
@@ -82,11 +102,12 @@ namespace pgl {
 
 		uint8_t total_room_count{};
 		uint8_t reply_room_count{};
-		room_info room_info_list[6]{};
+		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 	};
 
-	// 20 bytes
+	// 21 bytes
 	struct join_room_request_message final {
+		uint8_t group_index{};
 		room_id_type room_id{};
 		room_password_type password{};
 	};
@@ -96,10 +117,11 @@ namespace pgl {
 		client_address host_address{};
 	};
 
-	// 5 bytes
+	// 6 bytes
 	struct update_room_status_request_message final {
 		enum class status : uint8_t { open, close, remove };
 
+		uint8_t group_index{};
 		room_id_type room_id{};
 		status status{};
 	};

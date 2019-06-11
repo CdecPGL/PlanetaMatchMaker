@@ -35,6 +35,8 @@
     <ClInclude Include="source\async\read_write.hpp" />
     <ClInclude Include="source\data\random_id_generator.hpp" />
     <ClInclude Include="source\room\room_data_container.hpp" />
+    <ClInclude Include="source\message\message_constants.hpp" />
+    <ClInclude Include="source\utilities\fixed_string.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />
@@ -57,5 +59,6 @@
     <ClCompile Include="source\client\client_address.cpp" />
     <ClCompile Include="source\room\room_data_container.cpp" />
     <ClCompile Include="source\room\room_data.cpp" />
+    <ClCompile Include="source\server\server_data.cpp" />
   </ItemGroup>
 </Project>

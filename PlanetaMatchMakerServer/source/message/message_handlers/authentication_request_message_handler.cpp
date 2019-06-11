@@ -33,11 +33,11 @@ namespace pgl {
 
 				log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Authentication succeeded.");
 				const auto client_address = client_address::make_from_endpoint(param.socket.remote_endpoint());
-				if (param.server_data->client_data_container.is_data_exist(client_address)) {
-					param.server_data->client_data_container.update_data(client_address, client_data);
+				if (param.server_data->client_data_container().is_data_exist(client_address)) {
+					param.server_data->client_data_container().update_data(client_address, client_data);
 					log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Client data updated.");
 				} else {
-					param.server_data->client_data_container.add_data(client_address, client_data);
+					param.server_data->client_data_container().add_data(client_address, client_data);
 					log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Client data registered.");
 				}
 			} else {
