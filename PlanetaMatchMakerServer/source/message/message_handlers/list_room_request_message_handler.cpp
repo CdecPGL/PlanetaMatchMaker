@@ -5,6 +5,7 @@
 #include "server/server_data.hpp"
 #include "server/server_error.hpp"
 #include "utilities/string_utility.hpp"
+#include "utilities/static_cast_with_assertion.hpp"
 
 using namespace std;
 using namespace boost;
@@ -39,25 +40,27 @@ namespace pgl {
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 		                                                         message.end_index - message.start_index + 1,
 		                                                         message.sort_kind);
-		assert(room_data_container.size() <= std::numeric_limits<uint8_t>::max());
-		assert(room_data_list.size() <= std::numeric_limits<uint8_t>::max());
 		list_room_reply reply{
-			static_cast<uint8_t>(room_data_container.size()),
-			static_cast<uint8_t>(room_data_list.size()),
+			static_cast_with_range_assertion<uint8_t>(room_data_container.size()),
+			static_cast_with_range_assertion<uint8_t>(room_data_list.size()),
 			{},
 			{}
 		};
 
 		try {
-			const auto separation = static_cast<int>((room_data_list.size() / list_room_reply_room_info_count - 1) /
+			const auto separation = static_cast_with_range_assertion<int>(
+				(room_data_list.size() / list_room_reply_room_info_count - 1) /
 				list_room_reply_room_info_count);
 			for (auto i = 0; i < separation; ++i) {
 				const auto send_room_count = i == separation - 1
-					                             ? static_cast<uint8_t>(static_cast<int>(room_data_list.size()) -
+					                             ? static_cast_with_range_assertion<uint8_t>(
+						                             static_cast_with_range_assertion<int>(room_data_list.size()) -
 						                             list_room_reply_room_info_count * i)
 					                             : list_room_reply_room_info_count;
-				reply.reply_room_start_index = static_cast<uint8_t>(message.start_index + i * separation);
-				reply.reply_room_end_index = static_cast<uint8_t>(message.start_index + i * separation + send_room_count
+				reply.reply_room_start_index = static_cast_with_range_assertion<uint8_t>(
+					message.start_index + i * separation);
+				reply.reply_room_end_index = static_cast_with_range_assertion<uint8_t>(
+					message.start_index + i * separation + send_room_count
 					- 1);
 				for (auto j = 0; j < list_room_reply_room_info_count; ++j) {
 					const auto send_room_idx = i * separation + j;

@@ -8,6 +8,7 @@
 #include "utilities/log.hpp"
 #include "match_making_server.hpp"
 #include "server_error.hpp"
+#include "utilities/static_cast_with_assertion.hpp"
 
 using namespace std;
 using namespace boost;
@@ -66,9 +67,9 @@ namespace pgl {
 			catch (const server_error& e) {
 				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
 				restart();
-			}catch (const logic_error& e) {
-				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Unhandled logic error: ", e.what());
-				restart();
+			}catch (const static_cast_assertion_error& e) {
+				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "static_cast error: ", e.what());
+				throw;
 			}
 			catch (const std::exception& e) {
 				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), "Unknown error: ", e.what());

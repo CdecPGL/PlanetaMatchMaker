@@ -5,6 +5,7 @@
 #include "async/read_write.hpp"
 #include "server/server_error.hpp"
 #include "utilities/log.hpp"
+#include "utilities/static_cast_with_assertion.hpp"
 #include "list_room_group_request_message_handler.hpp"
 
 using namespace std;
@@ -26,7 +27,7 @@ namespace pgl {
 			               return list_room_group_reply_message::room_group_info{data.name};
 		               });
 		list_room_group_reply_message reply{
-			static_cast<uint8_t>(room_group_data_list.size()),
+			static_cast_with_range_assertion<uint8_t>(room_group_data_list.size()),
 			std::move(room_group_info_list)
 		};
 
