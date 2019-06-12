@@ -35,7 +35,7 @@ namespace pgl {
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
 
-		const auto& room_data_container = param.server_data->room_data_container(message.group_index);
+		const auto& room_data_container = param.server_data->get_room_data_container(message.group_index);
 
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 		                                                         message.end_index - message.start_index + 1,

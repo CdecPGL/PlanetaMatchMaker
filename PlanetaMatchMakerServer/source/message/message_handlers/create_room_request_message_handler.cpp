@@ -35,7 +35,7 @@ namespace pgl {
 				client_address::make_from_endpoint(param.socket.remote_endpoint()),
 				1
 			};
-			reply.room_id = param.server_data->room_data_container(message.group_index).assign_id_and_add_data(
+			reply.room_id = param.server_data->get_room_data_container(message.group_index).assign_id_and_add_data(
 				room_data);
 			log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "New room \"", room_data.name,
 			                  "\" is created in group ", message.group_index, " with id: ", reply.room_id);
