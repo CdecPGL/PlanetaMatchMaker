@@ -12,16 +12,24 @@ namespace pgl {
 		               [](const auto& room_group_name) { return room_group_data{room_group_name}; });
 	}
 
+	size_t server_data::room_group_count() const {
+		return room_data_container_list_.size();
+	}
+
+	bool server_data::is_valid_room_group_index(const size_t room_group_index) const {
+		return 0 <= room_group_index && room_group_index < room_group_count();
+	}
+
 	const server_data::room_group_data_list_type& server_data::get_room_data_group_list() const {
 		return room_group_data_list_;
 	}
 
 	const server_data::room_data_container_type& server_data::get_room_data_container(
-		const uint8_t room_group_idx) const {
+		const size_t room_group_idx) const {
 		return room_data_container_list_.at(room_group_idx);
 	}
 
-	server_data::room_data_container_type& server_data::get_room_data_container(const uint8_t room_group_idx) {
+	server_data::room_data_container_type& server_data::get_room_data_container(const size_t room_group_idx) {
 		return room_data_container_list_.at(room_group_idx);
 	}
 

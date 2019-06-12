@@ -18,10 +18,10 @@ namespace pgl {
 			message_error_code::ok
 		};
 
-		const auto room_group_count = param.server_data->room_data_group_list().size();
-		if (message.group_index < 0 || room_group_count <= message.group_index) {
-			const auto extra_message = generate_string("Range of valid room group index is 0 to ", room_group_count,
-			                                           " but \"", message.group_index, "\" is requested.");
+		if (param.server_data->is_valid_room_group_index(message.group_index)) {
+			const auto extra_message = generate_string("Range of valid room group index is 0 to ",
+			                                           param.server_data->room_group_count(), " but \"",
+			                                           message.group_index, "\" is requested.");
 			header.error_code = message_error_code::room_group_index_out_of_range;
 			try {
 				execute_timed_async_operation(param.io_service, param.socket, param.timeout_seconds, [&]()

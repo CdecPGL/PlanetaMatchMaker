@@ -16,11 +16,15 @@ namespace pgl {
 		explicit
 		server_data(std::vector<room_group_name_type>&& room_groups);
 
+		size_t room_group_count()const;
+
+		bool is_valid_room_group_index(size_t room_group_index)const;
+
 		const room_group_data_list_type& get_room_data_group_list() const;
 
-		const room_data_container_type& get_room_data_container(uint8_t room_group_idx) const;
+		const room_data_container_type& get_room_data_container(size_t room_group_idx) const;
 
-		room_data_container_type& get_room_data_container(uint8_t room_group_idx);
+		room_data_container_type& get_room_data_container(size_t room_group_idx);
 
 		const client_data_container_type& client_data_container() const;
 
