@@ -50,9 +50,9 @@ namespace pgl {
 				                  "Accepted new connection. Start to receive message.");
 
 				// Authenticate client
-				message_handle_parameter message_handler_param{
+				const auto message_handler_param = std::make_shared<message_handle_parameter>(message_handle_parameter{
 					io_service_, socket_, receive_buff_, server_data_, yield, chrono::seconds(time_out_seconds_)
-				};
+				});
 				message_handler_container_->handle_specific_message(message_type::authentication_request,
 				                                                    message_handler_param);
 

@@ -12,21 +12,21 @@ using namespace boost;
 
 namespace pgl {
 	void list_room_request_message_handler::handle_message(const list_room_request_message& message,
-	                                                       message_handle_parameter& param) {
+	                                                       std::shared_ptr<message_handle_parameter> param) {
 		reply_message_header header{
 			message_type::list_room_reply,
 			message_error_code::ok
 		};
 
-		if (param.server_data->is_valid_room_group_index(message.group_index)) {
+		if (param->server_data->is_valid_room_group_index(message.group_index)) {
 			const auto extra_message = generate_string("Range of valid room group index is 0 to ",
-			                                           param.server_data->room_group_count(), " but \"",
+			                                           param->server_data->room_group_count(), " but \"",
 			                                           message.group_index, "\" is requested.");
 			header.error_code = message_error_code::room_group_index_out_of_range;
 			try {
-				execute_timed_async_operation(param.io_service, param.socket, param.timeout_seconds, [&]()
+				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
 				{
-					packed_async_write(param.socket, param.yield, header, list_room_reply{});
+					packed_async_write(param->socket, param->yield, header, list_room_reply{});
 				});
 			} catch (const system::system_error& e) {
 				throw server_error(server_error_code::message_send_error, e.code().message());
@@ -35,7 +35,7 @@ namespace pgl {
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
 
-		const auto& room_data_container = param.server_data->get_room_data_container(message.group_index);
+		const auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 		                                                         message.end_index - message.start_index + 1,
@@ -78,9 +78,9 @@ namespace pgl {
 					}
 				}
 
-				execute_timed_async_operation(param.io_service, param.socket, param.timeout_seconds, [&]()
+				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
 				{
-					packed_async_write(param.socket, param.yield, header, reply);
+					packed_async_write(param->socket, param->yield, header, reply);
 				});
 			}
 		} catch (const system::system_error& e) {

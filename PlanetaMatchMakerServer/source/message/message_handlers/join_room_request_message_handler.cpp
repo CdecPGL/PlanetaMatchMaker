@@ -2,5 +2,5 @@
 
 namespace pgl {
 	void join_room_request_message_handler::handle_message(const join_room_request_message& message,
-	                                                       message_handle_parameter& param) { }
+		std::shared_ptr<message_handle_parameter> param) { }
 }

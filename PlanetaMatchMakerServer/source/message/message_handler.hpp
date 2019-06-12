@@ -11,7 +11,7 @@ namespace pgl {
 		virtual ~message_handler() = default;
 		message_handler& operator=(const message_handler& message_handler) = delete;
 		message_handler& operator=(message_handler&& message_handler) = delete;
-		virtual void operator()(const char* data, message_handle_parameter& param) = 0;
+		virtual void operator()(const char* data, std::shared_ptr<message_handle_parameter> param) = 0;
 		[[nodiscard]] virtual int get_message_size() const = 0;
 	};
 
@@ -29,12 +29,12 @@ namespace pgl {
 			return sizeof(Message);
 		}
 
-		void operator()(const char* data, message_handle_parameter& param) override final {
+		void operator()(const char* data, std::shared_ptr<message_handle_parameter> param) override final {
 			decltype(auto) message = reinterpret_cast<const Message*>(data);
-			handle_message(*message, param);
+			handle_message(*message, std::move(param));
 		}
 
 	private:
-		virtual void handle_message(const Message& message, message_handle_parameter& param) = 0;
+		virtual void handle_message(const Message& message, std::shared_ptr<message_handle_parameter> param) = 0;
 	};
 }
