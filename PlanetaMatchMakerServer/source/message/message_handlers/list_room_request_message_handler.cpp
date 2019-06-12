@@ -23,15 +23,7 @@ namespace pgl {
 			                                           param->server_data->room_group_count(), " but \"",
 			                                           message.group_index, "\" is requested.");
 			header.error_code = message_error_code::room_group_index_out_of_range;
-			try {
-				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
-				{
-					packed_async_write(param->socket, param->yield, header, list_room_reply{});
-				});
-			} catch (const system::system_error& e) {
-				throw server_error(server_error_code::message_send_error, e.code().message());
-			}
-
+			send(param, header, list_room_reply{});
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
 
@@ -47,45 +39,37 @@ namespace pgl {
 			{}
 		};
 
-		try {
-			const auto separation = static_cast_with_range_assertion<int>(
-				(room_data_list.size() / list_room_reply_room_info_count - 1) /
-				list_room_reply_room_info_count);
-			for (auto i = 0; i < separation; ++i) {
-				const auto send_room_count = i == separation - 1
-					                             ? static_cast_with_range_assertion<uint8_t>(
-						                             static_cast_with_range_assertion<int>(room_data_list.size()) -
-						                             list_room_reply_room_info_count * i)
-					                             : list_room_reply_room_info_count;
-				reply.reply_room_start_index = static_cast_with_range_assertion<uint8_t>(
-					message.start_index + i * separation);
-				reply.reply_room_end_index = static_cast_with_range_assertion<uint8_t>(
-					message.start_index + i * separation + send_room_count
-					- 1);
-				for (auto j = 0; j < list_room_reply_room_info_count; ++j) {
-					const auto send_room_idx = i * separation + j;
-					if (send_room_idx < send_room_count) {
-						reply.room_info_list[j] = list_room_reply::room_info{
-							room_data_list[send_room_idx].room_id,
-							room_data_list[send_room_idx].name,
-							room_data_list[send_room_idx].flags,
-							room_data_list[send_room_idx].max_player_count,
-							room_data_list[send_room_idx].current_player_count,
-							room_data_list[send_room_idx].create_datetime,
-						};
-					} else {
-						reply.room_info_list[j] = {};
-					}
+		const auto separation = static_cast_with_range_assertion<int>(
+			(room_data_list.size() / list_room_reply_room_info_count - 1) /
+			list_room_reply_room_info_count);
+		for (auto i = 0; i < separation; ++i) {
+			const auto send_room_count = i == separation - 1
+				                             ? static_cast_with_range_assertion<uint8_t>(
+					                             static_cast_with_range_assertion<int>(room_data_list.size()) -
+					                             list_room_reply_room_info_count * i)
+				                             : list_room_reply_room_info_count;
+			reply.reply_room_start_index = static_cast_with_range_assertion<uint8_t>(
+				message.start_index + i * separation);
+			reply.reply_room_end_index = static_cast_with_range_assertion<uint8_t>(
+				message.start_index + i * separation + send_room_count
+				- 1);
+			for (auto j = 0; j < list_room_reply_room_info_count; ++j) {
+				const auto send_room_idx = i * separation + j;
+				if (send_room_idx < send_room_count) {
+					reply.room_info_list[j] = list_room_reply::room_info{
+						room_data_list[send_room_idx].room_id,
+						room_data_list[send_room_idx].name,
+						room_data_list[send_room_idx].flags,
+						room_data_list[send_room_idx].max_player_count,
+						room_data_list[send_room_idx].current_player_count,
+						room_data_list[send_room_idx].create_datetime,
+					};
+				} else {
+					reply.room_info_list[j] = {};
 				}
-
-				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
-				{
-					packed_async_write(param->socket, param->yield, header, reply);
-				});
 			}
-		} catch (const system::system_error& e) {
-			throw server_error(server_error_code::message_send_error, e.code().message());
-		}
 
+			send(param, header, reply);
+		}
 	}
 }

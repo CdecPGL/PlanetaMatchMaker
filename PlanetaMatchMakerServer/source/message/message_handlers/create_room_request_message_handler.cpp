@@ -25,14 +25,7 @@ namespace pgl {
 		const auto client_address = client_address::make_from_endpoint(param->socket.remote_endpoint());
 		if (!param->server_data->client_data_container().is_data_exist(client_address)) {
 			header.error_code = message_error_code::permission_denied;
-			try {
-				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
-				{
-					packed_async_write(param->socket, param->yield, header, reply);
-				});
-			} catch (const system::system_error& e) {
-				throw server_error(server_error_code::message_send_error, e.code().message());
-			}
+			send(param, header, reply);
 			throw server_error(server_error_code::permission_error);
 		}
 
@@ -41,15 +34,7 @@ namespace pgl {
 			                                           param->server_data->room_group_count(), " but \"",
 			                                           message.group_index, "\" is requested.");
 			header.error_code = message_error_code::room_group_index_out_of_range;
-			try {
-				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
-				{
-					packed_async_write(param->socket, param->yield, header, list_room_reply{});
-				});
-			} catch (const system::system_error& e) {
-				throw server_error(server_error_code::message_send_error, e.code().message());
-			}
-
+			send(param, header, reply);
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
 
@@ -68,14 +53,6 @@ namespace pgl {
 			room_data);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New room \"", room_data.name,
 		                  "\" is created in group ", message.group_index, " with id: ", reply.room_id);
-
-		try {
-			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
-			{
-				packed_async_write(param->socket, param->yield, header, reply);
-			});
-		} catch (const system::system_error& e) {
-			throw server_error(server_error_code::message_send_error, e.code().message());
-		}
+		send(param, header, reply);
 	}
 }

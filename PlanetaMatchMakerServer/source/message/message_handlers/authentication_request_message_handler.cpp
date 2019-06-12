@@ -3,8 +3,6 @@
 #include "server/server_data.hpp"
 #include "server/server_constants.hpp"
 #include "server/server_error.hpp"
-#include "async/timer.hpp"
-#include "async/read_write.hpp"
 #include "utilities/string_utility.hpp"
 
 #include "authentication_request_message_handler.hpp"
@@ -45,10 +43,7 @@ namespace pgl {
 				header.error_code = message_error_code::version_mismatch;
 			}
 
-			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [=]()
-			{
-				packed_async_write(param->socket, param->yield, header, reply);
-			});
+			send(param, header, reply);
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply authentication message.");
 		} catch (const system::system_error& e) {
 			throw server_error(server_error_code::message_send_error, e.code().message());
