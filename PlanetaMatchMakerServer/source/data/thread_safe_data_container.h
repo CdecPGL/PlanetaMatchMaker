@@ -30,6 +30,10 @@ namespace pgl {
 			return data_map_.at(id).load();
 		}
 
+		size_t size() const {
+			return data_map_.size();
+		}
+
 		void add_data(id_param_type id, data_param_type data) {
 			std::lock_guard lock(mutex_);
 			data_map_.emplace(id, data);

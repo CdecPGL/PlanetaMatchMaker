@@ -88,7 +88,7 @@ namespace pgl {
 		uint8_t flags{}; //filter conditions about room
 	};
 
-	// 236 bytes
+	// 238 bytes
 	struct list_room_reply final {
 		//39 bytes
 		struct room_info {
@@ -100,8 +100,10 @@ namespace pgl {
 			datetime create_datetime{};
 		};
 
-		uint8_t total_room_count{};
-		uint8_t reply_room_count{};
+		uint8_t total_room_count{}; // the number of rooms server managing
+		uint8_t result_room_count{}; // the number of rooms for request
+		uint8_t reply_room_start_index{}; // the index of start room in this message
+		uint8_t reply_room_end_index{}; // the index of end room in this message
 		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 	};
 

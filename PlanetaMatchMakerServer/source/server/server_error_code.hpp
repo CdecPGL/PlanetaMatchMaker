@@ -15,6 +15,7 @@ namespace pgl {
 		version_mismatch,
 		message_send_error,
 		permission_error,
+		room_group_index_out_of_range,
 	};
 
 	std::string get_server_error_message(server_error_code error_code);

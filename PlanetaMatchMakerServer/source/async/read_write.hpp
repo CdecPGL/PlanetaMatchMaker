@@ -23,7 +23,7 @@ namespace pgl {
 	}
 
 	template <typename... Data>
-	void packed_async_write(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context& yield, Data& ... data) {
+	void packed_async_write(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context& yield, Data&& ... data) {
 		packed_data_buffer_t<Data...> buffer;
 		pack_data(buffer, data...);
 		static_assert(sizeof(buffer) == (sizeof(data) + ...));

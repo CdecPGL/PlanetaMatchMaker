@@ -21,6 +21,10 @@ namespace pgl {
 			return container_.get_data(id);
 		}
 
+		size_t size() const {
+			return container_.size();
+		}
+
 		void add_data(id_param_type id, data_param_type data) {
 			container_.add_data(id, data);
 		}

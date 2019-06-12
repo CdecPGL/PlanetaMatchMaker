@@ -23,6 +23,8 @@ namespace pgl {
 			return "Failed to send a message to client.";
 		case server_error_code::permission_error:
 			return "A client without permission try to connect.";
+		case server_error_code::room_group_index_out_of_range:
+			return "A index of room group is out of range.";
 		default:
 			return "Unknown";
 		}

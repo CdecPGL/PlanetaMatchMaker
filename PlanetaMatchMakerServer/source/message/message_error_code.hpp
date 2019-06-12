@@ -17,6 +17,7 @@ namespace pgl {
 		// not authenticated or not host of room
 		permission_denied,
 		join_rejected,
-		player_count_reaches_limit
+		player_count_reaches_limit,
+		room_group_index_out_of_range,
 	};
 }
