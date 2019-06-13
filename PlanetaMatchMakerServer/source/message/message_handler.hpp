@@ -5,8 +5,10 @@
 #include "async/timer.hpp"
 #include "async/read_write.hpp"
 #include "server/server_error.hpp"
+#include "server/server_data.hpp"
 
 #include "message_handle_parameter.hpp"
+#include "messages.hpp"
 
 namespace pgl {
 	class message_handler {
@@ -44,6 +46,23 @@ namespace pgl {
 				}
 			} catch (const boost::system::system_error& e) {
 				throw server_error(server_error_code::message_send_error, e.code().message());
+			}
+		}
+
+		// Check client is registered to this server. If not registered, reply error message to client and throw server error.
+		template <message_type ReplyMessageType, class ReplyMessage>
+		static void check_remote_endpoint_authority(std::shared_ptr<message_handle_parameter> param,
+		                                            const ReplyMessage& reply_message) {
+			reply_message_header header{
+				ReplyMessageType,
+				message_error_code::permission_denied
+			};
+
+			const auto client_address = client_address::make_from_endpoint(param->socket.remote_endpoint());
+			if (!param->server_data->client_data_container().is_data_exist(client_address)) {
+				header.error_code = message_error_code::permission_denied;
+				send(param, header, reply_message);
+				throw server_error(server_error_code::permission_error);
 			}
 		}
 	};

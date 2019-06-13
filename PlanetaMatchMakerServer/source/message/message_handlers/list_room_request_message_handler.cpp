@@ -1,7 +1,5 @@
 ﻿#include "list_room_request_message_handler.hpp"
 
-#include "async/read_write.hpp"
-#include "async/timer.hpp"
 #include "server/server_data.hpp"
 #include "server/server_error.hpp"
 #include "utilities/string_utility.hpp"
@@ -17,6 +15,8 @@ namespace pgl {
 			message_type::list_room_reply,
 			message_error_code::ok
 		};
+
+		check_remote_endpoint_authority<message_type::list_room_reply>(param, list_room_reply{});
 
 		if (param->server_data->is_valid_room_group_index(message.group_index)) {
 			const auto extra_message = generate_string("Range of valid room group index is 0 to ",

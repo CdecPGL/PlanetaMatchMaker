@@ -1,5 +1,4 @@
 ﻿#include "server/server_data.hpp"
-
 #include "async/read_write.hpp"
 #include "async/timer.hpp"
 #include "message/messages.hpp"
@@ -19,15 +18,9 @@ namespace pgl {
 			message_type::create_room_reply,
 			message_error_code::ok
 		};
-
 		create_room_reply reply{};
 
-		const auto client_address = client_address::make_from_endpoint(param->socket.remote_endpoint());
-		if (!param->server_data->client_data_container().is_data_exist(client_address)) {
-			header.error_code = message_error_code::permission_denied;
-			send(param, header, reply);
-			throw server_error(server_error_code::permission_error);
-		}
+		check_remote_endpoint_authority<message_type::create_room_reply>(param, reply);
 
 		if (param->server_data->is_valid_room_group_index(message.group_index)) {
 			const auto extra_message = generate_string("Range of valid room group index is 0 to ",

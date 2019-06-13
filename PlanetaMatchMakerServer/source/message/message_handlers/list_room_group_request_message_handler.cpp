@@ -2,8 +2,6 @@
 
 #include "server/server_data.hpp"
 #include "async/timer.hpp"
-#include "async/read_write.hpp"
-#include "server/server_error.hpp"
 #include "utilities/log.hpp"
 #include "utilities/static_cast_with_assertion.hpp"
 #include "list_room_group_request_message_handler.hpp"
@@ -18,6 +16,8 @@ namespace pgl {
 			message_type::list_room_group_reply,
 			message_error_code::ok
 		};
+
+		check_remote_endpoint_authority<message_type::list_room_group_reply>(param, list_room_group_reply_message{});
 
 		const auto& room_group_data_list = param->server_data->get_room_data_group_list();
 		decltype(list_room_group_reply_message::room_group_info_list) room_group_info_list;
