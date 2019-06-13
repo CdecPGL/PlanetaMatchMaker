@@ -1,8 +1,6 @@
 ﻿#include "list_room_request_message_handler.hpp"
 
 #include "server/server_data.hpp"
-#include "server/server_error.hpp"
-#include "utilities/string_utility.hpp"
 #include "utilities/static_cast_with_assertion.hpp"
 #include "../message_handle_utilities.hpp"
 
@@ -12,26 +10,23 @@ using namespace boost;
 namespace pgl {
 	void list_room_request_message_handler::handle_message(const list_room_request_message& message,
 	                                                       std::shared_ptr<message_handle_parameter> param) {
-		reply_message_header header{
-			message_type::list_room_reply,
-			message_error_code::ok
-		};
+		list_room_reply_message reply{};
 
-		check_remote_endpoint_authority<message_type::list_room_reply>(param, list_room_reply_message{});
+		check_remote_endpoint_existence<message_type::list_room_reply>(param, reply);
 
-		check_room_group_index_existence<message_type::list_room_reply>(param, message.group_index,
-		                                                                list_room_reply_message{});
+		check_room_group_existence<message_type::list_room_reply>(param, message.group_index, reply);
 		const auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 		                                                         message.end_index - message.start_index + 1,
 		                                                         message.sort_kind);
-		list_room_reply_message reply{
-			static_cast_with_range_assertion<uint8_t>(room_data_container.size()),
-			static_cast_with_range_assertion<uint8_t>(room_data_list.size()),
-			{},
-			{}
+
+		reply_message_header header{
+			message_type::list_room_reply,
+			message_error_code::ok
 		};
+		reply.total_room_count = static_cast_with_range_assertion<uint8_t>(room_data_container.size());
+		reply.result_room_count = static_cast_with_range_assertion<uint8_t>(room_data_list.size());
 
 		const auto separation = static_cast_with_range_assertion<int>(
 			(room_data_list.size() / list_room_reply_room_info_count - 1) /

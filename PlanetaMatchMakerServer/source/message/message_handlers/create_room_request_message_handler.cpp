@@ -2,7 +2,6 @@
 #include "async/read_write.hpp"
 #include "async/timer.hpp"
 #include "message/messages.hpp"
-#include "server/server_error.hpp"
 #include "client/client_address.hpp"
 #include "utilities/log.hpp"
 #include "datetime/datetime.hpp"
@@ -17,9 +16,9 @@ namespace pgl {
 	                                                         std::shared_ptr<message_handle_parameter> param) {
 		create_room_reply_message reply{};
 
-		check_remote_endpoint_authority<message_type::create_room_reply>(param, reply);
+		check_remote_endpoint_existence<message_type::create_room_reply>(param, reply);
 
-		check_room_group_index_existence<message_type::create_room_reply>(param, message.group_index, reply);
+		check_room_group_existence<message_type::create_room_reply>(param, message.group_index, reply);
 		auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
 		// Create room

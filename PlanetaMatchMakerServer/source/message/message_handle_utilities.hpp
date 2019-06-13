@@ -37,7 +37,7 @@ namespace pgl {
 
 	// Check client is registered to this server. If not registered, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
-	void check_remote_endpoint_authority(std::shared_ptr<message_handle_parameter> param,
+	void check_remote_endpoint_existence(std::shared_ptr<message_handle_parameter> param,
 	                                     const ReplyMessage& reply_message) {
 		reply_message_header header{
 			ReplyMessageType,
@@ -54,8 +54,8 @@ namespace pgl {
 
 	// Check a room group index is valid. If it is not valid, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
-	void check_room_group_index_existence(std::shared_ptr<message_handle_parameter> param, size_t room_group_index,
-	                                      const ReplyMessage& reply_message) {
+	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param, size_t room_group_index,
+	                                const ReplyMessage& reply_message) {
 		if (!param->server_data->is_valid_room_group_index(room_group_index)) {
 			const reply_message_header header{
 				ReplyMessageType,
@@ -69,10 +69,11 @@ namespace pgl {
 		}
 	}
 
+	// Check a room id exists. If it doesn't exist, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
-	void check_room_exists(std::shared_ptr<message_handle_parameter> param,
-	                       const room_data_container& room_data_container, room_id_type room_id,
-	                       const ReplyMessage& reply_message) {
+	void check_room_existence(std::shared_ptr<message_handle_parameter> param,
+	                          const room_data_container& room_data_container, room_id_type room_id,
+	                          const ReplyMessage& reply_message) {
 		if (!room_data_container.is_data_exist(room_id)) {
 			const reply_message_header header{
 				ReplyMessageType,
