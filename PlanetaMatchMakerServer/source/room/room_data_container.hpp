@@ -25,8 +25,8 @@ namespace pgl {
 			return container_.size();
 		}
 
-		void add_data(id_param_type id, data_param_type data) {
-			container_.add_data(id, data);
+		void add_data(data_param_type data) {
+			container_.add_data(data.room_id, data);
 		}
 
 		room_id_type assign_id_and_add_data(room_data& data) {
@@ -41,8 +41,8 @@ namespace pgl {
 			return container_.get_range_data(start_idx, count, get_room_data_compare_function(sort_kind));
 		}
 
-		void update_data(id_param_type id, data_param_type data) {
-			container_.update_data(id, data);
+		void update_data(data_param_type data) {
+			container_.update_data(data.room_id, data);
 		}
 
 		void remove_data(id_param_type id) {

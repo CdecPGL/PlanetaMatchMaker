@@ -46,14 +46,12 @@ namespace pgl {
 
 		switch (message.status) {
 		case update_room_status_request_message::status::open:
-			room_data_container.update_data(room_data.room_id, room_data);
 			room_data.flags |= room_flags_bit_mask::is_open;
-			room_data_container.update_data(room_data.room_id, room_data);
+			room_data_container.update_data(room_data);
 			break;
 		case update_room_status_request_message::status::close:
-			room_data_container.update_data(room_data.room_id, room_data);
 			room_data.flags &= ~room_flags_bit_mask::is_open;
-			room_data_container.update_data(room_data.room_id, room_data);
+			room_data_container.update_data(room_data);
 			break;
 		case update_room_status_request_message::status::remove:
 			room_data_container.remove_data(room_data.room_id);
