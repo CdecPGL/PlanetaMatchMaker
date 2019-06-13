@@ -10,8 +10,8 @@
 namespace pgl {
 	// Send data to remote endpoint. server_error will be thrown when send error occured.
 	template <typename FirstData, typename... RestData>
-	static void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data,
-	                 RestData&& ... rest_data) {
+	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data,
+	          RestData&& ... rest_data) {
 		try {
 			if constexpr (sizeof...(RestData) > 0) {
 				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
@@ -37,8 +37,8 @@ namespace pgl {
 
 	// Check client is registered to this server. If not registered, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
-	static void check_remote_endpoint_authority(std::shared_ptr<message_handle_parameter> param,
-	                                            const ReplyMessage& reply_message) {
+	void check_remote_endpoint_authority(std::shared_ptr<message_handle_parameter> param,
+	                                     const ReplyMessage& reply_message) {
 		reply_message_header header{
 			ReplyMessageType,
 			message_error_code::permission_denied
@@ -49,6 +49,22 @@ namespace pgl {
 			header.error_code = message_error_code::permission_denied;
 			send(param, header, reply_message);
 			throw server_error(server_error_code::permission_error);
+		}
+	}
+
+	template <message_type ReplyMessageType, class ReplyMessage>
+	void check_room_group_index_existence(std::shared_ptr<message_handle_parameter> param, size_t room_group_index,
+	                                      const ReplyMessage& reply_message) {
+		if (!param->server_data->is_valid_room_group_index(room_group_index)) {
+			const reply_message_header header{
+				message_type::update_room_status_reply,
+				message_error_code::room_group_index_out_of_range
+			};
+			send(param, header, reply_message);
+			const auto extra_message = generate_string("Range of valid room group index is 0 to ",
+			                                           param->server_data->room_group_count(), " but \"",
+			                                           room_group_index, "\" is requested.");
+			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
 	}
 }

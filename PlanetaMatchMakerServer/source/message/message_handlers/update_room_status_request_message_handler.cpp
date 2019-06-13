@@ -9,17 +9,8 @@ namespace pgl {
 		check_remote_endpoint_authority<message_type::update_room_status_reply>(
 			param, update_room_status_reply_message{});
 
-		if (!param->server_data->is_valid_room_group_index(message.group_index)) {
-			const reply_message_header header{
-				message_type::update_room_status_reply,
-				message_error_code::room_group_index_out_of_range
-			};
-			send(param, header, update_room_status_reply_message{});
-			const auto extra_message = generate_string("Range of valid room group index is 0 to ",
-			                                           param->server_data->room_group_count(), " but \"",
-			                                           message.group_index, "\" is requested.");
-			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
-		}
+		check_room_group_index_existence<message_type::update_room_status_reply>(
+			param, message.group_index, update_room_status_reply_message{});
 		auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
 		if (!room_data_container.is_data_exist(message.room_id)) {
