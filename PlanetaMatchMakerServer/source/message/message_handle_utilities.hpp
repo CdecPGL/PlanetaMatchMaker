@@ -52,12 +52,13 @@ namespace pgl {
 		}
 	}
 
+	// Check a room group index is valid. If it is not valid, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
 	void check_room_group_index_existence(std::shared_ptr<message_handle_parameter> param, size_t room_group_index,
 	                                      const ReplyMessage& reply_message) {
 		if (!param->server_data->is_valid_room_group_index(room_group_index)) {
 			const reply_message_header header{
-				message_type::update_room_status_reply,
+				ReplyMessageType,
 				message_error_code::room_group_index_out_of_range
 			};
 			send(param, header, reply_message);
@@ -65,6 +66,21 @@ namespace pgl {
 			                                           param->server_data->room_group_count(), " but \"",
 			                                           room_group_index, "\" is requested.");
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
+		}
+	}
+
+	template <message_type ReplyMessageType, class ReplyMessage>
+	void check_room_exists(std::shared_ptr<message_handle_parameter> param,
+	                       const room_data_container& room_data_container, room_id_type room_id,
+	                       const ReplyMessage& reply_message) {
+		if (!room_data_container.is_data_exist(room_id)) {
+			const reply_message_header header{
+				ReplyMessageType,
+				message_error_code::room_does_not_exist
+			};
+			send(param, header, reply_message);
+			const auto extra_message = generate_string("Requested room name \"", room_id, "\" does not exist.");
+			throw server_error(server_error_code::room_does_not_exist, extra_message);
 		}
 	}
 }
