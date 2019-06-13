@@ -18,7 +18,7 @@ namespace pgl {
 
 		check_remote_endpoint_authority<message_type::list_room_reply>(param, list_room_reply_message{});
 
-		if (param->server_data->is_valid_room_group_index(message.group_index)) {
+		if (!param->server_data->is_valid_room_group_index(message.group_index)) {
 			const auto extra_message = generate_string("Range of valid room group index is 0 to ",
 			                                           param->server_data->room_group_count(), " but \"",
 			                                           message.group_index, "\" is requested.");
@@ -26,7 +26,6 @@ namespace pgl {
 			send(param, header, list_room_reply_message{});
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
-
 		const auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
 		auto room_data_list = room_data_container.get_range_data(message.start_index,

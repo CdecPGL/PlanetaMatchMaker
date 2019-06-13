@@ -13,7 +13,7 @@ namespace pgl {
 		access_denied,
 		room_name_duplicated,
 		room_count_reaches_limit,
-		room_not_exist,
+		room_does_not_exist,
 		// not authenticated or not host of room
 		permission_denied,
 		join_rejected,
