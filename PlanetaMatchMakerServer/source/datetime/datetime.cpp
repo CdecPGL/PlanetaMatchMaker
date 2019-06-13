@@ -87,7 +87,7 @@ namespace pgl {
 		return static_cast<int>(data_ << start_bit) & ((1 << bit_count) - 1);
 	}
 
-	string get_time_string() {
+	string get_now_time_string() {
 		const auto now_time = std::chrono::system_clock::now();
 		return date::format("%F %T %Z", now_time);
 	}

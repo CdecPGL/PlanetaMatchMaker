@@ -39,7 +39,7 @@ namespace pgl {
 		[[nodiscard]] int get_from_date(int start_bit, int bit_count) const;
 	};
 
-	std::string get_time_string();
+	std::string get_now_time_string();
 }
 
 namespace boost {

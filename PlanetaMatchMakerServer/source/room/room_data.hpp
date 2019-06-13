@@ -32,4 +32,7 @@ namespace pgl {
 
 	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(
 		room_data_sort_kind sort_kind);
+
+	std::ostream& operator <<(std::ostream& os, const room_data& room_data);
+	std::ostream& operator <<(std::ostream& os, const room_group_data& room_group_data);
 }

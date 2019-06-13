@@ -26,7 +26,7 @@ namespace pgl {
 			break;
 		}
 
-		*os << "[" << get_time_string() << "] " << NAMEOF_ENUM(level) << log_header << ": " << log_body << endl;
+		*os << "[" << get_now_time_string() << "] " << NAMEOF_ENUM(level) << log_header << ": " << log_body << endl;
 	}
 
 	void set_output_log_level(const log_level level) {
