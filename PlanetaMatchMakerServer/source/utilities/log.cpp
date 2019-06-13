@@ -26,14 +26,13 @@ namespace pgl {
 			break;
 		}
 
-		*os << "[" << get_now_time_string() << "] " << NAMEOF_ENUM(level) << log_header << ": " << log_body << endl;
+		*os << "[" << get_now_time_string() << "] " << level << log_header << ": " << log_body << endl;
 	}
 
 	void set_output_log_level(const log_level level) {
 		std::scoped_lock locks{output_log_level_mutex, output_mutex};
 		output_log_level = level;
-		log_impl_without_mutex(log_level::info, "",
-		                       generate_string("Output log level is set to \"", NAMEOF_ENUM(level), "\"."));
+		log_impl_without_mutex(log_level::info, "", generate_string("Output log level is set to \"", level, "\"."));
 	}
 
 	void log_impl(const log_level level, string&& log_header, string&& log_body) {

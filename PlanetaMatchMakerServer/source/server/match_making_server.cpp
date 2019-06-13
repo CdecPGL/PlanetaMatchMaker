@@ -30,8 +30,7 @@ namespace pgl {
 		  receive_buff_(buffer_size),
 		  timer_(io_service),
 		  time_out_seconds_(time_out_seconds) {
-		log(log_level::info, "Server instance is generated with IP ", NAMEOF_ENUM(ip_version),
-		    " and port ", port_number, ".");
+		log(log_level::info, "Server instance is generated with IP ", ip_version, " and port ", port_number, ".");
 	}
 
 	void match_making_server::start() {

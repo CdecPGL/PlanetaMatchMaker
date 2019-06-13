@@ -55,14 +55,14 @@ namespace pgl {
 
 		if (enable_message_specification && header->message_type != specified_message_type) {
 			throw server_error(server_error_code::message_type_mismatch,
-			                   generate_string("expected: ", NAMEOF_ENUM(specified_message_type), ", actual: ",
-			                                   NAMEOF_ENUM(header->message_type)));
+			                   generate_string("expected: ", specified_message_type, ", actual: ",
+			                                   header->message_type));
 		}
 
 		const auto message_handler = make_message_handler(header->message_type);
 		const auto message_size = message_handler->get_message_size();
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message header received. (type: ",
-		                  NAMEOF_ENUM(header->message_type), ", size: ", sizeof(header), ")");
+		                  header->message_type, ", size: ", sizeof(header), ")");
 
 		// Receive a body of message
 		try {
@@ -86,6 +86,6 @@ namespace pgl {
 		(*message_handler)(data, param);
 		param->receive_buff.consume(param->receive_buff.size());
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message processed. (type: ",
-		                  NAMEOF_ENUM(header->message_type), ", size: ", message_size, ")");
+		                  header->message_type, ", size: ", message_size, ")");
 	}
 }

@@ -17,7 +17,7 @@ namespace pgl {
 		Source round_trip{static_cast<Source>(destination)};
 		if (round_trip != source) {
 			auto error_message = generate_string("Source value (", source, ") is out of range in destination type (",
-			                                     NAMEOF_TYPE(Destination), ").");
+			                                     nameof::nameof_type<Destination>(), ").");
 			throw static_cast_assertion_error(error_message);
 		}
 #endif

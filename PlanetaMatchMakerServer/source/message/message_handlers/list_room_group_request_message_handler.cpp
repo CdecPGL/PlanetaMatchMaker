@@ -33,6 +33,6 @@ namespace pgl {
 
 		send(param, header, reply);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
-		                  NAMEOF_ENUM(message_type::list_room_group_request), " message.");
+		                  message_type::list_room_group_request, " message.");
 	}
 }
