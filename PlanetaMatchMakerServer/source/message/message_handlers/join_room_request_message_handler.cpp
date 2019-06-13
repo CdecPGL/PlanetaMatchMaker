@@ -17,7 +17,7 @@ namespace pgl {
 			                                           message.group_index, "\" is requested.");
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
-		auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
+		const auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
 		if (!room_data_container.is_data_exist(message.room_id)) {
 			const reply_message_header header{
@@ -30,7 +30,7 @@ namespace pgl {
 			                                           "\".");
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
-		auto room_data = room_data_container.get_data(message.room_id);
+		const auto room_data = room_data_container.get_data(message.room_id);
 
 		if (room_data.current_player_count >= room_data.max_player_count) {
 			const reply_message_header header{
@@ -43,9 +43,6 @@ namespace pgl {
 			                                           room_data.current_player_count, ").");
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
-
-		++room_data.current_player_count;
-		room_data_container.update_data(message.room_id, room_data);
 
 		const reply_message_header header{
 			message_type::join_room_reply,
