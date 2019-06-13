@@ -2,13 +2,14 @@
 
 #include <boost/functional/hash.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/operators.hpp>
 
 #include "network/network_layer.hpp"
 #include "network/transport_layer.hpp"
 
 namespace pgl {
 	// 18 bytes
-	struct client_address final {
+	struct client_address final : private boost::equality_comparable<client_address>{
 		ip_address_type ip_address{};
 		port_number_type port_number{};
 

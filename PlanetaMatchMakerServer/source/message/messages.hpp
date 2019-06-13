@@ -129,7 +129,9 @@ namespace pgl {
 	};
 
 	// 1 bytes
-	struct update_room_status_reply_message final { };
+	struct update_room_status_reply_message final {
+		uint8_t dummy{};
+	};
 
 	struct random_match_request_message final { };
 }

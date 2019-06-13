@@ -16,6 +16,9 @@ namespace pgl {
 		message_send_error,
 		permission_error,
 		room_group_index_out_of_range,
+		room_does_not_exist,
+		room_player_is_full,
+		room_permission_error
 	};
 
 	std::string get_server_error_message(server_error_code error_code);

@@ -28,7 +28,7 @@ namespace pgl {
 			const auto extra_message = generate_string("Requested room name \"", message.room_id,
 			                                           "\" does not exist in room group \"", message.group_index,
 			                                           "\".");
-			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
+			throw server_error(server_error_code::room_does_not_exist, extra_message);
 		}
 		const auto room_data = room_data_container.get_data(message.room_id);
 
@@ -41,7 +41,7 @@ namespace pgl {
 			const auto extra_message = generate_string("Requested room \"", message.room_id, "\" in room group \"",
 			                                           message.group_index, "\" is full of players (",
 			                                           room_data.current_player_count, ").");
-			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
+			throw server_error(server_error_code::room_player_is_full, extra_message);
 		}
 
 		const reply_message_header header{

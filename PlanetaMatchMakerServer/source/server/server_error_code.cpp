@@ -24,7 +24,13 @@ namespace pgl {
 		case server_error_code::permission_error:
 			return "A client without permission try to connect.";
 		case server_error_code::room_group_index_out_of_range:
-			return "A index of room group is out of range.";
+			return "The index of room group is out of range.";
+		case server_error_code::room_does_not_exist:
+			return "The room does not exist.";
+		case server_error_code::room_player_is_full:
+			return "The number of players reaches limit.";
+		case server_error_code::room_permission_error:
+			return "A client who is not room host try to change room data.";
 		default:
 			return "Unknown";
 		}
