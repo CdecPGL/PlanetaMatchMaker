@@ -4,6 +4,7 @@
 #include "server/server_error.hpp"
 #include "utilities/string_utility.hpp"
 #include "utilities/static_cast_with_assertion.hpp"
+#include "../message_handle_utilities.hpp"
 
 using namespace std;
 using namespace boost;

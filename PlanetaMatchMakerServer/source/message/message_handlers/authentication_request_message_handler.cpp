@@ -4,9 +4,9 @@
 #include "server/server_constants.hpp"
 #include "server/server_error.hpp"
 #include "utilities/string_utility.hpp"
-
-#include "authentication_request_message_handler.hpp"
 #include "utilities/log.hpp"
+#include "../message_handle_utilities.hpp"
+#include "authentication_request_message_handler.hpp"
 
 using namespace boost;
 

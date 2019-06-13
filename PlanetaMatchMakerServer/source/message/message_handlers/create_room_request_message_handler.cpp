@@ -7,6 +7,7 @@
 #include "utilities/log.hpp"
 #include "datetime/datetime.hpp"
 #include "create_room_request_message_handler.hpp"
+#include "../message_handle_utilities.hpp"
 
 using namespace boost;
 

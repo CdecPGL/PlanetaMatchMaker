@@ -1,5 +1,6 @@
 ﻿#include "update_room_status_request_message_handler.hpp"
 #include "utilities/string_utility.hpp"
+#include "../message_handle_utilities.hpp"
 
 namespace pgl {
 

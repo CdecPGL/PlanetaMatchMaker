@@ -5,6 +5,7 @@
 #include "utilities/log.hpp"
 #include "utilities/static_cast_with_assertion.hpp"
 #include "list_room_group_request_message_handler.hpp"
+#include "../message_handle_utilities.hpp"
 
 using namespace std;
 using namespace boost;
