@@ -16,14 +16,14 @@ namespace pgl {
 			message_error_code::ok
 		};
 
-		check_remote_endpoint_authority<message_type::list_room_reply>(param, list_room_reply{});
+		check_remote_endpoint_authority<message_type::list_room_reply>(param, list_room_reply_message{});
 
 		if (param->server_data->is_valid_room_group_index(message.group_index)) {
 			const auto extra_message = generate_string("Range of valid room group index is 0 to ",
 			                                           param->server_data->room_group_count(), " but \"",
 			                                           message.group_index, "\" is requested.");
 			header.error_code = message_error_code::room_group_index_out_of_range;
-			send(param, header, list_room_reply{});
+			send(param, header, list_room_reply_message{});
 			throw server_error(server_error_code::room_group_index_out_of_range, extra_message);
 		}
 
@@ -32,7 +32,7 @@ namespace pgl {
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 		                                                         message.end_index - message.start_index + 1,
 		                                                         message.sort_kind);
-		list_room_reply reply{
+		list_room_reply_message reply{
 			static_cast_with_range_assertion<uint8_t>(room_data_container.size()),
 			static_cast_with_range_assertion<uint8_t>(room_data_list.size()),
 			{},
@@ -56,7 +56,7 @@ namespace pgl {
 			for (auto j = 0; j < list_room_reply_room_info_count; ++j) {
 				const auto send_room_idx = i * separation + j;
 				if (send_room_idx < send_room_count) {
-					reply.room_info_list[j] = list_room_reply::room_info{
+					reply.room_info_list[j] = list_room_reply_message::room_info{
 						room_data_list[send_room_idx].room_id,
 						room_data_list[send_room_idx].name,
 						room_data_list[send_room_idx].flags,

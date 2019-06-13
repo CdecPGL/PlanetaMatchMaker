@@ -18,7 +18,7 @@ namespace pgl {
 			message_type::create_room_reply,
 			message_error_code::ok
 		};
-		create_room_reply reply{};
+		create_room_reply_message reply{};
 
 		check_remote_endpoint_authority<message_type::create_room_reply>(param, reply);
 

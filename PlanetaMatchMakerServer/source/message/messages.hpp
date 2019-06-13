@@ -75,7 +75,7 @@ namespace pgl {
 	};
 
 	// 4 bytes
-	struct create_room_reply final {
+	struct create_room_reply_message final {
 		room_id_type room_id{};
 	};
 
@@ -89,7 +89,7 @@ namespace pgl {
 	};
 
 	// 238 bytes
-	struct list_room_reply final {
+	struct list_room_reply_message final {
 		//39 bytes
 		struct room_info {
 			room_id_type room_id{};
