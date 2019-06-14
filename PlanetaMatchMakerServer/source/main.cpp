@@ -9,7 +9,7 @@ using namespace boost;
 int main() {
 	set_output_log_level(log_level::debug);
 	const auto message_handler_invkr = message_handler_invoker_factory::make_standard();
-	const auto server_dat = std::make_shared<server_data>(std::vector<room_group_name_type>{"テスト１", "テスト2"});
+	const auto server_dat = std::make_shared<server_data>(std::vector<room_group_name_type>{u8"テスト１", u8"テスト2"});
 	asio::io_service io_service;
 	// prevent to stop server when all request are processed
 	asio::io_service::work work(io_service);
