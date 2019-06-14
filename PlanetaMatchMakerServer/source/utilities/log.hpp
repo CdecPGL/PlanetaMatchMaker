@@ -21,8 +21,8 @@ namespace pgl {
 	// Log thread safely with information of endpoint.
 	template <typename ... Params>
 	void log_with_endpoint(const log_level level,
-	                       const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint,
-	                       Params&& ... params) {
+		const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint,
+		Params&& ... params) {
 		log_impl(level, generate_string(" @", endpoint), generate_string(params...));
 	}
 }

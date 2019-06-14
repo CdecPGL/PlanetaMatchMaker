@@ -1,5 +1,3 @@
 ﻿#include "timer.hpp"
 
-namespace pgl {
-	
-}
+namespace pgl { }

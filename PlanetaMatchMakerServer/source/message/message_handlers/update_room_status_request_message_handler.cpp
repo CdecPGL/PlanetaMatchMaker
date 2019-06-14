@@ -5,7 +5,7 @@
 namespace pgl {
 
 	void update_room_status_request_message_handler::handle_message(const update_room_status_request_message& message,
-	                                                                std::shared_ptr<message_handle_parameter> param) {
+		std::shared_ptr<message_handle_parameter> param) {
 		update_room_status_reply_message reply{};
 
 		check_remote_endpoint_existence<message_type::update_room_status_reply>(param, reply);
@@ -28,19 +28,19 @@ namespace pgl {
 		}
 
 		switch (message.status) {
-		case update_room_status_request_message::status::open:
-			room_data.flags |= room_flags_bit_mask::is_open;
-			room_data_container.update_data(room_data);
-			break;
-		case update_room_status_request_message::status::close:
-			room_data.flags &= ~room_flags_bit_mask::is_open;
-			room_data_container.update_data(room_data);
-			break;
-		case update_room_status_request_message::status::remove:
-			room_data_container.remove_data(room_data.room_id);
-			break;
-		default:
-			break;
+			case update_room_status_request_message::status::open:
+				room_data.flags |= room_flags_bit_mask::is_open;
+				room_data_container.update_data(room_data);
+				break;
+			case update_room_status_request_message::status::close:
+				room_data.flags &= ~room_flags_bit_mask::is_open;
+				room_data_container.update_data(room_data);
+				break;
+			case update_room_status_request_message::status::remove:
+				room_data_container.remove_data(room_data.room_id);
+				break;
+			default:
+				break;
 		}
 
 		const reply_message_header header{

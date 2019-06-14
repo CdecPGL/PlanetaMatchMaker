@@ -8,6 +8,6 @@ namespace pgl {
 		final : public message_handler_base<update_room_status_request_message> {
 	public:
 		void handle_message(const update_room_status_request_message& message,
-		                    std::shared_ptr<message_handle_parameter> param) override;
+			std::shared_ptr<message_handle_parameter> param) override;
 	};
 }

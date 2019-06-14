@@ -9,7 +9,7 @@
 
 namespace pgl {
 	// 18 bytes
-	struct client_address final : private boost::equality_comparable<client_address>{
+	struct client_address final : private boost::equality_comparable<client_address> {
 		ip_address_type ip_address{};
 		port_number_type port_number{};
 

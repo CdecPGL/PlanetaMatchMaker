@@ -30,7 +30,7 @@ namespace pgl {
 	datetime::datetime(const int year, const int month, const int day): datetime(year, month, day, 0, 0, 0) {}
 
 	datetime::datetime(const int year, const int month, const int day, const int hour, const int minuit,
-	                   const int second): data_(
+		const int second): data_(
 		get_located_data(year, year_start_bit, year_bit_count) &
 		get_located_data(month, month_start_bit, month_bit_count) &
 		get_located_data(day, day_start_bit, day_bit_count) &
@@ -80,7 +80,7 @@ namespace pgl {
 		const auto date = date_time.date();
 		const auto time = date_time.time_of_day();
 		return datetime(date.year(), date.month(), date.day(), static_cast<int>(time.hours()),
-		                static_cast<int>(time.minutes()), static_cast<int>(time.seconds()));
+			static_cast<int>(time.minutes()), static_cast<int>(time.seconds()));
 	}
 
 	int datetime::get_from_date(const int start_bit, const int bit_count) const {

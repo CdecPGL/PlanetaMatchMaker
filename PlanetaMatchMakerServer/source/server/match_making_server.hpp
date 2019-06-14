@@ -15,9 +15,9 @@ namespace pgl {
 	class match_making_server final : boost::noncopyable {
 	public:
 		match_making_server(std::shared_ptr<server_data> server_data,
-		                    std::shared_ptr<message_handler_invoker> message_handler_container,
-		                    boost::asio::io_service& io_service, ip_version ip_version,
-		                    std::uint16_t port_number, std::uint32_t time_out_seconds);
+			std::shared_ptr<message_handler_invoker> message_handler_container,
+			boost::asio::io_service& io_service, ip_version ip_version,
+			std::uint16_t port_number, std::uint32_t time_out_seconds);
 
 		void start();
 	private:

@@ -21,13 +21,15 @@ namespace pgl {
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			static_assert(std::is_base_of_v<message_handler, MessageHandler>,
 				"MessageHandler must be a child class of message_handler.");
-			handler_generator_map_.emplace(MessageType, []() { return std::make_unique<MessageHandler>(); });
+			handler_generator_map_.emplace(MessageType, []() {
+				return std::make_unique<MessageHandler>();
+			});
 		}
 
 		void handle_message(std::shared_ptr<message_handle_parameter> param) const;
 
 		void handle_specific_message(message_type specified_message_type,
-		                             std::shared_ptr<message_handle_parameter> param) const;
+			std::shared_ptr<message_handle_parameter> param) const;
 
 	private:
 		std::unordered_map<message_type, message_handler_generator_type> handler_generator_map_;
@@ -44,6 +46,6 @@ namespace pgl {
 		}
 
 		void handle_message_impl(bool enable_message_specification, message_type specified_message_type,
-		                         std::shared_ptr<message_handle_parameter> param) const;
+			std::shared_ptr<message_handle_parameter> param) const;
 	};
 }

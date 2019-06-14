@@ -40,8 +40,8 @@ namespace pgl {
 		}
 
 		Id assign_id_and_add_data(Data& data,
-		                          std::function<void(Data&, id_param_type)>&& id_setter = [](Data&, id_param_type) {},
-		                          std::function<Id()>&& random_id_generator = generate_random_id<Id>) {
+			std::function<void(Data&, id_param_type)>&& id_setter = [](Data&, id_param_type) {},
+			std::function<Id()>&& random_id_generator = generate_random_id<Id>) {
 			std::lock_guard lock(mutex_);
 			Id id;
 			do {
@@ -53,8 +53,7 @@ namespace pgl {
 		}
 
 		std::vector<Data> get_range_data(const size_t start_idx, size_t count,
-		                                 std::function<bool(data_param_type,
-		                                                    data_param_type)>&& compare_function) const {
+			std::function<bool(data_param_type, data_param_type)>&& compare_function) const {
 			std::shared_lock lock(mutex_);
 			std::vector<Data> data;
 			data.reserve(data_map_.size());

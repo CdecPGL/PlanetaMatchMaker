@@ -13,7 +13,7 @@ using namespace boost;
 namespace pgl {
 
 	void create_room_request_message_handler::handle_message(const create_room_request_message& message,
-	                                                         std::shared_ptr<message_handle_parameter> param) {
+		std::shared_ptr<message_handle_parameter> param) {
 		create_room_reply_message reply{};
 
 		check_remote_endpoint_existence<message_type::create_room_reply>(param, reply);
@@ -38,7 +38,7 @@ namespace pgl {
 		};
 		reply.room_id = room_data_container.assign_id_and_add_data(room_data);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New room \"", room_data.name,
-		                  "\" is created in group ", message.group_index, " with id: ", reply.room_id);
+			"\" is created in group ", message.group_index, " with id: ", reply.room_id);
 		send(param, header, reply);
 	}
 }

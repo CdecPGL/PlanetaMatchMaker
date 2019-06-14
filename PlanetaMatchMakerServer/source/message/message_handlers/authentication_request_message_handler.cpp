@@ -12,7 +12,7 @@ using namespace boost;
 
 namespace pgl {
 	void authentication_request_message_handler::handle_message(const authentication_request_message& message,
-	                                                            std::shared_ptr<message_handle_parameter> param) {
+		std::shared_ptr<message_handle_parameter> param) {
 		try {
 			reply_message_header header{
 				message_type::authentication_reply,
@@ -51,7 +51,7 @@ namespace pgl {
 
 		if (message.version != server_version) {
 			const auto extra_message = generate_string("server version: ", server_version, ", client version: ",
-			                                           message.version);
+				message.version);
 			throw server_error(server_error_code::version_mismatch, extra_message);
 		}
 	}

@@ -9,7 +9,7 @@ using namespace boost;
 
 namespace pgl {
 	void list_room_request_message_handler::handle_message(const list_room_request_message& message,
-	                                                       std::shared_ptr<message_handle_parameter> param) {
+		std::shared_ptr<message_handle_parameter> param) {
 		list_room_reply_message reply{};
 
 		check_remote_endpoint_existence<message_type::list_room_reply>(param, reply);
@@ -18,8 +18,8 @@ namespace pgl {
 		const auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
-		                                                         message.end_index - message.start_index + 1,
-		                                                         message.sort_kind);
+			message.end_index - message.start_index + 1,
+			message.sort_kind);
 
 		reply_message_header header{
 			message_type::list_room_reply,
@@ -33,10 +33,10 @@ namespace pgl {
 			list_room_reply_room_info_count);
 		for (auto i = 0; i < separation; ++i) {
 			const auto send_room_count = i == separation - 1
-				                             ? static_cast_with_range_assertion<uint8_t>(
-					                             static_cast_with_range_assertion<int>(room_data_list.size()) -
-					                             list_room_reply_room_info_count * i)
-				                             : list_room_reply_room_info_count;
+											? static_cast_with_range_assertion<uint8_t>(
+												static_cast_with_range_assertion<int>(room_data_list.size()) -
+												list_room_reply_room_info_count * i)
+											: list_room_reply_room_info_count;
 			reply.reply_room_start_index = static_cast_with_range_assertion<uint8_t>(
 				message.start_index + i * separation);
 			reply.reply_room_end_index = static_cast_with_range_assertion<uint8_t>(

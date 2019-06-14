@@ -9,7 +9,9 @@ namespace pgl {
 		room_data_container_list_(room_groups.size()) {
 		room_group_data_list_.resize(room_groups.size());
 		std::transform(room_groups.begin(), room_groups.end(), room_group_data_list_.begin(),
-		               [](const auto& room_group_name) { return room_group_data{room_group_name}; });
+			[](const auto& room_group_name) {
+				return room_group_data{room_group_name};
+			});
 	}
 
 	size_t server_data::room_group_count() const {

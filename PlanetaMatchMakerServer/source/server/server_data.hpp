@@ -13,12 +13,11 @@ namespace pgl {
 		using room_data_container_type = room_data_container;
 		using room_group_data_list_type = std::vector<room_group_data>;
 
-		explicit
-		server_data(std::vector<room_group_name_type>&& room_groups);
+		explicit server_data(std::vector<room_group_name_type>&& room_groups);
 
-		size_t room_group_count()const;
+		size_t room_group_count() const;
 
-		bool is_valid_room_group_index(size_t room_group_index)const;
+		bool is_valid_room_group_index(size_t room_group_index) const;
 
 		const room_group_data_list_type& get_room_data_group_list() const;
 

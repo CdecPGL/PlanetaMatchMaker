@@ -17,13 +17,13 @@ namespace pgl {
 	void log_impl_without_mutex(const log_level level, string&& log_header, string&& log_body) {
 		ostream* os = nullptr;
 		switch (level) {
-		case log_level::info:
-		case log_level::debug:
-			os = &cout;
-			break;
-		default:
-			os = &cerr;
-			break;
+			case log_level::info:
+			case log_level::debug:
+				os = &cout;
+				break;
+			default:
+				os = &cerr;
+				break;
 		}
 
 		*os << "[" << get_now_time_string() << "] " << level << log_header << ": " << log_body << endl;

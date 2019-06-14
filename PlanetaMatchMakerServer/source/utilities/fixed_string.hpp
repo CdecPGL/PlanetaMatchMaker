@@ -9,9 +9,9 @@
 namespace pgl {
 	template <size_t Length>
 	class fixed_string final : boost::less_than_comparable<fixed_string<Length>>,
-	                           boost::equality_comparable<fixed_string<Length>> {
+		boost::equality_comparable<fixed_string<Length>> {
 	public:
-		constexpr fixed_string() :data_({}) {}
+		constexpr fixed_string() : data_({}) {}
 
 		constexpr fixed_string(const fixed_string& other) = default;
 
@@ -21,7 +21,7 @@ namespace pgl {
 			const auto str_length = get_c_string_length(c_str);
 			assert(str_length <= Length);
 			std::memcpy(data_.data(), c_str, str_length);
-			for (auto i = str_length; i < Length; ++i)data_[i] = 0;
+			for (auto i = str_length; i < Length; ++i) data_[i] = 0;
 		}
 
 		constexpr fixed_string(const std::string& str) : fixed_string(str.c_str()) { }

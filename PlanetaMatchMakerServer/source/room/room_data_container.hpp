@@ -30,14 +30,13 @@ namespace pgl {
 		}
 
 		room_id_type assign_id_and_add_data(room_data& data) {
-			return container_.assign_id_and_add_data(data, [](room_data& data, id_param_type id)
-			{
+			return container_.assign_id_and_add_data(data, [](room_data& data, id_param_type id) {
 				data.room_id = id;
 			});
 		}
 
 		std::vector<room_data> get_range_data(const int start_idx, const int count,
-		                                      const room_data_sort_kind sort_kind) const {
+			const room_data_sort_kind sort_kind) const {
 			return container_.get_range_data(start_idx, count, get_room_data_compare_function(sort_kind));
 		}
 

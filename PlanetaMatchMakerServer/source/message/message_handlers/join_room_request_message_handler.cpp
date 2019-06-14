@@ -4,7 +4,7 @@
 
 namespace pgl {
 	void join_room_request_message_handler::handle_message(const join_room_request_message& message,
-	                                                       std::shared_ptr<message_handle_parameter> param) {
+		std::shared_ptr<message_handle_parameter> param) {
 		join_room_reply_message reply{};
 
 		check_remote_endpoint_existence<message_type::join_room_reply>(param, reply);
@@ -22,8 +22,8 @@ namespace pgl {
 			};
 			send(param, header, reply);
 			const auto extra_message = generate_string("Requested room \"", message.room_id, "\" in room group \"",
-			                                           message.group_index, "\" is full of players (",
-			                                           room_data.current_player_count, ").");
+				message.group_index, "\" is full of players (",
+				room_data.current_player_count, ").");
 			throw server_error(server_error_code::room_player_is_full, extra_message);
 		}
 
