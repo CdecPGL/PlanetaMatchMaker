@@ -26,6 +26,7 @@ namespace pgl {
 			[](const room_group_data& data) {
 				return list_room_group_reply_message::room_group_info{data.name};
 			});
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), room_group_data_list.size(), "are listed.");
 
 		// Reply to the client
 		const reply_message_header header{

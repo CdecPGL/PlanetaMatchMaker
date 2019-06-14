@@ -10,27 +10,37 @@ using namespace boost;
 namespace pgl {
 	void list_room_request_message_handler::handle_message(const list_room_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
+
 		list_room_reply_message reply{};
 
+		// Check authority of the client
 		check_remote_endpoint_existence<message_type::list_room_reply>(param, reply);
 
+		// Check room group existence
 		check_room_group_existence<message_type::list_room_reply>(param, message.group_index, reply);
 		const auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
 
+		// Generate room data list to send
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 			message.end_index - message.start_index + 1,
 			message.sort_kind);
 
+		// Prepare reply header
 		reply_message_header header{
 			message_type::list_room_reply,
 			message_error_code::ok
 		};
 		reply.total_room_count = static_cast_with_range_assertion<uint8_t>(room_data_container.size());
 		reply.result_room_count = static_cast_with_range_assertion<uint8_t>(room_data_list.size());
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), reply.result_room_count, "/",
+			reply.total_room_count, "are listed.");
 
+		// Reply room data list separately
 		const auto separation = static_cast_with_range_assertion<int>(
 			(room_data_list.size() / list_room_reply_room_info_count - 1) /
 			list_room_reply_room_info_count);
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Start replying ",
+			message_type::list_room_request, " message by ", separation, " messages.");
 		for (auto i = 0; i < separation; ++i) {
 			const auto send_room_count = i == separation - 1
 											? static_cast_with_range_assertion<uint8_t>(
@@ -58,7 +68,12 @@ namespace pgl {
 				}
 			}
 
+			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Reply ", i + 1, "/", separation,
+				" message.");
 			send(param, header, reply);
 		}
+
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Finished replying ",
+			message_type::list_room_request, " message by ", separation, " messages.");
 	}
 }
