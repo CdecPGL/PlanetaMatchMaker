@@ -13,6 +13,7 @@ using namespace boost;
 namespace pgl {
 	void create_room_request_message_handler::handle_message(const create_room_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
+
 		create_room_reply_message reply{};
 
 		// Check authority of the client
@@ -42,6 +43,8 @@ namespace pgl {
 			"\" is created in group ", message.group_index, " with id: ", reply.room_id);
 
 		// Reply to the client
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ", message_type::create_room_request,
+			" message.");
 		send(param, header, reply);
 	}
 }

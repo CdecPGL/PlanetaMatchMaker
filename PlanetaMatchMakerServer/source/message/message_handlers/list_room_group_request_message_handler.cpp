@@ -13,6 +13,7 @@ using namespace boost;
 namespace pgl {
 	void list_room_group_request_message_handler::handle_message(const list_room_group_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
+
 		list_room_group_reply_message reply{};
 
 		// Check authority of the client

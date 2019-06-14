@@ -12,7 +12,7 @@ using namespace boost;
 namespace pgl {
 	void authentication_request_message_handler::handle_message(const authentication_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
-		// Reply version when both not error and error
+
 		const authentication_reply_message reply{
 			server_version
 		};
@@ -52,7 +52,8 @@ namespace pgl {
 			message_type::authentication_reply,
 			message_error_code::ok,
 		};
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
+			message_type::authentication_request, " message.");
 		send(param, header, reply);
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply authentication message.");
 	}
 }

@@ -4,6 +4,7 @@
 namespace pgl {
 	void join_room_request_message_handler::handle_message(const join_room_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
+
 		join_room_reply_message reply{};
 
 		// Check authority of the client
@@ -39,6 +40,8 @@ namespace pgl {
 			message_error_code::ok
 		};
 		reply.host_address = room_data.host_address;
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ", message_type::join_room_request,
+			" message.");
 		send(param, header, reply);
 	}
 }
