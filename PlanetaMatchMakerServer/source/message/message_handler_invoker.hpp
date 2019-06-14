@@ -5,6 +5,7 @@
 #include <cassert>
 #include <shared_mutex>
 
+#include "utilities/log.hpp"
 #include "messages.hpp"
 #include "message_handler.hpp"
 #include "message_handle_parameter.hpp"
@@ -21,6 +22,8 @@ namespace pgl {
 			std::lock_guard<decltype(mutex_)> lock(mutex_);
 			static_assert(std::is_base_of_v<message_handler, MessageHandler>,
 				"MessageHandler must be a child class of message_handler.");
+			log(log_level::debug, "Register message handler (", NAMEOF_TYPE(MessageHandler), ") for ", MessageType,
+				".");
 			handler_generator_map_.emplace(MessageType, []() {
 				return std::make_unique<MessageHandler>();
 			});

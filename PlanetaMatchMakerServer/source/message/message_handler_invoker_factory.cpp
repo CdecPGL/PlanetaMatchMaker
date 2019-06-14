@@ -17,6 +17,7 @@ namespace pgl {
 		invoker->register_handler<message_type::list_room_request, list_room_request_message_handler>();
 		invoker->register_handler<message_type::update_room_status_request, update_room_status_request_message_handler
 		>();
+		log(log_level::info, "Generate standard message handler invoker.");
 		return invoker;
 	}
 }
