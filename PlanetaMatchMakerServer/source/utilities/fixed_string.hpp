@@ -2,9 +2,10 @@
 
 #include <array>
 #include <string>
-#include <cassert>
 
 #include <boost/operators.hpp>
+
+#include "string_utility.hpp"
 
 namespace pgl {
 	template <size_t Length>
@@ -19,7 +20,12 @@ namespace pgl {
 
 		fixed_string(const char* c_str) {
 			const auto str_length = get_c_string_length(c_str);
-			assert(str_length <= Length);
+			if (str_length > Length) {
+				const auto message = generate_string("The length of string (", str_length, " exceeds defined length (",
+					Length, ")");
+				throw std::out_of_range(message);
+			}
+
 			std::memcpy(data_.data(), c_str, str_length);
 			for (auto i = str_length; i < Length; ++i) data_[i] = 0;
 		}
@@ -48,7 +54,7 @@ namespace pgl {
 			return data_ == other.data_;
 		}
 
-		constexpr char at(size_t idx) const {
+		[[nodiscard]] constexpr char at(size_t idx) const {
 			return data_.at(idx);
 		}
 
