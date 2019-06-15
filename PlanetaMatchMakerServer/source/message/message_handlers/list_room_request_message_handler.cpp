@@ -1,7 +1,7 @@
 ﻿#include "list_room_request_message_handler.hpp"
 
 #include "server/server_data.hpp"
-#include "utilities/static_cast_with_assertion.hpp"
+#include "utilities/checked_static_cast.hpp"
 #include "../message_handle_utilities.hpp"
 
 using namespace std;
@@ -30,26 +30,26 @@ namespace pgl {
 			message_type::list_room_reply,
 			message_error_code::ok
 		};
-		reply.total_room_count = static_cast_with_range_assertion<uint8_t>(room_data_container.size());
-		reply.result_room_count = static_cast_with_range_assertion<uint8_t>(room_data_list.size());
+		reply.total_room_count = range_checked_static_cast<uint8_t>(room_data_container.size());
+		reply.result_room_count = range_checked_static_cast<uint8_t>(room_data_list.size());
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), reply.result_room_count, "/",
 			reply.total_room_count, "are listed.");
 
 		// Reply room data list separately
-		const auto separation = static_cast_with_range_assertion<int>(
+		const auto separation = range_checked_static_cast<int>(
 			(room_data_list.size() / list_room_reply_room_info_count - 1) /
 			list_room_reply_room_info_count);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Start replying ",
 			message_type::list_room_request, " message by ", separation, " messages.");
 		for (auto i = 0; i < separation; ++i) {
 			const auto send_room_count = i == separation - 1
-											? static_cast_with_range_assertion<uint8_t>(
-												static_cast_with_range_assertion<int>(room_data_list.size()) -
+											? range_checked_static_cast<uint8_t>(
+												range_checked_static_cast<int>(room_data_list.size()) -
 												list_room_reply_room_info_count * i)
 											: list_room_reply_room_info_count;
-			reply.reply_room_start_index = static_cast_with_range_assertion<uint8_t>(
+			reply.reply_room_start_index = range_checked_static_cast<uint8_t>(
 				message.start_index + i * separation);
-			reply.reply_room_end_index = static_cast_with_range_assertion<uint8_t>(
+			reply.reply_room_end_index = range_checked_static_cast<uint8_t>(
 				message.start_index + i * separation + send_room_count
 				- 1);
 			for (auto j = 0; j < list_room_reply_room_info_count; ++j) {

@@ -196,7 +196,7 @@
     <ClInclude Include="source\utilities\fixed_string.hpp" />
     <ClInclude Include="source\utilities\io_utility.hpp" />
     <ClInclude Include="source\utilities\log.hpp" />
-    <ClInclude Include="source\utilities\static_cast_with_assertion.hpp" />
+    <ClInclude Include="source\utilities\checked_static_cast.hpp" />
     <ClInclude Include="source\utilities\string_utility.hpp" />
   </ItemGroup>
   <ItemGroup>
