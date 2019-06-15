@@ -13,7 +13,7 @@ namespace pgl {
 	template <typename FirstData, typename... RestData>
 	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&& ... rest_data) {
 		auto data_summary = generate_string(sizeof...(rest_data) + 1, " data (",
-			sizeof(first_data) + (sizeof(rest_data) + ...), " bytes");
+			sizeof(first_data) + (sizeof(rest_data) + ...), " bytes)");
 
 		try {
 			if constexpr (sizeof...(RestData) > 0) {

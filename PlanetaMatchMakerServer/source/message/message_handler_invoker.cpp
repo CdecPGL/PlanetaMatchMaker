@@ -82,8 +82,14 @@ namespace pgl {
 		// process received message
 		const auto* data = asio::buffer_cast<const char*>(param->receive_buff.data());
 		(*message_handler)(data, param);
-		param->receive_buff.consume(param->receive_buff.size());
+		param->receive_buff.consume(message_size);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message processed. (type: ",
 			header->message_type, ", size: ", message_size, ")");
+		if (param->receive_buff.size()) {
+			log_with_endpoint(log_level::warning, param->socket.remote_endpoint(), "There are unprocessed data (size: ",
+				param->receive_buff.size(), ").");
+		}
+		param->receive_buff.consume(param->receive_buff.size());
+
 	}
 }

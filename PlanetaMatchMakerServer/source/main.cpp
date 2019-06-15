@@ -16,7 +16,7 @@ int main() {
 		asio::io_service io_service;
 		// prevent to stop server when all request are processed
 		asio::io_service::work work(io_service);
-		match_making_server server(server_dat, message_handler_invkr, io_service, ip_version::v4, 7777, 30);
+		match_making_server server(server_dat, message_handler_invkr, io_service, ip_version::v4, 7777, 300);
 		for (auto i = 0; i < 1; ++i) {
 			server.start();
 		}
