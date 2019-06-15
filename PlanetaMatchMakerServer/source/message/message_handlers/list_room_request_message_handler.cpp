@@ -37,8 +37,7 @@ namespace pgl {
 
 		// Reply room data list separately
 		const auto separation = range_checked_static_cast<int>(
-			(room_data_list.size() / list_room_reply_room_info_count - 1) /
-			list_room_reply_room_info_count);
+			(room_data_list.size() + list_room_reply_room_info_count - 1) / list_room_reply_room_info_count);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Start replying ",
 			message_type::list_room_request, " message by ", separation, " messages.");
 		for (auto i = 0; i < separation; ++i) {
@@ -70,6 +69,15 @@ namespace pgl {
 
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Reply ", i + 1, "/", separation,
 				" message.");
+			send(param, header, reply);
+		}
+
+		if (separation == 0) {
+			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(),
+				"There are no room which matches request.");
+			reply.reply_room_start_index = 0;
+			reply.reply_room_end_index = 0;
+			reply.room_info_list = {};
 			send(param, header, reply);
 		}
 
