@@ -48,6 +48,14 @@ namespace pgl {
 			return data_ == other.data_;
 		}
 
+		constexpr char at(size_t idx) const {
+			return data_.at(idx);
+		}
+
+		constexpr char& at(size_t idx) {
+			return data_.at(idx);
+		}
+
 		[[nodiscard]] constexpr size_t size() const {
 			return data_[Length - 1] ? Length : get_c_string_length(data_.data());
 		}
