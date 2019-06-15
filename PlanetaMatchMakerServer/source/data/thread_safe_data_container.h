@@ -61,10 +61,10 @@ namespace pgl {
 				data.push_back(pair.second.load());
 			}
 			std::sort(data.begin(), data.end(), compare_function);
-			count = std::min(count, data.size() - start_idx - 1);
+			count = std::min(count, data.size() >= start_idx ? data.size() - start_idx : 0);
 			std::vector<Data> result(count);
-			const auto end_idx = start_idx + count - 1;
-			for (auto i = start_idx; i <= end_idx; ++i) {
+			const auto end_idx_plus_one = start_idx + count;
+			for (auto i = start_idx; i < end_idx_plus_one; ++i) {
 				result[i - start_idx] = data[i];
 			}
 			return result;
