@@ -4,5 +4,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="string_utilities_test.cpp" />
     <ClCompile Include="fixed_string_test.cpp" />
+    <ClCompile Include="checked_static_cast_test.cpp" />
   </ItemGroup>
 </Project>
