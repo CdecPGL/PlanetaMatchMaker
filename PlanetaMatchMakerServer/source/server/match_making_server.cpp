@@ -65,16 +65,15 @@ namespace pgl {
 			catch (const server_error& e) {
 				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
 				restart();
-			}catch (const static_cast_range_error& e) {
-				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "static_cast error: ", e.what());
-				throw;
 			}
 			catch (const std::exception& e) {
-				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), "Unknown error: ", e.what());
+				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), typeid(e), ": ", e.what());
+				socket_.close();
 				throw;
 			}
 			catch (...) {
 				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), "Unknown error.");
+				socket_.close();
 				throw;
 			}
 		});
