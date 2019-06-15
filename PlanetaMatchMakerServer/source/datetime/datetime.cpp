@@ -31,11 +31,11 @@ namespace pgl {
 
 	datetime::datetime(const int year, const int month, const int day, const int hour, const int minute,
 		const int second): data_(
-		get_located_data(year, year_start_bit, year_bit_count) &
-		get_located_data(month, month_start_bit, month_bit_count) &
-		get_located_data(day, day_start_bit, day_bit_count) &
-		get_located_data(hour, hour_start_bit, hour_bit_count) &
-		get_located_data(minute, minute_start_bit, minute_bit_count) &
+		get_located_data(year, year_start_bit, year_bit_count) |
+		get_located_data(month, month_start_bit, month_bit_count) |
+		get_located_data(day, day_start_bit, day_bit_count) |
+		get_located_data(hour, hour_start_bit, hour_bit_count) |
+		get_located_data(minute, minute_start_bit, minute_bit_count) |
 		get_located_data(second, second_start_bit, second_bit_count)
 	) {}
 
@@ -84,7 +84,7 @@ namespace pgl {
 	}
 
 	int datetime::get_from_date(const int start_bit, const int bit_count) const {
-		return static_cast<int>(data_ << start_bit) & ((1 << bit_count) - 1);
+		return static_cast<int>(data_ >> start_bit) & ((1 << bit_count) - 1);
 	}
 
 	string get_now_datetime_string() {

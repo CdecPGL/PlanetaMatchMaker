@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_SUITE(datetime_test)
 	BOOST_AUTO_TEST_CASE(test_less_than_operator_same) {
 		const pgl::datetime test1(2019, 5, 6, 11, 22, 33);
 		const pgl::datetime test2(2019, 5, 6, 11, 22, 33);
-		BOOST_CHECK(test1 < test2);
+		BOOST_CHECK(!(test1 < test2));
 	}
 
 	BOOST_AUTO_TEST_CASE(test_equal_operator_true) {
