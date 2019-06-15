@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
