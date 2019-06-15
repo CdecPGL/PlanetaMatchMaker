@@ -51,9 +51,7 @@ namespace pgl {
 	};
 
 	// 1 bytes
-	struct list_room_group_request_message final {
-		uint8_t dummy{};
-	};
+	struct list_room_group_request_message final { };
 
 	// 241 bytes
 	struct list_room_group_reply_message final {
