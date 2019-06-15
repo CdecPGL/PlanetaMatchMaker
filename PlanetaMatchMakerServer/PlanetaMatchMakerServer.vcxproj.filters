@@ -44,6 +44,7 @@
     <ClInclude Include="source\serialize\serializer.hpp" />
     <ClInclude Include="source\serialize\serialization_error.hpp" />
     <ClInclude Include="source\serialize\serializable.hpp" />
+    <ClInclude Include="source\utilities\template_utilities.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />

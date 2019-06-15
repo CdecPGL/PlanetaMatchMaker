@@ -4,6 +4,7 @@
 #include <functional>
 #include <boost/endian/conversion.hpp>
 
+#include "utilities/template_utilities.hpp"
 #include "utilities/string_utility.hpp"
 #include "serialization_error.hpp"
 #include "serialize/serializable.hpp"
@@ -20,7 +21,7 @@ namespace pgl {
 		void operator +=(const serializable& value);
 
 		template <typename T>
-		auto operator +=(const T& value) -> std::enable_if_t<std::is_arithmetic_v<T>, void> {
+		auto operator +=(const T& value) -> std::enable_if_t<std::is_arithmetic_v<T>> {
 			if (status_ == status::none) {
 				throw serialization_error(
 					"Cannot add serialization target out of serialization or deserialization process.");
@@ -42,6 +43,13 @@ namespace pgl {
 					boost::endian::big_to_native_inplace(nc_value);
 					pos += size;
 				});
+			}
+		}
+
+		template <typename T>
+		auto operator +=(const T& value) -> std::enable_if_t<is_array_container_v<T>> {
+			for (auto i = 0u; i < value.size(); ++i) {
+				*this += value[i];
 			}
 		}
 

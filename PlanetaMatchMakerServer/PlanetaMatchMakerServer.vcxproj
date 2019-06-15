@@ -201,6 +201,7 @@
     <ClInclude Include="source\utilities\log.hpp" />
     <ClInclude Include="source\utilities\checked_static_cast.hpp" />
     <ClInclude Include="source\utilities\string_utility.hpp" />
+    <ClInclude Include="source\utilities\template_utilities.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\async\timer.cpp" />
