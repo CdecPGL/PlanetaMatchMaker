@@ -19,6 +19,7 @@ namespace pgl {
 	template <typename ... Params>
 	std::string generate_string(Params&& ... params) {
 		std::ostringstream oss;
+		oss << std::boolalpha;
 		generate_string2(oss, std::forward<Params>(params)...);
 		return oss.str();
 	}

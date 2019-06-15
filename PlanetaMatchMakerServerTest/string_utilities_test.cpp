@@ -16,7 +16,8 @@ BOOST_AUTO_TEST_SUITE(string_utilities_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_double_concatenation) {
-		BOOST_CHECK_EQUAL(u8"0.123456789-0.987654321", pgl::generate_string(0.123456789, -0.987654321));
+		// double is rounded by 6 digits
+		BOOST_CHECK_EQUAL(u8"0.123457-0.987654", pgl::generate_string(0.123456789, -0.987654321));
 	}
 
 	BOOST_AUTO_TEST_CASE(test_bool_concatenation) {
@@ -30,8 +31,9 @@ BOOST_AUTO_TEST_SUITE(string_utilities_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_mixed_concatenation) {
-		BOOST_CHECK_EQUAL(u8"test1true0.230.9999999999element1",
-			pgl::generate_string("test", 1, true, 0.23, 0.9999999999, test_enum::element1));
+		// double is rounded by 6 digits
+		BOOST_CHECK_EQUAL(u8"test1true0.230.888889element1",
+			pgl::generate_string("test", 1, true, 0.23, 0.8888888888, test_enum::element1));
 	}
 
 	BOOST_AUTO_TEST_CASE(test_empty_parameter) {
