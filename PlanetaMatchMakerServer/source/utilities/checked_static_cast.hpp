@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "nameof.hpp"
 
 #include "string_utility.hpp"
@@ -14,7 +16,7 @@ namespace pgl {
 	Destination range_checked_static_cast(const Source& source) {
 		Destination destination{static_cast<Destination>(source)};
 		Source round_trip{static_cast<Source>(destination)};
-		if (round_trip != source) {
+		if (round_trip != source || std::is_unsigned_v<Destination> && source < 0) {
 			auto error_message = generate_string("Source value (", source, ") is out of range in destination type (",
 				nameof::nameof_type<Destination>(), ").");
 			throw static_cast_range_error(error_message);
