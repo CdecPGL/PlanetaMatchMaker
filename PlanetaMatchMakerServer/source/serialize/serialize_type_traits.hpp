@@ -15,7 +15,7 @@ namespace pgl {
 		::function_types::non_cv>::value;
 
 	struct has_global_on_serialize_impl {
-		template <class T, void(*)(T&, serializer&) = &on_serialize>
+		template <class T, void(*)(T&, serializer&) = &::pgl::on_serialize>
 		static std::true_type check(T&& x);
 
 		template <class T>
@@ -27,5 +27,5 @@ namespace pgl {
 		= decltype(has_global_on_serialize_impl::check<T>(std::declval<T>()))::value;
 
 	template <class T>
-	constexpr bool is_serializable_v = has_global_on_serialize_v<T>;
+	constexpr bool is_serializable_v = has_global_on_serialize_v<T> && std::is_trivial_v<T>;
 }
