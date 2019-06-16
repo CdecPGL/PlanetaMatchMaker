@@ -15,5 +15,5 @@ namespace pgl {
 	struct is_array_container final : decltype(is_array_container_impl::check<T>(std::declval<T>())) {};
 
 	template <class T>
-	bool is_array_container_v = is_array_container<T>::value;
+	constexpr bool is_array_container_v = is_array_container<T>::value;
 }

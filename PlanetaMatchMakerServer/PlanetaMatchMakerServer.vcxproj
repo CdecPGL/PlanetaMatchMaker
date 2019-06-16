@@ -174,9 +174,9 @@
     <ClInclude Include="source\message\message_handlers\update_room_status_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handle_utilities.hpp" />
     <ClInclude Include="source\room\room_data_container.hpp" />
-    <ClInclude Include="source\serialize\serializable.hpp" />
     <ClInclude Include="source\serialize\serialization_error.hpp" />
     <ClInclude Include="source\serialize\serializer.hpp" />
+    <ClInclude Include="source\serialize\serialize_type_traits.hpp" />
     <ClInclude Include="source\server\match_making_server.hpp" />
     <ClInclude Include="source\server\server_constants.hpp" />
     <ClInclude Include="source\server\server_data.hpp" />
