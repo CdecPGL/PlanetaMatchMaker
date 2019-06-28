@@ -43,16 +43,15 @@ namespace pgl {
 		}
 
 	private:
-		enum class status { none, serializing, deserializing, scanning };
+		enum class status { none, serializing, deserializing, size_estimating };
 
-		size_t total_size_{0};
 		status status_{status::none};
+		std::vector<std::function<void(size_t&)>> size_estimators_;
 		std::vector<std::function<void(std::vector<uint8_t>&, size_t&)>> serializers_;
 		std::vector<std::function<void(const std::vector<uint8_t>&, size_t&)>> deserializers_;
 
 		template <typename T>
 		auto add_arithmetic_type_value(T& value) -> std::enable_if_t<std::is_arithmetic_v<T>> {
-			total_size_ += sizeof(T);
 			switch (status_) {
 				case status::serializing:
 					serializers_.push_back([&value](std::vector<uint8_t>& data, size_t& pos) {
@@ -70,6 +69,11 @@ namespace pgl {
 						pos += size;
 					});
 					break;
+				case status::size_estimating:
+					size_estimators_.push_back([&value](size_t& total_size) {
+						total_size += sizeof(T);
+					});
+					break;
 				default:
 					break;
 			}
@@ -78,7 +82,6 @@ namespace pgl {
 		template <typename T>
 		auto add_enum_type_value(T& value) -> std::enable_if_t<std::is_enum_v<T>> {
 			using base_t = std::underlying_type_t<T>;
-			total_size_ += sizeof(base_t);
 			switch (status_) {
 				case status::serializing:
 					serializers_.push_back([&value](std::vector<uint8_t>& data, size_t& pos) {
@@ -99,6 +102,11 @@ namespace pgl {
 						pos += size;
 					});
 					break;
+				case status::size_estimating:
+					size_estimators_.push_back([&value](size_t& total_size) {
+						total_size += sizeof(base_t);
+					});
+					break;
 				default:
 					break;
 			}
@@ -113,18 +121,23 @@ namespace pgl {
 				throw serialization_error("Cannot start serialization in serialization or deserialization progress.");
 			}
 
-			total_size_ = 0;
+			// Estimate  size
+			auto total_size = get_serialized_size(target);
 
+			// Build serializers
 			serializers_.clear();
 			status_ = status::serializing;
 			T& nc_target = const_cast<T&>(target);
 			on_serialize(nc_target, *this);
 			status_ = status::none;
-			std::vector<uint8_t> data(total_size_);
+
+			// Serialize
+			std::vector<uint8_t> data(total_size);
 			size_t pos = 0;
 			for (auto&& serializer : serializers_) {
 				serializer(data, pos);
 			}
+
 			return data;
 		}
 
@@ -137,17 +150,22 @@ namespace pgl {
 				throw serialization_error("Cannot start serialization in serialization or deserialization process.");
 			}
 
-			total_size_ = 0;
+			// Estimate and check size
+			auto total_size = get_serialized_size(target);
+			if (total_size != data.size()) {
+				const auto message = generate_string("The data size (", data.size(),
+					" bytes) does not match to the passed size (", total_size,
+					" bytes) for deserialization of the type (", typeid(target), ").");
+				throw serialization_error(message);
+			}
+
+			// Build deserializers
 			deserializers_.clear();
 			status_ = status::deserializing;
 			on_serialize(target, *this);
 			status_ = status::none;
-			if (total_size_ != data.size()) {
-				const auto message = generate_string("The data size (", data.size(),
-					" bytes) does not match to the passed size (", total_size_,
-					" bytes) for deserialization of the type (", typeid(target), ").");
-				throw serialization_error(message);
-			}
+
+			// Deserialize
 			size_t pos = 0;
 			for (auto&& deserializer : deserializers_) {
 				deserializer(data, pos);
@@ -164,13 +182,20 @@ namespace pgl {
 					"Cannot start get_serialized_size in serialization or deserialization progress.");
 			}
 
-			total_size_ = 0;
-
-			status_ = status::scanning;
+			// Build size estimators
+			size_estimators_.clear();
+			status_ = status::size_estimating;
 			T& nc_target = const_cast<T&>(target);
 			on_serialize(nc_target, *this);
 			status_ = status::none;
-			return total_size_;
+
+			// Estimate size
+			size_t total_size = 0;
+			for (auto&& size_estimators : size_estimators_) {
+				size_estimators(total_size);
+			}
+
+			return total_size;
 		}
 	};
 
