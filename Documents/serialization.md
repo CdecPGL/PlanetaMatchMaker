@@ -1,5 +1,19 @@
 # Serialization
 
+## Available Types
+
+- Integer Types: int, long, int32_t, etc.
+- Float Types: float, double, etc.
+- Boolean Type
+- std::array
+- Enum Types: enum, enum class, enum struct
+- Trivial Custom Classes
+
+## Not Available Types
+
+- Not Trivial Custom Classes
+- Dynamic Containers: std::vector, std::map, etc.
+
 ## Usage
 
 ### Serialize
@@ -31,7 +45,7 @@ The size is always same if the type is same.
 To make custom type serializable, there are two ways as below.
 The type must be a trivial type.
 
-### Defina on_serialize(serializer&) Member Function
+### Define on_serialize(serializer&) Member Function
 
 ```cpp
 struct Data{
@@ -45,7 +59,7 @@ struct Data{
 };
 ```
 
-### Defina on_serialize(T& value, serializer&) Global Function in pgl Namespace
+### Define on_serialize(T& value, serializer&) Global Function in pgl Namespace
 
 ```cpp
 struct Data{

@@ -22,6 +22,8 @@ namespace pgl {
 
 			if constexpr (std::is_arithmetic_v<T>) {
 				add_arithmetic_type_value(value);
+			} else if constexpr (std::is_enum_v<T>) {
+				add_enum_type_value(value);
 			} else if constexpr (is_array_container_v<T>) {
 				for (auto i = 0u; i < value.size(); ++i) {
 					*this += value[i];
@@ -65,6 +67,35 @@ namespace pgl {
 						const auto size = sizeof(T);
 						std::memcpy(&value, data.data() + pos, size);
 						boost::endian::big_to_native_inplace(value);
+						pos += size;
+					});
+					break;
+				default:
+					break;
+			}
+		}
+
+		template <typename T>
+		auto add_enum_type_value(T& value) -> std::enable_if_t<std::is_enum_v<T>> {
+			using base_t = std::underlying_type_t<T>;
+			total_size_ += sizeof(base_t);
+			switch (status_) {
+				case status::serializing:
+					serializers_.push_back([&value](std::vector<uint8_t>& data, size_t& pos) {
+						base_t base_value = static_cast<base_t>(value);
+						auto e_value = boost::endian::native_to_big(base_value);
+						const auto size = sizeof(base_t);
+						std::memcpy(data.data() + pos, &e_value, size);
+						pos += size;
+					});
+					break;
+				case status::deserializing:
+					deserializers_.push_back([&value](const std::vector<uint8_t>& data, size_t& pos) {
+						const auto size = sizeof(base_t);
+						base_t base_value;
+						std::memcpy(&base_value, data.data() + pos, size);
+						boost::endian::big_to_native_inplace(base_value);
+						value = static_cast<T>(base_value);
 						pos += size;
 					});
 					break;
@@ -150,6 +181,11 @@ namespace pgl {
 
 	template <typename T>
 	auto on_serialize(T& value, serializer& serializer) -> std::enable_if_t<std::is_arithmetic_v<T>> {
+		serializer += value;
+	}
+
+	template <typename T>
+	auto on_serialize(T& value, serializer& serializer) -> std::enable_if_t<std::is_enum_v<T>> {
 		serializer += value;
 	}
 

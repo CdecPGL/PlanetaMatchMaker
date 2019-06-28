@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "serialize/serializer.hpp"
 #include "message/message_error_code.hpp"
 #include "datetime/datetime.hpp"
 #include "client/client_address.hpp"
@@ -29,6 +30,10 @@ namespace pgl {
 	// 1 bytes. Use for notice message too
 	struct request_message_header final {
 		message_type message_type{};
+
+		/*void on_serialize(serializer& serializer) {
+			serializer += message_type;
+		}*/
 	};
 
 	// 2 bytes

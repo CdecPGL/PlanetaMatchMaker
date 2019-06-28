@@ -98,15 +98,26 @@ struct nested_struct final {
 	}
 };
 
+enum test_enum { a, b, c };
+
+enum class test_enum_class { x, y, z };
+
 template <typename T>
 auto get_default() -> std::enable_if_t<std::is_arithmetic_v<T>, T> {
 	if constexpr (std::is_same_v<T, bool>) {
 		return true;
-	} else if constexpr (std::is_signed_v<T>) {
-		return std::numeric_limits<T>::min() / 10;
 	} else {
-		return std::numeric_limits<T>::max() / 10;
+		if constexpr (std::is_signed_v<T>) {
+			return std::numeric_limits<T>::min() / 10;
+		} else {
+			return std::numeric_limits<T>::max() / 10;
+		}
 	}
+}
+
+template <typename T>
+auto get_default() -> std::enable_if_t<std::is_enum_v<T>, T> {
+	return static_cast<T>(1);
 }
 
 template <typename T>
@@ -115,7 +126,7 @@ auto get_default() -> decltype(T::get_default, T{}) {
 }
 
 template <typename T>
-auto get_size() -> std::enable_if_t<std::is_arithmetic_v<T>, size_t> {
+auto get_size() -> std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, size_t> {
 	return sizeof(T);
 }
 
@@ -127,6 +138,7 @@ auto get_size() -> decltype(T::size, size_t{}) {
 BOOST_AUTO_TEST_SUITE(serialize_test)
 	typedef boost::mpl::list<int8_t, uint8_t, int16_t, uint16_t,
 		int32_t, uint32_t, int64_t, uint64_t, bool,
+		test_enum, test_enum_class,
 		simple_struct_member_serialize, simple_struct_global_serialize, nested_struct>
 	test_types;
 
