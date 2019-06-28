@@ -11,9 +11,8 @@ participant Client1
 ==Start Game==
 
 loop every seconds
-GameHost -> MatchingServer : update_room_status_request[open room, player count]
+GameHost -> MatchingServer : update_room_status_notice[open room, player count]
 activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
 end
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer

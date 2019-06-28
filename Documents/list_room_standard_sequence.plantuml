@@ -26,9 +26,8 @@ group Game
 ==Start Lobby==
 
 loop every seconds
-GameHost -> MatchingServer : update_room_status_request[open room, player count]
+GameHost -> MatchingServer : update_room_status_notice[open room, player count]
 activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
 end
@@ -74,25 +73,22 @@ note right: Disconnected
 destroy Client2
 
 note right of GameHost: Pause accepting new client
-GameHost -> MatchingServer : update_room_status_request[close room, player count]
+GameHost -> MatchingServer : update_room_status_notice[close room, player count]
 activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
 
 note right of GameHost: Resume accepting new client
-GameHost -> MatchingServer : update_room_status_request[open room, player count]
+GameHost -> MatchingServer : update_room_status_notice[open room, player count]
 activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
 
 ==Start Game==
 
 loop every seconds
-GameHost -> MatchingServer : update_room_status_request[open room, player count]
+GameHost -> MatchingServer : update_room_status_notice[open room, player count]
 activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
 end
@@ -102,9 +98,8 @@ GameHost<->Client1 : send and receive game data
 ==Finish Game==
 
 loop every seconds
-GameHost -> MatchingServer : update_room_status_request[open room, player count]
+GameHost -> MatchingServer : update_room_status_notice[open room, player count]
 activate MatchingServer
-MatchingServer --> GameHost : update_room_status_reply[ok or error]
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
 end
@@ -113,7 +108,7 @@ GameHost<->Client1 : send and receive game data
 
 ==Finish Lobby==
 
-GameHost -> MatchingServer : update_room_status_request[remove room]
+GameHost -> MatchingServer : update_room_status_notice[remove room]
 activate MatchingServer
 
 end

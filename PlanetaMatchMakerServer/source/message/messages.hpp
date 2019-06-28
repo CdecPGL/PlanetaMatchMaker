@@ -22,12 +22,11 @@ namespace pgl {
 		list_room_reply,
 		join_room_request,
 		join_room_reply,
-		update_room_status_request,
-		update_room_status_reply,
+		update_room_status_notice,
 		random_match_request
 	};
 
-	// 1 bytes
+	// 1 bytes. Use for notice message too
 	struct request_message_header final {
 		message_type message_type{};
 	};
@@ -118,17 +117,12 @@ namespace pgl {
 	};
 
 	// 6 bytes
-	struct update_room_status_request_message final {
+	struct update_room_status_notice_message final {
 		enum class status : uint8_t { open, close, remove };
 
 		uint8_t group_index{};
 		room_id_type room_id{};
 		status status{};
-	};
-
-	// 1 bytes
-	struct update_room_status_reply_message final {
-		uint8_t dummy{};
 	};
 
 	struct random_match_request_message final { };

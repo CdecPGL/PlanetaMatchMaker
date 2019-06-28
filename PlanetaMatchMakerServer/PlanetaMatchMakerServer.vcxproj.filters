@@ -38,13 +38,13 @@
     <ClInclude Include="source\message\message_constants.hpp" />
     <ClInclude Include="source\utilities\fixed_string.hpp" />
     <ClInclude Include="source\message\message_handlers\list_room_group_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\update_room_status_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handle_utilities.hpp" />
     <ClInclude Include="source\utilities\checked_static_cast.hpp" />
     <ClInclude Include="source\serialize\serializer.hpp" />
     <ClInclude Include="source\serialize\serialization_error.hpp" />
     <ClInclude Include="source\utilities\template_utilities.hpp" />
     <ClInclude Include="source\serialize\serialize_type_traits.hpp" />
+    <ClInclude Include="source\message\message_handlers\update_room_status_notice_message_handler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />
@@ -69,7 +69,8 @@
     <ClCompile Include="source\room\room_data.cpp" />
     <ClCompile Include="source\server\server_data.cpp" />
     <ClCompile Include="source\message\message_handlers\list_room_group_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\update_room_status_request_message_handler.cpp" />
     <ClCompile Include="source\serialize\serializer.cpp" />
+    <ClCompile Include="source\message\message_handle_utilities.cpp" />
+    <ClCompile Include="source\message\message_handlers\update_room_status_notice_message_handler.cpp" />
   </ItemGroup>
 </Project>

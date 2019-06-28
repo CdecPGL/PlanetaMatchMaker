@@ -5,7 +5,7 @@
 #include "message_handlers/create_room_request_message_handler.hpp"
 #include "message_handlers/join_room_request_message_handler.hpp"
 #include "message_handlers/list_room_request_message_handler.hpp"
-#include "message_handlers/update_room_status_request_message_handler.hpp"
+#include "message_handlers/update_room_status_notice_message_handler.hpp"
 
 namespace pgl {
 	std::shared_ptr<message_handler_invoker> message_handler_invoker_factory::make_standard() {
@@ -15,7 +15,7 @@ namespace pgl {
 		invoker->register_handler<message_type::create_room_request, create_room_request_message_handler>();
 		invoker->register_handler<message_type::join_room_request, join_room_request_message_handler>();
 		invoker->register_handler<message_type::list_room_request, list_room_request_message_handler>();
-		invoker->register_handler<message_type::update_room_status_request, update_room_status_request_message_handler
+		invoker->register_handler<message_type::update_room_status_notice, update_room_status_notice_message_handler
 		>();
 		log(log_level::info, "Generate standard message handler invoker.");
 		return invoker;

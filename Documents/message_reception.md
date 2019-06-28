@@ -32,11 +32,10 @@
 1. Check if player count of requested room reaches max, and send error to the client if it reaches max
 1. Send join_room_reply_message to the client
 
-## update_room_status_request_message
+## update_room_status_notice_message
 
-1. Check if the client is registered to the server, and send error to the client if the client is not registered to the server
-1. Check requested room group index exists, and send error to the client if requested room group index doesn't exist
-1. Check requested room id exists, and send error to the client if requested room id doesn't exist
-1. Check requested host of the room is same as the client, and send error to the client if not
+1. Check if the client is registered to the server, and stop message handling if the client is not registered to the server
+1. Check requested room group index exists, and stop message handling if requested room group index doesn't exist
+1. Check requested room id exists, and stop message handling if requested room id doesn't exist
+1. Check requested host of the room is same as the client, and stop message handling if not
 1. Update room data
-1. Send update_room_status_reply_message to the client

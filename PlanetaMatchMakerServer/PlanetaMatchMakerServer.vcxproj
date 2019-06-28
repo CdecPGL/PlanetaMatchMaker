@@ -171,7 +171,7 @@
     <ClInclude Include="source\message\message_constants.hpp" />
     <ClInclude Include="source\message\message_error_code.hpp" />
     <ClInclude Include="source\message\message_handlers\list_room_group_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\update_room_status_request_message_handler.hpp" />
+    <ClInclude Include="source\message\message_handlers\update_room_status_notice_message_handler.hpp" />
     <ClInclude Include="source\message\message_handle_utilities.hpp" />
     <ClInclude Include="source\room\room_data_container.hpp" />
     <ClInclude Include="source\serialize\serialization_error.hpp" />
@@ -210,7 +210,8 @@
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\message\message_handlers\list_room_group_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\update_room_status_request_message_handler.cpp" />
+    <ClCompile Include="source\message\message_handlers\update_room_status_notice_message_handler.cpp" />
+    <ClCompile Include="source\message\message_handle_utilities.cpp" />
     <ClCompile Include="source\room\room_data.cpp" />
     <ClCompile Include="source\room\room_data_container.cpp" />
     <ClCompile Include="source\serialize\serializer.cpp" />
