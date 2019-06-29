@@ -3,8 +3,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 
-#include "nameof.hpp"
-
 #include "async/timer.hpp"
 #include "utilities/log.hpp"
 #include "server/server_error.hpp"

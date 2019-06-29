@@ -29,7 +29,7 @@ namespace pgl {
 
 	// 1 bytes. Use for notice message too
 	struct request_message_header final {
-		message_type message_type{};
+		message_type message_type;
 
 		void on_serialize(serializer& serializer) {
 			serializer += message_type;
@@ -38,8 +38,8 @@ namespace pgl {
 
 	// 2 bytes
 	struct reply_message_header final {
-		message_type message_type{};
-		message_error_code error_code{};
+		message_type message_type;
+		message_error_code error_code;
 
 		void on_serialize(serializer& serializer) {
 			serializer += message_type;
@@ -51,7 +51,7 @@ namespace pgl {
 
 	// 2 bytes
 	struct authentication_request_message final {
-		version_type version{};
+		version_type version;
 
 		void on_serialize(serializer& serializer) {
 			serializer += version;
@@ -60,7 +60,7 @@ namespace pgl {
 
 	// 2 bytes
 	struct authentication_reply_message final {
-		version_type version{};
+		version_type version;
 
 		void on_serialize(serializer& serializer) {
 			serializer += version;
@@ -86,7 +86,7 @@ namespace pgl {
 			}
 		};
 
-		uint8_t room_group_count{};
+		uint8_t room_group_count;
 		std::array<room_group_info, room_group_max_count> room_group_info_list{};
 
 		void on_serialize(serializer& serializer) {
@@ -97,11 +97,11 @@ namespace pgl {
 
 	// 43 bytes
 	struct create_room_request_message final {
-		uint8_t group_index{};
-		room_name_type name{};
-		room_flags_bit_mask::flags_type flags{};
-		room_password_type password{};
-		uint8_t max_player_count{};
+		uint8_t group_index;
+		room_name_type name;
+		room_flags_bit_mask::flags_type flags;
+		room_password_type password;
+		uint8_t max_player_count;
 
 		void on_serialize(serializer& serializer) {
 			serializer += group_index;
@@ -114,7 +114,7 @@ namespace pgl {
 
 	// 4 bytes
 	struct create_room_reply_message final {
-		room_id_type room_id{};
+		room_id_type room_id;
 
 		void on_serialize(serializer& serializer) {
 			serializer += room_id;
@@ -123,11 +123,11 @@ namespace pgl {
 
 	// 5 bytes
 	struct list_room_request_message final {
-		uint8_t group_index{};
-		uint8_t start_index{};
-		uint8_t end_index{};
-		room_data_sort_kind sort_kind{};
-		uint8_t flags{}; //filter conditions about room
+		uint8_t group_index;
+		uint8_t start_index;
+		uint8_t end_index;
+		room_data_sort_kind sort_kind;
+		uint8_t flags; //filter conditions about room
 
 		void on_serialize(serializer& serializer) {
 			serializer += group_index;
@@ -159,10 +159,10 @@ namespace pgl {
 			}
 		};
 
-		uint8_t total_room_count{}; // the number of rooms server managing
-		uint8_t result_room_count{}; // the number of rooms for request
-		uint8_t reply_room_start_index{}; // the index of start room in this message
-		uint8_t reply_room_end_index{}; // the index of end room in this message
+		uint8_t total_room_count; // the number of rooms server managing
+		uint8_t result_room_count; // the number of rooms for request
+		uint8_t reply_room_start_index; // the index of start room in this message
+		uint8_t reply_room_end_index; // the index of end room in this message
 		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 
 		void on_serialize(serializer& serializer) {
@@ -176,8 +176,8 @@ namespace pgl {
 
 	// 21 bytes
 	struct join_room_request_message final {
-		uint8_t group_index{};
-		room_id_type room_id{};
+		uint8_t group_index;
+		room_id_type room_id;
 		room_password_type password{};
 
 		void on_serialize(serializer& serializer) {
@@ -189,7 +189,7 @@ namespace pgl {
 
 	//18 bytes
 	struct join_room_reply_message final {
-		client_address host_address{};
+		client_address host_address;
 
 		void on_serialize(serializer& serializer) {
 			serializer += host_address;
@@ -200,9 +200,9 @@ namespace pgl {
 	struct update_room_status_notice_message final {
 		enum class status : uint8_t { open, close, remove };
 
-		uint8_t group_index{};
-		room_id_type room_id{};
-		status status{};
+		uint8_t group_index;
+		room_id_type room_id;
+		status status;
 
 		void on_serialize(serializer& serializer) {
 			serializer += group_index;

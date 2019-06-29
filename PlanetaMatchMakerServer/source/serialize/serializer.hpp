@@ -201,6 +201,8 @@ namespace pgl {
 
 	template <typename T>
 	auto on_serialize(T& value, serializer& serializer) -> std::enable_if_t<has_member_on_serialize_v<T>> {
+		static_assert(std::is_trivial_v<T>,
+			"T must be a trivial type because the serialize size of T must not be changed in runtime.");
 		value.on_serialize(serializer);
 	}
 
