@@ -2,7 +2,7 @@
 
 ## Available Types
 
-- Integer Types: int, long, int32_t, etc.
+- Size Defined Integer Types: int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t. 
 - Boolean Type
 - std::array
 - Enum Types: enum, enum class, enum struct
@@ -10,6 +10,7 @@
 
 ## Not Available Types
 
+- Size Undefined Integer Types: char, int, long, etc. (Because some of types has different size in different environment. It may not occur errors but it may not works well)
 - Float Types: float, double, etc. (Due to boost::endian library)
 - Not Trivial Custom Classes
 - Dynamic Containers: std::vector, std::map, etc.
@@ -34,7 +35,7 @@ deserialize(value, data);
 ### Get Serialized Size
 
 ```cpp
-int value=0;
+int32_t value=0;
 size_t size = get_serialized_size(value);
 ```
 
@@ -49,8 +50,8 @@ The type must be a trivial type.
 
 ```cpp
 struct Data{
-    int value1;
-    char value2;
+    int32_t value1;
+    uint8_t value2;
 
     void on_serialize(serializer& serializer){
         serializer += value1;
@@ -63,8 +64,8 @@ struct Data{
 
 ```cpp
 struct Data{
-    int value1;
-    char value2;
+    int32_t value1;
+    uint8_t value2;
 };
 
 namespace pgl{

@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_SUITE(fixed_string_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_size_zero) {
-		const pgl::fixed_string<32> test1;
+		const pgl::fixed_string<32> test1{};
 		BOOST_CHECK_EQUAL(0, test1.size());
 	}
 

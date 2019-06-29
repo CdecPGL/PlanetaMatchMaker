@@ -4,19 +4,25 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/operators.hpp>
 
+#include "serialize/serializer.hpp"
 #include "network/network_layer.hpp"
 #include "network/transport_layer.hpp"
 
 namespace pgl {
 	// 18 bytes
 	struct client_address final : private boost::equality_comparable<client_address> {
-		ip_address_type ip_address{};
-		port_number_type port_number{};
+		ip_address_type ip_address;
+		port_number_type port_number;
 
 		bool operator==(const client_address& other) const;
 
 		static client_address make_from_endpoint(
 			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint);
+
+		void on_serialize(serializer& serializer) {
+			serializer += ip_address;
+			serializer += port_number;
+		}
 	};
 }
 

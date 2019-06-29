@@ -5,17 +5,17 @@
 
 #include <boost/operators.hpp>
 
+#include "serialize/serializer.hpp"
 #include "string_utility.hpp"
 
 namespace pgl {
+	// Fixed length string which is trivial type. THis class holds characters as uint8_t instead of char.
 	template <size_t Length>
 	class fixed_string final : boost::less_than_comparable<fixed_string<Length>>,
 		boost::equality_comparable<fixed_string<Length>> {
 	public:
-		constexpr fixed_string() : data_({}) {}
-
+		constexpr fixed_string() = default;
 		constexpr fixed_string(const fixed_string& other) = default;
-
 		constexpr fixed_string(fixed_string&& other) = default;
 
 		fixed_string(const char* c_str) {
@@ -35,14 +35,13 @@ namespace pgl {
 		~fixed_string() = default;
 
 		constexpr fixed_string& operator=(const fixed_string& other) = default;
-
 		constexpr fixed_string& operator=(fixed_string&& other) = default;
 
-		constexpr char operator[](size_t idx) const {
+		constexpr uint8_t operator[](size_t idx) const {
 			return data_[idx];
 		}
 
-		constexpr char& operator[](size_t idx) {
+		constexpr uint8_t& operator[](size_t idx) {
 			return data_[idx];
 		}
 
@@ -54,16 +53,16 @@ namespace pgl {
 			return data_ == other.data_;
 		}
 
-		[[nodiscard]] constexpr char at(size_t idx) const {
+		[[nodiscard]] constexpr uint8_t at(size_t idx) const {
 			return data_.at(idx);
 		}
 
-		constexpr char& at(size_t idx) {
+		constexpr uint8_t& at(size_t idx) {
 			return data_.at(idx);
 		}
 
 		[[nodiscard]] constexpr size_t size() const {
-			return data_[Length - 1] ? Length : get_c_string_length(data_.data());
+			return data_[Length - 1] ? Length : get_c_string_length(reinterpret_cast<const char*>(data_.data()));
 		}
 
 		[[nodiscard]] constexpr std::string to_string() const {
@@ -74,15 +73,19 @@ namespace pgl {
 				return std::string(c_str);
 			}
 
-			return std::string(data_.data());
+			return std::string(reinterpret_cast<const char*>(data_.data()));
 		}
 
 		constexpr static size_t get_c_string_length(const char* c_str) {
 			return *c_str ? 1 + get_c_string_length(c_str + 1) : 0;
 		}
 
+		void on_serialize(serializer& serializer) {
+			serializer += data_;
+		}
+
 	private:
-		std::array<char, Length> data_;
+		std::array<uint8_t, Length> data_;
 	};
 
 	template <size_t Length>

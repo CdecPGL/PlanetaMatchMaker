@@ -6,6 +6,8 @@
 #include <boost/functional/hash.hpp>
 #include <boost/operators.hpp>
 
+#include "serialize/serializer.hpp"
+
 namespace pgl {
 	// 8 bytes
 	struct datetime final : private boost::less_than_comparable<datetime>, boost::equality_comparable<datetime> {
@@ -33,8 +35,12 @@ namespace pgl {
 
 		static datetime now();
 
+		void on_serialize(serializer& serializer) {
+			serializer += data_;
+		}
+
 	private:
-		uint64_t data_{};
+		uint64_t data_;
 
 		[[nodiscard]] int get_from_date(int start_bit, int bit_count) const;
 	};
