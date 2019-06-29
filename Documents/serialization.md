@@ -3,7 +3,6 @@
 ## Available Types
 
 - Integer Types: int, long, int32_t, etc.
-- Float Types: float, double, etc.
 - Boolean Type
 - std::array
 - Enum Types: enum, enum class, enum struct
@@ -11,6 +10,7 @@
 
 ## Not Available Types
 
+- Float Types: float, double, etc. (Due to boost::endian library)
 - Not Trivial Custom Classes
 - Dynamic Containers: std::vector, std::map, etc.
 
