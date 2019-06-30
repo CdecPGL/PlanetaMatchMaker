@@ -6,6 +6,7 @@
 #include "async/timer.hpp"
 #include "utilities/log.hpp"
 #include "server/server_error.hpp"
+#include "message_handle_utilities.hpp"
 
 using namespace std;
 using namespace boost;
@@ -26,63 +27,34 @@ namespace pgl {
 		message_type specified_message_type,
 		std::shared_ptr<message_handle_parameter> param) const {
 
-		// Receive a message header
+		// Receive ana analyze a message header
+		request_message_header header{};
 		try {
-			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [&]() {
-				async_read(param->socket, param->receive_buff, asio::transfer_exactly(sizeof(request_message_header)),
-					param->yield);
-			});
-		} catch (const system::system_error& e) {
-			if (e.code() == asio::error::operation_aborted) {
-				throw server_error(server_error_code::message_reception_timeout, e.code().message());
-			}
-
-			if (e.code() && e.code() != asio::error::eof) {
-				throw server_error(server_error_code::message_header_reception_error, e.code().message());
-			}
+			receive(param, header);
+		} catch (const server_error& e) {
+			throw server_error(server_error_code::message_header_reception_error, e.message());
 		}
 
-		// Analyze received message header
-		auto header = asio::buffer_cast<const request_message_header*>(param->receive_buff.data());
-		param->receive_buff.consume(sizeof(request_message_header));
-		if (!is_handler_exist(header->message_type)) {
+		if (!is_handler_exist(header.message_type)) {
 			throw server_error(server_error_code::invalid_message_type,
-				generate_string(static_cast<int>(header->message_type)));
+				generate_string(static_cast<int>(header.message_type)));
 		}
 
-		if (enable_message_specification && header->message_type != specified_message_type) {
+		if (enable_message_specification && header.message_type != specified_message_type) {
 			throw server_error(server_error_code::message_type_mismatch,
-				generate_string("expected: ", specified_message_type, ", actual: ",
-					header->message_type));
+				generate_string("expected: ", specified_message_type, ", actual: ", header.message_type));
 		}
 
-		const auto message_handler = make_message_handler(header->message_type);
+		const auto message_handler = make_message_handler(header.message_type);
 		const auto message_size = message_handler->get_message_size();
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message header received. (type: ",
-			header->message_type, ", size: ", sizeof(header), ")");
+			header.message_type, ", size: ", sizeof(header), ")");
 
-		// Receive a body of message
-		try {
-			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds, [&]() {
-				async_read(param->socket, param->receive_buff,
-					asio::transfer_exactly(message_size), param->yield);
-			});
-		} catch (const system::system_error& e) {
-			if (e.code() == asio::error::operation_aborted) {
-				throw server_error(server_error_code::message_reception_timeout, e.code().message());
-			}
+		// Receive and process a body of message
+		(*message_handler)(param);
 
-			if (e.code() && e.code() != asio::error::eof) {
-				throw server_error(server_error_code::message_body_reception_error, e.code().message());
-			}
-		}
-
-		// process received message
-		const auto* data = asio::buffer_cast<const char*>(param->receive_buff.data());
-		(*message_handler)(data, param);
-		param->receive_buff.consume(message_size);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message processed. (type: ",
-			header->message_type, ", size: ", message_size, ")");
+			header.message_type, ", size: ", message_size, ")");
 		if (param->receive_buff.size()) {
 			log_with_endpoint(log_level::warning, param->socket.remote_endpoint(), "There are unprocessed data (size: ",
 				param->receive_buff.size(), ").");

@@ -186,6 +186,8 @@ namespace pgl {
 
 		template <typename T>
 		auto get_serialized_size() -> std::enable_if_t<is_serializable_v<T>, size_t> {
+			using non_cvref_t = remove_cvref_t<T>;
+
 			if (status_ != status::none) {
 				throw serialization_error(
 					"Cannot start get_serialized_size in serialization or deserialization progress.");
@@ -194,7 +196,7 @@ namespace pgl {
 			// Build size estimators
 			size_estimators_.clear();
 			status_ = status::size_estimating;
-			T target;
+			non_cvref_t target;
 			on_serialize(target, *this);
 			status_ = status::none;
 
@@ -212,21 +214,25 @@ namespace pgl {
 	auto on_serialize(T& value, serializer& serializer) -> std::enable_if_t<has_member_on_serialize_v<T>> {
 		static_assert(std::is_trivial_v<T>,
 			"T must be a trivial type because the serialize size of T must not be changed in runtime.");
+		static_assert(!std::is_const_v<T>,"T must not be const.");
 		value.on_serialize(serializer);
 	}
 
 	template <typename T>
 	auto on_serialize(T& value, serializer& serializer) -> std::enable_if_t<std::is_arithmetic_v<T>> {
+		static_assert(!std::is_const_v<T>, "T must not be const.");
 		serializer += value;
 	}
 
 	template <typename T>
 	auto on_serialize(T& value, serializer& serializer) -> std::enable_if_t<std::is_enum_v<T>> {
+		static_assert(!std::is_const_v<T>, "T must not be const.");
 		serializer += value;
 	}
 
 	template <typename T, size_t V>
 	void on_serialize(std::array<T, V>& value, serializer& serializer) {
+		static_assert(!std::is_const_v<T>, "T must not be const.");
 		serializer += value;
 	}
 
@@ -244,15 +250,17 @@ namespace pgl {
 	// Deserialize data to get data from a network
 	template <typename T>
 	auto deserialize(T& target, const std::vector<uint8_t>& data) -> std::enable_if_t<is_serializable_v<T>> {
+		static_assert(!std::is_const_v<T>, "T must not be const.");
 		serializer().deserialize(target, data);
 	}
 
 	template <typename T>
 	auto deserialize(T& target, const std::vector<uint8_t>& data) -> std::enable_if_t<!is_serializable_v<T>> {
+		static_assert(!std::is_const_v<T>, "T must not be const.");
 		raise_error_for_not_serializable_type<T>();
 	}
 
-	// Get a serialized size of a value. The size always same if the type of the value is same.
+	// Get a serialized size of a type.
 	template <typename T>
 	auto get_serialized_size() -> std::enable_if_t<is_serializable_v<T>, size_t> {
 		return serializer().get_serialized_size<T>();

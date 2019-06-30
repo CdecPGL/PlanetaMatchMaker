@@ -2,6 +2,7 @@
 
 #include <boost/asio/spawn.hpp>
 
+#include "message_handle_utilities.hpp"
 #include "message_handle_parameter.hpp"
 
 namespace pgl {
@@ -13,7 +14,7 @@ namespace pgl {
 		virtual ~message_handler() = default;
 		message_handler& operator=(const message_handler& message_handler) = delete;
 		message_handler& operator=(message_handler&& message_handler) = delete;
-		virtual void operator()(const char* data, std::shared_ptr<message_handle_parameter> param) = 0;
+		virtual void operator()(std::shared_ptr<message_handle_parameter> param) = 0;
 		[[nodiscard]] virtual int get_message_size() const = 0;
 	};
 
@@ -31,9 +32,14 @@ namespace pgl {
 			return sizeof(Message);
 		}
 
-		void operator()(const char* data, std::shared_ptr<message_handle_parameter> param) override final {
-			decltype(auto) message = reinterpret_cast<const Message*>(data);
-			handle_message(*message, std::move(param));
+		void operator()(std::shared_ptr<message_handle_parameter> param) override final {
+			Message message;
+			try {
+				receive(param, message);
+			} catch (const server_error& e) {
+				throw server_error(server_error_code::message_body_reception_error, e.message());
+			}
+			handle_message(message, std::move(param));
 		}
 
 	private:

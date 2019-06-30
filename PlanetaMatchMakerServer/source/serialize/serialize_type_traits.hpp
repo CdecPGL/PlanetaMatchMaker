@@ -7,6 +7,9 @@
 namespace pgl {
 	class serializer;
 
+	template <typename T>
+	using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
 	BOOST_TTI_HAS_MEMBER_FUNCTION(on_serialize)
 
 	template <typename T>
@@ -15,7 +18,7 @@ namespace pgl {
 		::function_types::non_cv>::value;
 
 	struct has_global_on_serialize_impl {
-		template <class T, void(*)(T&, serializer&) = &::pgl::on_serialize>
+		template <class T, void(*)(remove_cvref_t<T>&, serializer&) = &::pgl::on_serialize>
 		static std::true_type check(T&& x);
 
 		template <class T>
