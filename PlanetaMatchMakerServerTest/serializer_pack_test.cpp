@@ -1,8 +1,8 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../PlanetaMatchMakerServer/source/async/read_write.hpp"
+#include "../PlanetaMatchMakerServer/source/serialize/pack.hpp"
 
-BOOST_AUTO_TEST_SUITE(async_read_write_test)
+BOOST_AUTO_TEST_SUITE(serializer_pack_test)
 
 	struct test_struct1 final {
 		uint8_t value1;
@@ -70,6 +70,15 @@ BOOST_AUTO_TEST_SUITE(async_read_write_test)
 
 		BOOST_CHECK_EQUAL(expected1, actual1);
 		BOOST_CHECK_EQUAL(expected2, actual2);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_unpack_lack_of_data_exception) {
+		using test_t = uint64_t;
+		const test_t expected{123};
+
+		test_t actual;
+		BOOST_CHECK_EXCEPTION(pgl::unpack_data(std::vector<uint8_t>(1), actual), std::runtime_error,
+			[](auto) {return true; });
 	}
 
 BOOST_AUTO_TEST_SUITE_END()

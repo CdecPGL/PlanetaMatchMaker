@@ -45,6 +45,7 @@
     <ClInclude Include="source\utilities\template_utilities.hpp" />
     <ClInclude Include="source\serialize\serialize_type_traits.hpp" />
     <ClInclude Include="source\message\message_handlers\update_room_status_notice_message_handler.hpp" />
+    <ClInclude Include="source\serialize\pack.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\message\message_handler.cpp" />
