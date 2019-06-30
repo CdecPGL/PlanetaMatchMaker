@@ -87,7 +87,7 @@ namespace pgl {
 		};
 
 		uint8_t room_group_count;
-		std::array<room_group_info, room_group_max_count> room_group_info_list{};
+		std::array<room_group_info, room_group_max_count> room_group_info_list;
 
 		void on_serialize(serializer& serializer) {
 			serializer += room_group_count;
@@ -178,7 +178,7 @@ namespace pgl {
 	struct join_room_request_message final {
 		uint8_t group_index;
 		room_id_type room_id;
-		room_password_type password{};
+		room_password_type password;
 
 		void on_serialize(serializer& serializer) {
 			serializer += group_index;

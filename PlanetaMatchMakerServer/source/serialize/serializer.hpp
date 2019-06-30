@@ -10,6 +10,19 @@
 #include "serialize/serialize_type_traits.hpp"
 
 namespace pgl {
+	/* Function to raise error for not serializable type.
+	 * This function always fails static assertion and throws serialization_error in runtime.
+	 */
+	template <typename T, typename Return = void>
+	auto raise_error_for_not_serializable_type() -> std::enable_if_t<!is_serializable_v<T>, Return> {
+		static_assert(std::is_trivial_v<T>,
+			"T must be a trivial type because the serialize size of T must not be changed in runtime.");
+		static_assert(has_member_on_serialize_v<T> || has_global_on_serialize_v<T>,
+			"There mest be a member function T::on_serialize(serializer&) or a global function on_serialize(T& value, serializer&) to serialize."
+		);
+		throw serialization_error("Not serializable type.");
+	}
+
 	class serializer final {
 	public:
 		// Add a values as a serialization target. The type of the value must be trivial.
@@ -35,11 +48,7 @@ namespace pgl {
 
 		template <typename T>
 		auto operator +=(T& value) -> std::enable_if_t<!is_serializable_v<T>> {
-			static_assert(std::is_trivial_v<T>,
-				"T must be a trivial type because the serialize size of T must not be changed in runtime.");
-			static_assert(has_member_on_serialize_v<T> || has_global_on_serialize_v<T>,
-				"There mest be a member function T::on_serialize(serializer&) or a global function on_serialize(T& value, serializer&) to serialize."
-			);
+			raise_error_for_not_serializable_type<T>();
 		}
 
 	private:
@@ -122,7 +131,7 @@ namespace pgl {
 			}
 
 			// Estimate  size
-			auto total_size = get_serialized_size(target);
+			auto total_size = get_serialized_size<T>();
 
 			// Build serializers
 			serializers_.clear();
@@ -151,7 +160,7 @@ namespace pgl {
 			}
 
 			// Estimate and check size
-			auto total_size = get_serialized_size(target);
+			auto total_size = get_serialized_size<T>();
 			if (total_size != data.size()) {
 				const auto message = generate_string("The data size (", data.size(),
 					" bytes) does not match to the passed size (", total_size,
@@ -173,10 +182,10 @@ namespace pgl {
 		}
 
 		template <typename T>
-		friend auto get_serialized_size(const T&) -> std::enable_if_t<is_serializable_v<T>, size_t>;
+		friend auto get_serialized_size() -> std::enable_if_t<is_serializable_v<T>, size_t>;
 
 		template <typename T>
-		auto get_serialized_size(const T& target) -> std::enable_if_t<is_serializable_v<T>, size_t> {
+		auto get_serialized_size() -> std::enable_if_t<is_serializable_v<T>, size_t> {
 			if (status_ != status::none) {
 				throw serialization_error(
 					"Cannot start get_serialized_size in serialization or deserialization progress.");
@@ -185,8 +194,8 @@ namespace pgl {
 			// Build size estimators
 			size_estimators_.clear();
 			status_ = status::size_estimating;
-			T& nc_target = const_cast<T&>(target);
-			on_serialize(nc_target, *this);
+			T target;
+			on_serialize(target, *this);
 			status_ = status::none;
 
 			// Estimate size
@@ -228,6 +237,11 @@ namespace pgl {
 		return serializer.serialize(target);
 	}
 
+	template <typename T>
+	auto serialize(const T& target) -> std::enable_if_t<!is_serializable_v<T>, std::vector<uint8_t>> {
+		return raise_error_for_not_serializable_type<T, std::vector<uint8_t>>();
+	}
+
 	// Deserialize data to get data from a network
 	template <typename T>
 	auto deserialize(T& target, const std::vector<uint8_t>& data) -> std::enable_if_t<is_serializable_v<T>> {
@@ -235,10 +249,20 @@ namespace pgl {
 		serializer.deserialize(target, data);
 	}
 
+	template <typename T>
+	auto deserialize(T& target, const std::vector<uint8_t>& data) -> std::enable_if_t<!is_serializable_v<T>> {
+		raise_error_for_not_serializable_type<T>();
+	}
+
 	// Get a serialized size of a value. The size always same if the type of the value is same.
 	template <typename T>
-	auto get_serialized_size(const T& target) -> std::enable_if_t<is_serializable_v<T>, size_t> {
+	auto get_serialized_size() -> std::enable_if_t<is_serializable_v<T>, size_t> {
 		serializer serializer;
-		return serializer.get_serialized_size(target);
+		return serializer.get_serialized_size<T>();
+	}
+
+	template <typename T>
+	auto get_serialized_size() -> std::enable_if_t<!is_serializable_v<T>, size_t> {
+		return raise_error_for_not_serializable_type<T, size_t>();
 	}
 }

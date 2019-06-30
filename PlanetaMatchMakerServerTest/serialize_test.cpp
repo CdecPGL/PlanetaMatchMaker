@@ -165,8 +165,7 @@ BOOST_AUTO_TEST_SUITE(serialize_test)
 	}
 
 	BOOST_AUTO_TEST_CASE_TEMPLATE(test_member_serialize_size, Test, test_types) {
-		const auto expected = get_default<Test>();
-		auto size = pgl::get_serialized_size(expected);
+		auto size = pgl::get_serialized_size<Test>();
 		BOOST_CHECK_EQUAL(get_size<Test>(), size);
 	}
 
@@ -194,7 +193,7 @@ BOOST_AUTO_TEST_SUITE(serialize_test)
 
 	BOOST_AUTO_TEST_CASE(test_member_serialize_size_array) {
 		const std::array<int32_t, 4> expected = {-123, 23, 56, 7};
-		auto size = pgl::get_serialized_size(expected);
+		auto size = pgl::get_serialized_size<std::array<int32_t, 4>>();
 		BOOST_CHECK_EQUAL(sizeof(int32_t)*4, size);
 	}
 
