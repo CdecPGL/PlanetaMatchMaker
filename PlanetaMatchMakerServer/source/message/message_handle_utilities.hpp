@@ -13,28 +13,38 @@ namespace pgl {
 	template <typename FirstData, typename... RestData>
 	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&& ... rest_data) {
 		auto data_summary = generate_string(sizeof...(rest_data) + 1, " data (",
-			sizeof(first_data) + (sizeof(rest_data) + ...), " bytes)");
+			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			if constexpr (sizeof...(RestData) > 0) {
-				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
-					[param, first_data, rest_data...]() {
-						packed_async_write(
-							param->socket, param->yield, first_data, rest_data...);
-					});
-			} else {
-				execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
-					[param, first_data]() {
-						async_write(
-							param->socket,
-							boost::asio::buffer(&first_data, sizeof(first_data)),
-							param->yield);
-					});
-			}
+			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
+				[param, first_data, rest_data...]() {
+					packed_async_write(
+						param->socket, param->yield, first_data, rest_data...);
+				});
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Send ", data_summary,
 				" to the client.");
 		} catch (const boost::system::system_error& e) {
 			auto extra_message = generate_string("Failed to send ", data_summary, " to the client. ",
+				e.code().message());
+			throw server_error(server_error_code::message_send_error, extra_message);
+		}
+	}
+
+	// Receive data. server_error will be thrown when reception error occured.
+	template <typename FirstData, typename... RestData>
+	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData& ... rest_data) {
+		auto data_summary = generate_string(sizeof...(rest_data) + 1, " data (",
+			get_packed_size<FirstData, RestData...>(), " bytes)");
+
+		try {
+			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
+				[param, first_data, rest_data...]() {
+					unpacked_async_read(param->socket, param->yield, first_data, rest_data...);
+				});
+			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Send ", data_summary,
+				" to the client.");
+		} catch (const boost::system::system_error& e) {
+			auto extra_message = generate_string("Failed to receive ", data_summary, " from the client. ",
 				e.code().message());
 			throw server_error(server_error_code::message_send_error, extra_message);
 		}
