@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(serializer_pack_test)
 
 	BOOST_AUTO_TEST_CASE(test_packed_one_data_size) {
 		using test_t = test_struct1;
-		test_t data{};
+		const test_t data{};
 		const auto expected = pgl::get_serialized_size<test_t>();
 		const auto actual = pgl::pack_data(data).size();
 		BOOST_CHECK_EQUAL(expected, actual);
@@ -37,8 +37,8 @@ BOOST_AUTO_TEST_SUITE(serializer_pack_test)
 	BOOST_AUTO_TEST_CASE(test_packed_two_data_size) {
 		using test_t1 = test_struct1;
 		using test_t2 = test_struct2;
-		test_t1 data1{};
-		test_t2 data2{};
+		const test_t1 data1{};
+		const test_t2 data2{};
 		const auto expected = pgl::get_serialized_size<test_t1>() + pgl::get_serialized_size<test_t2>();
 		const auto actual = pgl::pack_data(data1, data2).size();
 		BOOST_CHECK_EQUAL(expected, actual);

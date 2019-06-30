@@ -233,8 +233,7 @@ namespace pgl {
 	// Serialize target to send data to a network
 	template <typename T>
 	auto serialize(const T& target) -> std::enable_if_t<is_serializable_v<T>, std::vector<uint8_t>> {
-		serializer serializer;
-		return serializer.serialize(target);
+		return serializer().serialize(target);
 	}
 
 	template <typename T>
@@ -245,8 +244,7 @@ namespace pgl {
 	// Deserialize data to get data from a network
 	template <typename T>
 	auto deserialize(T& target, const std::vector<uint8_t>& data) -> std::enable_if_t<is_serializable_v<T>> {
-		serializer serializer;
-		serializer.deserialize(target, data);
+		serializer().deserialize(target, data);
 	}
 
 	template <typename T>
@@ -257,8 +255,7 @@ namespace pgl {
 	// Get a serialized size of a value. The size always same if the type of the value is same.
 	template <typename T>
 	auto get_serialized_size() -> std::enable_if_t<is_serializable_v<T>, size_t> {
-		serializer serializer;
-		return serializer.get_serialized_size<T>();
+		return serializer().get_serialized_size<T>();
 	}
 
 	template <typename T>
