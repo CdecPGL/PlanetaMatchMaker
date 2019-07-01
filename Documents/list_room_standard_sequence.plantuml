@@ -25,13 +25,6 @@ group Game
 
 ==Start Lobby==
 
-loop every seconds
-GameHost -> MatchingServer : update_room_status_notice[open room, player count]
-activate MatchingServer
-MatchingServer -> MatchingServer : update room information
-deactivate MatchingServer
-end
-
 group Join Client1
 
 group Authentication
@@ -86,23 +79,19 @@ deactivate MatchingServer
 
 ==Start Game==
 
-loop every seconds
 GameHost -> MatchingServer : update_room_status_notice[open room, player count]
 activate MatchingServer
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
-end
 
 GameHost<->Client1 : send and receive game data
 
 ==Finish Game==
 
-loop every seconds
 GameHost -> MatchingServer : update_room_status_notice[open room, player count]
 activate MatchingServer
 MatchingServer -> MatchingServer : update room information
 deactivate MatchingServer
-end
 
 GameHost<->Client1 : send and receive game data
 

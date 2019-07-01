@@ -48,8 +48,8 @@ namespace pgl {
 				[param, first_data, rest_data...]()mutable {
 					unpacked_async_read(param->socket, param->yield, first_data, rest_data...);
 				});
-			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Send ", data_summary,
-				" to the client.");
+			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Receive ", data_summary,
+				" from the client.");
 		} catch (const boost::system::system_error& e) {
 			auto extra_message = generate_string("Failed to receive ", data_summary, " from the client. ",
 				e.code().message());
