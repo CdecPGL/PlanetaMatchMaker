@@ -196,6 +196,8 @@
     <ClInclude Include="source\network\transport_layer.hpp" />
     <ClInclude Include="source\room\room_constants.hpp" />
     <ClInclude Include="source\room\room_data.hpp" />
+    <ClInclude Include="source\session\session_data.hpp" />
+    <ClInclude Include="source\session\session_key.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
     <ClInclude Include="source\utilities\fixed_string.hpp" />
     <ClInclude Include="source\utilities\io_utility.hpp" />
@@ -228,6 +230,8 @@
     <ClCompile Include="source\server\server_error.cpp" />
     <ClCompile Include="source\server\server_error_code.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />
+    <ClCompile Include="source\session\session_data.cpp" />
+    <ClCompile Include="source\session\session_key.cpp" />
     <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
     <ClCompile Include="source\utilities\log.cpp" />
   </ItemGroup>

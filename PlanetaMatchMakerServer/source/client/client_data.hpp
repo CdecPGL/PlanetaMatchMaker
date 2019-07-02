@@ -7,7 +7,6 @@
 namespace pgl {
 	struct client_data final {
 		client_address address;
-		datetime last_communicate_datetime;
 	};
 }
 
@@ -15,7 +14,6 @@ namespace boost {
 	inline size_t hash_value(const pgl::client_data& client_data) {
 		size_t seed = 0;
 		hash_combine(seed, hash_value(client_data.address));
-		hash_combine(seed, hash_value(client_data.last_communicate_datetime));
 		return seed;
 	}
 }

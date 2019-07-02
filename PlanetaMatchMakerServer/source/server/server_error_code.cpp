@@ -31,6 +31,8 @@ namespace pgl {
 				return "The number of players reaches limit.";
 			case server_error_code::room_permission_error:
 				return "A client who is not room host try to change room data.";
+			case server_error_code::invalid_session:
+				return "A session is invalid.";
 			default:
 				return "Unknown";
 		}

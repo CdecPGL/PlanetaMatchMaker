@@ -4,6 +4,7 @@
 
 #include "utilities/log.hpp"
 #include "server/server_error.hpp"
+#include "session/session_data.hpp"
 #include "message_handle_utilities.hpp"
 
 using namespace std;
@@ -11,19 +12,19 @@ using namespace boost;
 
 namespace pgl {
 	void message_handler_invoker::
-	handle_message(std::shared_ptr<message_handle_parameter> param) const {
-		handle_message_impl(false, {}, std::move(param));
+	handle_message(std::shared_ptr<message_handle_parameter> param, const bool check_session_key) const {
+		handle_message_impl(false, {}, std::move(param), check_session_key);
 	}
 
 	auto message_handler_invoker::handle_specific_message(const message_type specified_message_type,
-		std::shared_ptr<message_handle_parameter> param) const ->
+		std::shared_ptr<message_handle_parameter> param, const bool check_session_key) const ->
 	void {
-		handle_message_impl(true, specified_message_type, std::move(param));
+		handle_message_impl(true, specified_message_type, std::move(param), check_session_key);
 	}
 
 	void message_handler_invoker::handle_message_impl(const bool enable_message_specification,
-		message_type specified_message_type,
-		std::shared_ptr<message_handle_parameter> param) const {
+		message_type specified_message_type, std::shared_ptr<message_handle_parameter> param,
+		const bool check_session_key) const {
 
 		// Receive ana analyze a message header
 		request_message_header header{};
@@ -31,6 +32,17 @@ namespace pgl {
 			receive(param, header);
 		} catch (const server_error& e) {
 			throw server_error(server_error_code::message_header_reception_error, e.message());
+		}
+
+		// Check if a session is valid if need
+		if (check_session_key) {
+			if (!param->session_data.is_session_key_generated()) {
+				throw server_error(server_error_code::invalid_session, "A session key is not generated.");
+			}
+			if (!param->session_data.check_session_key(header.session_key)) {
+				throw server_error(server_error_code::invalid_session,
+					generate_string("A session key(", header.session_key, ") is not valid."));
+			}
 		}
 
 		if (!is_handler_exist(header.message_type)) {
@@ -53,11 +65,6 @@ namespace pgl {
 
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message processed. (type: ",
 			header.message_type, ", size: ", message_size, ")");
-		if (param->receive_buff.size()) {
-			log_with_endpoint(log_level::warning, param->socket.remote_endpoint(), "There are unprocessed data (size: ",
-				param->receive_buff.size(), ").");
-		}
-		param->receive_buff.consume(param->receive_buff.size());
 
 	}
 }

@@ -9,6 +9,7 @@
 #include "room/room_constants.hpp"
 #include "data/data_constants.hpp"
 #include "room/room_data.hpp"
+#include "session/session_key.hpp"
 #include "message_constants.hpp"
 
 namespace pgl {
@@ -27,12 +28,14 @@ namespace pgl {
 		random_match_request
 	};
 
-	// 1 bytes. Use for notice message too
+	// 5 bytes. Use for notice message too
 	struct request_message_header final {
 		message_type message_type;
+		session_key_type session_key;
 
 		void on_serialize(serializer& serializer) {
 			serializer += message_type;
+			serializer += session_key;
 		}
 	};
 
@@ -58,12 +61,14 @@ namespace pgl {
 		}
 	};
 
-	// 2 bytes
+	// 6 bytes
 	struct authentication_reply_message final {
 		version_type version;
+		session_key_type session_key;
 
 		void on_serialize(serializer& serializer) {
 			serializer += version;
+			serializer += session_key;
 		}
 	};
 

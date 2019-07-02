@@ -5,6 +5,7 @@
 
 #include "message/message_handler_invoker.hpp"
 #include "message/messages.hpp"
+#include "session/session_data.hpp"
 #include "utilities/log.hpp"
 #include "match_making_server.hpp"
 #include "server_error.hpp"
@@ -27,7 +28,6 @@ namespace pgl {
 		io_service_(io_service),
 		acceptor_(io_service, asio::ip::tcp::endpoint(get_tcp(ip_version), port_number)),
 		socket_(io_service),
-		receive_buff_(buffer_size),
 		timer_(io_service),
 		time_out_seconds_(time_out_seconds) {
 		log(log_level::info, "Server instance is generated with IP ", ip_version, " and port ", port_number, ".");
@@ -47,16 +47,19 @@ namespace pgl {
 				log_with_endpoint(log_level::info, socket_.remote_endpoint(),
 					"Accepted new connection. Start to receive message.");
 
-				// Authenticate client
+				// Prepare data
 				const auto message_handler_param = std::make_shared<message_handle_parameter>(message_handle_parameter{
-					io_service_, socket_, receive_buff_, server_data_, yield, chrono::seconds(time_out_seconds_)
+					io_service_, socket_, server_data_, yield, chrono::seconds(time_out_seconds_),
+					session_data_
 				});
+
+				// Authenticate client
 				message_handler_container_->handle_specific_message(message_type::authentication_request,
-					message_handler_param);
+					message_handler_param, false);
 
 				// Receive message
 				while (true) {
-					message_handler_container_->handle_message(message_handler_param);
+					message_handler_container_->handle_message(message_handler_param, true);
 				}
 			} catch (const system::system_error& e) {
 				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Unhandled error: ", e);
