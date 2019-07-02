@@ -10,7 +10,6 @@
 
 namespace pgl {
 	// Send data to remote endpoint. server_error will be thrown when send error occured.
-	// todo: use shared_ptr to avoid invalid reference access
 	template <typename FirstData, typename... RestData>
 	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&& ... rest_data) {
 		auto data_summary = generate_string(sizeof...(rest_data) + 1, " data (",
@@ -18,13 +17,10 @@ namespace pgl {
 
 		try {
 			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
-				// To avoid to access invalid reference, copy all parameters.
-				// Use std::bind to do this because lambda capture can't copy reference value
-				std::bind(
-					[param](const FirstData& first_data, const RestData& ... rest_data) {
-						packed_async_write(
-							param->socket, param->yield, first_data, rest_data...);
-					}, FirstData(first_data), RestData(rest_data)...));
+				[param, first_data, rest_data...]() {
+					packed_async_write(
+						param->socket, param->yield, first_data, rest_data...);
+				});
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Send ", data_summary,
 				" to the client.");
 		} catch (const boost::system::system_error& e) {
@@ -35,7 +31,7 @@ namespace pgl {
 	}
 
 	// Receive data. server_error will be thrown when reception error occured.
-	// todo: use shared_ptr to avoid invalid reference access
+	// todo: use shared_ptr to avoid invalid reference access in lambda function
 	template <typename FirstData, typename... RestData>
 	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData& ... rest_data) {
 		static_assert(!(std::is_const_v<FirstData> || (std::is_const_v<RestData> || ...)),
@@ -45,7 +41,7 @@ namespace pgl {
 
 		try {
 			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
-				[param, first_data, rest_data...]()mutable {
+				[param, &first_data, &rest_data...]()mutable {
 					unpacked_async_read(param->socket, param->yield, first_data, rest_data...);
 				});
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Receive ", data_summary,

@@ -58,7 +58,7 @@ namespace pgl {
 
 	// Deserialize multi data
 	template <typename First, typename ... Rests>
-	std::vector<uint8_t> unpack_data(const std::vector<uint8_t>& buffer, First& first, Rests& ... rests) {
+	void unpack_data(const std::vector<uint8_t>& buffer, First& first, Rests& ... rests) {
 		static_assert(!(std::is_const_v<First> || (std::is_const_v<Rests> || ...)),
 			"First and all Rests must not be const.");
 		// When there are only one data, deserialize directory to avoid redundant buffer copy
@@ -67,6 +67,5 @@ namespace pgl {
 		} else {
 			unpack_data_impl(buffer, 0, first, rests...);
 		}
-		return buffer;
 	}
 }
