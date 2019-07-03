@@ -2,7 +2,7 @@
 #include <utility>
 
 namespace pgl {
-	bool does_room_group_exist(const std::shared_ptr<message_handle_parameter> param, size_t room_group_index) {
+	bool does_room_group_exist(const std::shared_ptr<message_handle_parameter> param, room_group_index_type room_group_index) {
 		// Check if the id is valid
 		if (param->server_data->is_valid_room_group_index(room_group_index)) {
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "The room group index \"",
@@ -17,7 +17,7 @@ namespace pgl {
 		return false;
 	}
 
-	void check_room_group_existence(const std::shared_ptr<message_handle_parameter> param, const size_t room_group_index) {
+	void check_room_group_existence(const std::shared_ptr<message_handle_parameter> param, const room_group_index_type room_group_index) {
 		// Check if the id is valid
 		if (does_room_group_exist(param, room_group_index)) {
 			return;

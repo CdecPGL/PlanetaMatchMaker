@@ -1,4 +1,5 @@
 ﻿#include "update_room_status_notice_message_handler.hpp"
+#include "session/session_data.hpp"
 #include "../message_handle_utilities.hpp"
 
 namespace pgl {
@@ -36,6 +37,7 @@ namespace pgl {
 			case update_room_status_notice_message::status::remove:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Remove ", room_data, ".");
 				room_data_container.remove_data(room_data.room_id);
+				param->session_data.delete_hosting_room_id(message.group_index, room_data.room_id);
 				break;
 			default:
 				break;

@@ -102,7 +102,7 @@ namespace pgl {
 
 	// 43 bytes
 	struct create_room_request_message final {
-		uint8_t group_index;
+		room_group_index_type group_index;
 		room_name_type name;
 		room_flags_bit_mask::flags_type flags;
 		room_password_type password;
@@ -128,7 +128,7 @@ namespace pgl {
 
 	// 5 bytes
 	struct list_room_request_message final {
-		uint8_t group_index;
+		room_group_index_type group_index;
 		uint8_t start_index;
 		uint8_t end_index;
 		room_data_sort_kind sort_kind;
@@ -181,7 +181,7 @@ namespace pgl {
 
 	// 21 bytes
 	struct join_room_request_message final {
-		uint8_t group_index;
+		room_group_index_type group_index;
 		room_id_type room_id;
 		room_password_type password;
 
@@ -205,7 +205,7 @@ namespace pgl {
 	struct update_room_status_notice_message final {
 		enum class status : uint8_t { open, close, remove };
 
-		uint8_t group_index;
+		room_group_index_type group_index;
 		room_id_type room_id;
 		status status;
 

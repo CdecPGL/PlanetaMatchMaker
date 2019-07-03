@@ -12,15 +12,15 @@ namespace pgl {
 
 		explicit server_data(std::vector<room_group_name_type>&& room_groups);
 
-		size_t room_group_count() const;
+		[[nodiscard]] size_t room_group_count() const;
 
-		bool is_valid_room_group_index(size_t room_group_index) const;
+		[[nodiscard]] bool is_valid_room_group_index(room_group_index_type room_group_index) const;
 
-		const room_group_data_list_type& get_room_data_group_list() const;
+		[[nodiscard]] const room_group_data_list_type& get_room_data_group_list() const;
 
-		const room_data_container_type& get_room_data_container(size_t room_group_idx) const;
+		[[nodiscard]] const room_data_container_type& get_room_data_container(room_group_index_type room_group_idx) const;
 
-		room_data_container_type& get_room_data_container(size_t room_group_idx);
+		room_data_container_type& get_room_data_container(room_group_index_type room_group_idx);
 	private:
 		room_group_data_list_type room_group_data_list_;
 		std::vector<room_data_container_type> room_data_container_list_;

@@ -16,7 +16,7 @@ namespace pgl {
 		return room_data_container_list_.size();
 	}
 
-	bool server_data::is_valid_room_group_index(const size_t room_group_index) const {
+	bool server_data::is_valid_room_group_index(const room_group_index_type room_group_index) const {
 		return 0 <= room_group_index && room_group_index < room_group_count();
 	}
 
@@ -25,11 +25,11 @@ namespace pgl {
 	}
 
 	const server_data::room_data_container_type& server_data::get_room_data_container(
-		const size_t room_group_idx) const {
+		const room_group_index_type room_group_idx) const {
 		return room_data_container_list_.at(room_group_idx);
 	}
 
-	server_data::room_data_container_type& server_data::get_room_data_container(const size_t room_group_idx) {
+	server_data::room_data_container_type& server_data::get_room_data_container(const room_group_index_type room_group_idx) {
 		return room_data_container_list_.at(room_group_idx);
 	}
 }

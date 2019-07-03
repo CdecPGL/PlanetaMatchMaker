@@ -31,6 +31,7 @@ namespace pgl {
 		std::uint32_t time_out_seconds_;
 		session_data session_data_;
 
+		void finalize() const;
 		void restart();
 	};
 }

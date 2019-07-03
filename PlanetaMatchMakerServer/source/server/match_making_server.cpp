@@ -6,6 +6,8 @@
 #include "message/message_handler_invoker.hpp"
 #include "message/messages.hpp"
 #include "session/session_data.hpp"
+#include "server/server_data.hpp"
+#include "room/room_data_container.hpp"
 #include "utilities/log.hpp"
 #include "match_making_server.hpp"
 #include "server_error.hpp"
@@ -57,10 +59,11 @@ namespace pgl {
 
 				// Receive message
 				while (true) {
-					message_handler_container_->handle_message(message_handler_param, true);
+					message_handler_container_->handle_message(message_handler_param, false);
 				}
 			} catch (const system::system_error& e) {
 				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Unhandled error: ", e);
+				finalize();
 				restart();
 			}
 			catch (const server_error& e) {
@@ -69,19 +72,32 @@ namespace pgl {
 				} else {
 					log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
 				}
+				finalize();
 				restart();
 			}
 			catch (const std::exception& e) {
 				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), typeid(e), ": ", e.what());
+				finalize();
 				socket_.close();
 				throw;
 			}
 			catch (...) {
 				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), "Unknown error.");
+				finalize();
 				socket_.close();
 				throw;
 			}
 		});
+	}
+
+	void match_making_server::finalize() const {
+		// Remove hosting room if exist
+		if (session_data_.is_hosting_room()) {
+			server_data_->get_room_data_container(session_data_.hosting_room_group_index()).remove_data(
+				session_data_.hosting_room_id());
+			log_with_endpoint(log_level::info, socket_.remote_endpoint(), "Hosting room(Group index: ",
+				session_data_.hosting_room_group_index(), ", ID: ", session_data_.hosting_room_id(), ") is removed.");
+		}
 	}
 
 	void match_making_server::restart() {

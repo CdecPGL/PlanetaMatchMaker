@@ -54,11 +54,12 @@ namespace pgl {
 	}
 
 	// Return true if a room group index is valid.
-	bool does_room_group_exist(std::shared_ptr<message_handle_parameter> param, size_t room_group_index);
+	bool does_room_group_exist(std::shared_ptr<message_handle_parameter> param, room_group_index_type room_group_index);
 
 	// Check a room group index is valid. If it is not valid, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
-	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param, size_t room_group_index,
+	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param,
+		room_group_index_type room_group_index,
 		const ReplyMessage& reply_message) {
 		// Check if the id is valid
 		if (does_room_group_exist(param, room_group_index)) {
@@ -74,7 +75,8 @@ namespace pgl {
 	}
 
 	// Check a room group index is valid. If it is not valid, throw server error.
-	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param, size_t room_group_index);
+	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param,
+		room_group_index_type room_group_index);
 
 	// Return if a room id exists.
 	bool does_room_exist(std::shared_ptr<message_handle_parameter> param,
@@ -83,7 +85,7 @@ namespace pgl {
 	// Check a room id exists. If it doesn't exist, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
 	void check_room_existence(std::shared_ptr<message_handle_parameter> param,
-		const room_data_container& room_data_container, room_id_type room_id,
+		const room_data_container& room_data_container, const room_id_type room_id,
 		const ReplyMessage& reply_message) {
 		// Check room existence
 		if (does_room_exist(param, room_data_container, room_id)) {
