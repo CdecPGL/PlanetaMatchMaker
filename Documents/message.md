@@ -44,6 +44,7 @@ In all request, check if the session key is valid and disconnect if not.
 1. Check requested room id exists, and send error to the client if requested room id doesn't exist
 1. Check if player count of requested room reaches max, and send error to the client if it reaches max
 1. Send join_room_reply_message to the client
+1. Disconnect
 
 ## Notice Handling
 

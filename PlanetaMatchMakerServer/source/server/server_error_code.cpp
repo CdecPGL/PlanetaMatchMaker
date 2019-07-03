@@ -5,6 +5,8 @@ namespace pgl {
 		switch (error_code) {
 			case server_error_code::ok:
 				return "Ok.";
+			case server_error_code::expected_disconnection:
+				return "Disconnected by correct operation.";
 			case server_error_code::acception_failed:
 				return "Failed to accept new client.";
 			case server_error_code::message_reception_timeout:

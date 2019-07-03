@@ -43,5 +43,8 @@ namespace pgl {
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ", message_type::join_room_request,
 			" message.");
 		send(param, header, reply);
+
+		// Disconnect
+		throw server_error(server_error_code::expected_disconnection);
 	}
 }

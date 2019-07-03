@@ -66,7 +66,11 @@ namespace pgl {
 				restart();
 			}
 			catch (const server_error& e) {
-				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
+				if (e.error_code() == server_error_code::expected_disconnection) {
+					log_with_endpoint(log_level::info, socket_.remote_endpoint(), e);
+				} else {
+					log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
+				}
 				restart();
 			}
 			catch (const std::exception& e) {
@@ -83,7 +87,7 @@ namespace pgl {
 	}
 
 	void match_making_server::restart() {
-		log(log_level::error, "Restart server instance.");
+		log(log_level::info, "Restart server instance.");
 		socket_.close();
 		start();
 	}
