@@ -15,6 +15,11 @@ MatchingServer --> GameHost : authentication_reply[ok or error]
 deactivate MatchingServer
 end
 
+GameHost->MatchingServer : list_room_group_request
+activate MatchingServer
+MatchingServer --> GameHost : list_room_group_reply
+deactivate MatchingServer
+
 GameHost -> MatchingServer : create_room_request
 activate MatchingServer
 MatchingServer -> MatchingServer : create room
@@ -34,6 +39,11 @@ MatchingServer -> MatchingServer: authentication
 MatchingServer --> Client1 : authentication_reply[ok or error]
 deactivate MatchingServer
 end
+
+Client1->MatchingServer : list_room_group_request
+activate MatchingServer
+MatchingServer --> Client1 : list_room_group_reply
+deactivate MatchingServer
 
 Client1->MatchingServer : list_room_request
 activate MatchingServer
