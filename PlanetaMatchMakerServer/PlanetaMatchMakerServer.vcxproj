@@ -163,7 +163,6 @@
     <ClInclude Include="source\async\timer.hpp" />
     <ClInclude Include="source\client\client_address.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
-    <ClInclude Include="source\client\client_data.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
     <ClInclude Include="source\data\random_id_generator.hpp" />
     <ClInclude Include="source\data\thread_safe_data_container.h" />
@@ -209,7 +208,6 @@
   <ItemGroup>
     <ClCompile Include="source\async\timer.cpp" />
     <ClCompile Include="source\client\client_address.cpp" />
-    <ClCompile Include="source\client\client_data.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\message\message_handlers\list_room_group_request_message_handler.cpp" />

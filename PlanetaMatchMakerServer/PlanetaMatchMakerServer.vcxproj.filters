@@ -11,7 +11,6 @@
     <ClInclude Include="source\message\message_handlers\create_room_request_message_handler.hpp" />
     <ClInclude Include="source\datetime\datetime.hpp" />
     <ClInclude Include="source\data\thread_safe_data_container.h" />
-    <ClInclude Include="source\client\client_data.hpp" />
     <ClInclude Include="source\room\room_data.hpp" />
     <ClInclude Include="source\client\client_address.hpp" />
     <ClInclude Include="source\room\room_constants.hpp" />
@@ -57,7 +56,6 @@
     <ClCompile Include="source\message\message_handlers\join_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\create_room_request_message_handler.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
-    <ClCompile Include="source\client\client_data.cpp" />
     <ClCompile Include="source\message\message_handlers\authentication_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handler_invoker.cpp" />
     <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />

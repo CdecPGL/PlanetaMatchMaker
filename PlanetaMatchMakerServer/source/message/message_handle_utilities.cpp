@@ -2,31 +2,6 @@
 #include <utility>
 
 namespace pgl {
-
-	bool does_remote_endpoint_exist(std::shared_ptr<message_handle_parameter> param) {
-		// Check existence
-		const auto client_address = client_address::make_from_endpoint(param->socket.remote_endpoint());
-		if (param->server_data->client_data_container().is_data_exist(client_address)) {
-			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(),
-				"The client exists in the client list.");
-			return true;
-		}
-
-		log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-			"The client does not exist in the client list.");
-		return false;
-	}
-
-	void check_remote_endpoint_existence(std::shared_ptr<message_handle_parameter> param) {
-		// Check existence
-		if (does_remote_endpoint_exist(std::move(param))) {
-			return;
-		}
-
-		// Send permission error to the client
-		throw server_error(server_error_code::permission_error);
-	}
-
 	bool does_room_group_exist(const std::shared_ptr<message_handle_parameter> param, size_t room_group_index) {
 		// Check if the id is valid
 		if (param->server_data->is_valid_room_group_index(room_group_index)) {

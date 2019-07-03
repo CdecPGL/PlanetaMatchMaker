@@ -53,30 +53,6 @@ namespace pgl {
 		}
 	}
 
-	// return true if client is registered to this server.
-	bool does_remote_endpoint_exist(std::shared_ptr<message_handle_parameter> param);
-
-	// Check client is registered to this server. If not registered, reply error message to client and throw server error.
-	template <message_type ReplyMessageType, class ReplyMessage>
-	void check_remote_endpoint_existence(std::shared_ptr<message_handle_parameter> param,
-		const ReplyMessage& reply_message) {
-		// Check existence
-		if (does_remote_endpoint_exist(param)) {
-			return;
-		}
-
-		// Send permission error to the client
-		reply_message_header header{
-			ReplyMessageType,
-			message_error_code::permission_denied
-		};
-		send(param, header, reply_message);
-		throw server_error(server_error_code::permission_error);
-	}
-
-	// Check client is registered to this server. If not registered, throw server error.
-	void check_remote_endpoint_existence(std::shared_ptr<message_handle_parameter> param);
-
 	// Return true if a room group index is valid.
 	bool does_room_group_exist(std::shared_ptr<message_handle_parameter> param, size_t room_group_index);
 

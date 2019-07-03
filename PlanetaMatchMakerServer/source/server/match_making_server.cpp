@@ -15,8 +15,6 @@ using namespace std;
 using namespace boost;
 
 namespace pgl {
-	constexpr int buffer_size{256};
-
 	match_making_server::
 	match_making_server(std::shared_ptr<server_data> server_data,
 		std::shared_ptr<message_handler_invoker> message_handler_container,

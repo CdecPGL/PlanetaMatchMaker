@@ -1,5 +1,3 @@
-#include "server/server_error.hpp"
-
 #include "server_data.hpp"
 
 namespace pgl {
@@ -33,13 +31,5 @@ namespace pgl {
 
 	server_data::room_data_container_type& server_data::get_room_data_container(const size_t room_group_idx) {
 		return room_data_container_list_.at(room_group_idx);
-	}
-
-	const server_data::client_data_container_type& server_data::client_data_container() const {
-		return client_data_container_;
-	}
-
-	server_data::client_data_container_type& server_data::client_data_container() {
-		return client_data_container_;
 	}
 }

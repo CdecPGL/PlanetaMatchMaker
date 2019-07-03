@@ -6,9 +6,6 @@ namespace pgl {
 	void update_room_status_notice_message_handler::handle_message(const update_room_status_notice_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
 
-		// Check authority of the client
-		check_remote_endpoint_existence(param);
-
 		// Check room group existence
 		check_room_group_existence(param, message.group_index);
 		auto& room_data_container = param->server_data->get_room_data_container(message.group_index);

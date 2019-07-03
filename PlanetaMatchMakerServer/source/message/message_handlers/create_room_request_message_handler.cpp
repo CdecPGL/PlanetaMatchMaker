@@ -16,9 +16,6 @@ namespace pgl {
 
 		create_room_reply_message reply{};
 
-		// Check authority of the client
-		check_remote_endpoint_existence<message_type::create_room_reply>(param, reply);
-
 		// Check room group existence
 		check_room_group_existence<message_type::create_room_reply>(param, message.group_index, reply);
 		auto& room_data_container = param->server_data->get_room_data_container(message.group_index);

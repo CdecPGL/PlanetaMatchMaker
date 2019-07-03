@@ -16,9 +16,6 @@ namespace pgl {
 
 		list_room_group_reply_message reply{};
 
-		// Check authority of the client
-		check_remote_endpoint_existence<message_type::list_room_group_reply>(param, reply);
-
 		// Generate room group data list to send
 		const auto& room_group_data_list = param->server_data->get_room_data_group_list();
 		decltype(list_room_group_reply_message::room_group_info_list) room_group_info_list;

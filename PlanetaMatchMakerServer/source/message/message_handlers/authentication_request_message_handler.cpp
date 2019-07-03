@@ -44,18 +44,6 @@ namespace pgl {
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "A session key(", reply.session_key,
 			") is generated.");
 
-		// Register the client data to the server if need
-		const auto client_address = client_address::make_from_endpoint(param->socket.remote_endpoint());
-		if (param->server_data->client_data_container().is_data_exist(client_address)) {
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Client data is already registered.");
-		} else {
-			const client_data client_data{
-				client_address::make_from_endpoint(param->socket.remote_endpoint())
-			};
-			param->server_data->client_data_container().add_data(client_address, client_data);
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Client data registered.");
-		}
-
 		// Reply to the client
 		reply_message_header header{
 			message_type::authentication_reply,
