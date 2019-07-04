@@ -17,7 +17,7 @@ namespace pgl {
 		list_room_group_reply_message reply{};
 
 		// Generate room group data list to send
-		const auto& room_group_data_list = param->server_data->get_room_data_group_list();
+		const auto& room_group_data_list = param->server_data.get_room_data_group_list();
 		decltype(list_room_group_reply_message::room_group_info_list) room_group_info_list;
 		std::transform(room_group_data_list.begin(), room_group_data_list.end(), room_group_info_list.begin(),
 			[](const room_group_data& data) {

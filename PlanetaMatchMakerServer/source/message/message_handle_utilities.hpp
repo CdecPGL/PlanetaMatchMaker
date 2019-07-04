@@ -16,7 +16,7 @@ namespace pgl {
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
+			execute_timed_async_operation(param->socket, param->timeout_seconds,
 				[param, first_data, rest_data...]() {
 					packed_async_write(
 						param->socket, param->yield, first_data, rest_data...);
@@ -40,7 +40,7 @@ namespace pgl {
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			execute_timed_async_operation(param->io_service, param->socket, param->timeout_seconds,
+			execute_timed_async_operation(param->socket, param->timeout_seconds,
 				[param, &first_data, &rest_data...]()mutable {
 					unpacked_async_read(param->socket, param->yield, first_data, rest_data...);
 				});

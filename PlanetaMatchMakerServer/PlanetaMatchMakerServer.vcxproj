@@ -177,7 +177,9 @@
     <ClInclude Include="source\serialize\serialization_error.hpp" />
     <ClInclude Include="source\serialize\serializer.hpp" />
     <ClInclude Include="source\serialize\serialize_type_traits.hpp" />
+    <ClInclude Include="source\server\connection_handler.hpp" />
     <ClInclude Include="source\server\match_making_server.hpp" />
+    <ClInclude Include="source\server\server.hpp" />
     <ClInclude Include="source\server\server_constants.hpp" />
     <ClInclude Include="source\server\server_data.hpp" />
     <ClInclude Include="source\message\messages.hpp" />
@@ -195,6 +197,8 @@
     <ClInclude Include="source\network\transport_layer.hpp" />
     <ClInclude Include="source\room\room_constants.hpp" />
     <ClInclude Include="source\room\room_data.hpp" />
+    <ClInclude Include="source\server\server_setting.hpp" />
+    <ClInclude Include="source\server\server_thread.hpp" />
     <ClInclude Include="source\session\session_data.hpp" />
     <ClInclude Include="source\session\session_key.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
@@ -216,6 +220,7 @@
     <ClCompile Include="source\room\room_data.cpp" />
     <ClCompile Include="source\room\room_data_container.cpp" />
     <ClCompile Include="source\serialize\serializer.cpp" />
+    <ClCompile Include="source\server\connection_handler.cpp" />
     <ClCompile Include="source\server\match_making_server.cpp" />
     <ClCompile Include="source\message\message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\authentication_request_message_handler.cpp" />
@@ -224,10 +229,12 @@
     <ClCompile Include="source\message\message_handlers\list_room_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handler_invoker.cpp" />
     <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />
+    <ClCompile Include="source\server\server.cpp" />
     <ClCompile Include="source\server\server_data.cpp" />
     <ClCompile Include="source\server\server_error.cpp" />
     <ClCompile Include="source\server\server_error_code.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />
+    <ClCompile Include="source\server\server_thread.cpp" />
     <ClCompile Include="source\session\session_data.cpp" />
     <ClCompile Include="source\session\session_key.cpp" />
     <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />

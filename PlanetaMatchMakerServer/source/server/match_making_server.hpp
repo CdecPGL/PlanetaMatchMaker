@@ -27,7 +27,6 @@ namespace pgl {
 		boost::asio::io_service& io_service_;
 		boost::asio::ip::tcp::acceptor acceptor_;
 		boost::asio::ip::tcp::socket socket_;
-		boost::asio::steady_timer timer_;
 		std::uint32_t time_out_seconds_;
 		session_data session_data_;
 

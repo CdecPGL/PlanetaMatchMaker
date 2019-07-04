@@ -9,7 +9,7 @@ namespace pgl {
 
 		// Check room group existence
 		check_room_group_existence(param, message.group_index);
-		auto& room_data_container = param->server_data->get_room_data_container(message.group_index);
+		auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
 
 		// Check room existence
 		check_room_existence(param, room_data_container, message.room_id);
