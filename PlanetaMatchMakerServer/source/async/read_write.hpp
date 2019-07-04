@@ -12,7 +12,7 @@ namespace pgl {
 	 * todo: Reduce redundant copy. Currently, there are two copy steps (copy in serialization and copy in pack_data)
 	 */
 	template <typename... Data>
-	void packed_async_write(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context& yield,
+	void packed_async_write(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context yield,
 		const Data& ... data) {
 		auto buffer = pack_data(data...);
 		async_write(socket, boost::asio::buffer(buffer), yield);
@@ -23,7 +23,7 @@ namespace pgl {
 	 * todo: Reduce redundant copy. Currently, there are two copy steps (copy in serialization and copy in pack_data)
 	 */
 	template <typename... Data>
-	void unpacked_async_read(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context& yield, Data& ... data) {
+	void unpacked_async_read(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context yield, Data& ... data) {
 		static_assert(!(std::is_const_v<Data> || ...),"All Data must not be const.");
 		auto total_size = get_packed_size<Data...>();
 		std::vector<uint8_t> buffer(total_size);
