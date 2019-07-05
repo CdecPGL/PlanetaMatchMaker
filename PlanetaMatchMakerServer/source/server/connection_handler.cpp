@@ -62,11 +62,12 @@ namespace pgl {
 				restart();
 			}
 			catch (const server_error& e) {
-				if (e.error_code() == server_error_code::expected_disconnection) {
+				if (e.error_code() == server_error_code::disconnected_expectedly) {
 					log_with_endpoint(log_level::info, socket_.remote_endpoint(), e);
 				} else {
 					log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
 				}
+
 				restart();
 			}
 			catch (const std::exception& e) {

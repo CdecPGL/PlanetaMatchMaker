@@ -42,6 +42,6 @@ namespace pgl {
 		send(param, header, reply);
 
 		// Disconnect
-		throw server_error(server_error_code::expected_disconnection);
+		throw server_error(server_error_code::disconnected_expectedly);
 	}
 }

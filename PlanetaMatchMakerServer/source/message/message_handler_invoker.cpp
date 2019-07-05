@@ -28,11 +28,7 @@ namespace pgl {
 
 		// Receive ana analyze a message header
 		request_message_header header{};
-		try {
-			receive(param, header);
-		} catch (const server_error& e) {
-			throw server_error(server_error_code::message_header_reception_error, e.message());
-		}
+		receive(param, header);
 
 		// Check if a session is valid if need
 		if (check_session_key) {

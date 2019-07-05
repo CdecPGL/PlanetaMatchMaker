@@ -6,12 +6,12 @@
 namespace pgl {
 	enum class server_error_code {
 		ok,
-		expected_disconnection,
+		disconnected_expectedly,
+		disconnected_by_client,
 		acception_failed,
 		message_send_timeout,
 		message_reception_timeout,
-		message_header_reception_error,
-		message_body_reception_error,
+		message_reception_error,
 		invalid_message_type,
 		message_type_mismatch,
 		version_mismatch,

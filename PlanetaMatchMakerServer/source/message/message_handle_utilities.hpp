@@ -28,9 +28,11 @@ namespace pgl {
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
 				throw server_error(server_error_code::message_send_timeout, extra_message);
-			} else {
-				throw server_error(server_error_code::message_send_error, extra_message);
 			}
+			if (e.code() == boost::asio::error::eof) {
+				throw server_error(server_error_code::disconnected_by_client, extra_message);
+			}
+			throw server_error(server_error_code::message_send_error, extra_message);
 		}
 	}
 
@@ -55,9 +57,11 @@ namespace pgl {
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
 				throw server_error(server_error_code::message_reception_timeout, extra_message);
-			} else {
-				throw server_error(server_error_code::message_send_error, extra_message);
 			}
+			if (e.code() == boost::asio::error::eof) {
+				throw server_error(server_error_code::disconnected_by_client, extra_message);
+			}
+			throw server_error(server_error_code::message_reception_error, extra_message);
 		}
 	}
 
@@ -67,7 +71,7 @@ namespace pgl {
 	// Check a room group index is valid. If it is not valid, reply error message to client and throw server error.
 	template <message_type ReplyMessageType, class ReplyMessage>
 	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param,
-		room_group_index_type room_group_index,
+		const room_group_index_type room_group_index,
 		const ReplyMessage& reply_message) {
 		// Check if the id is valid
 		if (does_room_group_exist(param, room_group_index)) {

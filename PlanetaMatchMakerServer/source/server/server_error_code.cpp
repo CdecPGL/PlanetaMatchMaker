@@ -5,16 +5,14 @@ namespace pgl {
 		switch (error_code) {
 			case server_error_code::ok:
 				return "Ok.";
-			case server_error_code::expected_disconnection:
+			case server_error_code::disconnected_expectedly:
 				return "Disconnected by correct operation.";
 			case server_error_code::acception_failed:
 				return "Failed to accept new client.";
 			case server_error_code::message_reception_timeout:
 				return "Failed to receive a message because of time out.";
-			case server_error_code::message_header_reception_error:
-				return "Failed to receive a message header.";
-			case server_error_code::message_body_reception_error:
-				return "Failed to receive a message body.";
+			case server_error_code::message_reception_error:
+				return "Failed to receive a message.";
 			case server_error_code::invalid_message_type:
 				return "The message type is invalid.";
 			case server_error_code::message_type_mismatch:
@@ -35,6 +33,10 @@ namespace pgl {
 				return "A client who is not room host try to change room data.";
 			case server_error_code::invalid_session:
 				return "A session is invalid.";
+			case server_error_code::disconnected_by_client:
+				return "Disconnected by the client.";
+			case server_error_code::message_send_timeout:
+				break;
 			default:
 				return "Unknown";
 		}

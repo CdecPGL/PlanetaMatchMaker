@@ -34,11 +34,7 @@ namespace pgl {
 
 		void operator()(std::shared_ptr<message_handle_parameter> param) override final {
 			Message message;
-			try {
-				receive(param, message);
-			} catch (const server_error& e) {
-				throw server_error(server_error_code::message_body_reception_error, e.message());
-			}
+			receive(param, message);
 			handle_message(message, std::move(param));
 		}
 
