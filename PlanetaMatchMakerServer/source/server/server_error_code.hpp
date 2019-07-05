@@ -8,6 +8,7 @@ namespace pgl {
 		ok,
 		expected_disconnection,
 		acception_failed,
+		message_send_timeout,
 		message_reception_timeout,
 		message_header_reception_error,
 		message_body_reception_error,

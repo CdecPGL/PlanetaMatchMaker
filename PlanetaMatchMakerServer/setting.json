@@ -1,5 +1,5 @@
 {
-    "enable_session_key_check": true,
+    "enable_session_key_check": false,
     "time_out_seconds": 300,
     "log_level": "debug",
     "ip_version": "v4",

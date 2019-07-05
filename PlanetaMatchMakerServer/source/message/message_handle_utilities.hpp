@@ -26,7 +26,11 @@ namespace pgl {
 		} catch (const boost::system::system_error& e) {
 			auto extra_message = generate_string("Failed to send ", data_summary, " to the client. ",
 				e.code().message());
-			throw server_error(server_error_code::message_send_error, extra_message);
+			if (e.code() == boost::asio::error::operation_aborted) {
+				throw server_error(server_error_code::message_send_timeout, extra_message);
+			} else {
+				throw server_error(server_error_code::message_send_error, extra_message);
+			}
 		}
 	}
 
@@ -49,7 +53,11 @@ namespace pgl {
 		} catch (const boost::system::system_error& e) {
 			auto extra_message = generate_string("Failed to receive ", data_summary, " from the client. ",
 				e.code().message());
-			throw server_error(server_error_code::message_send_error, extra_message);
+			if (e.code() == boost::asio::error::operation_aborted) {
+				throw server_error(server_error_code::message_reception_timeout, extra_message);
+			} else {
+				throw server_error(server_error_code::message_send_error, extra_message);
+			}
 		}
 	}
 
