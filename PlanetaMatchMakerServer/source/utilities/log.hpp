@@ -6,6 +6,9 @@
 namespace pgl {
 	enum class log_level { debug, info, warning, error, fatal };
 
+	// convert string to log level thead safely. If str is invalid, throws std::out_of_range.
+	log_level string_to_log_level(const std::string& str);
+
 	// Set threshold of log level thread safely to output.
 	void set_output_log_level(log_level level);
 

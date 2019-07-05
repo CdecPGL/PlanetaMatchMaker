@@ -1,10 +1,12 @@
 {
     "enable_session_key_check": true,
+    "time_out_seconds": 300,
     "log_level": "debug",
-    "ip_version": "ipv4",
+    "ip_version": "v4",
+    "port": 7777,
     "max_connection_per_thread": 10,
-    "thread_count": 1,
-    "max_count_of_room_per_room_group": 100,
+    "thread": 1,
+    "max_room_per_room_group": 100,
     "room_group_list": [
         "test_group1",
         "test_group2"

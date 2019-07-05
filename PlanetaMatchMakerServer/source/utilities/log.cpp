@@ -1,5 +1,6 @@
 #include <iostream>
 #include <shared_mutex>
+#include <unordered_map>
 
 #include "nameof.hpp"
 
@@ -27,6 +28,16 @@ namespace pgl {
 		}
 
 		*os << "[" << get_now_datetime_string() << "] " << level << log_header << ": " << log_body << endl;
+	}
+
+	log_level string_to_log_level(const std::string& str) {
+		const static std::unordered_map<std::string, log_level> map{
+			{std::string(nameof::nameof_enum(log_level::debug)), log_level::debug},
+			{std::string(nameof::nameof_enum(log_level::info)), log_level::info},
+			{std::string(nameof::nameof_enum(log_level::warning)), log_level::warning},
+			{std::string(nameof::nameof_enum(log_level::error)), log_level::error}
+		};
+		return map.at(str);
 	}
 
 	void set_output_log_level(const log_level level) {

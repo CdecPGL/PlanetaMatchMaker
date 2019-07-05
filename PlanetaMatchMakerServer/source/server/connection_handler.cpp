@@ -54,7 +54,8 @@ namespace pgl {
 
 				// Receive message
 				while (true) {
-					message_handler_invoker_.handle_message(message_handler_param, false);
+					message_handler_invoker_.handle_message(message_handler_param,
+						server_setting_.enable_session_key_check);
 				}
 			} catch (const system::system_error& e) {
 				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Unhandled error: ", e);

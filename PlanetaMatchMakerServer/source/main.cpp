@@ -11,7 +11,7 @@ using namespace boost;
 
 int main() {
 	try {
-		server server;
+		server server("setting.json");
 		server.run();
 		//set_output_log_level(log_level::debug);
 		//const auto message_handler_invkr = message_handler_invoker_factory::make_shared_standard();
@@ -24,8 +24,7 @@ int main() {
 		//	server.start();
 		//}
 		//io_service.run();
-	} 
-	catch (const std::exception& e) {
+	} catch (const std::exception& e) {
 		cerr << "Fatal error occured: " << e.what() << endl;
 		exit(1);
 	}
