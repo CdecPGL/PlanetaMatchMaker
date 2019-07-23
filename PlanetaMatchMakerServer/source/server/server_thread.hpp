@@ -7,10 +7,10 @@
 #include <boost/noncopyable.hpp>
 
 #include "message/message_handler_invoker.hpp"
-#include "connection_handler.hpp"
 
 namespace pgl {
 	class server_data;
+	class connection_handler;
 	struct server_setting;
 
 	class server_thread final : boost::noncopyable {
@@ -25,6 +25,6 @@ namespace pgl {
 		const server_setting& server_setting_;
 
 		std::unique_ptr<message_handler_invoker> message_handler_invoker_;
-		std::vector<std::unique_ptr<connection_handler>> connection_handlers_;
+		std::vector<std::shared_ptr<connection_handler>> connection_handlers_;
 	};
 }

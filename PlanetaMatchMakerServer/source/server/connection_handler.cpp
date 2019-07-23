@@ -29,55 +29,57 @@ namespace pgl {
 		session_data_ = std::make_unique<session_data>();
 
 		// Start connection
-		spawn(acceptor_.get_executor(), [&](asio::yield_context yield) {
+		spawn(acceptor_.get_executor(), [shared_this=shared_from_this()](asio::yield_context yield) {
 			try {
 				log(log_level::debug, "Start to accept.");
 				try {
-					acceptor_.async_accept(socket_, yield);
+					shared_this->acceptor_.async_accept(shared_this->socket_, yield);
 				} catch (system::system_error& e) {
-					const auto extra_message = generate_string(e, " @", socket_.remote_endpoint());
+					const auto extra_message = generate_string(e, " @", shared_this->socket_.remote_endpoint());
 					throw server_error(server_error_code::acception_failed, extra_message);
 				}
 
-				log_with_endpoint(log_level::info, socket_.remote_endpoint(),
+				log_with_endpoint(log_level::info, shared_this->socket_.remote_endpoint(),
 					"Accepted new connection. Start to receive message.");
 
 				// Prepare data
 				const auto message_handler_param = std::make_shared<message_handle_parameter>(message_handle_parameter{
-					socket_, server_data_, yield, chrono::seconds(server_setting_.time_out_seconds),
-					*session_data_
+					shared_this->socket_, shared_this->server_data_, yield,
+					chrono::seconds(shared_this->server_setting_.time_out_seconds),
+					* shared_this->session_data_
 				});
 
 				// Authenticate client
-				message_handler_invoker_.handle_specific_message(message_type::authentication_request,
+				shared_this->message_handler_invoker_.handle_specific_message(message_type::authentication_request,
 					message_handler_param, false);
 
 				// Receive message
 				while (true) {
-					message_handler_invoker_.handle_message(message_handler_param,
-						server_setting_.enable_session_key_check);
+					shared_this->message_handler_invoker_.handle_message(message_handler_param,
+						shared_this->server_setting_.enable_session_key_check);
 				}
 			} catch (const system::system_error& e) {
-				log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Unhandled error: ", e);
-				restart();
+				log_with_endpoint(log_level::error, shared_this->socket_.remote_endpoint(), "Unhandled error: ", e);
+				shared_this->restart();
 			}
 			catch (const server_error& e) {
 				if (e.error_code() == server_error_code::disconnected_expectedly) {
-					log_with_endpoint(log_level::info, socket_.remote_endpoint(), e);
+					log_with_endpoint(log_level::info, shared_this->socket_.remote_endpoint(), e);
 				} else {
-					log_with_endpoint(log_level::error, socket_.remote_endpoint(), "Message handling error: ", e);
+					log_with_endpoint(log_level::error, shared_this->socket_.remote_endpoint(),
+						"Message handling error: ", e);
 				}
 
-				restart();
+				shared_this->restart();
 			}
 			catch (const std::exception& e) {
-				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), typeid(e), ": ", e.what());
-				stop();
+				log_with_endpoint(log_level::fatal, shared_this->socket_.remote_endpoint(), typeid(e), ": ", e.what());
+				shared_this->stop();
 				throw;
 			}
 			catch (...) {
-				log_with_endpoint(log_level::fatal, socket_.remote_endpoint(), "Unknown error.");
-				stop();
+				log_with_endpoint(log_level::fatal, shared_this->socket_.remote_endpoint(), "Unknown error.");
+				shared_this->stop();
 				throw;
 			}
 		});

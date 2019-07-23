@@ -1,8 +1,9 @@
 #include "server_thread.hpp"
 
+#include "utilities/log.hpp"
 #include "message/message_handler_invoker_factory.hpp"
-#include "./server_setting.hpp"
-#include "./connection_handler.hpp"
+#include "server_setting.hpp"
+#include "connection_handler.hpp"
 
 namespace pgl {
 
@@ -15,11 +16,12 @@ namespace pgl {
 	void server_thread::start() {
 		connection_handlers_.reserve(server_setting_.max_connection_per_thread);
 		for (auto i = 0u; i < server_setting_.max_connection_per_thread; ++i) {
-			auto conn_handler = std::make_unique<connection_handler>(acceptor_, server_data_,
+			auto conn_handler = std::make_shared<connection_handler>(acceptor_, server_data_,
 				server_setting_, *message_handler_invoker_);
 			conn_handler->start();
 			connection_handlers_.push_back(std::move(conn_handler));
 		}
+		log(log_level::info, "Start ", server_setting_.max_connection_per_thread, " connection handlers.");
 	}
 
 	void server_thread::stop() {

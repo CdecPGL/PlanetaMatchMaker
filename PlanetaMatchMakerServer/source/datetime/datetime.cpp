@@ -3,8 +3,6 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "date/date.h"
-
 #include "datetime.hpp"
 
 using namespace std;
@@ -88,7 +86,13 @@ namespace pgl {
 	}
 
 	string get_now_datetime_string() {
-		const auto now_time = std::chrono::system_clock::now();
-		return date::format("%F %T %Z", now_time);
+		const auto date_time = boost::posix_time::microsec_clock::universal_time();
+		ostringstream oss;
+		// deleting of std::locale::facet mey not be necessary.
+		auto facet = new boost::posix_time::time_facet();
+		facet->format("%Y-%m-%d %H:%M:%S.%f UTC");
+		oss.imbue(locale(locale::classic(), facet));
+		oss << date_time;
+		return oss.str();
 	}
 }
