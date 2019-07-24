@@ -36,7 +36,7 @@ namespace pgl {
 			case server_error_code::disconnected_by_client:
 				return "Disconnected by the client.";
 			case server_error_code::message_send_timeout:
-				break;
+				return "Time out of sending message.";
 			default:
 				return "Unknown";
 		}

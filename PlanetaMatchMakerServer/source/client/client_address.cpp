@@ -7,7 +7,7 @@ namespace pgl {
 
 	client_address client_address::make_from_endpoint(
 		const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint) {
-		client_address client_address;
+		client_address client_address{};
 		if (endpoint.address().is_v4()) {
 			client_address.ip_address[0] = endpoint.address().to_v4().to_uint();
 		} else {
