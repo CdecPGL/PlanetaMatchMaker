@@ -7,30 +7,50 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlanetaMatchMakerServer", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlanetaMatchMakerServerTest", "PlanetaMatchMakerServerTest\PlanetaMatchMakerServerTest.vcxproj", "{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlanetaMatchMakerClient", "PlanetaMatchMakerClient\PlanetaMatchMakerClient.csproj", "{A574E9BA-5C01-43E7-A665-9C49DC55B439}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|x64.ActiveCfg = Debug|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|x64.Build.0 = Debug|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|x86.ActiveCfg = Debug|Win32
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|x86.Build.0 = Debug|Win32
+		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|Any CPU.ActiveCfg = Release|Win32
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|x64.ActiveCfg = Release|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|x64.Build.0 = Release|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|x86.ActiveCfg = Release|Win32
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|x86.Build.0 = Release|Win32
+		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|x64.ActiveCfg = Debug|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|x64.Build.0 = Debug|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|x86.ActiveCfg = Debug|Win32
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|x86.Build.0 = Debug|Win32
+		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|Any CPU.ActiveCfg = Release|Win32
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|x64.ActiveCfg = Release|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|x64.Build.0 = Release|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|x86.ActiveCfg = Release|Win32
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|x86.Build.0 = Release|Win32
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Debug|x64.Build.0 = Debug|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Debug|x86.Build.0 = Debug|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Release|x64.ActiveCfg = Release|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Release|x64.Build.0 = Release|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Release|x86.ActiveCfg = Release|Any CPU
+		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
