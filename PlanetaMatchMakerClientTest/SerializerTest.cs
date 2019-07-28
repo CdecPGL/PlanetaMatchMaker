@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using PlanetaMatchMakerClient;
+using PlanetaGameLabo.Serializer;
 
 namespace PlanetaGameLabo.Test {
     [Serializable]
@@ -224,7 +224,7 @@ namespace PlanetaGameLabo.Test {
         [DataRow(typeof(NestedTestStruct), 170)]
         [DataRow(typeof(NestedTestClass), 16)]
         public void GetSerializedSizeTest(Type type, int expected) {
-            Assert.AreEqual(expected, Serializer.GetSerializedSize(type));
+            Assert.AreEqual(expected, Serializer.Serializer.GetSerializedSize(type));
         }
 
         [DataTestMethod]
@@ -234,7 +234,7 @@ namespace PlanetaGameLabo.Test {
         [DataRow(typeof(NotFixedArrayStruct))]
         [ExpectedException(typeof(InvalidSerializationException))]
         public void GetSerializedSizeErrorTest(Type type) {
-            Serializer.GetSerializedSize(type);
+            Serializer.Serializer.GetSerializedSize(type);
         }
 
         [DataTestMethod]
@@ -250,8 +250,8 @@ namespace PlanetaGameLabo.Test {
         [DataRow(12e-3f, DisplayName = nameof(SerializeConsistencyTest) + "_float")]
         [DataRow(123e-45, DisplayName = nameof(SerializeConsistencyTest) + "_double")]
         public void SerializeConsistencyTest(object obj) {
-            var data1 = Serializer.Serialize(obj);
-            var data2 = Serializer.Serialize(obj);
+            var data1 = Serializer.Serializer.Serialize(obj);
+            var data2 = Serializer.Serializer.Serialize(obj);
             CollectionAssert.AreEqual(data1, data2);
         }
 
@@ -288,24 +288,24 @@ namespace PlanetaGameLabo.Test {
         [TestMethod]
         [ExpectedException(typeof(InvalidSerializationException))]
         public void SerializeTooLongFixedStringErrorTest() {
-            Serializer.Serialize(TooLongFixedStringStruct.GetDefault());
+            Serializer.Serializer.Serialize(TooLongFixedStringStruct.GetDefault());
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidSerializationException))]
         public void SerializeTooLongFixedArrayErrorTest() {
-            Serializer.Serialize(TooLongFixedArrayStruct.GetDefault());
+            Serializer.Serializer.Serialize(TooLongFixedArrayStruct.GetDefault());
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidSerializationException))]
         public void SerializeTooShortFixedArrayErrorTest() {
-            Serializer.Serialize(TooShortFixedArrayStruct.GetDefault());
+            Serializer.Serializer.Serialize(TooShortFixedArrayStruct.GetDefault());
         }
 
         private void DeserializeTest<T>(T obj) {
-            var data = Serializer.Serialize(obj);
-            var obj2 = Serializer.Deserialize<T>(data);
+            var data = Serializer.Serializer.Serialize(obj);
+            var obj2 = Serializer.Serializer.Deserialize<T>(data);
             Assert.AreEqual(obj, obj2);
         }
 

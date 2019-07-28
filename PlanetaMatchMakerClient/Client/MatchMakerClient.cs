@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Runtime.Serialization;
 
-namespace PlanetaGameLabo {
+namespace PlanetaGameLabo.MatchMaker {
     public sealed class MatchMakerClient {
         public async void StartAsync(string server_address, short port) {
             _tcpClient = new TcpClient();
@@ -13,24 +12,24 @@ namespace PlanetaGameLabo {
             var header = new RequestMessageHeader {
                 messageType = MessageType.AuthenticationRequest
             };
-            var request_header_data = new ArraySegment<byte>(Serializer.Serialize(header));
-            var message = new AuthenticationRequestMessage {version = Constants.clientVersion};
-            var request_body_data = new ArraySegment<byte>(Serializer.Serialize(message));
+            var request_header_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(header));
+            var message = new AuthenticationRequestMessage {version = ClientConstants.clientVersion};
+            var request_body_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(message));
             await _tcpClient.Client.SendAsync(new ArraySegment<byte>[] {request_header_data, request_body_data},
                 SocketFlags.None);
 
             var reply_header_data =
-                new ArraySegment<byte>(new byte[Serializer.GetSerializedSize<ReplyMessageHeader>()]);
+                new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<ReplyMessageHeader>()]);
             await _tcpClient.Client.ReceiveAsync(reply_header_data, SocketFlags.None);
-            var reply_header = Serializer.Deserialize<ReplyMessageHeader>(reply_header_data.Array);
+            var reply_header = Serializer.Serializer.Deserialize<ReplyMessageHeader>(reply_header_data.Array);
             if (reply_header.messageType != MessageType.AuthenticationReply) {
 
             }
 
             var reply_body_data =
-                new ArraySegment<byte>(new byte[Serializer.GetSerializedSize<AuthenticationReplyMessage>()]);
+                new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<AuthenticationReplyMessage>()]);
             await _tcpClient.Client.ReceiveAsync(reply_body_data, SocketFlags.None);
-            var reply_body = Serializer.Deserialize<AuthenticationReplyMessage>(reply_body_data.Array);
+            var reply_body = Serializer.Serializer.Deserialize<AuthenticationReplyMessage>(reply_body_data.Array);
             _sessionKey = reply_body.sessionKey;
         }
 

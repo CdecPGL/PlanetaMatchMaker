@@ -1,7 +1,7 @@
 ﻿using System;
 
-namespace PlanetaGameLabo {
-    public class InvalidSerializationException : Exception {
+namespace PlanetaGameLabo.Serializer {
+    public sealed class InvalidSerializationException : Exception {
         public InvalidSerializationException() : base() { }
         public InvalidSerializationException(string message) : base(message) { }
     }

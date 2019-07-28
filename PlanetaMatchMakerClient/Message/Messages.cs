@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace PlanetaGameLabo {
+namespace PlanetaGameLabo.MatchMaker {
     using SessionKeyType = System.UInt32;
     using VersionType = System.UInt16;
 
