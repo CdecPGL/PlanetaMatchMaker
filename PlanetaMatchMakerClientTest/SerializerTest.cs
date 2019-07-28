@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PlanetaMatchMakerClient;
@@ -10,6 +11,19 @@ namespace PlanetaGameLabo.Test {
 
         public static FixedStringStruct GetDefault() {
             return new FixedStringStruct {str = "abc"};
+        }
+
+        public override bool Equals(object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            var other = (FixedStringStruct) obj;
+            return str == other.str;
+        }
+
+        public override string ToString() {
+            return base.ToString() + "(" + str + ")";
         }
     }
 
@@ -24,6 +38,15 @@ namespace PlanetaGameLabo.Test {
                     27, 28, 29, 30, 31
                 }
             };
+        }
+
+        public override bool Equals(object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            var other = (FixedArrayStruct) obj;
+            return array.SequenceEqual(other.array);
         }
     }
 
@@ -47,6 +70,15 @@ namespace PlanetaGameLabo.Test {
                 }
             };
         }
+
+        //public override bool Equals(object obj) {
+        //    if (obj == null) {
+        //        return false;
+        //    }
+
+        //    var other = (TestStruct) obj;
+        //    return a == other.a && b == other.b && c == other.c && array.SequenceEqual(other.array);
+        //}
     }
 
     [Serializable]
@@ -257,22 +289,22 @@ namespace PlanetaGameLabo.Test {
 
         [TestMethod]
         public void DeserializeTest_byte() {
-            DeserializeTest((byte)123);
+            DeserializeTest((byte) 123);
         }
 
         [TestMethod]
         public void DeserializeTest_sbyte() {
-            DeserializeTest((sbyte)-123);
+            DeserializeTest((sbyte) -123);
         }
 
         [TestMethod]
         public void DeserializeTest_short() {
-            DeserializeTest((short)-12345);
+            DeserializeTest((short) -12345);
         }
 
         [TestMethod]
         public void DeserializeTest_ushort() {
-            DeserializeTest((ushort)12345);
+            DeserializeTest((ushort) 12345);
         }
 
         [TestMethod]

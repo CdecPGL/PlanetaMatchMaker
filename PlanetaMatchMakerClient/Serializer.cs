@@ -263,19 +263,27 @@ namespace PlanetaGameLabo {
 
         private static void DeserializeDirectSerializableType(Type type, byte[] source, ref int pos,
             out object obj) {
-            var data = source.ToArray();
+            var size = GetSerializedSize(type);
             if (BitConverter.IsLittleEndian) {
-                Array.Reverse(data);
+                Array.Reverse(source, pos, size);
             }
 
-            if (_bytesToDirectSerializableTypeConverterDict.ContainsKey(type)) {
-                obj = _bytesToDirectSerializableTypeConverterDict[type](source, pos);
+            try {
+                if (_bytesToDirectSerializableTypeConverterDict.ContainsKey(type)) {
+                    obj = _bytesToDirectSerializableTypeConverterDict[type](source, pos);
+                }
+                else {
+                    throw new InvalidSerializationException("Invalid type for serialization.");
+                }
             }
-            else {
-                throw new InvalidSerializationException("Invalid type for serialization.");
+            finally {
+                // Make source to first status
+                if (BitConverter.IsLittleEndian) {
+                    Array.Reverse(source, pos, size);
+                }
             }
 
-            pos += GetSerializedSize(type);
+            pos += size;
         }
 
         private static void DeserializeFieldSerializableType(object owner_obj, FieldInfo field, byte[] source,
@@ -283,7 +291,7 @@ namespace PlanetaGameLabo {
             object obj;
             if (field.FieldType == typeof(string)) {
                 var max_length = GetLengthOfFixedLengthAttribute(field);
-                var real_length = Array.IndexOf(source, '\0', pos, max_length);
+                var real_length = Array.IndexOf(source, (byte) '\0', pos, max_length) - pos;
                 if (real_length < 0) {
                     real_length = max_length;
                 }
