@@ -36,13 +36,11 @@ namespace pgl {
 		static datetime now();
 
 		void on_serialize(serializer& serializer) {
-			serializer += data_;
+			serializer += unix_time_;
 		}
 
 	private:
-		uint64_t data_;
-
-		[[nodiscard]] int get_from_date(int start_bit, int bit_count) const;
+		uint64_t unix_time_;
 	};
 
 	std::string get_now_datetime_string();

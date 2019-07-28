@@ -1,4 +1,3 @@
-#include <chrono>
 #include <ctime>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -8,69 +7,70 @@
 using namespace std;
 
 namespace pgl {
-	constexpr int second_start_bit = 0;
-	constexpr int second_bit_count = 6;
-	constexpr int minute_start_bit = second_start_bit + second_bit_count;
-	constexpr int minute_bit_count = 6;
-	constexpr int hour_start_bit = minute_start_bit + minute_bit_count;
-	constexpr int hour_bit_count = 5;
-	constexpr int day_start_bit = hour_start_bit + hour_bit_count;
-	constexpr int day_bit_count = 5;
-	constexpr int month_start_bit = day_start_bit + day_bit_count;
-	constexpr int month_bit_count = 4;
-	constexpr int year_start_bit = month_start_bit + month_bit_count;
-	constexpr int year_bit_count = 31;
+	uint64_t get_unix_time(const int year, const int month, const int day, const int hours, const int minutes,
+		const int seconds) {
+		const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+		const boost::posix_time::ptime date_time(boost::gregorian::date(static_cast<const unsigned short>(year),
+				static_cast<const unsigned short>(month), static_cast<const unsigned short>(day)),
+			boost::posix_time::time_duration(hours, minutes, seconds));
+		return (date_time - epoch).total_seconds();
+	}
 
-	uint64_t get_located_data(const uint64_t value, const int start_bit, const int bit_count) {
-		return (value & ((1ll << bit_count) - 1)) << start_bit;
+	void get_boost_ptime_from_unix_time(const uint64_t unix_time, boost::posix_time::ptime& ptime) {
+		ptime = boost::posix_time::ptime(boost::gregorian::date(1970, 1, 1), boost::posix_time::seconds(unix_time));
 	}
 
 	datetime::datetime(const int year, const int month, const int day): datetime(year, month, day, 0, 0, 0) {}
 
 	datetime::datetime(const int year, const int month, const int day, const int hour, const int minute,
-		const int second): data_(
-		get_located_data(year, year_start_bit, year_bit_count) |
-		get_located_data(month, month_start_bit, month_bit_count) |
-		get_located_data(day, day_start_bit, day_bit_count) |
-		get_located_data(hour, hour_start_bit, hour_bit_count) |
-		get_located_data(minute, minute_start_bit, minute_bit_count) |
-		get_located_data(second, second_start_bit, second_bit_count)
-	) {}
+		const int second): unix_time_(get_unix_time(year, month, day, hour, minute, second)) {}
 
 	int datetime::year() const {
-		return get_from_date(year_start_bit, year_bit_count);
+		boost::posix_time::ptime ptime;
+		get_boost_ptime_from_unix_time(unix_time_, ptime);
+		return ptime.date().year();
 	}
 
 	int datetime::month() const {
-		return get_from_date(month_start_bit, month_bit_count);
+		boost::posix_time::ptime ptime;
+		get_boost_ptime_from_unix_time(unix_time_, ptime);
+		return ptime.date().month();
 	}
 
 	int datetime::day() const {
-		return get_from_date(day_start_bit, day_bit_count);
+		boost::posix_time::ptime ptime;
+		get_boost_ptime_from_unix_time(unix_time_, ptime);
+		return ptime.date().day();
 	}
 
 	int datetime::hour() const {
-		return get_from_date(hour_start_bit, hour_bit_count);
+		boost::posix_time::ptime ptime;
+		get_boost_ptime_from_unix_time(unix_time_, ptime);
+		return static_cast<int>(ptime.time_of_day().hours());
 	}
 
 	int datetime::minute() const {
-		return get_from_date(minute_start_bit, minute_bit_count);
+		boost::posix_time::ptime ptime;
+		get_boost_ptime_from_unix_time(unix_time_, ptime);
+		return static_cast<int>(ptime.time_of_day().minutes());
 	}
 
 	int datetime::second() const {
-		return get_from_date(second_start_bit, second_bit_count);
+		boost::posix_time::ptime ptime;
+		get_boost_ptime_from_unix_time(unix_time_, ptime);
+		return static_cast<int>(ptime.time_of_day().seconds());
 	}
 
 	size_t datetime::get_hash() const {
-		return boost::hash_value(data_);
+		return boost::hash_value(unix_time_);
 	}
 
 	bool datetime::operator<(const datetime& other) const {
-		return data_ < other.data_;
+		return unix_time_ < other.unix_time_;
 	}
 
 	bool datetime::operator==(const datetime& other) const {
-		return data_ == other.data_;
+		return unix_time_ == other.unix_time_;
 	}
 
 	datetime datetime::now() {
@@ -79,10 +79,6 @@ namespace pgl {
 		const auto time = date_time.time_of_day();
 		return datetime(date.year(), date.month(), date.day(), static_cast<int>(time.hours()),
 			static_cast<int>(time.minutes()), static_cast<int>(time.seconds()));
-	}
-
-	int datetime::get_from_date(const int start_bit, const int bit_count) const {
-		return static_cast<int>(data_ >> start_bit) & ((1 << bit_count) - 1);
 	}
 
 	string get_now_datetime_string() {
