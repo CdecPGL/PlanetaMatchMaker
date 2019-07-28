@@ -40,7 +40,7 @@ namespace pgl {
 		}
 
 	private:
-		uint64_t unix_time_;
+		int64_t unix_time_;
 	};
 
 	std::string get_now_datetime_string();

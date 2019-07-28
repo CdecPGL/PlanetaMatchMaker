@@ -7,7 +7,7 @@
 using namespace std;
 
 namespace pgl {
-	uint64_t get_unix_time(const int year, const int month, const int day, const int hours, const int minutes,
+	int64_t get_unix_time(const int year, const int month, const int day, const int hours, const int minutes,
 		const int seconds) {
 		const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
 		const boost::posix_time::ptime date_time(boost::gregorian::date(static_cast<const unsigned short>(year),
@@ -16,7 +16,7 @@ namespace pgl {
 		return (date_time - epoch).total_seconds();
 	}
 
-	void get_boost_ptime_from_unix_time(const uint64_t unix_time, boost::posix_time::ptime& ptime) {
+	void get_boost_ptime_from_unix_time(const int64_t unix_time, boost::posix_time::ptime& ptime) {
 		ptime = boost::posix_time::ptime(boost::gregorian::date(1970, 1, 1), boost::posix_time::seconds(unix_time));
 	}
 
