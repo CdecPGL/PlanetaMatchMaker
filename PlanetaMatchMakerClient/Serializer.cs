@@ -37,7 +37,7 @@ namespace PlanetaGameLabo {
         }
 
         private static readonly HashSet<Type> _directSerializableTypeSet = new HashSet<Type>() {
-            typeof(bool), typeof(char), typeof(byte), typeof(sbyte),
+            typeof(bool), typeof(byte), typeof(sbyte),
             typeof(double), typeof(short), typeof(int), typeof(long),
             typeof(float), typeof(ushort), typeof(uint), typeof(ulong)
         };
@@ -45,7 +45,6 @@ namespace PlanetaGameLabo {
         private static readonly Dictionary<Type, Func<byte[], int, object>> _bytesToDirectSerializableTypeConverterDict
             = new Dictionary<Type, Func<byte[], int, object>>() {
                 {typeof(bool), (bytes, start_idx) => BitConverter.ToBoolean(bytes, start_idx)},
-                {typeof(char), (bytes, start_idx) => BitConverter.ToChar(bytes, start_idx)},
                 {typeof(byte), (bytes, start_idx) => bytes[0]},
                 {typeof(sbyte), (bytes, start_idx) => (sbyte) bytes[0]},
                 {typeof(double), (bytes, start_idx) => BitConverter.ToDouble(bytes, start_idx)},
@@ -65,7 +64,7 @@ namespace PlanetaGameLabo {
                 return _serializedSizeCache[type];
             }
 
-            var size = 0;
+            int size;
             if (IsDirectSerializableType(type)) {
                 size = GetSerializedSizeOfDirectSerializableType(type);
             }
@@ -86,7 +85,8 @@ namespace PlanetaGameLabo {
         }
 
         private static int GetSerializedSizeOfDirectSerializableType(Type type) {
-            return Marshal.SizeOf(type);
+            // Return 1 if type is bool because Marshal.SizeOf returns 4 for bool due to C compability.
+            return type == typeof(bool) ? 1 : Marshal.SizeOf(type);
         }
 
         private static int GetSerializedSizeOfFieldSerializableType(FieldInfo field, Type type) {
@@ -151,9 +151,6 @@ namespace PlanetaGameLabo {
             byte[] data;
             switch (obj) {
                 case bool value:
-                    data = BitConverter.GetBytes(value);
-                    break;
-                case char value:
                     data = BitConverter.GetBytes(value);
                     break;
                 case byte value:
