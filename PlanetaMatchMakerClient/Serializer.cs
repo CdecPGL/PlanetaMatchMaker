@@ -78,7 +78,7 @@ namespace PlanetaGameLabo {
             }
             else {
                 throw new InvalidSerializationException(
-                    $"The type ({type}) is not serializable. Primitive types, fixed string and struct and class which is sequential are available.");
+                    $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
             }
 
             _serializedSizeCache.Add(type, size);
@@ -98,13 +98,13 @@ namespace PlanetaGameLabo {
             int size;
             if (type == typeof(string)) {
                 size = GetLengthOfFixedLengthAttribute(field);
-                _serializedSizeCache.Add(type, size);
+                // Not add to cache because the size is not fixed for same string type.
             }
             else if (field.FieldType.IsArray) {
                 var length = GetLengthOfFixedLengthAttribute(field);
-                var element_type = field.FieldType.GetGenericTypeDefinition().GetGenericArguments()[0];
+                var element_type = field.FieldType.GetElementType();
                 size = GetSerializedSizeImpl(element_type) * length;
-                // Not add to cache because the size is not fixed for same array time.
+                // Not add to cache because the size is not fixed for same array tipe.
             }
             else {
                 throw new InvalidSerializationException("Invalid type.");
@@ -142,7 +142,7 @@ namespace PlanetaGameLabo {
             }
             else {
                 throw new InvalidSerializationException(
-                    $"The type ({type}) is not serializable. Primitive types, fixed string and struct and class which is sequential are available.");
+                    $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
             }
         }
 
@@ -259,7 +259,7 @@ namespace PlanetaGameLabo {
             }
             else {
                 throw new InvalidSerializationException(
-                    $"The type ({type}) is not serializable. Primitive types, fixed string and struct and class which is sequential are available.");
+                    $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
             }
         }
 
@@ -296,7 +296,7 @@ namespace PlanetaGameLabo {
                 var length = GetLengthOfFixedLengthAttribute(field);
                 obj = Activator.CreateInstance(field.FieldType, length);
                 var array = (object[]) obj;
-                var element_type = field.FieldType.GetGenericTypeDefinition().GetGenericArguments()[0];
+                var element_type = field.FieldType.GetElementType();
                 for (var i = 0; i < length; ++i) {
                     DeserializeImpl(element_type, source, ref pos, out array[i]);
                 }
@@ -340,8 +340,7 @@ namespace PlanetaGameLabo {
         }
 
         private static bool IsComplexSerializableType(Type type) {
-            return type.GetFields().Length > 0 && type.IsLayoutSequential &&
-                   (type.Attributes & TypeAttributes.Serializable) != 0;
+            return type.GetFields().Length > 0 && type.IsLayoutSequential && type.IsSerializable;
         }
     }
 }
