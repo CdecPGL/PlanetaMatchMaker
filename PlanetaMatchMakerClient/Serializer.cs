@@ -327,7 +327,8 @@ namespace PlanetaGameLabo {
                     DeserializeFieldSerializableType(obj, field, source, ref pos);
                 }
                 else {
-                    DeserializeImpl(field.FieldType, source, ref pos, out obj);
+                    DeserializeImpl(field.FieldType, source, ref pos, out var field_obj);
+                    field.SetValue(obj, field_obj);
                 }
             }
         }

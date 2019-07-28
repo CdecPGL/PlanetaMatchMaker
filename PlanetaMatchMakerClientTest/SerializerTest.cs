@@ -71,25 +71,34 @@ namespace PlanetaGameLabo.Test {
             };
         }
 
-        //public override bool Equals(object obj) {
-        //    if (obj == null) {
-        //        return false;
-        //    }
+        public override bool Equals(object obj) {
+            if (obj == null) {
+                return false;
+            }
 
-        //    var other = (TestStruct) obj;
-        //    return a == other.a && b == other.b && c == other.c && array.SequenceEqual(other.array);
-        //}
+            var other = (TestStruct) obj;
+            return a == other.a && b == other.b && c == other.c && array.SequenceEqual(other.array);
+        }
     }
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    internal class TestClass {
+    internal sealed class TestClass {
         public int a;
 
         public static TestClass GetDefault() {
             return new TestClass {
                 a = 1234
             };
+        }
+
+        public override bool Equals(object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            var other = (TestClass) obj;
+            return a == other.a;
         }
     }
 
@@ -106,11 +115,20 @@ namespace PlanetaGameLabo.Test {
                 c = TestStruct.GetDefault()
             };
         }
+
+        public override bool Equals(object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            var other = (NestedTestStruct) obj;
+            return a == other.a && b == other.b && c.Equals(other.c);
+        }
     }
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    internal class NestedTestClass {
+    internal sealed class NestedTestClass {
         public uint a;
         public double b;
         public TestClass c;
@@ -121,6 +139,15 @@ namespace PlanetaGameLabo.Test {
                 b = -123.345,
                 c = TestClass.GetDefault()
             };
+        }
+
+        public override bool Equals(object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            var other = (NestedTestClass) obj;
+            return a == other.a && b == other.b && c.Equals(other.c);
         }
     }
 
