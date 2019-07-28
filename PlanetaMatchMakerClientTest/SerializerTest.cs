@@ -151,6 +151,14 @@ namespace PlanetaGameLabo.Test {
         }
     }
 
+    [Serializable]
+    internal enum TestEnum : uint {
+        A,
+        B,
+        C,
+        D
+    }
+
     internal struct NotSerializableStruct {
         public int a;
     }
@@ -223,6 +231,7 @@ namespace PlanetaGameLabo.Test {
         [DataRow(typeof(TestClass), 4)]
         [DataRow(typeof(NestedTestStruct), 170)]
         [DataRow(typeof(NestedTestClass), 16)]
+        [DataRow(typeof(TestEnum), 4)]
         public void GetSerializedSizeTest(Type type, int expected) {
             Assert.AreEqual(expected, Serializer.Serializer.GetSerializedSize(type));
         }
@@ -249,6 +258,7 @@ namespace PlanetaGameLabo.Test {
         [DataRow(12345678912345u, DisplayName = nameof(SerializeConsistencyTest) + "_ulong")]
         [DataRow(12e-3f, DisplayName = nameof(SerializeConsistencyTest) + "_float")]
         [DataRow(123e-45, DisplayName = nameof(SerializeConsistencyTest) + "_double")]
+        [DataRow(TestEnum.C, DisplayName = nameof(SerializeConsistencyTest) + "_TestEnum")]
         public void SerializeConsistencyTest(object obj) {
             var data1 = Serializer.Serializer.Serialize(obj);
             var data2 = Serializer.Serializer.Serialize(obj);
@@ -392,6 +402,11 @@ namespace PlanetaGameLabo.Test {
         [TestMethod]
         public void DeserializeTest_NestedTestClass() {
             DeserializeTest(NestedTestClass.GetDefault());
+        }
+
+        [TestMethod]
+        public void DeserializeTest_TestEnum() {
+            DeserializeTest(TestEnum.C);
         }
     }
 }
