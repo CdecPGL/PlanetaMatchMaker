@@ -196,32 +196,33 @@ namespace PlanetaGameLabo {
         }
 
         private static void
-            SerializeFieldSerializableType(FieldInfo field, object obj, byte[] destination, ref int pos) {
+            SerializeFieldSerializableType(object owner_obj, FieldInfo field, byte[] destination, ref int pos) {
+            var obj = field.GetValue(owner_obj);
             if (field.FieldType == typeof(string)) {
                 var max_length = GetLengthOfFixedLengthAttribute(field);
+                // Encoding.UTF8.GetBytes doesn't include '\0' of end
                 var data = Encoding.UTF8.GetBytes((string) obj);
-                // Check length except '\0' of end
-                if (data.Length - 1 > max_length) {
+                if (data.Length > max_length) {
                     throw new InvalidSerializationException(
-                        $"The length of string ({data.Length - 1}) exceeds max length indicated by attribute ({max_length}).");
+                        $"The length of string ({data.Length}) exceeds max length indicated by attribute ({max_length}).");
                 }
 
                 for (var i = 0; i < max_length; ++i) {
-                    destination[pos + i] = data.Length - 1 < i ? data[i] : (byte) '\0';
+                    destination[pos + i] = i < data.Length ? data[i] : (byte) '\0';
                 }
 
                 pos += max_length;
             }
             else if (field.FieldType.IsArray) {
                 var length = GetLengthOfFixedLengthAttribute(field);
-                var array = (object[]) obj;
+                var array = (Array) obj;
                 if (array.Length != length) {
                     throw new InvalidSerializationException(
                         $"The size of array ({array.Length}) does not match the size indicated by attribute ({length}).");
                 }
 
                 for (var i = 0; i < length; ++i) {
-                    SerializeImpl(array[i], destination, ref pos);
+                    SerializeImpl(array.GetValue(i), destination, ref pos);
                 }
             }
             else {
@@ -235,7 +236,7 @@ namespace PlanetaGameLabo {
                                                  BindingFlags.Instance)
             ) {
                 if (IsFieldSerializableType(field.FieldType)) {
-                    SerializeFieldSerializableType(field, obj, destination, ref pos);
+                    SerializeFieldSerializableType(obj, field, destination, ref pos);
                 }
                 else {
                     SerializeImpl(field.GetValue(obj), destination, ref pos);
@@ -277,8 +278,9 @@ namespace PlanetaGameLabo {
             pos += GetSerializedSize(type);
         }
 
-        private static void DeserializeFieldSerializableType(FieldInfo field, byte[] source, ref int pos,
-            out object obj) {
+        private static void DeserializeFieldSerializableType(object owner_obj, FieldInfo field, byte[] source,
+            ref int pos) {
+            object obj;
             if (field.FieldType == typeof(string)) {
                 var max_length = GetLengthOfFixedLengthAttribute(field);
                 var real_length = Array.IndexOf(source, '\0', pos, max_length);
@@ -292,15 +294,18 @@ namespace PlanetaGameLabo {
             else if (field.FieldType.IsArray) {
                 var length = GetLengthOfFixedLengthAttribute(field);
                 obj = Activator.CreateInstance(field.FieldType, length);
-                var array = (object[]) obj;
+                var array = (Array) obj;
                 var element_type = field.FieldType.GetElementType();
                 for (var i = 0; i < length; ++i) {
-                    DeserializeImpl(element_type, source, ref pos, out array[i]);
+                    DeserializeImpl(element_type, source, ref pos, out var element_obj);
+                    array.SetValue(element_obj, i);
                 }
             }
             else {
                 throw new InvalidSerializationException("Invalid type.");
             }
+
+            field.SetValue(owner_obj, obj);
         }
 
         private static void
@@ -311,7 +316,7 @@ namespace PlanetaGameLabo {
                                                  BindingFlags.Instance)
             ) {
                 if (IsFieldSerializableType(field.FieldType)) {
-                    DeserializeFieldSerializableType(field, source, ref pos, out obj);
+                    DeserializeFieldSerializableType(obj, field, source, ref pos);
                 }
                 else {
                     DeserializeImpl(field.FieldType, source, ref pos, out obj);
