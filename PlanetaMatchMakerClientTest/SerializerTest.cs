@@ -151,7 +151,6 @@ namespace PlanetaGameLabo.Test {
         }
     }
 
-    [Serializable]
     internal enum TestEnum : uint {
         A,
         B,

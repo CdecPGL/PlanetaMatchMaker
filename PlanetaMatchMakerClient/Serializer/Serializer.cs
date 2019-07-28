@@ -84,6 +84,14 @@ namespace PlanetaGameLabo.Serializer {
 
         private static int GetSerializedSizeOfDirectSerializableType(Type type) {
             // Return 1 if type is bool because Marshal.SizeOf returns 4 for bool due to C compability.
+            if (type == typeof(bool)) {
+                return 1;
+            }
+
+            if (type.IsEnum) {
+                type = type.GetEnumUnderlyingType();
+            }
+
             return type == typeof(bool) ? 1 : Marshal.SizeOf(type);
         }
 
@@ -146,6 +154,11 @@ namespace PlanetaGameLabo.Serializer {
 
         private static void SerializeDirectSerializableType(object obj, byte[] destination, ref int pos) {
             var type = obj.GetType();
+            if (type.IsEnum) {
+                type = type.GetEnumUnderlyingType();
+                obj = Convert.ChangeType(obj, type);
+            }
+
             byte[] data;
             switch (obj) {
                 case bool value:
@@ -266,6 +279,10 @@ namespace PlanetaGameLabo.Serializer {
                 Array.Reverse(source, pos, size);
             }
 
+            if (type.IsEnum) {
+                type = type.GetEnumUnderlyingType();
+            }
+
             try {
                 if (_bytesToDirectSerializableTypeConverterDict.ContainsKey(type)) {
                     obj = _bytesToDirectSerializableTypeConverterDict[type](source, pos);
@@ -341,7 +358,7 @@ namespace PlanetaGameLabo.Serializer {
         }
 
         private static bool IsDirectSerializableType(Type type) {
-            return _directSerializableTypeSet.Contains(type);
+            return _directSerializableTypeSet.Contains(type) || type.IsEnum;
         }
 
         private static bool IsFieldSerializableType(Type type) {
