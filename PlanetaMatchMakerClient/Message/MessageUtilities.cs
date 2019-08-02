@@ -5,11 +5,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
-    internal static class MessageHandler {
+    internal static class MessageUtilities {
         internal static async Task SendRequestMessage<T>(TcpClient client, T message_body, uint sessionKey = 0) {
             var message_attribute = message_body.GetType().GetCustomAttribute<MessageAttribute>();
             if (message_attribute == null) {
-                throw null;
+                throw new MessageErrorException(
+                    "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
             var header = new RequestMessageHeader {
@@ -25,7 +26,8 @@ namespace PlanetaGameLabo.MatchMaker {
         internal static async Task<(MessageErrorCode, T)> ReceiveReplyMessage<T>(TcpClient client) {
             var message_attribute = typeof(T).GetCustomAttribute<MessageAttribute>();
             if (message_attribute == null) {
-                throw null;
+                throw new MessageErrorException(
+                    "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
             var buffer =
@@ -37,7 +39,7 @@ namespace PlanetaGameLabo.MatchMaker {
             }
 
             if (header.messageType != message_attribute.messageType) {
-                throw null;
+                throw new MessageErrorException("The type of received message is invalid.");
             }
 
             buffer = new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<T>()]);

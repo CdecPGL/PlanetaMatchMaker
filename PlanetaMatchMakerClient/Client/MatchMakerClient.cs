@@ -9,12 +9,9 @@ namespace PlanetaGameLabo.MatchMaker {
             await _tcpClient.ConnectAsync(server_address, port);
 
             var request_body = new AuthenticationRequestMessage {version = ClientConstants.clientVersion};
-            await MessageHandler.SendRequestMessage(_tcpClient, request_body, _sessionKey);
+            await SendRequestAsync(request_body);
 
-            var (error_code, reply_body) =
-                await MessageHandler.ReceiveReplyMessage<AuthenticationReplyMessage>(_tcpClient);
-            if (error_code != MessageErrorCode.Ok) { }
-
+            var reply_body = await ReceiveReplyAsync<AuthenticationReplyMessage>();
             _sessionKey = reply_body.sessionKey;
         }
 
@@ -24,12 +21,9 @@ namespace PlanetaGameLabo.MatchMaker {
 
         public async Task<ListRoomGroupReplyMessage.RoomGroupInfo[]> GetRoomGroupListAsync() {
             var request_body = new ListRoomGroupRequestMessage();
-            await MessageHandler.SendRequestMessage(_tcpClient, request_body, _sessionKey);
+            await SendRequestAsync(request_body);
 
-            var (error_code, reply_body) =
-                await MessageHandler.ReceiveReplyMessage<ListRoomGroupReplyMessage>(_tcpClient);
-            if (error_code != MessageErrorCode.Ok) { }
-
+            var reply_body = await ReceiveReplyAsync<ListRoomGroupReplyMessage>();
             return reply_body.roomGroupInfoList.Take(reply_body.roomGroupCount).ToArray();
         }
 
@@ -38,11 +32,9 @@ namespace PlanetaGameLabo.MatchMaker {
                 groupIndex = room_group_index,
                 name = room_name
             };
-            await MessageHandler.SendRequestMessage(_tcpClient, request_body, _sessionKey);
+            await SendRequestAsync(request_body);
 
-            var (error_code, reply_body) =
-                await MessageHandler.ReceiveReplyMessage<CreateRoomReplyMessage>(_tcpClient);
-            if (error_code != MessageErrorCode.Ok) { }
+            await ReceiveReplyAsync<CreateRoomReplyMessage>();
         }
 
         public async Task<ListRoomReplyMessage.RoomInfo[]> GetRoomList(byte room_group_index, byte start_index,
@@ -54,13 +46,28 @@ namespace PlanetaGameLabo.MatchMaker {
                 sortKind = sort_kind,
                 flags = flags
             };
-            await MessageHandler.SendRequestMessage(_tcpClient, request_body, _sessionKey);
+            await SendRequestAsync(request_body);
 
-            var (error_code, reply_body) =
-                await MessageHandler.ReceiveReplyMessage<ListRoomReplyMessage>(_tcpClient);
-            if (error_code != MessageErrorCode.Ok) { }
+            var reply_body = await ReceiveReplyAsync<ListRoomReplyMessage>();
+            var result = new ListRoomReplyMessage.RoomInfo[reply_body.resultRoomCount];
 
-            return reply_body.roomInfoList.Take(reply_body.resultRoomCount).ToArray();
+            // Set results of reply to result list
+            void SetResult(ListRoomReplyMessage reply) {
+                for (var i = 0; i < reply_body.replyRoomEndIndex - reply_body.replyRoomStartIndex + 1; ++i) {
+                    result[reply_body.replyRoomStartIndex + i] = reply_body.roomInfoList[i];
+                }
+            }
+
+            SetResult(reply_body);
+
+            var separate_count = (reply_body.resultRoomCount - 1) / ClientConstants.listRoomReplyRoomInfoCount + 1;
+
+            for (var i = 1; i < separate_count; ++i) {
+                reply_body = await ReceiveReplyAsync<ListRoomReplyMessage>();
+                SetResult(reply_body);
+            }
+
+            return result;
         }
 
         public async Task<ClientAddress> JoinRoom(byte room_group_index, uint room_id) {
@@ -68,12 +75,9 @@ namespace PlanetaGameLabo.MatchMaker {
                 groupIndex = room_group_index,
                 roomId = room_id
             };
-            await MessageHandler.SendRequestMessage(_tcpClient, request_body, _sessionKey);
+            await SendRequestAsync(request_body);
 
-            var (error_code, reply_body) =
-                await MessageHandler.ReceiveReplyMessage<JoinRoomReplyMessage>(_tcpClient);
-            if (error_code != MessageErrorCode.Ok) { }
-
+            var reply_body = await ReceiveReplyAsync<JoinRoomReplyMessage>();
             return reply_body.hostAddress;
         }
 
@@ -84,10 +88,33 @@ namespace PlanetaGameLabo.MatchMaker {
                 roomId = room_id,
                 status = status
             };
-            await MessageHandler.SendRequestMessage(_tcpClient, request_body, _sessionKey);
+            await SendRequestAsync(request_body);
         }
 
         private TcpClient _tcpClient;
         private uint _sessionKey;
+
+        private async Task SendRequestAsync<T>(T message_body) {
+            try {
+                await MessageUtilities.SendRequestMessage(_tcpClient, message_body, _sessionKey);
+            }
+            catch (MessageErrorException e) {
+                throw new ClientErrorException(ClientErrorCode.MessageSendError, e.Message);
+            }
+        }
+
+        private async Task<T> ReceiveReplyAsync<T>() {
+            try {
+                var (error_code, reply_body) = await MessageUtilities.ReceiveReplyMessage<T>(_tcpClient);
+                if (error_code != MessageErrorCode.Ok) {
+                    throw new ClientErrorException(ClientErrorCode.RequestError, error_code.ToString());
+                }
+
+                return reply_body;
+            }
+            catch (MessageErrorException e) {
+                throw new ClientErrorException(ClientErrorCode.MessageReceptionError, e.Message);
+            }
+        }
     }
 }
