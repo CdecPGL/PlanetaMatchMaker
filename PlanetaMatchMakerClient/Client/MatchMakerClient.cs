@@ -37,7 +37,8 @@ namespace PlanetaGameLabo.MatchMaker {
             await ReceiveReplyAsync<CreateRoomReplyMessage>();
         }
 
-        public async Task<ListRoomReplyMessage.RoomInfo[]> GetRoomList(byte room_group_index, byte start_index,
+        public async Task<(int totalRoomCount, ListRoomReplyMessage.RoomInfo[] roomInfoList)> GetRoomList(
+            byte room_group_index, byte start_index,
             byte count, RoomDataSortKind sort_kind, byte flags) {
             var request_body = new ListRoomRequestMessage {
                 groupIndex = room_group_index,
@@ -52,9 +53,9 @@ namespace PlanetaGameLabo.MatchMaker {
             var result = new ListRoomReplyMessage.RoomInfo[reply_body.resultRoomCount];
 
             // Set results of reply to result list
-            void SetResult(ListRoomReplyMessage reply) {
-                for (var i = 0; i < reply_body.replyRoomEndIndex - reply_body.replyRoomStartIndex + 1; ++i) {
-                    result[reply_body.replyRoomStartIndex + i] = reply_body.roomInfoList[i];
+            void SetResult(in ListRoomReplyMessage reply) {
+                for (var i = 0; i < reply.replyRoomEndIndex - reply.replyRoomStartIndex + 1; ++i) {
+                    result[reply.replyRoomStartIndex + i] = reply.roomInfoList[i];
                 }
             }
 
@@ -67,7 +68,7 @@ namespace PlanetaGameLabo.MatchMaker {
                 SetResult(reply_body);
             }
 
-            return result;
+            return (reply_body.totalRoomCount, result);
         }
 
         public async Task<ClientAddress> JoinRoom(byte room_group_index, uint room_id) {
