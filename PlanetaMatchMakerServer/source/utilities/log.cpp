@@ -35,7 +35,8 @@ namespace pgl {
 			{std::string(nameof::nameof_enum(log_level::debug)), log_level::debug},
 			{std::string(nameof::nameof_enum(log_level::info)), log_level::info},
 			{std::string(nameof::nameof_enum(log_level::warning)), log_level::warning},
-			{std::string(nameof::nameof_enum(log_level::error)), log_level::error}
+			{std::string(nameof::nameof_enum(log_level::error)), log_level::error},
+			{std::string(nameof::nameof_enum(log_level::fatal)), log_level::fatal},
 		};
 		return map.at(str);
 	}
