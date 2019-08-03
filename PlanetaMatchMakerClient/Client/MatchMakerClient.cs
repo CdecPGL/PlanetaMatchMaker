@@ -27,7 +27,15 @@ namespace PlanetaGameLabo.MatchMaker {
                 throw new ClientErrorException(ClientErrorCode.AlreadyConnected);
             }
 
-            await _tcpClient.ConnectAsync(server_address, server_port);
+            try {
+                await _tcpClient.ConnectAsync(server_address, server_port);
+            }
+            catch (SocketException e) {
+                throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+            }
+            catch (ObjectDisposedException e) {
+                throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+            }
 
             var request_body = new AuthenticationRequestMessage {version = ClientConstants.clientVersion};
             await SendRequestAsync(request_body);

@@ -16,18 +16,11 @@ namespace PlanetaGameLabo.MatchMaker {
             clientErrorCode = error_code;
             extraMessage = extra_message;
         }
-
-        private string GenerateMessage() {
-            if (string.IsNullOrWhiteSpace(extraMessage)) {
-                return clientErrorCode.GetClientErrorMessage();
-            }
-
-            return clientErrorCode.GetClientErrorMessage() + ": " + extraMessage;
-        }
     }
 
     public enum ClientErrorCode {
         Ok,
+        FailedToConnect,
         AlreadyConnected,
         NotConnected,
         MessageSendError,
@@ -43,6 +36,8 @@ namespace PlanetaGameLabo.MatchMaker {
             switch (error_code) {
                 case ClientErrorCode.Ok:
                     return "Ok";
+                case ClientErrorCode.FailedToConnect:
+                    return "Failed to connect to the server.";
                 case ClientErrorCode.MessageSendError:
                     return "Failed to send messages.";
                 case ClientErrorCode.MessageReceptionError:
