@@ -11,11 +11,10 @@ namespace PlanetaGameLabo.MatchMaker {
             _port = port;
         }
 
-        public async Task RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<long>> benchmark_results) {
-            //System.Console.WriteLine(
-            //    $"Start ConnectAndStay test in the thread {Thread.CurrentThread.ManagedThreadId}.");
+        public async Task
+            RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<double>> benchmark_results) {
             var connection_response_benchmark_results =
-                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<long>());
+                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<double>());
             try {
                 _stopwatch.Restart();
                 await _client.ConnectAsync(_address, _port);
@@ -29,11 +28,9 @@ namespace PlanetaGameLabo.MatchMaker {
         }
 
         public async Task RunConnectAndDisconnectTest(
-            ConcurrentDictionary<string, ConcurrentQueue<long>> benchmark_results) {
-            //System.Console.WriteLine(
-            //    $"Start ConnectAndDisconnect test in the thread {Thread.CurrentThread.ManagedThreadId}.");
+            ConcurrentDictionary<string, ConcurrentQueue<double>> benchmark_results) {
             var connection_response_benchmark_results =
-                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<long>());
+                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<double>());
             try {
                 while (true) {
                     _stopwatch.Restart();
