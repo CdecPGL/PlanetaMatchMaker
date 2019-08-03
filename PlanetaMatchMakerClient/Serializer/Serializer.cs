@@ -43,8 +43,8 @@ namespace PlanetaGameLabo.Serializer {
         private static readonly Dictionary<Type, Func<byte[], int, object>> _bytesToDirectSerializableTypeConverterDict
             = new Dictionary<Type, Func<byte[], int, object>>() {
                 {typeof(bool), (bytes, start_idx) => BitConverter.ToBoolean(bytes, start_idx)},
-                {typeof(byte), (bytes, start_idx) => bytes[0]},
-                {typeof(sbyte), (bytes, start_idx) => (sbyte) bytes[0]},
+                {typeof(byte), (bytes, start_idx) => bytes[start_idx]},
+                {typeof(sbyte), (bytes, start_idx) => (sbyte) bytes[start_idx]},
                 {typeof(double), (bytes, start_idx) => BitConverter.ToDouble(bytes, start_idx)},
                 {typeof(short), (bytes, start_idx) => BitConverter.ToInt16(bytes, start_idx)},
                 {typeof(int), (bytes, start_idx) => BitConverter.ToInt32(bytes, start_idx)},
