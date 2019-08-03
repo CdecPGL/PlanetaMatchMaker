@@ -23,7 +23,7 @@ namespace PlanetaGameLabo.MatchMaker {
                 await EternalDelay();
             }
             catch (ClientErrorException e) {
-                System.Console.WriteLine($"Client error: {e.Message}");
+                Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
@@ -41,7 +41,25 @@ namespace PlanetaGameLabo.MatchMaker {
                 }
             }
             catch (ClientErrorException e) {
-                System.Console.WriteLine($"Client error: {e.Message}");
+                Console.WriteLine($"Client error: {e.Message}");
+            }
+        }
+
+        public async Task RunGetRoomGroupListTest(
+            ConcurrentDictionary<string, ConcurrentQueue<double>> benchmark_results) {
+            var get_room_group_list_response_benchmark_results =
+                benchmark_results.GetOrAdd("get_room_group_list_response_time", new ConcurrentQueue<double>());
+            try {
+                await _client.ConnectAsync(_address, _port);
+                while (true) {
+                    _stopwatch.Restart();
+                    await _client.GetRoomGroupListAsync();
+                    _stopwatch.Stop();
+                    get_room_group_list_response_benchmark_results.Enqueue(_stopwatch.ElapsedMilliseconds);
+                }
+            }
+            catch (ClientErrorException e) {
+                Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
@@ -52,7 +70,7 @@ namespace PlanetaGameLabo.MatchMaker {
         private readonly MatchMakerClient _client;
         private readonly string _address;
         private readonly ushort _port;
-        private readonly Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
+        private readonly Stopwatch _stopwatch = new Stopwatch();
 
         private static async Task EternalDelay() {
             while (true) {

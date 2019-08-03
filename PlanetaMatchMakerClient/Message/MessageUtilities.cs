@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
+using PlanetaGameLabo.Serializer;
 
 namespace PlanetaGameLabo.MatchMaker {
     internal static class MessageUtilities {
@@ -23,14 +24,19 @@ namespace PlanetaGameLabo.MatchMaker {
                     "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
-            var header = new RequestMessageHeader {
-                messageType = message_attribute.messageType,
-                sessionKey = sessionKey
-            };
-            var request_header_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(header));
-            var request_body_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(message_body));
-            var data = new List<ArraySegment<byte>> {request_header_data, request_body_data};
-            await client.Client.SendAsync(data, SocketFlags.None);
+            try {
+                var header = new RequestMessageHeader {
+                    messageType = message_attribute.messageType,
+                    sessionKey = sessionKey
+                };
+                var request_header_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(header));
+                var request_body_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(message_body));
+                var data = new List<ArraySegment<byte>> {request_header_data, request_body_data};
+                await client.Client.SendAsync(data, SocketFlags.None);
+            }
+            catch (InvalidSerializationException e) {
+                throw new MessageErrorException("Failed to serialize a message: " + e.Message);
+            }
         }
 
         /// <summary>
@@ -48,22 +54,27 @@ namespace PlanetaGameLabo.MatchMaker {
                     "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
-            var buffer =
-                new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<ReplyMessageHeader>()]);
-            await client.Client.ReceiveAsync(buffer, SocketFlags.None);
-            var header = Serializer.Serializer.Deserialize<ReplyMessageHeader>(buffer.Array);
-            if (header.errorCode != MessageErrorCode.Ok) {
-                return (header.errorCode, default);
-            }
+            try {
+                var buffer =
+                    new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<ReplyMessageHeader>()]);
+                await client.Client.ReceiveAsync(buffer, SocketFlags.None);
+                var header = Serializer.Serializer.Deserialize<ReplyMessageHeader>(buffer.Array);
+                if (header.errorCode != MessageErrorCode.Ok) {
+                    return (header.errorCode, default);
+                }
 
-            if (header.messageType != message_attribute.messageType) {
-                throw new MessageErrorException("The type of received message is invalid.");
-            }
+                if (header.messageType != message_attribute.messageType) {
+                    throw new MessageErrorException("The type of received message is invalid.");
+                }
 
-            buffer = new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<T>()]);
-            await client.Client.ReceiveAsync(buffer, SocketFlags.None);
-            var body = Serializer.Serializer.Deserialize<T>(buffer.Array);
-            return (MessageErrorCode.Ok, body);
+                buffer = new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<T>()]);
+                await client.Client.ReceiveAsync(buffer, SocketFlags.None);
+                var body = Serializer.Serializer.Deserialize<T>(buffer.Array);
+                return (MessageErrorCode.Ok, body);
+            }
+            catch (InvalidSerializationException e) {
+                throw new MessageErrorException("Failed to deserialize a message: " + e.Message);
+            }
         }
     }
 }

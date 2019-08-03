@@ -36,6 +36,9 @@ namespace PlanetaGameLabo.MatchMaker {
                         case Mode.ConnectAndDisconnect:
                             task = Task.Run(async () => await client.RunConnectAndDisconnectTest(benchmark_results));
                             break;
+                        case Mode.GetRoomGroupList:
+                            task = Task.Run(async () => await client.RunGetRoomGroupListTest(benchmark_results));
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -87,7 +90,8 @@ namespace PlanetaGameLabo.MatchMaker {
 
     enum Mode {
         ConnectAndStay,
-        ConnectAndDisconnect
+        ConnectAndDisconnect,
+        GetRoomGroupList
     };
 
     class Options {

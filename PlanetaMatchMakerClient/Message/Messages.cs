@@ -92,6 +92,7 @@ namespace PlanetaGameLabo.MatchMaker {
     [Serializable]
     [Message(MessageType.ListRoomGroupReply)]
     public struct ListRoomGroupReplyMessage {
+        [Serializable]
         public struct RoomGroupInfo {
             [FixedLength(ClientConstants.roomGroupNameLength)]
             public string name;
@@ -143,6 +144,7 @@ namespace PlanetaGameLabo.MatchMaker {
     [Message(MessageType.ListRoomReply)]
     public struct ListRoomReplyMessage {
         //39 bytes
+        [Serializable]
         public struct RoomInfo {
             public RoomIdType roomId;
 
