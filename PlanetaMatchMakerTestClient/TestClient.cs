@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
     class TestClient {
@@ -8,10 +11,16 @@ namespace PlanetaGameLabo.MatchMaker {
             _port = port;
         }
 
-        public async Task RunConnectAndStayTest() {
-            System.Console.WriteLine("Start ConnectAndStay test.");
+        public async Task RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<long>> benchmark_results) {
+            //System.Console.WriteLine(
+            //    $"Start ConnectAndStay test in the thread {Thread.CurrentThread.ManagedThreadId}.");
+            var connection_response_benchmark_results =
+                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<long>());
             try {
+                _stopwatch.Restart();
                 await _client.ConnectAsync(_address, _port);
+                _stopwatch.Stop();
+                connection_response_benchmark_results.Enqueue(_stopwatch.ElapsedMilliseconds);
                 await EternalDelay();
             }
             catch (ClientErrorException e) {
@@ -19,11 +28,18 @@ namespace PlanetaGameLabo.MatchMaker {
             }
         }
 
-        public async Task RunConnectAndDisconnectTest() {
-            System.Console.WriteLine("Start ConnectAndDisconnect test.");
+        public async Task RunConnectAndDisconnectTest(
+            ConcurrentDictionary<string, ConcurrentQueue<long>> benchmark_results) {
+            //System.Console.WriteLine(
+            //    $"Start ConnectAndDisconnect test in the thread {Thread.CurrentThread.ManagedThreadId}.");
+            var connection_response_benchmark_results =
+                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<long>());
             try {
                 while (true) {
+                    _stopwatch.Restart();
                     await _client.ConnectAsync(_address, _port);
+                    _stopwatch.Stop();
+                    connection_response_benchmark_results.Enqueue(_stopwatch.ElapsedMilliseconds);
                     _client.Close();
                 }
             }
@@ -35,6 +51,7 @@ namespace PlanetaGameLabo.MatchMaker {
         private readonly MatchMakerClient _client;
         private readonly string _address;
         private readonly ushort _port;
+        private readonly Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
 
         private static async Task EternalDelay() {
             while (true) {
