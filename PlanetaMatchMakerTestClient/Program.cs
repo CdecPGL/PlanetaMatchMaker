@@ -1,32 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
-    class Program {
-        static void Main(string[] args) {
+    internal sealed class Program {
+        private static void Main(string[] args) {
             var result = CommandLine.Parser.Default.ParseArguments<Options>(args);
 
             if (result.Tag != CommandLine.ParserResultType.Parsed) {
-                // パースに失敗していれば、NotParsed<T>型に変換できるはずだ！ (使わんけど……)
-                var notParsed = (CommandLine.NotParsed<Options>) result;
-
-                Console.WriteLine("コマンドライン引数を間違えてないかぃ？");
                 return;
             }
 
-            // パースに成功していれば、Parsed<T>型に変換できるはずだ！
             var parsed = (CommandLine.Parsed<Options>) result;
-
-            Console.WriteLine($"Mode: {parsed.Value.Mode}");
-            Console.WriteLine($"ClientCount: {parsed.Value.ClientCount}");
-
+            parsed.Value.Display();
 
             var client_list = new List<TestClient>();
             for (var i = 0; i < parsed.Value.ClientCount; ++i) {
-                client_list.Add(new TestClient("127.0.0.1", 7777));
+                client_list.Add(new TestClient(parsed.Value.ServerAddress, parsed.Value.ServerPort));
             }
 
             var task_list = new List<Task>();
@@ -56,10 +46,25 @@ namespace PlanetaGameLabo.MatchMaker {
     };
 
     class Options {
-        [CommandLine.Option('m', "mode", Required = true, HelpText = "テストのモード")]
+        [CommandLine.Option('a', "server_address", Required = true, HelpText = "An address of the server.")]
+        public string ServerAddress { get; set; }
+
+        [CommandLine.Option('p', "server_port", Required = true, HelpText = "A port of the server.")]
+        public ushort ServerPort { get; set; }
+
+        [CommandLine.Option('m', "mode", Required = true, HelpText = "A mode of the test client.")]
         public Mode Mode { get; set; }
 
-        [CommandLine.Option('c', "client_count", Required = true, HelpText = "作成するクライアントの数")]
+        [CommandLine.Option('c', "client_count", Required = true, HelpText = "The number of clients.")]
         public int ClientCount { get; set; }
+
+        public void Display() {
+            Console.WriteLine("========Options========");
+            Console.WriteLine($"Server Address: {ServerAddress}");
+            Console.WriteLine($"Server Port: {ServerPort}");
+            Console.WriteLine($"Mode: {Mode}");
+            Console.WriteLine($"ClientCount: {ClientCount}");
+            Console.WriteLine("=======================");
+        }
     }
 }

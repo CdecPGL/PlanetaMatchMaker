@@ -7,17 +7,14 @@ namespace PlanetaGameLabo.MatchMaker {
 
         public string extraMessage { get; }
 
-        public string message { get; }
-
-        public ClientErrorException(ClientErrorCode error_code) {
+        public ClientErrorException(ClientErrorCode error_code) : base(error_code.GetClientErrorMessage()) {
             clientErrorCode = error_code;
-            message = GenerateMessage();
         }
 
-        public ClientErrorException(ClientErrorCode error_code, string extra_message) {
+        public ClientErrorException(ClientErrorCode error_code, string extra_message) : base(
+            error_code.GetClientErrorMessage() + ": " + extra_message) {
             clientErrorCode = error_code;
             extraMessage = extra_message;
-            message = GenerateMessage();
         }
 
         private string GenerateMessage() {

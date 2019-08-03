@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace PlanetaGameLabo.MatchMaker
-{
+namespace PlanetaGameLabo.MatchMaker {
     class TestClient {
         public TestClient(string address, ushort port) {
             _client = new MatchMakerClient();
@@ -10,13 +9,23 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         public async Task RunConnectAndStayTest() {
-            await _client.ConnectAsync(_address, _port);
+            try {
+                await _client.ConnectAsync(_address, _port);
+            }
+            catch (ClientErrorException e) {
+                System.Console.WriteLine($"Client error: {e.Message}");
+            }
         }
 
         public async Task RunConnectAndDisconnectTest() {
-            while (true) {
-                await _client.ConnectAsync(_address, _port);
-                _client.Close();
+            try {
+                while (true) {
+                    await _client.ConnectAsync(_address, _port);
+                    _client.Close();
+                }
+            }
+            catch (ClientErrorException e) {
+                System.Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
