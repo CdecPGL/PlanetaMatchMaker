@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
-    internal sealed class Program {
+    internal static class Program {
         private static void Main(string[] args) {
             var parsed_result = CommandLine.Parser.Default.ParseArguments<Options>(args);
 
@@ -19,8 +19,8 @@ namespace PlanetaGameLabo.MatchMaker {
 
             Console.CancelKeyPress += (sender, eargs) => DisposeAllTestClients();
             try {
-                for (var i = 0; i < parsed.Value.ClientCount; ++i) {
-                    _testClientList.Add(new TestClient(parsed.Value.ServerAddress, parsed.Value.ServerPort));
+                for (var i = 0; i < parsed.Value.clientCount; ++i) {
+                    _testClientList.Add(new TestClient(parsed.Value.serverAddress, parsed.Value.serverPort));
                 }
 
                 Console.WriteLine("Start test.");
@@ -29,7 +29,7 @@ namespace PlanetaGameLabo.MatchMaker {
                 var task_list = new List<Task>();
                 foreach (var client in _testClientList) {
                     Task task;
-                    switch (parsed.Value.Mode) {
+                    switch (parsed.Value.mode) {
                         case Mode.ConnectAndStay:
                             task = Task.Run(async () => await client.RunConnectAndStayTest(benchmark_results));
                             break;
@@ -85,38 +85,38 @@ namespace PlanetaGameLabo.MatchMaker {
             }
         }
 
-        private static List<TestClient> _testClientList = new List<TestClient>();
+        private static readonly List<TestClient> _testClientList = new List<TestClient>();
 
         private static void DisposeAllTestClients() {
             _testClientList.ForEach(client => client.Dispose());
         }
     }
 
-    enum Mode {
+    internal enum Mode {
         ConnectAndStay,
         ConnectAndDisconnect,
         GetRoomGroupList
     };
 
-    class Options {
+    internal sealed class Options {
         [CommandLine.Option('a', "server_address", Required = true, HelpText = "An address of the server.")]
-        public string ServerAddress { get; set; }
+        public string serverAddress { get; set; }
 
         [CommandLine.Option('p', "server_port", Required = true, HelpText = "A port of the server.")]
-        public ushort ServerPort { get; set; }
+        public ushort serverPort { get; set; }
 
         [CommandLine.Option('m', "mode", Required = true, HelpText = "A mode of the test client.")]
-        public Mode Mode { get; set; }
+        public Mode mode { get; set; }
 
         [CommandLine.Option('c', "client_count", Required = true, HelpText = "The number of clients.")]
-        public int ClientCount { get; set; }
+        public int clientCount { get; set; }
 
         public void Display() {
             Console.WriteLine("========Options========");
-            Console.WriteLine($"Server Address: {ServerAddress}");
-            Console.WriteLine($"Server Port: {ServerPort}");
-            Console.WriteLine($"Mode: {Mode}");
-            Console.WriteLine($"ClientCount: {ClientCount}");
+            Console.WriteLine($"Server Address: {serverAddress}");
+            Console.WriteLine($"Server Port: {serverPort}");
+            Console.WriteLine($"Mode: {mode}");
+            Console.WriteLine($"ClientCount: {clientCount}");
             Console.WriteLine("=======================");
         }
     }
