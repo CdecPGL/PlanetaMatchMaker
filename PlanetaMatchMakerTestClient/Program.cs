@@ -25,7 +25,7 @@ namespace PlanetaGameLabo.MatchMaker {
 
                 Console.WriteLine("Start test.");
 
-                var benchmark_results = new ConcurrentDictionary<string, ConcurrentQueue<double>>();
+                var benchmark_results = new ConcurrentDictionary<string, ConcurrentQueue<(int, double)>>();
                 var task_list = new List<Task>();
                 foreach (var client in _testClientList) {
                     Task task;
@@ -54,17 +54,21 @@ namespace PlanetaGameLabo.MatchMaker {
                             continue;
                         }
 
-                        var count = pair.Value.Count;
+                        var queue_count = pair.Value.Count;
                         var result_list = new List<double>();
-                        for (var i = 0; i < count; ++i) {
+                        var result_count = 0;
+                        for (var i = 0; i < queue_count; ++i) {
                             if (!pair.Value.TryDequeue(out var result)) {
                                 break;
                             }
 
-                            result_list.Add(result);
+                            var (count, average_time) = result;
+                            result_count += count;
+                            result_list.Add(average_time);
                         }
 
-                        line_list.Add($"{pair.Key}: {result_list.Average():f03}ms");
+                        line_list.Add(
+                            $"{pair.Key}: response={result_list.Average():f03}ms, operation={result_count}/s");
                     }
 
                     if (line_list.Count == 0) {

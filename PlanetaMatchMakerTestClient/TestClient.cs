@@ -12,14 +12,14 @@ namespace PlanetaGameLabo.MatchMaker {
         }
 
         public async Task
-            RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<double>> benchmark_results) {
+            RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmark_results) {
             var connection_response_benchmark_results =
-                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<double>());
+                benchmark_results.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
             try {
                 _stopwatch.Restart();
                 await _client.ConnectAsync(_address, _port);
                 _stopwatch.Stop();
-                connection_response_benchmark_results.Enqueue(_stopwatch.ElapsedMilliseconds);
+                connection_response_benchmark_results.Enqueue((1, _stopwatch.ElapsedMilliseconds));
                 await EternalDelay();
             }
             catch (ClientErrorException e) {
@@ -28,15 +28,15 @@ namespace PlanetaGameLabo.MatchMaker {
         }
 
         public async Task RunConnectAndDisconnectTest(
-            ConcurrentDictionary<string, ConcurrentQueue<double>> benchmark_results) {
+            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmark_results) {
             var connection_response_benchmark_results =
-                benchmark_results.GetOrAdd("connection_response_time", new ConcurrentQueue<double>());
+                benchmark_results.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
             try {
                 while (true) {
                     _stopwatch.Restart();
                     await _client.ConnectAsync(_address, _port);
                     _stopwatch.Stop();
-                    connection_response_benchmark_results.Enqueue(_stopwatch.ElapsedMilliseconds);
+                    connection_response_benchmark_results.Enqueue((1, _stopwatch.ElapsedMilliseconds));
                     _client.Close();
                 }
             }
@@ -46,16 +46,16 @@ namespace PlanetaGameLabo.MatchMaker {
         }
 
         public async Task RunGetRoomGroupListTest(
-            ConcurrentDictionary<string, ConcurrentQueue<double>> benchmark_results) {
+            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmark_results) {
             var get_room_group_list_response_benchmark_results =
-                benchmark_results.GetOrAdd("get_room_group_list_response_time", new ConcurrentQueue<double>());
+                benchmark_results.GetOrAdd("get_room_group_list", new ConcurrentQueue<(int, double)>());
             try {
                 await _client.ConnectAsync(_address, _port);
                 while (true) {
                     _stopwatch.Restart();
                     await _client.GetRoomGroupListAsync();
                     _stopwatch.Stop();
-                    get_room_group_list_response_benchmark_results.Enqueue(_stopwatch.ElapsedMilliseconds);
+                    get_room_group_list_response_benchmark_results.Enqueue((1, _stopwatch.ElapsedMilliseconds));
                 }
             }
             catch (ClientErrorException e) {
