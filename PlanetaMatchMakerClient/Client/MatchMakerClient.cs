@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
-    public sealed class MatchMakerClient {
+    public sealed class MatchMakerClient : IDisposable {
         /// <summary>
         /// true if connected to the server.
         /// </summary>
@@ -29,6 +29,7 @@ namespace PlanetaGameLabo.MatchMaker {
 
             try {
                 _tcpClient = new TcpClient();
+                _tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 await _tcpClient.ConnectAsync(server_address, server_port);
             }
             catch (SocketException e) {
@@ -55,6 +56,7 @@ namespace PlanetaGameLabo.MatchMaker {
 
             _tcpClient.GetStream().Close();
             _tcpClient.Close();
+            _tcpClient.Dispose();
             _tcpClient = null;
             OnConnectionClosed();
         }
@@ -214,6 +216,10 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <returns></returns>
         public async Task RemoveHostingRoom() {
             await UpdateHostingRoomStatus(UpdateRoomStatusNoticeMessage.Status.Remove);
+        }
+
+        public void Dispose() {
+            _tcpClient?.Dispose();
         }
 
         private TcpClient _tcpClient;

@@ -17,60 +17,71 @@ namespace PlanetaGameLabo.MatchMaker {
             var parsed = (CommandLine.Parsed<Options>) parsed_result;
             parsed.Value.Display();
 
-            var client_list = new List<TestClient>();
-            for (var i = 0; i < parsed.Value.ClientCount; ++i) {
-                client_list.Add(new TestClient(parsed.Value.ServerAddress, parsed.Value.ServerPort));
-            }
-
-            Console.WriteLine("Start test.");
-
-            var benchmark_results = new ConcurrentDictionary<string, ConcurrentQueue<double>>();
-            var task_list = new List<Task>();
-            foreach (var client in client_list) {
-                Task task;
-                switch (parsed.Value.Mode) {
-                    case Mode.ConnectAndStay:
-                        task = Task.Run(async () => await client.RunConnectAndStayTest(benchmark_results));
-                        break;
-                    case Mode.ConnectAndDisconnect:
-                        task = Task.Run(async () => await client.RunConnectAndDisconnectTest(benchmark_results));
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+            Console.CancelKeyPress += (sender, eargs) => DisposeAllTestClients();
+            try {
+                for (var i = 0; i < parsed.Value.ClientCount; ++i) {
+                    _testClientList.Add(new TestClient(parsed.Value.ServerAddress, parsed.Value.ServerPort));
                 }
 
-                task_list.Add(task);
-            }
+                Console.WriteLine("Start test.");
 
-            while (task_list.Any(task => !task.IsCompleted)) {
-                Thread.Sleep(1000);
-                var line_list = new List<string>();
-                foreach (var pair in benchmark_results) {
-                    if (pair.Value.IsEmpty) {
+                var benchmark_results = new ConcurrentDictionary<string, ConcurrentQueue<double>>();
+                var task_list = new List<Task>();
+                foreach (var client in _testClientList) {
+                    Task task;
+                    switch (parsed.Value.Mode) {
+                        case Mode.ConnectAndStay:
+                            task = Task.Run(async () => await client.RunConnectAndStayTest(benchmark_results));
+                            break;
+                        case Mode.ConnectAndDisconnect:
+                            task = Task.Run(async () => await client.RunConnectAndDisconnectTest(benchmark_results));
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    task_list.Add(task);
+                }
+
+                while (task_list.Any(task => !task.IsCompleted)) {
+                    Thread.Sleep(1000);
+                    var line_list = new List<string>();
+                    foreach (var pair in benchmark_results) {
+                        if (pair.Value.IsEmpty) {
+                            continue;
+                        }
+
+                        var count = pair.Value.Count;
+                        var result_list = new List<double>();
+                        for (var i = 0; i < count; ++i) {
+                            if (!pair.Value.TryDequeue(out var result)) {
+                                break;
+                            }
+
+                            result_list.Add(result);
+                        }
+
+                        line_list.Add($"{pair.Key}: {result_list.Average():f03}ms");
+                    }
+
+                    if (line_list.Count == 0) {
                         continue;
                     }
 
-                    var count = pair.Value.Count;
-                    var result_list = new List<double>();
-                    for (var i = 0; i < count; ++i) {
-                        if (!pair.Value.TryDequeue(out var result)) {
-                            break;
-                        }
-
-                        result_list.Add(result);
-                    }
-
-                    line_list.Add($"{pair.Key}: {result_list.Average():f03}ms");
+                    Console.WriteLine("--------Benchmark Results--------");
+                    line_list.ForEach(Console.WriteLine);
+                    Console.WriteLine("---------------------------------");
                 }
-
-                if (line_list.Count == 0) {
-                    continue;
-                }
-
-                Console.WriteLine("--------Benchmark Results--------");
-                line_list.ForEach(Console.WriteLine);
-                Console.WriteLine("---------------------------------");
             }
+            finally {
+                DisposeAllTestClients();
+            }
+        }
+
+        private static List<TestClient> _testClientList = new List<TestClient>();
+
+        private static void DisposeAllTestClients() {
+            _testClientList.ForEach(client => client.Dispose());
         }
     }
 

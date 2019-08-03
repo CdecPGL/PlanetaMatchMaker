@@ -1,10 +1,10 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
-    class TestClient {
+    internal sealed class TestClient : IDisposable {
         public TestClient(string address, ushort port) {
             _client = new MatchMakerClient();
             _address = address;
@@ -43,6 +43,10 @@ namespace PlanetaGameLabo.MatchMaker {
             catch (ClientErrorException e) {
                 System.Console.WriteLine($"Client error: {e.Message}");
             }
+        }
+
+        public void Dispose() {
+            _client?.Dispose();
         }
 
         private readonly MatchMakerClient _client;
