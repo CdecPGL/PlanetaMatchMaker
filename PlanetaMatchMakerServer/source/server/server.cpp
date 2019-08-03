@@ -1,3 +1,7 @@
+#include <thread>
+
+#include <boost/thread.hpp>
+
 #include "server.hpp"
 
 #include "server_thread.hpp"
@@ -37,9 +41,17 @@ namespace pgl {
 		// prevent to stop server when all request are processed
 		asio::io_service::work work(io_service_);
 
-		server_thread server_thread(acceptor_, *server_data_, server_setting_);
-		server_thread.start();
+		log(log_level::info, "Start ", server_setting_.thread, " threads.");
 
-		io_service_.run();
+		thread_group thread_group;
+		for (auto i = 0u; i < server_setting_.thread; ++i) {
+			thread_group.create_thread([&]() {
+				server_thread server_thread(acceptor_, *server_data_, server_setting_);
+				server_thread.start();
+				io_service_.run();
+			});
+		}
+
+		thread_group.join_all();
 	}
 }
