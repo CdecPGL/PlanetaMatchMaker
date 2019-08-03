@@ -8,7 +8,7 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <summary>
         /// true if connected to the server.
         /// </summary>
-        public bool connected => _tcpClient.Connected;
+        public bool connected => _tcpClient != null && _tcpClient.Connected;
 
         /// <summary>
         /// true if this client hosting a room.
@@ -23,11 +23,12 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task ConnectAsync(string server_address, ushort server_port) {
-            if (_tcpClient.Connected) {
+            if (connected) {
                 throw new ClientErrorException(ClientErrorCode.AlreadyConnected);
             }
 
             try {
+                _tcpClient = new TcpClient();
                 await _tcpClient.ConnectAsync(server_address, server_port);
             }
             catch (SocketException e) {
@@ -48,11 +49,13 @@ namespace PlanetaGameLabo.MatchMaker {
         /// Close the connection.
         /// </summary>
         public void Close() {
-            if (!_tcpClient.Connected) {
+            if (!connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
+            _tcpClient.GetStream().Close();
             _tcpClient.Close();
+            _tcpClient = null;
             OnConnectionClosed();
         }
 
@@ -62,7 +65,7 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task<ListRoomGroupReplyMessage.RoomGroupInfo[]> GetRoomGroupListAsync() {
-            if (!_tcpClient.Connected) {
+            if (!connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
@@ -81,7 +84,7 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task CreateRoomAsync(byte room_group_index, string room_name) {
-            if (!_tcpClient.Connected) {
+            if (!connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
@@ -115,7 +118,7 @@ namespace PlanetaGameLabo.MatchMaker {
         public async Task<(int totalRoomCount, ListRoomReplyMessage.RoomInfo[] roomInfoList)> GetRoomList(
             byte room_group_index, byte start_index,
             byte count, RoomDataSortKind sort_kind, byte flags) {
-            if (!_tcpClient.Connected) {
+            if (!connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
@@ -158,7 +161,7 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task<ClientAddress> JoinRoom(byte room_group_index, uint room_id) {
-            if (!_tcpClient.Connected) {
+            if (!connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
@@ -184,7 +187,7 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task UpdateHostingRoomStatus(UpdateRoomStatusNoticeMessage.Status status) {
-            if (!_tcpClient.Connected) {
+            if (!connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
@@ -213,7 +216,7 @@ namespace PlanetaGameLabo.MatchMaker {
             await UpdateHostingRoomStatus(UpdateRoomStatusNoticeMessage.Status.Remove);
         }
 
-        private readonly TcpClient _tcpClient = new TcpClient();
+        private TcpClient _tcpClient;
         private uint _sessionKey;
         private byte _hostingRoomGroupIndex;
         private uint _hostingRoomId;
