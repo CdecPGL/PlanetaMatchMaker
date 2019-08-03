@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker
 {
@@ -24,7 +20,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        private MatchMakerClient _client;
+        private readonly MatchMakerClient _client;
         private readonly string _address;
         private readonly ushort _port;
     }

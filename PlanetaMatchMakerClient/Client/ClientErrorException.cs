@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http.Headers;
 
 namespace PlanetaGameLabo.MatchMaker {
     public sealed class ClientErrorException : Exception {
@@ -30,9 +31,14 @@ namespace PlanetaGameLabo.MatchMaker {
 
     public enum ClientErrorCode {
         Ok,
+        AlreadyConnected,
+        NotConnected,
         MessageSendError,
         MessageReceptionError,
         RequestError,
+        AlreadyHostingRoom,
+        NotHostingRoom,
+        ConnectionClosed
     };
 
     public static class ClientErrorCodeExtensions {
@@ -46,6 +52,16 @@ namespace PlanetaGameLabo.MatchMaker {
                     return "Failed to receive messages.";
                 case ClientErrorCode.RequestError:
                     return "Request doesn't processed correctly on the server.";
+                case ClientErrorCode.AlreadyConnected:
+                    return "The client is already connected to the server.";
+                case ClientErrorCode.NotConnected:
+                    return "The client is not connected to the server.";
+                case ClientErrorCode.AlreadyHostingRoom:
+                    return "The client is already hosting a room.";
+                case ClientErrorCode.NotHostingRoom:
+                    return "The client is not hosting a room.";
+                case ClientErrorCode.ConnectionClosed:
+                    return "The connection is closed.";
                 default:
                     return "";
             }

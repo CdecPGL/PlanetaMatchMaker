@@ -6,7 +6,17 @@ using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
     internal static class MessageUtilities {
-        internal static async Task SendRequestMessage<T>(TcpClient client, T message_body, uint sessionKey = 0) {
+        /// <summary>
+        /// Send a request or notice message to the server.
+        /// </summary>
+        /// <typeparam name="T">A type of message</typeparam>
+        /// <param name="client"></param>
+        /// <param name="message_body"></param>
+        /// <param name="sessionKey"></param>
+        /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
+        /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
+        /// <returns></returns>
+        internal static async Task SendRequestMessage<T>(this TcpClient client, T message_body, uint sessionKey = 0) {
             var message_attribute = message_body.GetType().GetCustomAttribute<MessageAttribute>();
             if (message_attribute == null) {
                 throw new MessageErrorException(
@@ -23,7 +33,15 @@ namespace PlanetaGameLabo.MatchMaker {
             await client.Client.SendAsync(data, SocketFlags.None);
         }
 
-        internal static async Task<(MessageErrorCode, T)> ReceiveReplyMessage<T>(TcpClient client) {
+        /// <summary>
+        /// Receive a reply message from the server.
+        /// </summary>
+        /// <typeparam name="T">A type of message</typeparam>
+        /// <param name="client"></param>
+        /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
+        /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
+        /// <returns></returns>
+        internal static async Task<(MessageErrorCode, T)> ReceiveReplyMessage<T>(this TcpClient client) {
             var message_attribute = typeof(T).GetCustomAttribute<MessageAttribute>();
             if (message_attribute == null) {
                 throw new MessageErrorException(
