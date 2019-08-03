@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker {
     public sealed class MatchMakerClient {
-        public async Task ConnectAsync(string server_address, short port) {
+        public async Task ConnectAsync(string server_address, ushort port) {
             _tcpClient = new TcpClient();
             await _tcpClient.ConnectAsync(server_address, port);
 
