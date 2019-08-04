@@ -1,9 +1,8 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-project ("PlanetaMatchMaker")
+project ("PlanetaMatchMaker" CXX)
 
 # C++ configurations
-enable_language(CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -24,5 +23,15 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 endif()
 
+# vckpg
+if(Windows)
+	if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+	  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+	else()
+	  message(FATAL_ERROR "vcpkg is required.")
+	endif()
+endif()
+
 # Subprojects
 add_subdirectory ("PlanetaMatchMakerServer")
+add_subdirectory ("PlanetaMatchMakerServerTest")
