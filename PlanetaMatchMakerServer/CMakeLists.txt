@@ -21,10 +21,12 @@ file(GLOB_RECURSE boost_library_paths "${Boost_LIBRARY_DIRS}/*")
 include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServer ${boost_library_paths})
 
-# Avoid to error of Boost Library 1.70.0 for MSVC
+# Avoid to error of Boost Library 1.70 for MSVC
 if (MSVC)
   add_definitions(-D_WIN32_WINNT=0x0601)
 endif()
+
+install (TARGETS "PlanetaMatchMakerServer" RUNTIME DESTINATION bin)
 
 # for debug
 #message(STATUS "*** dump start cmake variables ***")
