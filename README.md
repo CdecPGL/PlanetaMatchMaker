@@ -6,7 +6,7 @@ A match making server and client for network game.
 
 ### Dependencies
 
-- Boost Library 1.53 (from vcpgk)
+- Boost Library 1.70 (from vcpgk)
 
 ### Functions
 
@@ -22,8 +22,8 @@ A match making server and client for network game.
 
 #### Windows
 
-1. Install Boost Library 1.53 or higher
-1. Install a compiler (VC++ or clang) which is compatible with C++17
+1. Install Boost Library 1.70 or higher
+1. Install a compiler (at least, VC++15.7, g++7 or clang5) which is compatible with C++17
 1. Unknown
 
 #### Linux
@@ -41,7 +41,8 @@ sudo yum -y install git
 sudo yum -y install wget
 sudo yum -y install gcc-c++ # use for build latest g++
 sudo yum -y install bzip2 # use for installing latest g++
-sudo yum -y install boost boost-devel
+# install boost library 1.70+
+install boost?
 # install latest cmake manually because cmake installed through yum is old.
 wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1.tar.gz
 tar zxvf cmake-3.15.1.tar.gz

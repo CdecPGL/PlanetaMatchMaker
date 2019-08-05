@@ -23,7 +23,7 @@
     <ProjectGuid>{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}</ProjectGuid>
     <RootNamespace>PlanetaMatchMakerServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>PlanetaMatchMakerServerWindows</ProjectName>
+    <ProjectName>PlanetaMatchMakerServer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

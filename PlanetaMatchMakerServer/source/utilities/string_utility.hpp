@@ -40,7 +40,7 @@ namespace pgl {
 		return os;
 	}
 
-	inline std::ostream& operator <<(std::ostream& os, const type_info& type_info) {
+	inline std::ostream& operator <<(std::ostream& os, const std::type_info& type_info) {
 		os << type_info.name();
 		return os;
 	}

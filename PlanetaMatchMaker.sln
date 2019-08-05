@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29001.49
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlanetaMatchMakerServerWindows", "PlanetaMatchMakerServerWindows\PlanetaMatchMakerServerWindows.vcxproj", "{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlanetaMatchMakerServer", "PlanetaMatchMakerServer\PlanetaMatchMakerServer.vcxproj", "{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlanetaMatchMakerServerTest", "PlanetaMatchMakerServerTest\PlanetaMatchMakerServerTest.vcxproj", "{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}"
 EndProject
