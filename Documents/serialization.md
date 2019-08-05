@@ -60,7 +60,7 @@ struct Data{
 };
 ```
 
-### Define on_serialize(T& value, serializer&) Global Function in pgl Namespace
+### Define on_serialize(T& value, serializer&) Global Function
 
 ```cpp
 struct Data{
@@ -68,10 +68,8 @@ struct Data{
     uint8_t value2;
 };
 
-namespace pgl{
-    void on_serialize(Data& data, serializer& serializer){
-        serializer += data.value1;
-        serializer += data.value2;
-    }
+void on_serialize(Data& data, serializer& serializer){
+    serializer += data.value1;
+    serializer += data.value2;
 }
 ```

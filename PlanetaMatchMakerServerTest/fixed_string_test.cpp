@@ -9,12 +9,12 @@ BOOST_AUTO_TEST_SUITE(fixed_string_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_c_str_construct_japanese) {
-		const auto test = u8"Ç†Ç¢Ç§Ç¶Ç®äI";
+		const auto test = u8"„ÅÇ„ÅÑ„ÅÜ„Åà„ÅäËüπ";
 		BOOST_CHECK_EQUAL(std::string(test), pgl::fixed_string<32>(test).to_string());
 	}
 
 	BOOST_AUTO_TEST_CASE(test_c_str_construct_mixed) {
-		const auto test = u8"Ç†Ç¢Ç§ABCÇ¶Ç®äI";
+		const auto test = u8"„ÅÇ„ÅÑ„ÅÜABC„Åà„ÅäËüπ";
 		BOOST_CHECK_EQUAL(std::string(test), pgl::fixed_string<32>(test).to_string());
 	}
 
@@ -24,12 +24,12 @@ BOOST_AUTO_TEST_SUITE(fixed_string_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_std_string_construct_japanese) {
-		const std::string test = u8"Ç†Ç¢Ç§Ç¶Ç®äI";
+		const std::string test = u8"„ÅÇ„ÅÑ„ÅÜ„Åà„ÅäËüπ";
 		BOOST_CHECK_EQUAL(test, pgl::fixed_string<32>(test).to_string());
 	}
 
 	BOOST_AUTO_TEST_CASE(test_std_string_construct_mixed) {
-		const std::string test = u8"Ç†Ç¢Ç§ABCÇ¶Ç®äI";
+		const std::string test = u8"„ÅÇ„ÅÑ„ÅÜABC„Åà„ÅäËüπ";
 		BOOST_CHECK_EQUAL(test, pgl::fixed_string<32>(test).to_string());
 	}
 
@@ -39,15 +39,15 @@ BOOST_AUTO_TEST_SUITE(fixed_string_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_construct_bound_length_string) {
-		pgl::fixed_string<15>(u8"Ç†Ç†Ç†Ç†Ç†");
+		pgl::fixed_string<15>(u8"„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ");
 	}
 
 	BOOST_AUTO_TEST_CASE(test_construct_too_long_string) {
-		BOOST_CHECK_EXCEPTION(pgl::fixed_string<32>(u8"Ç†Ç†Ç†Ç†Ç†Ç†Ç†Ç†Ç†Ç†Ç†"), std::out_of_range, [](auto) {return true; });
+		BOOST_CHECK_EXCEPTION(pgl::fixed_string<32>(u8"„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ„ÅÇ"), std::out_of_range, [](auto) {return true; });
 	}
 
 	BOOST_AUTO_TEST_CASE(test_copy_construct) {
-		const std::string test = u8"Ç©Ç´Ç≠ÇØÇ±";
+		const std::string test = u8"„Åã„Åç„Åè„Åë„Åì";
 		const pgl::fixed_string<32> original(test);
 		const auto copied(original);
 		BOOST_CHECK_EQUAL(test, original.to_string());
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_SUITE(fixed_string_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_copy_operator) {
-		const std::string test = u8"Ç©Ç´Ç≠ÇØÇ±";
+		const std::string test = u8"„Åã„Åç„Åè„Åë„Åì";
 		const pgl::fixed_string<32> original(test);
 		pgl::fixed_string<32> copied;
 		copied = original;
@@ -129,12 +129,12 @@ BOOST_AUTO_TEST_SUITE(fixed_string_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_size_japanese) {
-		const pgl::fixed_string<32> test1(u8"Ç≥ÇµÇ∑ÇπÇª");
+		const pgl::fixed_string<32> test1(u8"„Åï„Åó„Åô„Åõ„Åù");
 		BOOST_CHECK_EQUAL(15, test1.size());
 	}
 
 	BOOST_AUTO_TEST_CASE(test_size_japanese_bound) {
-		const pgl::fixed_string<15> test1(u8"Ç≥ÇµÇ∑ÇπÇª");
+		const pgl::fixed_string<15> test1(u8"„Åï„Åó„Åô„Åõ„Åù");
 		BOOST_CHECK_EQUAL(15, test1.size());
 	}
 

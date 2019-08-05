@@ -4,7 +4,7 @@
 
 BOOST_AUTO_TEST_SUITE(string_utilities_test)
 	BOOST_AUTO_TEST_CASE(test_string_concatenation) {
-		BOOST_CHECK_EQUAL(u8"ABCXYZÇ†Ç¢Ç§", pgl::generate_string(u8"ABC", u8"XYZ", u8"Ç†Ç¢Ç§"));
+		BOOST_CHECK_EQUAL(u8"ABCXYZ„ÅÇ„ÅÑ„ÅÜ", pgl::generate_string(u8"ABC", u8"XYZ", u8"„ÅÇ„ÅÑ„ÅÜ"));
 	}
 
 	BOOST_AUTO_TEST_CASE(test_integer_concatenation) {

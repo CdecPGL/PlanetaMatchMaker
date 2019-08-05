@@ -18,13 +18,13 @@ namespace pgl {
 		::function_types::non_cv>::value;
 
 	struct has_global_on_serialize_impl {
-		template <class T, void(*)(remove_cvref_t<T>&, serializer&) = &::pgl::on_serialize>
-		static std::true_type check(T&& x);
+		template <class T>
+		static auto check(T&& x) -> decltype(on_serialize(std::declval<T&>(), std::declval<serializer&>()), std::true_type());
 
 		template <class T>
 		static std::false_type check(...);
 	};
-
+	
 	template <class T>
 	constexpr bool has_global_on_serialize_v
 		= decltype(has_global_on_serialize_impl::check<T>(std::declval<T>()))::value;

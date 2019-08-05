@@ -65,7 +65,7 @@ namespace pgl {
 			return data_[Length - 1] ? Length : get_c_string_length(reinterpret_cast<const char*>(data_.data()));
 		}
 
-		[[nodiscard]] constexpr std::string to_string() const {
+		[[nodiscard]] std::string to_string() const {
 			if (data_[Length - 1]) {
 				char c_str[Length + 1];
 				std::memcpy(c_str, data_.data(), Length);
