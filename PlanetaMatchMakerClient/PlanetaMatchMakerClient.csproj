@@ -4,4 +4,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>$(SolutionDir)bin\$(Platform)\$(Configuration)\PlanetaMatchMakerClient\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>$(SolutionDir)bin\$(Platform)\$(Configuration)\PlanetaMatchMakerClient\</OutputPath>
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
 </Project>
