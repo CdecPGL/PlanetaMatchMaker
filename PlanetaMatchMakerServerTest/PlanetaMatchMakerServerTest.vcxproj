@@ -102,7 +102,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)PlanetaMatchMakerServer\library;$(SolutionDir)PlanetaMatchMakerServer\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-D_WIN32_WINNT=0x0601 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_WIN32_WINNT=0x0601 /source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)PlanetaMatchMakerServer\library;$(SolutionDir)PlanetaMatchMakerServer\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-D_WIN32_WINNT=0x0601 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_WIN32_WINNT=0x0601 /source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
@@ -148,7 +148,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)PlanetaMatchMakerServer\library;$(SolutionDir)PlanetaMatchMakerServer\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-D_WIN32_WINNT=0x0601 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_WIN32_WINNT=0x0601 /source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
@@ -174,7 +174,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)PlanetaMatchMakerServer\library;$(SolutionDir)PlanetaMatchMakerServer\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-D_WIN32_WINNT=0x0601 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_WIN32_WINNT=0x0601 /source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
     </ClCompile>
     <Link>
