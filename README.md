@@ -7,6 +7,7 @@ A match making server and client for network game.
 ### Dependencies
 
 - Boost Library 1.70 (from vcpgk)
+- CMake 3.15
 
 ### Functions
 
