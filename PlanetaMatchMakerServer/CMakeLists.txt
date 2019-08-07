@@ -13,7 +13,8 @@ target_include_directories(PlanetaMatchMakerServerLib PUBLIC ${includes})
 # Boost Library
 find_package(Boost REQUIRED)
 file(GLOB_RECURSE boost_library_paths "${Boost_LIBRARY_DIRS}/*boost*")
-target_include_directories(PlanetaMatchMakerServerLib PUBLIC ${Boost_INCLUDE_DIRS})
+# to avoid warnings, use SYSTEM (-isystem option of gcc)
+target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerLib ${boost_library_paths})
 
 # Avoid to error of Boost Library 1.70 for MSVC
