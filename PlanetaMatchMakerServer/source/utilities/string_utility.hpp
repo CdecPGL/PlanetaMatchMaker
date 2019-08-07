@@ -7,6 +7,19 @@
 #include "nameof.hpp"
 
 namespace pgl {
+	// Enable enum values to output by ostream
+	template <typename Enum, std::enable_if_t<std::is_enum_v<Enum>, int> = 0>
+	std::ostream & operator <<(std::ostream & os, const Enum & enum_value) {
+		os << nameof::nameof_enum(enum_value);
+		return os;
+	}
+
+	// Enable std::type_info to output by ostream
+	inline std::ostream& operator <<(std::ostream& os, const std::type_info& type_info) {
+		os << type_info.name();
+		return os;
+	}
+
 	inline void generate_string_impl(std::ostringstream&) {}
 
 	template <typename First, typename ... Rest>
@@ -31,17 +44,5 @@ namespace pgl {
 		oss << std::boolalpha;
 		generate_string_impl(oss, std::forward<Params>(params)...);
 		return oss.str();
-	}
-
-	// Enable enum values to output by ostream
-	template <typename Enum, std::enable_if_t<std::is_enum_v<Enum>, int>  = 0>
-	std::ostream& operator <<(std::ostream& os, const Enum& enum_value) {
-		os << nameof::nameof_enum(enum_value);
-		return os;
-	}
-
-	inline std::ostream& operator <<(std::ostream& os, const std::type_info& type_info) {
-		os << type_info.name();
-		return os;
 	}
 }
