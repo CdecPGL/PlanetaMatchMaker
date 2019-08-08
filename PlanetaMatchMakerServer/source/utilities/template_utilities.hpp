@@ -4,19 +4,19 @@
 #include <type_traits>
 
 namespace pgl {
-	struct is_array_container_impl {
+	struct is_fixed_array_container_impl {
 		template <class T>
-		static auto check(T&& x) -> decltype(x.operator[](std::declval<size_t>()), x.size(), std::true_type{});
+		static auto check(T&& x) -> decltype(x.operator[](std::declval<size_t>()), x.max_size(), std::true_type{});
 
 		template <class T>
 		static auto check(...) -> std::false_type;
 	};
 
 	template <class T>
-	struct is_array_container final : decltype(is_array_container_impl::check<T>(std::declval<T>())) {};
+	struct is_fixed_array_container final : decltype(is_fixed_array_container_impl::check<T>(std::declval<T>())) {};
 
 	template <class T>
-	constexpr bool is_array_container_v = is_array_container<T>::value;
+	constexpr bool is_fixed_array_container_v = is_fixed_array_container<T>::value;
 
 	template <typename T>
 	struct is_shared_ptr : std::false_type {};

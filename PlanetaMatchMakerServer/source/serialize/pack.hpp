@@ -19,7 +19,7 @@ namespace pgl {
 		auto size = serialized_data.size();
 		if (pos + size > buffer.size()) {
 			auto message = generate_string("Data range(pos=", pos, ", size=", size, ") exceeds the size of buffer(",
-				buffer.size(), ").");
+				buffer.size(), ") in data packing.");
 			throw serialization_error(message);
 		}
 		std::memcpy(buffer.data() + pos, serialized_data.data(), size);
@@ -47,7 +47,7 @@ namespace pgl {
 		auto size = get_serialized_size<First>();
 		if (pos + size > buffer.size()) {
 			auto message = generate_string("Data range(pos=", pos, ", size=", size, ") exceeds the size of buffer(",
-				buffer.size(), ").");
+				buffer.size(), ") in data unpacking.");
 			throw serialization_error(message);
 		}
 		std::vector<uint8_t> data(size);

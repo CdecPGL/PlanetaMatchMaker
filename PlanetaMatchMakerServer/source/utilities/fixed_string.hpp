@@ -57,12 +57,23 @@ namespace pgl {
 			return data_.at(idx);
 		}
 
-		constexpr uint8_t& at(size_t idx) {
+		[[nodiscard]] constexpr uint8_t& at(size_t idx) {
 			return data_.at(idx);
 		}
 
+		// Return actual string size
 		[[nodiscard]] constexpr size_t size() const {
 			return data_[Length - 1] ? Length : get_c_string_length(reinterpret_cast<const char*>(data_.data()));
+		}
+
+		// Return actual string size
+		[[nodiscard]] constexpr size_t length() const {
+			return size();
+		}
+
+		// Return max string size
+		[[nodiscard]] constexpr size_t max_size() const {
+			return Length;
 		}
 
 		[[nodiscard]] std::string to_string() const {
@@ -76,7 +87,7 @@ namespace pgl {
 			return std::string(reinterpret_cast<const char*>(data_.data()));
 		}
 
-		constexpr static size_t get_c_string_length(const char* c_str) {
+		[[nodiscard]] constexpr static size_t get_c_string_length(const char* c_str) {
 			return *c_str ? 1 + get_c_string_length(c_str + 1) : 0;
 		}
 

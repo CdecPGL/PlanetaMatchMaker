@@ -37,8 +37,8 @@ namespace pgl {
 				add_arithmetic_type_value(value);
 			} else if constexpr (std::is_enum_v<T>) {
 				add_enum_type_value(value);
-			} else if constexpr (is_array_container_v<T>) {
-				for (auto i = 0u; i < value.size(); ++i) {
+			} else if constexpr (is_fixed_array_container_v<T>) {
+				for (auto i = 0u; i < value.max_size(); ++i) {
 					*this += value[i];
 				}
 			} else {
@@ -79,7 +79,7 @@ namespace pgl {
 					});
 					break;
 				case status::size_estimating:
-					size_estimators_.push_back([&value](size_t& total_size) {
+					size_estimators_.push_back([](size_t& total_size) {
 						total_size += sizeof(T);
 					});
 					break;
@@ -94,7 +94,7 @@ namespace pgl {
 			switch (status_) {
 				case status::serializing:
 					serializers_.push_back([&value](std::vector<uint8_t>& data, size_t& pos) {
-						base_t base_value = static_cast<base_t>(value);
+						auto base_value = static_cast<base_t>(value);
 						auto e_value = boost::endian::native_to_big(base_value);
 						const auto size = sizeof(base_t);
 						std::memcpy(data.data() + pos, &e_value, size);
@@ -112,7 +112,7 @@ namespace pgl {
 					});
 					break;
 				case status::size_estimating:
-					size_estimators_.push_back([&value](size_t& total_size) {
+					size_estimators_.push_back([](size_t& total_size) {
 						total_size += sizeof(base_t);
 					});
 					break;
