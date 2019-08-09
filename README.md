@@ -79,6 +79,10 @@ make
 # vi ~/.planeta_match_maker_server/setting.json
 ```
 
+### Setting File
+
+You can locate a setting file `setting.json` to `.pmms` directory in home directory.
+
 ## Client
 
 ### Windows

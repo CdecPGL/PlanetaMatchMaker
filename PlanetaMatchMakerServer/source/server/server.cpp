@@ -1,5 +1,3 @@
-#include <thread>
-
 #include <boost/thread.hpp>
 
 #include "server.hpp"
@@ -11,7 +9,7 @@ using namespace boost;
 
 namespace pgl {
 
-	server::server(const std::string& setting_file_path): acceptor_(io_service_) {
+	server::server(const std::filesystem::path& setting_file_path): acceptor_(io_service_) {
 		// Load setting
 		server_setting_.load_from_setting_file(setting_file_path);
 

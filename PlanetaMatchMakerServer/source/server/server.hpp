@@ -11,7 +11,7 @@
 namespace pgl {
 	class server final : boost::noncopyable {
 	public:
-		explicit server(const std::string& setting_file_path);
+		explicit server(const std::filesystem::path& setting_file_path);
 		void run();
 	private:
 		boost::asio::io_service io_service_;

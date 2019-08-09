@@ -10,9 +10,14 @@ using namespace boost;
 
 namespace pgl {
 
-	void server_setting::load_from_setting_file(const std::string& file_path) {
+	bool server_setting::load_from_setting_file(const std::filesystem::path& file_path) {
+		if (!exists(file_path)) {
+			std::cerr << "Failed to load a server setting file (" << file_path << ")." << std::endl;
+			return false;
+		}
+
 		property_tree::ptree ptree;
-		read_json(file_path, ptree);
+		read_json(file_path.string(), ptree);
 		enable_session_key_check = ptree.get("enable_session_key_check", enable_session_key_check);
 		time_out_seconds = ptree.get("time_out_seconds", time_out_seconds);
 		auto log_level_str = ptree.get("log_level", std::string(nameof::nameof_enum(log_level)));
@@ -40,6 +45,8 @@ namespace pgl {
 				room_group_list.push_back(child.second.get_value<std::string>());
 			}
 		}
+
+		return true;
 	}
 
 	void server_setting::output_to_log() const {
