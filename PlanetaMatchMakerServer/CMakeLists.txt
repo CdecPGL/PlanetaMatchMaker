@@ -26,6 +26,7 @@ endif()
 add_executable (PlanetaMatchMakerServer ${main_source})
 target_link_libraries(PlanetaMatchMakerServer PlanetaMatchMakerServerLib)
 # Install bunary
+install (TARGETS PlanetaMatchMakerServer RUNTIME DESTINATION bin CONFIGURATIONS Debug RENAME pmms_debug)
 install (TARGETS PlanetaMatchMakerServer RUNTIME DESTINATION bin CONFIGURATIONS Release RENAME pmms)
 # Copy setting file
 if((CMAKE_SYSTEM_NAME STREQUAL "Windows") OR (CMAKE_SYSTEM_NAME STREQUAL "MSYS"))
