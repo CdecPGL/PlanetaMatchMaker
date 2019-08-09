@@ -26,11 +26,13 @@ endif()
 add_executable (PlanetaMatchMakerServer ${main_source})
 target_link_libraries(PlanetaMatchMakerServer PlanetaMatchMakerServerLib)
 # Install bunary
-install (TARGETS PlanetaMatchMakerServer RUNTIME DESTINATION bin CONFIGURATIONS Debug RENAME pmms_debug)
-install (TARGETS PlanetaMatchMakerServer RUNTIME DESTINATION bin CONFIGURATIONS Release RENAME pmms)
+install (TARGETS PlanetaMatchMakerServer DESTINATION bin)
+# Create symbolic link to binary
+install_symlink ("${CMAKE_INSTALL_PREFIX}/bin/PlanetaMatchMakerServer" "${CMAKE_INSTALL_PREFIX}/bin/pmms")
+
 # Copy setting file
 if((CMAKE_SYSTEM_NAME STREQUAL "Windows") OR (CMAKE_SYSTEM_NAME STREQUAL "MSYS"))
-	install (FILES "setting.json" DESTINATION OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ "$ENV{HOMEDRIVE}$ENV{HOMEPATH}/.pmms")
+	install (FILES "setting.json" PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ DESTINATION "$ENV{HOMEDRIVE}$ENV{HOMEPATH}/.pmms")
 else()
 	install (FILES "setting.json" PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ DESTINATION "$ENV{HOME}/.pmms")
 endif()
