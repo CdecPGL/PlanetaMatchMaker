@@ -1,0 +1,6 @@
+version: "2"
+services:
+  pmms:
+    build: pmms
+    ports:
+      - "7777:7777"

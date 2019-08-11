@@ -14,10 +14,11 @@ A match making server and client for network game.
 - Create rooms and join rooms
 - Random match making (not implemented)
 
-### Environment Requirement
+### Supported Platforms
 
 - Windowds 7 or higher
 - Linux(Ubuntu)
+- Docker
 
 ### Build
 
@@ -35,36 +36,36 @@ A match making server and client for network game.
 
 #### Linux(Ubuntu)
 
-In Ubuntu18.0.4, PlanetaMatchMakerServer is installable by below commands.
+Install by refering to Docker/pmms/Dockerfile .
 
-```bash
-# Install Git
-sudo apt install git
-# Install g++9 to install libc++ compatible with C++17
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt update
-sudo apt install g++-9
-# Install Clang8
-wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-sudo apt-get install software-properties-common
-sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
-sudo apt update
-sudo apt install clang-8 lldb-8 lld-8
-# Install CMake
-sudo apt install cmake
-# Install Boost Library 1.70 or higher
-sudo add-apt-repository ppa:mhier/libboost-latest # find ppa which has latest boost library
-sudo apt install libboost1.70-dev
-# Clone PlanetaMatchMakerServer repository
-git clone https://github.com/CdecPGL/PlanetaMatchMaker.git
-# Build PlanetaMatchMakerServer
-cd PlanetaMatchMaker
-mkdir build
-cd build
-cmake -DCMAKE_CXX_COMPILER=clang++-8 ..
-make
-sudo make install
-```
+Ubuntu18.0.4 is supported.
+
+#### Docker
+
+1. Install Git
+1. Install Docker and Docker-Compose
+1. Clone https://github.com/CdecPGL/PlanetaMatchMaker.git
+1. Move to Docker directory in the cloned repository
+1. Execute docker-compose up
+
+### Run
+
+#### Windows
+
+1. Change `~/.pmms/setting.json` if need
+1. Open CommandPrompt or PowerShell
+1. Execute `pmms` command
+
+#### Linux(Ubuntu)
+
+1. Change `~/.pmms/setting.json` if need
+1. Open bash
+1. Execute `pmms` command
+
+#### Docker
+
+1. Move to `[PlanetaMatchMaker Root]/Docker` directory
+1. Execute `docker-compose up` command
 
 ### Setting File
 
