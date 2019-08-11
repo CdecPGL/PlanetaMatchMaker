@@ -6,8 +6,8 @@ A match making server and client for network game.
 
 ### Dependencies
 
-- Boost Library 1.70 (from vcpgk)
-- CMake 3.15
+- Boost Library 1.70
+- CMake 3.8
 
 ### Functions
 
@@ -17,66 +17,53 @@ A match making server and client for network game.
 ### Environment Requirement
 
 - Windowds 7 or higher
-- Linux
+- Linux(Ubuntu)
 
 ### Build
 
 #### Windows
 
-1. Install Boost Library 1.70 or higher
-1. Install a compiler (at least, VC++15.7, g++7 or clang5) which is compatible with C++17
-1. Unknown
+1. Install a compiler (VC++15.7, g++7 or clang5) which is compatible with C++17
+1. Install vcpkg
+1. Install Boost Library 1.70 or higher by vcpkg
+1. Execute (1) or (2) process
+1. (1)Open PlanetaMatchMaker.sln and build PlanetaMatchMakerServer project
+1. (2)Install cmake
+1. (2)mkdir build
+1. (2)cmake ..
+1. (2)make install
 
-#### Linux
+#### Linux(Ubuntu)
 
-1. Install CMake
-1. mkdir build
-1. cmake ..
-1. make
-
-##### Ex. Cent OS 7
+In Ubuntu18.0.4, PlanetaMatchMakerServer is installable by below commands.
 
 ```bash
-# install neccesarry packages
-sudo yum -y install git
-sudo yum -y install wget
-sudo yum -y install gcc-c++ # use for build latest g++
-sudo yum -y install bzip2 # use for installing latest g++
-# install boost library 1.70+
-install boost?
-# install latest cmake manually because cmake installed through yum is old.
-wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1.tar.gz
-tar zxvf cmake-3.15.1.tar.gz
-cd cmake-3.15.1
-./bootstrap --prefix=/opt/cmake --no-system-libs
-make
-sudo make install
-vi ~/.bashrc # add PATH=$PATH:/opt/cmake/bin
-source ~/.bashrc
-cmake -version # check if cmake is installed successfully.
-cd ~
-# install latest g++ manually because g++ installed through yum is old.
-cd ~
-wget http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-9.1.0/gcc-9.1.0.tar.gz
-tar zxvf gcc-9.1.0.tar.gz
-cd gcc-9.1.0
-./contrib/download_prerequisites
-mkdir build
-cd build
-../configure --enable-languages=c++ --prefix=/usr/local --disable-bootstrap --disable-multilib
-make # make will fail with too small memory
-sudo make install # g++ will be installed in /usr/local/lib64
-g++ --version # check if g++ is installed successfully.
-# build match maker server
+# Install Git
+sudo apt install git
+# Install g++9 to install libc++ compatible with C++17
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install g++-9
+# Install Clang8
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+sudo apt-get install software-properties-common
+sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
+sudo apt update
+sudo apt install clang-8 lldb-8 lld-8
+# Install CMake
+sudo apt install cmake
+# Install Boost Library 1.70 or higher
+sudo add-apt-repository ppa:mhier/libboost-latest # find ppa which has latest boost library
+sudo apt install libboost1.70-dev
+# Clone PlanetaMatchMakerServer repository
 git clone https://github.com/CdecPGL/PlanetaMatchMaker.git
+# Build PlanetaMatchMakerServer
 cd PlanetaMatchMaker
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_CXX_COMPILER=clang++-8 ..
 make
-# sudo make install
-# PlanetaMatchMakerServer
-# vi ~/.planeta_match_maker_server/setting.json
+sudo make install
 ```
 
 ### Setting File
