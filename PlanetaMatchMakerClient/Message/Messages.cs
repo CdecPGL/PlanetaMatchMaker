@@ -89,13 +89,13 @@ namespace PlanetaGameLabo.MatchMaker
         [Serializable]
         public struct RoomGroupInfo
         {
-            [FixedLength(ClientConstants.RoomGroupNameLength)]
+            [FixedLength(RoomConstants.RoomGroupNameLength)]
             public string Name;
         }
 
         public byte RoomGroupCount;
 
-        [FixedLength(ClientConstants.RoomGroupMaxCount)]
+        [FixedLength(RoomConstants.RoomGroupMaxCount)]
         public RoomGroupInfo[] RoomGroupInfoList;
     }
 
@@ -106,12 +106,12 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public RoomGroupIndexType GroupIndex;
 
-        [FixedLength(ClientConstants.RoomNameLength)]
+        [FixedLength(RoomConstants.RoomNameLength)]
         public string Name;
 
         public RoomFlag Flags;
 
-        [FixedLength(ClientConstants.RoomPasswordLength)]
+        [FixedLength(RoomConstants.RoomPasswordLength)]
         public string Password;
 
         public byte MaxPlayerCount;
@@ -148,7 +148,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             public RoomIdType RoomId;
 
-            [FixedLength(ClientConstants.RoomNameLength)]
+            [FixedLength(RoomConstants.RoomNameLength)]
             public string Name;
 
             public RoomFlag Flags;
@@ -162,7 +162,7 @@ namespace PlanetaGameLabo.MatchMaker
         public byte ReplyRoomStartIndex; // the index of start room in this message
         public byte ReplyRoomEndIndex; // the index of end room in this message
 
-        [FixedLength(ClientConstants.ListRoomReplyRoomInfoCount)]
+        [FixedLength(RoomConstants.ListRoomReplyRoomInfoCount)]
         public RoomInfo[] RoomInfoList;
     }
 
@@ -174,7 +174,7 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomGroupIndexType GroupIndex;
         public RoomIdType RoomId;
 
-        [FixedLength(ClientConstants.RoomPasswordLength)]
+        [FixedLength(RoomConstants.RoomPasswordLength)]
         public string Password;
     }
 

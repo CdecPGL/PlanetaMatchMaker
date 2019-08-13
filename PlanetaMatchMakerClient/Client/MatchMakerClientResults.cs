@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PlanetaGameLabo.MatchMaker
+﻿namespace PlanetaGameLabo.MatchMaker
 {
     public struct RoomGroupResult
     {

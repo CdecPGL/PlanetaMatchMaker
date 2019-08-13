@@ -168,7 +168,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             SetResult(replyBody);
 
-            var separateCount = (replyBody.ResultRoomCount - 1) / ClientConstants.ListRoomReplyRoomInfoCount + 1;
+            var separateCount = (replyBody.ResultRoomCount - 1) / RoomConstants.ListRoomReplyRoomInfoCount + 1;
 
             for (var i = 1; i < separateCount; ++i)
             {

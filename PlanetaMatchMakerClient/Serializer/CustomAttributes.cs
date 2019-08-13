@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Xml.Schema;
 
 namespace PlanetaGameLabo.Serializer {
     [AttributeUsage(AttributeTargets.Field)]
