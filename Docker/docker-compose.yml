@@ -3,4 +3,4 @@ services:
   pmms:
     build: pmms
     ports:
-      - "7777:7777"
+      - "57000:57000"
