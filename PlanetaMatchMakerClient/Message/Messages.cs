@@ -1,13 +1,15 @@
 ﻿using System;
 using PlanetaGameLabo.Serializer;
 
-namespace PlanetaGameLabo.MatchMaker {
+namespace PlanetaGameLabo.MatchMaker
+{
     using SessionKeyType = UInt32;
     using VersionType = UInt16;
     using RoomGroupIndexType = Byte;
     using RoomIdType = UInt32;
 
-    public enum MessageErrorCode : byte {
+    internal enum MessageErrorCode : byte
+    {
         Ok,
         UnknownError,
         VersionMismatch,
@@ -22,7 +24,8 @@ namespace PlanetaGameLabo.MatchMaker {
         RoomGroupIndexOutOfRange,
     };
 
-    public enum MessageType : byte {
+    internal enum MessageType : byte
+    {
         AuthenticationRequest,
         AuthenticationReply,
         ListRoomGroupRequest,
@@ -37,31 +40,18 @@ namespace PlanetaGameLabo.MatchMaker {
         RandomMatchRequest
     }
 
-    [Serializable]
-    [Flags]
-    public enum RoomFlag : byte {
-        IsPrivate = 1,
-        IsOpen = 2
-    }
-
-    [Serializable]
-    public enum RoomDataSortKind : byte {
-        NameAscending,
-        NameDescending,
-        CreateDatetimeAscending,
-        CreateDatetimeDescending
-    }
-
     // 5 bytes. Use for notice message too
     [Serializable]
-    public struct RequestMessageHeader {
+    internal struct RequestMessageHeader
+    {
         public MessageType MessageType;
         public SessionKeyType SessionKey;
     }
 
     // 2 bytes
     [Serializable]
-    public struct ReplyMessageHeader {
+    internal struct ReplyMessageHeader
+    {
         public MessageType MessageType;
         public MessageErrorCode ErrorCode;
     }
@@ -69,14 +59,16 @@ namespace PlanetaGameLabo.MatchMaker {
     // 2 bytes
     [Serializable]
     [Message(MessageType.AuthenticationRequest)]
-    public struct AuthenticationRequestMessage {
+    internal struct AuthenticationRequestMessage
+    {
         public VersionType Version;
     }
 
     // 6 bytes
     [Serializable]
     [Message(MessageType.AuthenticationReply)]
-    public struct AuthenticationReplyMessage {
+    internal struct AuthenticationReplyMessage
+    {
         public VersionType Version;
         public SessionKeyType SessionKey;
     }
@@ -84,16 +76,19 @@ namespace PlanetaGameLabo.MatchMaker {
     // 1 bytes
     [Serializable]
     [Message(MessageType.ListRoomGroupRequest)]
-    public struct ListRoomGroupRequestMessage {
+    internal struct ListRoomGroupRequestMessage
+    {
         public byte Dummy;
     }
 
     // 241 bytes
     [Serializable]
     [Message(MessageType.ListRoomGroupReply)]
-    public struct ListRoomGroupReplyMessage {
+    internal struct ListRoomGroupReplyMessage
+    {
         [Serializable]
-        public struct RoomGroupInfo {
+        public struct RoomGroupInfo
+        {
             [FixedLength(ClientConstants.RoomGroupNameLength)]
             public string Name;
         }
@@ -107,7 +102,8 @@ namespace PlanetaGameLabo.MatchMaker {
     // 43 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
-    public struct CreateRoomRequestMessage {
+    internal struct CreateRoomRequestMessage
+    {
         public RoomGroupIndexType GroupIndex;
 
         [FixedLength(ClientConstants.RoomNameLength)]
@@ -124,14 +120,16 @@ namespace PlanetaGameLabo.MatchMaker {
     // 4 bytes
     [Serializable]
     [Message(MessageType.CreateRoomReply)]
-    public struct CreateRoomReplyMessage {
+    internal struct CreateRoomReplyMessage
+    {
         public RoomIdType RoomId;
     }
 
     // 5 bytes
     [Serializable]
     [Message(MessageType.ListRoomRequest)]
-    public struct ListRoomRequestMessage {
+    internal struct ListRoomRequestMessage
+    {
         public RoomGroupIndexType GroupIndex;
         public byte StartIndex;
         public byte EndIndex;
@@ -142,10 +140,12 @@ namespace PlanetaGameLabo.MatchMaker {
     // 238 bytes
     [Serializable]
     [Message(MessageType.ListRoomReply)]
-    public struct ListRoomReplyMessage {
+    internal struct ListRoomReplyMessage
+    {
         //39 bytes
         [Serializable]
-        public struct RoomInfo {
+        public struct RoomInfo
+        {
             public RoomIdType RoomId;
 
             [FixedLength(ClientConstants.RoomNameLength)]
@@ -169,7 +169,8 @@ namespace PlanetaGameLabo.MatchMaker {
     // 21 bytes
     [Serializable]
     [Message(MessageType.JoinRoomRequest)]
-    public struct JoinRoomRequestMessage {
+    internal struct JoinRoomRequestMessage
+    {
         public RoomGroupIndexType GroupIndex;
         public RoomIdType RoomId;
 
@@ -180,20 +181,16 @@ namespace PlanetaGameLabo.MatchMaker {
     //18 bytes
     [Serializable]
     [Message(MessageType.JoinRoomReply)]
-    public struct JoinRoomReplyMessage {
+    internal struct JoinRoomReplyMessage
+    {
         public ClientAddress HostAddress;
     }
 
     // 6 bytes
     [Serializable]
     [Message(MessageType.UpdateRoomStatusNotice)]
-    public struct UpdateRoomStatusNoticeMessage {
-        public enum RoomStatus : byte {
-            Open,
-            Close,
-            Remove
-        }
-
+    internal struct UpdateRoomStatusNoticeMessage
+    {
         public RoomGroupIndexType GroupIndex;
         public RoomIdType RoomId;
         public RoomStatus Status;
