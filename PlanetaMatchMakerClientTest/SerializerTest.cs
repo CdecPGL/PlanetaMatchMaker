@@ -4,17 +4,22 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using PlanetaGameLabo.Serializer;
 
-namespace PlanetaGameLabo.Test {
+namespace PlanetaGameLabo.Test
+{
     [Serializable]
-    internal struct FixedStringStruct {
+    internal struct FixedStringStruct
+    {
         [FixedLength(16)] public string Str;
 
-        public static FixedStringStruct GetDefault() {
+        public static FixedStringStruct GetDefault()
+        {
             return new FixedStringStruct {Str = "abc"};
         }
 
-        public override bool Equals(object obj) {
-            if (obj == null) {
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
                 return false;
             }
 
@@ -22,26 +27,33 @@ namespace PlanetaGameLabo.Test {
             return Str == other.Str;
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return base.ToString() + "(" + Str + ")";
         }
     }
 
     [Serializable]
-    internal struct FixedArrayStruct {
+    internal struct FixedArrayStruct
+    {
         [FixedLength(32)] public int[] Array;
 
-        public static FixedArrayStruct GetDefault() {
-            return new FixedArrayStruct {
-                Array = new[] {
+        public static FixedArrayStruct GetDefault()
+        {
+            return new FixedArrayStruct
+            {
+                Array = new[]
+                {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                     27, 28, 29, 30, 31
                 }
             };
         }
 
-        public override bool Equals(object obj) {
-            if (obj == null) {
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
                 return false;
             }
 
@@ -51,28 +63,34 @@ namespace PlanetaGameLabo.Test {
     }
 
     [Serializable]
-    internal struct TestStruct {
+    internal struct TestStruct
+    {
         public short A;
         public uint B;
         public double C;
         [FixedLength(16)] public string Str;
         [FixedLength(32)] public int[] Array;
 
-        public static TestStruct GetDefault() {
-            return new TestStruct {
+        public static TestStruct GetDefault()
+        {
+            return new TestStruct
+            {
                 A = -12,
                 B = 3456,
                 C = 3.1415,
                 Str = "abcdefg",
-                Array = new[] {
+                Array = new[]
+                {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                     27, 28, 29, 30, 31
                 }
             };
         }
 
-        public override bool Equals(object obj) {
-            if (obj == null) {
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
                 return false;
             }
 
@@ -83,17 +101,22 @@ namespace PlanetaGameLabo.Test {
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    internal sealed class TestClass {
+    internal sealed class TestClass
+    {
         public int a;
 
-        public static TestClass GetDefault() {
-            return new TestClass {
+        public static TestClass GetDefault()
+        {
+            return new TestClass
+            {
                 a = 1234
             };
         }
 
-        public override bool Equals(object obj) {
-            if (obj == null) {
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
                 return false;
             }
 
@@ -103,21 +126,26 @@ namespace PlanetaGameLabo.Test {
     }
 
     [Serializable]
-    internal struct NestedTestStruct {
+    internal struct NestedTestStruct
+    {
         public uint A;
         public double B;
         public TestStruct C;
 
-        public static NestedTestStruct GetDefault() {
-            return new NestedTestStruct {
+        public static NestedTestStruct GetDefault()
+        {
+            return new NestedTestStruct
+            {
                 A = 12345,
                 B = -123.345,
                 C = TestStruct.GetDefault()
             };
         }
 
-        public override bool Equals(object obj) {
-            if (obj == null) {
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
                 return false;
             }
 
@@ -128,21 +156,26 @@ namespace PlanetaGameLabo.Test {
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    internal sealed class NestedTestClass {
+    internal sealed class NestedTestClass
+    {
         public uint a;
         public double b;
         public TestClass c;
 
-        public static NestedTestClass GetDefault() {
-            return new NestedTestClass {
+        public static NestedTestClass GetDefault()
+        {
+            return new NestedTestClass
+            {
                 a = 12345,
                 b = -123.345,
                 c = TestClass.GetDefault()
             };
         }
 
-        public override bool Equals(object obj) {
-            if (obj == null) {
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
                 return false;
             }
 
@@ -151,58 +184,71 @@ namespace PlanetaGameLabo.Test {
         }
     }
 
-    internal enum TestEnum : uint {
+    internal enum TestEnum : uint
+    {
         A,
         B,
         C,
         D
     }
 
-    internal struct NotSerializableStruct {
+    internal struct NotSerializableStruct
+    {
         public int A;
     }
 
     [Serializable]
-    internal class NotSequentialClass {
+    internal class NotSequentialClass
+    {
         public int A;
     }
 
     [Serializable]
-    internal struct NotFixedStringStruct {
+    internal struct NotFixedStringStruct
+    {
         public string Str;
     }
 
     [Serializable]
-    internal struct NotFixedArrayStruct {
+    internal struct NotFixedArrayStruct
+    {
         public int[] A;
     }
 
     [Serializable]
-    internal struct TooLongFixedStringStruct {
+    internal struct TooLongFixedStringStruct
+    {
         [FixedLength(16)] public string Str;
 
-        public static TooLongFixedStringStruct GetDefault() {
+        public static TooLongFixedStringStruct GetDefault()
+        {
             return new TooLongFixedStringStruct {Str = "abcdefghijklmnopqrstuvwxyz"};
         }
     }
 
     [Serializable]
-    internal struct TooLongFixedArrayStruct {
+    internal struct TooLongFixedArrayStruct
+    {
         [FixedLength(32)] public int[] Array;
 
-        public static TooLongFixedArrayStruct GetDefault() {
-            return new TooLongFixedArrayStruct {
+        public static TooLongFixedArrayStruct GetDefault()
+        {
+            return new TooLongFixedArrayStruct
+            {
                 Array = new int[64]
             };
         }
     }
 
     [Serializable]
-    internal struct TooShortFixedArrayStruct {
+    internal struct TooShortFixedArrayStruct
+    {
         [FixedLength(32)] public int[] Array;
 
-        public static TooShortFixedArrayStruct GetDefault() {
-            return new TooShortFixedArrayStruct {
+        public static TooShortFixedArrayStruct GetDefault()
+        {
+            return new TooShortFixedArrayStruct
+            {
                 Array = new int[16]
             };
         }
@@ -211,7 +257,8 @@ namespace PlanetaGameLabo.Test {
 
     [TestClass]
     [TestCategory("ClientSerializer")]
-    public class SerializerTest {
+    public class SerializerTest
+    {
         [DataTestMethod]
         [DataRow(typeof(bool), 1)]
         [DataRow(typeof(byte), 1)]
@@ -231,7 +278,8 @@ namespace PlanetaGameLabo.Test {
         [DataRow(typeof(NestedTestStruct), 170)]
         [DataRow(typeof(NestedTestClass), 16)]
         [DataRow(typeof(TestEnum), 4)]
-        public void GetSerializedSizeTest(Type type, int expected) {
+        public void GetSerializedSizeTest(Type type, int expected)
+        {
             Assert.AreEqual(expected, Serializer.Serializer.GetSerializedSize(type));
         }
 
@@ -241,7 +289,8 @@ namespace PlanetaGameLabo.Test {
         [DataRow(typeof(NotFixedStringStruct))]
         [DataRow(typeof(NotFixedArrayStruct))]
         [ExpectedException(typeof(InvalidSerializationException))]
-        public void GetSerializedSizeErrorTest(Type type) {
+        public void GetSerializedSizeErrorTest(Type type)
+        {
             Serializer.Serializer.GetSerializedSize(type);
         }
 
@@ -258,153 +307,182 @@ namespace PlanetaGameLabo.Test {
         [DataRow(12e-3f, DisplayName = nameof(SerializeConsistencyTest) + "_float")]
         [DataRow(123e-45, DisplayName = nameof(SerializeConsistencyTest) + "_double")]
         [DataRow(TestEnum.C, DisplayName = nameof(SerializeConsistencyTest) + "_TestEnum")]
-        public void SerializeConsistencyTest(object obj) {
+        public void SerializeConsistencyTest(object obj)
+        {
             var data1 = Serializer.Serializer.Serialize(obj);
             var data2 = Serializer.Serializer.Serialize(obj);
             CollectionAssert.AreEqual(data1, data2);
         }
 
         [TestMethod]
-        public void SerializeConsistencyTest_FixedStringStruct() {
+        public void SerializeConsistencyTest_FixedStringStruct()
+        {
             SerializeConsistencyTest(FixedStringStruct.GetDefault());
         }
 
         [TestMethod]
-        public void SerializeConsistencyTest_FixedArrayStruct() {
+        public void SerializeConsistencyTest_FixedArrayStruct()
+        {
             SerializeConsistencyTest(FixedArrayStruct.GetDefault());
         }
 
         [TestMethod]
-        public void SerializeConsistencyTest_TestStruct() {
+        public void SerializeConsistencyTest_TestStruct()
+        {
             SerializeConsistencyTest(TestStruct.GetDefault());
         }
 
         [TestMethod]
-        public void SerializeConsistencyTest_TestClass() {
+        public void SerializeConsistencyTest_TestClass()
+        {
             SerializeConsistencyTest(TestClass.GetDefault());
         }
 
         [TestMethod]
-        public void SerializeConsistencyTest_NestedTestStruct() {
+        public void SerializeConsistencyTest_NestedTestStruct()
+        {
             SerializeConsistencyTest(NestedTestStruct.GetDefault());
         }
 
         [TestMethod]
-        public void SerializeConsistencyTest_NestedTestClass() {
+        public void SerializeConsistencyTest_NestedTestClass()
+        {
             SerializeConsistencyTest(NestedTestClass.GetDefault());
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidSerializationException))]
-        public void SerializeTooLongFixedStringErrorTest() {
+        public void SerializeTooLongFixedStringErrorTest()
+        {
             Serializer.Serializer.Serialize(TooLongFixedStringStruct.GetDefault());
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidSerializationException))]
-        public void SerializeTooLongFixedArrayErrorTest() {
+        public void SerializeTooLongFixedArrayErrorTest()
+        {
             Serializer.Serializer.Serialize(TooLongFixedArrayStruct.GetDefault());
         }
 
         [TestMethod]
         [ExpectedException(typeof(InvalidSerializationException))]
-        public void SerializeTooShortFixedArrayErrorTest() {
+        public void SerializeTooShortFixedArrayErrorTest()
+        {
             Serializer.Serializer.Serialize(TooShortFixedArrayStruct.GetDefault());
         }
 
-        private void DeserializeTest<T>(T obj) {
+        private void DeserializeTest<T>(T obj)
+        {
             var data = Serializer.Serializer.Serialize(obj);
             var obj2 = Serializer.Serializer.Deserialize<T>(data);
             Assert.AreEqual(obj, obj2);
         }
 
         [TestMethod]
-        public void DeserializeTest_bool() {
+        public void DeserializeTest_bool()
+        {
             DeserializeTest(true);
         }
 
         [TestMethod]
-        public void DeserializeTest_byte() {
+        public void DeserializeTest_byte()
+        {
             DeserializeTest((byte) 123);
         }
 
         [TestMethod]
-        public void DeserializeTest_sbyte() {
+        public void DeserializeTest_sbyte()
+        {
             DeserializeTest((sbyte) -123);
         }
 
         [TestMethod]
-        public void DeserializeTest_short() {
+        public void DeserializeTest_short()
+        {
             DeserializeTest((short) -12345);
         }
 
         [TestMethod]
-        public void DeserializeTest_ushort() {
+        public void DeserializeTest_ushort()
+        {
             DeserializeTest((ushort) 12345);
         }
 
         [TestMethod]
-        public void DeserializeTest_int() {
+        public void DeserializeTest_int()
+        {
             DeserializeTest(-12345678);
         }
 
         [TestMethod]
-        public void DeserializeTest_uint() {
+        public void DeserializeTest_uint()
+        {
             DeserializeTest(12345678u);
         }
 
         [TestMethod]
-        public void DeserializeTest_long() {
+        public void DeserializeTest_long()
+        {
             DeserializeTest(-123456787912345);
         }
 
         [TestMethod]
-        public void DeserializeTest_ulong() {
+        public void DeserializeTest_ulong()
+        {
             DeserializeTest(12345678912345u);
         }
 
         [TestMethod]
-        public void DeserializeTest_float() {
+        public void DeserializeTest_float()
+        {
             DeserializeTest(12e-3f);
         }
 
         [TestMethod]
-        public void DeserializeTest_double() {
+        public void DeserializeTest_double()
+        {
             DeserializeTest(123e-45);
         }
 
         [TestMethod]
-        public void DeserializeTest_FixedStringStruct() {
+        public void DeserializeTest_FixedStringStruct()
+        {
             DeserializeTest(FixedStringStruct.GetDefault());
         }
 
         [TestMethod]
-        public void DeserializeTest_FixedArrayStruct() {
+        public void DeserializeTest_FixedArrayStruct()
+        {
             DeserializeTest(FixedArrayStruct.GetDefault());
         }
 
         [TestMethod]
-        public void DeserializeTest_TestStruct() {
+        public void DeserializeTest_TestStruct()
+        {
             DeserializeTest(TestStruct.GetDefault());
         }
 
         [TestMethod]
-        public void DeserializeTest_TestClass() {
+        public void DeserializeTest_TestClass()
+        {
             DeserializeTest(TestClass.GetDefault());
         }
 
         [TestMethod]
-        public void DeserializeTest_NestedTestStruct() {
+        public void DeserializeTest_NestedTestStruct()
+        {
             DeserializeTest(NestedTestStruct.GetDefault());
         }
 
         [TestMethod]
-        public void DeserializeTest_NestedTestClass() {
+        public void DeserializeTest_NestedTestClass()
+        {
             DeserializeTest(NestedTestClass.GetDefault());
         }
 
         [TestMethod]
-        public void DeserializeTest_TestEnum() {
+        public void DeserializeTest_TestEnum()
+        {
             DeserializeTest(TestEnum.C);
         }
     }

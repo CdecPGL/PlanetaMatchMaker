@@ -3,36 +3,45 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace PlanetaGameLabo.MatchMaker {
-    internal sealed class TestClient : IDisposable {
-        public TestClient(string address, ushort port) {
+namespace PlanetaGameLabo.MatchMaker
+{
+    internal sealed class TestClient : IDisposable
+    {
+        public TestClient(string address, ushort port)
+        {
             client = new MatchMakerClient();
             this.address = address;
             this.port = port;
         }
 
         public async Task
-            RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults) {
+            RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults)
+        {
             var connectionResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
-            try {
+            try
+            {
                 stopwatch.Restart();
                 await client.ConnectAsync(address, port);
                 stopwatch.Stop();
                 connectionResponseBenchmarkResults.Enqueue((1, stopwatch.ElapsedMilliseconds));
                 await EternalDelay();
             }
-            catch (ClientErrorException e) {
+            catch (ClientErrorException e)
+            {
                 Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
         public async Task RunConnectAndDisconnectTest(
-            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults) {
+            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults)
+        {
             var connectionResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
-            try {
-                while (true) {
+            try
+            {
+                while (true)
+                {
                     stopwatch.Restart();
                     await client.ConnectAsync(address, port);
                     stopwatch.Stop();
@@ -40,30 +49,36 @@ namespace PlanetaGameLabo.MatchMaker {
                     client.Close();
                 }
             }
-            catch (ClientErrorException e) {
+            catch (ClientErrorException e)
+            {
                 Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
         public async Task RunGetRoomGroupListTest(
-            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults) {
+            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults)
+        {
             var getRoomGroupListResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("get_room_group_list", new ConcurrentQueue<(int, double)>());
-            try {
+            try
+            {
                 await client.ConnectAsync(address, port);
-                while (true) {
+                while (true)
+                {
                     stopwatch.Restart();
                     await client.GetRoomGroupListAsync();
                     stopwatch.Stop();
                     getRoomGroupListResponseBenchmarkResults.Enqueue((1, stopwatch.ElapsedMilliseconds));
                 }
             }
-            catch (ClientErrorException e) {
+            catch (ClientErrorException e)
+            {
                 Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             client?.Dispose();
         }
 
@@ -72,8 +87,10 @@ namespace PlanetaGameLabo.MatchMaker {
         private readonly ushort port;
         private readonly Stopwatch stopwatch = new Stopwatch();
 
-        private static async Task EternalDelay() {
-            while (true) {
+        private static async Task EternalDelay()
+        {
+            while (true)
+            {
                 await Task.Delay(1000);
             }
         }
