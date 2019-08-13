@@ -15,15 +15,15 @@ namespace pgl {
 		std::shared_ptr<message_handle_parameter> param) {
 
 		authentication_reply_message reply{
-			server_version,
+			api_version,
 			{}
 		};
 
 		// Check if the client version matches the server version. If not, send an error to the client
-		if (message.version != server_version) {
+		if (message.version != api_version) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
 				"Authentication failed. The client version doesn't match to the server version. (server version: ",
-				server_version,
+				api_version,
 				", client version: ", message.version, ")");
 
 			reply_message_header header{

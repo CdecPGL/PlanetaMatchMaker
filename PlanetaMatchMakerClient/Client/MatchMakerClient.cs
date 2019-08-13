@@ -39,7 +39,7 @@ namespace PlanetaGameLabo.MatchMaker {
                 throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
             }
 
-            var requestBody = new AuthenticationRequestMessage {Version = ClientConstants.ClientVersion};
+            var requestBody = new AuthenticationRequestMessage {Version = ClientConstants.ApiVersion};
             await SendRequestAsync(requestBody);
 
             var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>();
