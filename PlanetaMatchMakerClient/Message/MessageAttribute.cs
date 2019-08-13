@@ -5,10 +5,10 @@ using System.Text;
 namespace PlanetaGameLabo.MatchMaker {
     [AttributeUsage(AttributeTargets.Struct)]
     internal sealed class MessageAttribute : Attribute {
-        public MessageAttribute(MessageType message_type) {
-            messageType = message_type;
+        public MessageAttribute(MessageType messageType) {
+            this.MessageType = messageType;
         }
 
-        public MessageType messageType { get; }
+        public MessageType MessageType { get; }
     }
 }

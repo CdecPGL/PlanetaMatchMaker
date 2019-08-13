@@ -8,29 +8,29 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <summary>
         /// true if connected to the server.
         /// </summary>
-        public bool connected => _tcpClient != null && _tcpClient.Connected;
+        public bool Connected => tcpClient != null && tcpClient.Connected;
 
         /// <summary>
         /// true if this client hosting a room.
         /// </summary>
-        public bool isHostingRoom { get; private set; }
+        public bool IsHostingRoom { get; private set; }
 
         /// <summary>
         /// Connect to matching server.
         /// </summary>
-        /// <param name="server_address"></param>
-        /// <param name="server_port"></param>
+        /// <param name="serverAddress"></param>
+        /// <param name="serverPort"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task ConnectAsync(string server_address, ushort server_port) {
-            if (connected) {
+        public async Task ConnectAsync(string serverAddress, ushort serverPort) {
+            if (Connected) {
                 throw new ClientErrorException(ClientErrorCode.AlreadyConnected);
             }
 
             try {
-                _tcpClient = new TcpClient();
-                _tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                await _tcpClient.ConnectAsync(server_address, server_port);
+                tcpClient = new TcpClient();
+                tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                await tcpClient.ConnectAsync(serverAddress, serverPort);
             }
             catch (SocketException e) {
                 throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
@@ -39,25 +39,25 @@ namespace PlanetaGameLabo.MatchMaker {
                 throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
             }
 
-            var request_body = new AuthenticationRequestMessage {version = ClientConstants.clientVersion};
-            await SendRequestAsync(request_body);
+            var requestBody = new AuthenticationRequestMessage {Version = ClientConstants.ClientVersion};
+            await SendRequestAsync(requestBody);
 
-            var reply_body = await ReceiveReplyAsync<AuthenticationReplyMessage>();
-            _sessionKey = reply_body.sessionKey;
+            var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>();
+            sessionKey = replyBody.SessionKey;
         }
 
         /// <summary>
         /// Close the connection.
         /// </summary>
         public void Close() {
-            if (!connected) {
+            if (!Connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
-            _tcpClient.GetStream().Close();
-            _tcpClient.Close();
-            _tcpClient.Dispose();
-            _tcpClient = null;
+            tcpClient.GetStream().Close();
+            tcpClient.Close();
+            tcpClient.Dispose();
+            tcpClient = null;
             OnConnectionClosed();
         }
 
@@ -67,145 +67,145 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task<ListRoomGroupReplyMessage.RoomGroupInfo[]> GetRoomGroupListAsync() {
-            if (!connected) {
+            if (!Connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
-            var request_body = new ListRoomGroupRequestMessage();
-            await SendRequestAsync(request_body);
+            var requestBody = new ListRoomGroupRequestMessage();
+            await SendRequestAsync(requestBody);
 
-            var reply_body = await ReceiveReplyAsync<ListRoomGroupReplyMessage>();
-            return reply_body.roomGroupInfoList.Take(reply_body.roomGroupCount).ToArray();
+            var replyBody = await ReceiveReplyAsync<ListRoomGroupReplyMessage>();
+            return replyBody.RoomGroupInfoList.Take(replyBody.RoomGroupCount).ToArray();
         }
 
         /// <summary>
         /// Create and host new room to the server.
         /// </summary>
-        /// <param name="room_group_index"></param>
-        /// <param name="room_name"></param>
+        /// <param name="roomGroupIndex"></param>
+        /// <param name="roomName"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte room_group_index, string room_name) {
-            if (!connected) {
+        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName) {
+            if (!Connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
-            if (isHostingRoom) {
+            if (IsHostingRoom) {
                 throw new ClientErrorException(ClientErrorCode.AlreadyHostingRoom,
                     "The client can host only one room.");
             }
 
-            var request_body = new CreateRoomRequestMessage {
-                groupIndex = room_group_index,
-                name = room_name
+            var requestBody = new CreateRoomRequestMessage {
+                GroupIndex = roomGroupIndex,
+                Name = roomName
             };
-            await SendRequestAsync(request_body);
+            await SendRequestAsync(requestBody);
 
-            var reply_body = await ReceiveReplyAsync<CreateRoomReplyMessage>();
-            isHostingRoom = true;
-            _hostingRoomGroupIndex = room_group_index;
-            _hostingRoomId = reply_body.roomId;
+            var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>();
+            IsHostingRoom = true;
+            hostingRoomGroupIndex = roomGroupIndex;
+            hostingRoomId = replyBody.RoomId;
         }
 
         /// <summary>
         /// Get a room list from the server.
         /// </summary>
-        /// <param name="room_group_index"></param>
-        /// <param name="start_index"></param>
+        /// <param name="roomGroupIndex"></param>
+        /// <param name="startIndex"></param>
         /// <param name="count"></param>
-        /// <param name="sort_kind"></param>
+        /// <param name="sortKind"></param>
         /// <param name="flags"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task<(int totalRoomCount, ListRoomReplyMessage.RoomInfo[] roomInfoList)> GetRoomList(
-            byte room_group_index, byte start_index,
-            byte count, RoomDataSortKind sort_kind, byte flags) {
-            if (!connected) {
+            byte roomGroupIndex, byte startIndex,
+            byte count, RoomDataSortKind sortKind, byte flags) {
+            if (!Connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
-            var request_body = new ListRoomRequestMessage {
-                groupIndex = room_group_index,
-                startIndex = start_index,
-                endIndex = (byte) (start_index + count - 1),
-                sortKind = sort_kind,
-                flags = flags
+            var requestBody = new ListRoomRequestMessage {
+                GroupIndex = roomGroupIndex,
+                StartIndex = startIndex,
+                EndIndex = (byte) (startIndex + count - 1),
+                SortKind = sortKind,
+                Flags = flags
             };
-            await SendRequestAsync(request_body);
+            await SendRequestAsync(requestBody);
 
-            var reply_body = await ReceiveReplyAsync<ListRoomReplyMessage>();
-            var result = new ListRoomReplyMessage.RoomInfo[reply_body.resultRoomCount];
+            var replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>();
+            var result = new ListRoomReplyMessage.RoomInfo[replyBody.ResultRoomCount];
 
             // Set results of reply to result list
             void SetResult(in ListRoomReplyMessage reply) {
-                for (var i = 0; i < reply.replyRoomEndIndex - reply.replyRoomStartIndex + 1; ++i) {
-                    result[reply.replyRoomStartIndex + i] = reply.roomInfoList[i];
+                for (var i = 0; i < reply.ReplyRoomEndIndex - reply.ReplyRoomStartIndex + 1; ++i) {
+                    result[reply.ReplyRoomStartIndex + i] = reply.RoomInfoList[i];
                 }
             }
 
-            SetResult(reply_body);
+            SetResult(replyBody);
 
-            var separate_count = (reply_body.resultRoomCount - 1) / ClientConstants.listRoomReplyRoomInfoCount + 1;
+            var separateCount = (replyBody.ResultRoomCount - 1) / ClientConstants.ListRoomReplyRoomInfoCount + 1;
 
-            for (var i = 1; i < separate_count; ++i) {
-                reply_body = await ReceiveReplyAsync<ListRoomReplyMessage>();
-                SetResult(reply_body);
+            for (var i = 1; i < separateCount; ++i) {
+                replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>();
+                SetResult(replyBody);
             }
 
-            return (reply_body.totalRoomCount, result);
+            return (replyBody.TotalRoomCount, result);
         }
 
         /// <summary>
         /// Join to a room on the server.
         /// </summary>
-        /// <param name="room_group_index"></param>
-        /// <param name="room_id"></param>
+        /// <param name="roomGroupIndex"></param>
+        /// <param name="roomId"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task<ClientAddress> JoinRoom(byte room_group_index, uint room_id) {
-            if (!connected) {
+        public async Task<ClientAddress> JoinRoom(byte roomGroupIndex, uint roomId) {
+            if (!Connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
-            if (isHostingRoom) {
+            if (IsHostingRoom) {
                 throw new ClientErrorException(ClientErrorCode.AlreadyHostingRoom,
                     "The client hosting a room can't join the room.");
             }
 
-            var request_body = new JoinRoomRequestMessage {
-                groupIndex = room_group_index,
-                roomId = room_id
+            var requestBody = new JoinRoomRequestMessage {
+                GroupIndex = roomGroupIndex,
+                RoomId = roomId
             };
-            await SendRequestAsync(request_body);
+            await SendRequestAsync(requestBody);
 
-            var reply_body = await ReceiveReplyAsync<JoinRoomReplyMessage>();
-            return reply_body.hostAddress;
+            var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>();
+            return replyBody.HostAddress;
         }
 
         /// <summary>
         /// Update hosting room status on the server.
         /// </summary>
-        /// <param name="status"></param>
+        /// <param name="roomStatus"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task UpdateHostingRoomStatus(UpdateRoomStatusNoticeMessage.Status status) {
-            if (!connected) {
+        public async Task UpdateHostingRoomStatus(UpdateRoomStatusNoticeMessage.RoomStatus roomStatus) {
+            if (!Connected) {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
-            if (!isHostingRoom) {
+            if (!IsHostingRoom) {
                 throw new ClientErrorException(ClientErrorCode.NotHostingRoom);
             }
 
-            var request_body = new UpdateRoomStatusNoticeMessage {
-                groupIndex = _hostingRoomGroupIndex,
-                roomId = _hostingRoomId,
-                status = status
+            var requestBody = new UpdateRoomStatusNoticeMessage {
+                GroupIndex = hostingRoomGroupIndex,
+                RoomId = hostingRoomId,
+                Status = roomStatus
             };
-            await SendRequestAsync(request_body);
+            await SendRequestAsync(requestBody);
 
-            if (status == UpdateRoomStatusNoticeMessage.Status.Remove) {
-                isHostingRoom = false;
+            if (roomStatus == UpdateRoomStatusNoticeMessage.RoomStatus.Remove) {
+                IsHostingRoom = false;
             }
         }
 
@@ -215,28 +215,28 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task RemoveHostingRoom() {
-            await UpdateHostingRoomStatus(UpdateRoomStatusNoticeMessage.Status.Remove);
+            await UpdateHostingRoomStatus(UpdateRoomStatusNoticeMessage.RoomStatus.Remove);
         }
 
         public void Dispose() {
-            _tcpClient?.Dispose();
+            tcpClient?.Dispose();
         }
 
-        private TcpClient _tcpClient;
-        private uint _sessionKey;
-        private byte _hostingRoomGroupIndex;
-        private uint _hostingRoomId;
+        private TcpClient tcpClient;
+        private uint sessionKey;
+        private byte hostingRoomGroupIndex;
+        private uint hostingRoomId;
 
         /// <summary>
         /// Send a request or notice message to the server.
         /// </summary>
         /// <typeparam name="T">A type of the message</typeparam>
-        /// <param name="message_body"></param>
+        /// <param name="messageBody"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        private async Task SendRequestAsync<T>(T message_body) {
+        private async Task SendRequestAsync<T>(T messageBody) {
             try {
-                await _tcpClient.SendRequestMessage(message_body, _sessionKey);
+                await tcpClient.SendRequestMessage(messageBody, sessionKey);
             }
             catch (MessageErrorException e) {
                 throw new ClientErrorException(ClientErrorCode.MessageSendError, e.Message);
@@ -255,12 +255,12 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <returns></returns>
         private async Task<T> ReceiveReplyAsync<T>() {
             try {
-                var (error_code, reply_body) = await _tcpClient.ReceiveReplyMessage<T>();
-                if (error_code != MessageErrorCode.Ok) {
-                    throw new ClientErrorException(ClientErrorCode.RequestError, error_code.ToString());
+                var (errorCode, replyBody) = await tcpClient.ReceiveReplyMessage<T>();
+                if (errorCode != MessageErrorCode.Ok) {
+                    throw new ClientErrorException(ClientErrorCode.RequestError, errorCode.ToString());
                 }
 
-                return reply_body;
+                return replyBody;
             }
             catch (MessageErrorException e) {
                 throw new ClientErrorException(ClientErrorCode.MessageReceptionError, e.Message);
@@ -272,7 +272,7 @@ namespace PlanetaGameLabo.MatchMaker {
         }
 
         private void OnConnectionClosed() {
-            isHostingRoom = false;
+            IsHostingRoom = false;
         }
     }
 }

@@ -5,8 +5,8 @@ namespace PlanetaGameLabo.MatchMaker {
     [Serializable]
     public struct ClientAddress {
         [FixedLength(16)]
-        public byte[] IPAddress;
+        public byte[] IpAddress;
 
-        public ushort portNumber;
+        public ushort PortNumber;
     }
 }

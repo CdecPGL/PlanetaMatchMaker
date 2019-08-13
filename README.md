@@ -90,3 +90,13 @@ You can locate a setting file `setting.json` to `.pmms` directory in home direct
 - Command Line Parser v2.6.0 (from NuGet)
 
 ## UnityClient
+
+## Coding Rule
+
+### C++ Project
+
+### Standard C# Project
+
+- Naming Rule: https://qiita.com/Ted-HM/items/67eddbe36b88bf2d441d
+
+### Unity C# Project

@@ -7,10 +7,10 @@ using PlanetaGameLabo.Serializer;
 namespace PlanetaGameLabo.Test {
     [Serializable]
     internal struct FixedStringStruct {
-        [FixedLength(16)] public string str;
+        [FixedLength(16)] public string Str;
 
         public static FixedStringStruct GetDefault() {
-            return new FixedStringStruct {str = "abc"};
+            return new FixedStringStruct {Str = "abc"};
         }
 
         public override bool Equals(object obj) {
@@ -19,21 +19,21 @@ namespace PlanetaGameLabo.Test {
             }
 
             var other = (FixedStringStruct) obj;
-            return str == other.str;
+            return Str == other.Str;
         }
 
         public override string ToString() {
-            return base.ToString() + "(" + str + ")";
+            return base.ToString() + "(" + Str + ")";
         }
     }
 
     [Serializable]
     internal struct FixedArrayStruct {
-        [FixedLength(32)] public int[] array;
+        [FixedLength(32)] public int[] Array;
 
         public static FixedArrayStruct GetDefault() {
             return new FixedArrayStruct {
-                array = new[] {
+                Array = new[] {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                     27, 28, 29, 30, 31
                 }
@@ -46,25 +46,25 @@ namespace PlanetaGameLabo.Test {
             }
 
             var other = (FixedArrayStruct) obj;
-            return array.SequenceEqual(other.array);
+            return Array.SequenceEqual(other.Array);
         }
     }
 
     [Serializable]
     internal struct TestStruct {
-        public short a;
-        public uint b;
-        public double c;
-        [FixedLength(16)] public string str;
-        [FixedLength(32)] public int[] array;
+        public short A;
+        public uint B;
+        public double C;
+        [FixedLength(16)] public string Str;
+        [FixedLength(32)] public int[] Array;
 
         public static TestStruct GetDefault() {
             return new TestStruct {
-                a = -12,
-                b = 3456,
-                c = 3.1415,
-                str = "abcdefg",
-                array = new[] {
+                A = -12,
+                B = 3456,
+                C = 3.1415,
+                Str = "abcdefg",
+                Array = new[] {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                     27, 28, 29, 30, 31
                 }
@@ -77,7 +77,7 @@ namespace PlanetaGameLabo.Test {
             }
 
             var other = (TestStruct) obj;
-            return a == other.a && b == other.b && c == other.c && array.SequenceEqual(other.array);
+            return A == other.A && B == other.B && C == other.C && Array.SequenceEqual(other.Array);
         }
     }
 
@@ -104,15 +104,15 @@ namespace PlanetaGameLabo.Test {
 
     [Serializable]
     internal struct NestedTestStruct {
-        public uint a;
-        public double b;
-        public TestStruct c;
+        public uint A;
+        public double B;
+        public TestStruct C;
 
         public static NestedTestStruct GetDefault() {
             return new NestedTestStruct {
-                a = 12345,
-                b = -123.345,
-                c = TestStruct.GetDefault()
+                A = 12345,
+                B = -123.345,
+                C = TestStruct.GetDefault()
             };
         }
 
@@ -122,7 +122,7 @@ namespace PlanetaGameLabo.Test {
             }
 
             var other = (NestedTestStruct) obj;
-            return a == other.a && b == other.b && c.Equals(other.c);
+            return A == other.A && B == other.B && C.Equals(other.C);
         }
     }
 
@@ -159,51 +159,51 @@ namespace PlanetaGameLabo.Test {
     }
 
     internal struct NotSerializableStruct {
-        public int a;
+        public int A;
     }
 
     [Serializable]
     internal class NotSequentialClass {
-        public int a;
+        public int A;
     }
 
     [Serializable]
     internal struct NotFixedStringStruct {
-        public string str;
+        public string Str;
     }
 
     [Serializable]
     internal struct NotFixedArrayStruct {
-        public int[] a;
+        public int[] A;
     }
 
     [Serializable]
     internal struct TooLongFixedStringStruct {
-        [FixedLength(16)] public string str;
+        [FixedLength(16)] public string Str;
 
         public static TooLongFixedStringStruct GetDefault() {
-            return new TooLongFixedStringStruct {str = "abcdefghijklmnopqrstuvwxyz"};
+            return new TooLongFixedStringStruct {Str = "abcdefghijklmnopqrstuvwxyz"};
         }
     }
 
     [Serializable]
     internal struct TooLongFixedArrayStruct {
-        [FixedLength(32)] public int[] array;
+        [FixedLength(32)] public int[] Array;
 
         public static TooLongFixedArrayStruct GetDefault() {
             return new TooLongFixedArrayStruct {
-                array = new int[64]
+                Array = new int[64]
             };
         }
     }
 
     [Serializable]
     internal struct TooShortFixedArrayStruct {
-        [FixedLength(32)] public int[] array;
+        [FixedLength(32)] public int[] Array;
 
         public static TooShortFixedArrayStruct GetDefault() {
             return new TooShortFixedArrayStruct {
-                array = new int[16]
+                Array = new int[16]
             };
         }
     }

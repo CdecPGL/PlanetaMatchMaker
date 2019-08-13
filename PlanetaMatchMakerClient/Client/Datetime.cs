@@ -7,30 +7,30 @@ namespace PlanetaGameLabo.MatchMaker {
 
         public Datetime(int year, int month, int day, int hour, int minute, int second) {
             var datetime = new DateTime(year, month, day, hour, minute, second);
-            _unixTime = new DateTimeOffset(datetime.Ticks, new TimeSpan(0, 0, 0)).ToUnixTimeSeconds();
+            unixTime = new DateTimeOffset(datetime.Ticks, new TimeSpan(0, 0, 0)).ToUnixTimeSeconds();
         }
 
-        public int year => GetUtcDatetime().Year;
+        public int Year => GetUtcDatetime().Year;
 
-        public int month => GetUtcDatetime().Month;
+        public int Month => GetUtcDatetime().Month;
 
-        public int day => GetUtcDatetime().Day;
+        public int Day => GetUtcDatetime().Day;
 
-        public int hour => GetUtcDatetime().Hour;
+        public int Hour => GetUtcDatetime().Hour;
 
-        public int minute => GetUtcDatetime().Minute;
+        public int Minute => GetUtcDatetime().Minute;
 
-        public int second => GetUtcDatetime().Second;
+        public int Second => GetUtcDatetime().Second;
 
         public static Datetime Now() {
             var now = DateTime.UtcNow;
             return new Datetime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
         }
 
-        private long _unixTime;
+        private readonly long unixTime;
 
         private DateTime GetUtcDatetime() {
-            return DateTimeOffset.FromUnixTimeSeconds(_unixTime).UtcDateTime;
+            return DateTimeOffset.FromUnixTimeSeconds(unixTime).UtcDateTime;
         }
     }
 }

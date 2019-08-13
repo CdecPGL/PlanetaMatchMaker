@@ -55,37 +55,37 @@ namespace PlanetaGameLabo.MatchMaker {
     // 5 bytes. Use for notice message too
     [Serializable]
     public struct RequestMessageHeader {
-        public MessageType messageType;
-        public SessionKeyType sessionKey;
+        public MessageType MessageType;
+        public SessionKeyType SessionKey;
     }
 
     // 2 bytes
     [Serializable]
     public struct ReplyMessageHeader {
-        public MessageType messageType;
-        public MessageErrorCode errorCode;
+        public MessageType MessageType;
+        public MessageErrorCode ErrorCode;
     }
 
     // 2 bytes
     [Serializable]
     [Message(MessageType.AuthenticationRequest)]
     public struct AuthenticationRequestMessage {
-        public VersionType version;
+        public VersionType Version;
     }
 
     // 6 bytes
     [Serializable]
     [Message(MessageType.AuthenticationReply)]
     public struct AuthenticationReplyMessage {
-        public VersionType version;
-        public SessionKeyType sessionKey;
+        public VersionType Version;
+        public SessionKeyType SessionKey;
     }
 
     // 1 bytes
     [Serializable]
     [Message(MessageType.ListRoomGroupRequest)]
     public struct ListRoomGroupRequestMessage {
-        public byte dummy;
+        public byte Dummy;
     }
 
     // 241 bytes
@@ -94,49 +94,49 @@ namespace PlanetaGameLabo.MatchMaker {
     public struct ListRoomGroupReplyMessage {
         [Serializable]
         public struct RoomGroupInfo {
-            [FixedLength(ClientConstants.roomGroupNameLength)]
-            public string name;
+            [FixedLength(ClientConstants.RoomGroupNameLength)]
+            public string Name;
         }
 
-        public byte roomGroupCount;
+        public byte RoomGroupCount;
 
-        [FixedLength(ClientConstants.roomGroupMaxCount)]
-        public RoomGroupInfo[] roomGroupInfoList;
+        [FixedLength(ClientConstants.RoomGroupMaxCount)]
+        public RoomGroupInfo[] RoomGroupInfoList;
     }
 
     // 43 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     public struct CreateRoomRequestMessage {
-        public RoomGroupIndexType groupIndex;
+        public RoomGroupIndexType GroupIndex;
 
-        [FixedLength(ClientConstants.roomNameLength)]
-        public string name;
+        [FixedLength(ClientConstants.RoomNameLength)]
+        public string Name;
 
-        public RoomFlag flags;
+        public RoomFlag Flags;
 
-        [FixedLength(ClientConstants.roomPasswordLength)]
-        public string password;
+        [FixedLength(ClientConstants.RoomPasswordLength)]
+        public string Password;
 
-        public byte maxPlayerCount;
+        public byte MaxPlayerCount;
     }
 
     // 4 bytes
     [Serializable]
     [Message(MessageType.CreateRoomReply)]
     public struct CreateRoomReplyMessage {
-        public RoomIdType roomId;
+        public RoomIdType RoomId;
     }
 
     // 5 bytes
     [Serializable]
     [Message(MessageType.ListRoomRequest)]
     public struct ListRoomRequestMessage {
-        public RoomGroupIndexType groupIndex;
-        public byte startIndex;
-        public byte endIndex;
-        public RoomDataSortKind sortKind;
-        public byte flags; //filter conditions about room
+        public RoomGroupIndexType GroupIndex;
+        public byte StartIndex;
+        public byte EndIndex;
+        public RoomDataSortKind SortKind;
+        public byte Flags; //filter conditions about room
     }
 
     // 238 bytes
@@ -146,56 +146,56 @@ namespace PlanetaGameLabo.MatchMaker {
         //39 bytes
         [Serializable]
         public struct RoomInfo {
-            public RoomIdType roomId;
+            public RoomIdType RoomId;
 
-            [FixedLength(ClientConstants.roomNameLength)]
-            public string name;
+            [FixedLength(ClientConstants.RoomNameLength)]
+            public string Name;
 
-            public RoomFlag flags;
-            public byte maxPlayerCount;
-            public byte currentPlayerCount;
-            public Datetime createDatetime;
+            public RoomFlag Flags;
+            public byte MaxPlayerCount;
+            public byte CurrentPlayerCount;
+            public Datetime CreateDatetime;
         }
 
-        public byte totalRoomCount; // the number of rooms server managing
-        public byte resultRoomCount; // the number of rooms for request
-        public byte replyRoomStartIndex; // the index of start room in this message
-        public byte replyRoomEndIndex; // the index of end room in this message
+        public byte TotalRoomCount; // the number of rooms server managing
+        public byte ResultRoomCount; // the number of rooms for request
+        public byte ReplyRoomStartIndex; // the index of start room in this message
+        public byte ReplyRoomEndIndex; // the index of end room in this message
 
-        [FixedLength(ClientConstants.listRoomReplyRoomInfoCount)]
-        public RoomInfo[] roomInfoList;
+        [FixedLength(ClientConstants.ListRoomReplyRoomInfoCount)]
+        public RoomInfo[] RoomInfoList;
     }
 
     // 21 bytes
     [Serializable]
     [Message(MessageType.JoinRoomRequest)]
     public struct JoinRoomRequestMessage {
-        public RoomGroupIndexType groupIndex;
-        public RoomIdType roomId;
+        public RoomGroupIndexType GroupIndex;
+        public RoomIdType RoomId;
 
-        [FixedLength(ClientConstants.roomPasswordLength)]
-        public string password;
+        [FixedLength(ClientConstants.RoomPasswordLength)]
+        public string Password;
     }
 
     //18 bytes
     [Serializable]
     [Message(MessageType.JoinRoomReply)]
     public struct JoinRoomReplyMessage {
-        public ClientAddress hostAddress;
+        public ClientAddress HostAddress;
     }
 
     // 6 bytes
     [Serializable]
     [Message(MessageType.UpdateRoomStatusNotice)]
     public struct UpdateRoomStatusNoticeMessage {
-        public enum Status : byte {
+        public enum RoomStatus : byte {
             Open,
             Close,
             Remove
         }
 
-        public RoomGroupIndexType groupIndex;
-        public RoomIdType roomId;
-        public Status status;
+        public RoomGroupIndexType GroupIndex;
+        public RoomIdType RoomId;
+        public RoomStatus Status;
     }
 }

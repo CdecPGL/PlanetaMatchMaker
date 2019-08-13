@@ -34,32 +34,32 @@ namespace PlanetaGameLabo.Serializer {
             return (T) obj;
         }
 
-        private static readonly HashSet<Type> _directSerializableTypeSet = new HashSet<Type>() {
+        private static readonly HashSet<Type> DirectSerializableTypeSet = new HashSet<Type>() {
             typeof(bool), typeof(byte), typeof(sbyte),
             typeof(double), typeof(short), typeof(int), typeof(long),
             typeof(float), typeof(ushort), typeof(uint), typeof(ulong)
         };
 
-        private static readonly Dictionary<Type, Func<byte[], int, object>> _bytesToDirectSerializableTypeConverterDict
+        private static readonly Dictionary<Type, Func<byte[], int, object>> BytesToDirectSerializableTypeConverterDict
             = new Dictionary<Type, Func<byte[], int, object>>() {
-                {typeof(bool), (bytes, start_idx) => BitConverter.ToBoolean(bytes, start_idx)},
-                {typeof(byte), (bytes, start_idx) => bytes[start_idx]},
-                {typeof(sbyte), (bytes, start_idx) => (sbyte) bytes[start_idx]},
-                {typeof(double), (bytes, start_idx) => BitConverter.ToDouble(bytes, start_idx)},
-                {typeof(short), (bytes, start_idx) => BitConverter.ToInt16(bytes, start_idx)},
-                {typeof(int), (bytes, start_idx) => BitConverter.ToInt32(bytes, start_idx)},
-                {typeof(long), (bytes, start_idx) => BitConverter.ToInt64(bytes, start_idx)},
-                {typeof(float), (bytes, start_idx) => BitConverter.ToSingle(bytes, start_idx)},
-                {typeof(ushort), (bytes, start_idx) => BitConverter.ToUInt16(bytes, start_idx)},
-                {typeof(uint), (bytes, start_idx) => BitConverter.ToUInt32(bytes, start_idx)},
-                {typeof(ulong), (bytes, start_idx) => BitConverter.ToUInt64(bytes, start_idx)},
+                {typeof(bool), (bytes, startIdx) => BitConverter.ToBoolean(bytes, startIdx)},
+                {typeof(byte), (bytes, startIdx) => bytes[startIdx]},
+                {typeof(sbyte), (bytes, startIdx) => (sbyte) bytes[startIdx]},
+                {typeof(double), (bytes, startIdx) => BitConverter.ToDouble(bytes, startIdx)},
+                {typeof(short), (bytes, startIdx) => BitConverter.ToInt16(bytes, startIdx)},
+                {typeof(int), (bytes, startIdx) => BitConverter.ToInt32(bytes, startIdx)},
+                {typeof(long), (bytes, startIdx) => BitConverter.ToInt64(bytes, startIdx)},
+                {typeof(float), (bytes, startIdx) => BitConverter.ToSingle(bytes, startIdx)},
+                {typeof(ushort), (bytes, startIdx) => BitConverter.ToUInt16(bytes, startIdx)},
+                {typeof(uint), (bytes, startIdx) => BitConverter.ToUInt32(bytes, startIdx)},
+                {typeof(ulong), (bytes, startIdx) => BitConverter.ToUInt64(bytes, startIdx)},
             };
 
-        private static readonly Dictionary<Type, int> _serializedSizeCache = new Dictionary<Type, int>();
+        private static readonly Dictionary<Type, int> SerializedSizeCache = new Dictionary<Type, int>();
 
         private static int GetSerializedSizeImpl(Type type) {
-            if (_serializedSizeCache.ContainsKey(type)) {
-                return _serializedSizeCache[type];
+            if (SerializedSizeCache.ContainsKey(type)) {
+                return SerializedSizeCache[type];
             }
 
             int size;
@@ -78,7 +78,7 @@ namespace PlanetaGameLabo.Serializer {
                     $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
             }
 
-            _serializedSizeCache.Add(type, size);
+            SerializedSizeCache.Add(type, size);
             return size;
         }
 
@@ -97,8 +97,8 @@ namespace PlanetaGameLabo.Serializer {
 
         private static int GetSerializedSizeOfFieldSerializableType(FieldInfo field, Type type) {
             // check cache here because this method doesn't called by GetSerializableSizeImpl, which checks cache
-            if (_serializedSizeCache.ContainsKey(type)) {
-                return _serializedSizeCache[type];
+            if (SerializedSizeCache.ContainsKey(type)) {
+                return SerializedSizeCache[type];
             }
 
             int size;
@@ -108,9 +108,9 @@ namespace PlanetaGameLabo.Serializer {
             }
             else if (field.FieldType.IsArray) {
                 var length = GetLengthOfFixedLengthAttribute(field);
-                var element_type = field.FieldType.GetElementType();
-                size = GetSerializedSizeImpl(element_type) * length;
-                // Not add to cache because the size is not fixed for same array tipe.
+                var elementType = field.FieldType.GetElementType();
+                size = GetSerializedSizeImpl(elementType) * length;
+                // Not add to cache because the size is not fixed for same array type.
             }
             else {
                 throw new InvalidSerializationException("Invalid type.");
@@ -207,22 +207,22 @@ namespace PlanetaGameLabo.Serializer {
         }
 
         private static void
-            SerializeFieldSerializableType(object owner_obj, FieldInfo field, byte[] destination, ref int pos) {
-            var obj = field.GetValue(owner_obj);
+            SerializeFieldSerializableType(object ownerObj, FieldInfo field, byte[] destination, ref int pos) {
+            var obj = field.GetValue(ownerObj);
             if (field.FieldType == typeof(string)) {
-                var max_length = GetLengthOfFixedLengthAttribute(field);
+                var maxLength = GetLengthOfFixedLengthAttribute(field);
                 // Encoding.UTF8.GetBytes doesn't include '\0' of end
                 var data = Encoding.UTF8.GetBytes((string) obj);
-                if (data.Length > max_length) {
+                if (data.Length > maxLength) {
                     throw new InvalidSerializationException(
-                        $"The length of string ({data.Length}) exceeds max length indicated by attribute ({max_length}).");
+                        $"The length of string ({data.Length}) exceeds max length indicated by attribute ({maxLength}).");
                 }
 
-                for (var i = 0; i < max_length; ++i) {
+                for (var i = 0; i < maxLength; ++i) {
                     destination[pos + i] = i < data.Length ? data[i] : (byte) '\0';
                 }
 
-                pos += max_length;
+                pos += maxLength;
             }
             else if (field.FieldType.IsArray) {
                 var length = GetLengthOfFixedLengthAttribute(field);
@@ -284,8 +284,8 @@ namespace PlanetaGameLabo.Serializer {
             }
 
             try {
-                if (_bytesToDirectSerializableTypeConverterDict.ContainsKey(type)) {
-                    obj = _bytesToDirectSerializableTypeConverterDict[type](source, pos);
+                if (BytesToDirectSerializableTypeConverterDict.ContainsKey(type)) {
+                    obj = BytesToDirectSerializableTypeConverterDict[type](source, pos);
                 }
                 else {
                     throw new InvalidSerializationException("Invalid type for serialization.");
@@ -301,34 +301,34 @@ namespace PlanetaGameLabo.Serializer {
             pos += size;
         }
 
-        private static void DeserializeFieldSerializableType(object owner_obj, FieldInfo field, byte[] source,
+        private static void DeserializeFieldSerializableType(object ownerObj, FieldInfo field, byte[] source,
             ref int pos) {
             object obj;
             if (field.FieldType == typeof(string)) {
-                var max_length = GetLengthOfFixedLengthAttribute(field);
-                var real_length = Array.IndexOf(source, (byte) '\0', pos, max_length) - pos;
-                if (real_length < 0) {
-                    real_length = max_length;
+                var maxLength = GetLengthOfFixedLengthAttribute(field);
+                var realLength = Array.IndexOf(source, (byte) '\0', pos, maxLength) - pos;
+                if (realLength < 0) {
+                    realLength = maxLength;
                 }
 
-                obj = Encoding.UTF8.GetString(source, pos, real_length);
-                pos += max_length;
+                obj = Encoding.UTF8.GetString(source, pos, realLength);
+                pos += maxLength;
             }
             else if (field.FieldType.IsArray) {
                 var length = GetLengthOfFixedLengthAttribute(field);
                 obj = Activator.CreateInstance(field.FieldType, length);
                 var array = (Array) obj;
-                var element_type = field.FieldType.GetElementType();
+                var elementType = field.FieldType.GetElementType();
                 for (var i = 0; i < length; ++i) {
-                    DeserializeImpl(element_type, source, ref pos, out var element_obj);
-                    array.SetValue(element_obj, i);
+                    DeserializeImpl(elementType, source, ref pos, out var elementObj);
+                    array.SetValue(elementObj, i);
                 }
             }
             else {
                 throw new InvalidSerializationException("Invalid type.");
             }
 
-            field.SetValue(owner_obj, obj);
+            field.SetValue(ownerObj, obj);
         }
 
         private static void
@@ -342,23 +342,23 @@ namespace PlanetaGameLabo.Serializer {
                     DeserializeFieldSerializableType(obj, field, source, ref pos);
                 }
                 else {
-                    DeserializeImpl(field.FieldType, source, ref pos, out var field_obj);
-                    field.SetValue(obj, field_obj);
+                    DeserializeImpl(field.FieldType, source, ref pos, out var fieldObj);
+                    field.SetValue(obj, fieldObj);
                 }
             }
         }
 
         private static int GetLengthOfFixedLengthAttribute(FieldInfo field) {
-            var fixed_length_attribute = field.GetCustomAttribute<FixedLengthAttribute>();
-            if (fixed_length_attribute == null) {
+            var fixedLengthAttribute = field.GetCustomAttribute<FixedLengthAttribute>();
+            if (fixedLengthAttribute == null) {
                 throw new InvalidSerializationException("There is no FixedLengthAttribute set to the field.");
             }
 
-            return fixed_length_attribute.length;
+            return fixedLengthAttribute.Length;
         }
 
         private static bool IsDirectSerializableType(Type type) {
-            return _directSerializableTypeSet.Contains(type) || type.IsEnum;
+            return DirectSerializableTypeSet.Contains(type) || type.IsEnum;
         }
 
         private static bool IsFieldSerializableType(Type type) {
