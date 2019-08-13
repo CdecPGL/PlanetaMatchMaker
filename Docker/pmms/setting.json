@@ -3,7 +3,7 @@
     "time_out_seconds": 300,
     "log_level": "info",
     "ip_version": "v4",
-    "port": 7777,
+    "port": 57000,
     "max_connection_per_thread": 1000,
     "thread": 1,
     "max_room_per_room_group": 100,
