@@ -40,8 +40,11 @@ A match making server and client for network game.
 # install neccesarry packages
 sudo yum -y install git
 sudo yum -y install wget
-sudo yum -y install gcc-c++ # use for build latest g++
+sudo yum -y install gcc-c++ # use for build latest clang
 sudo yum -y install bzip2 # use for installing latest g++
+
+sudo yum -y install centos-release-scl
+
 # install boost library 1.70+
 install boost?
 # install latest cmake manually because cmake installed through yum is old.
@@ -55,28 +58,23 @@ vi ~/.bashrc # add PATH=$PATH:/opt/cmake/bin
 source ~/.bashrc
 cmake -version # check if cmake is installed successfully.
 cd ~
-# install latest g++ manually because g++ installed through yum is old.
+# install latest clang manually because clang installed through yum is old. http://clang.llvm.org/get_started.html
 cd ~
-wget http://ftp.tsukuba.wide.ad.jp/software/gcc/releases/gcc-9.1.0/gcc-9.1.0.tar.gz
-tar zxvf gcc-9.1.0.tar.gz
-cd gcc-9.1.0
-./contrib/download_prerequisites
+git clone https://github.com/llvm/llvm-project.git
+cd llvm-project
 mkdir build
 cd build
-../configure --enable-languages=c++ --prefix=/usr/local --disable-bootstrap --disable-multilib
-make # make will fail with too small memory
-sudo make install # g++ will be installed in /usr/local/lib64
-g++ --version # check if g++ is installed successfully.
+cmake -DCMAKE_CXX_COMPILER=g++ -DLLVM_ENABLE_PROJECTS=clang -G "Unix Makefiles" ../llvm
 # build match maker server
 git clone https://github.com/CdecPGL/PlanetaMatchMaker.git
 cd PlanetaMatchMaker
 mkdir build
 cd build
-cmake ..
+cmake  -DCMAKE_CXX_COMPILER=clang++ ..
 make
-# sudo make install
-# PlanetaMatchMakerServer
-# vi ~/.planeta_match_maker_server/setting.json
+sudo make install
+# change setting if need
+vi ~/.pmms/setting.json
 ```
 
 ### Setting File
