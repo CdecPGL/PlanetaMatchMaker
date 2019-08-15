@@ -1,13 +1,15 @@
 ﻿using System;
 using PlanetaGameLabo.Serializer;
 
-namespace PlanetaGameLabo.MatchMaker {
+namespace PlanetaGameLabo.MatchMaker
+{
     using SessionKeyType = UInt32;
     using VersionType = UInt16;
     using RoomGroupIndexType = Byte;
     using RoomIdType = UInt32;
 
-    public enum MessageErrorCode : byte {
+    internal enum MessageErrorCode : byte
+    {
         Ok,
         UnknownError,
         VersionMismatch,
@@ -22,7 +24,8 @@ namespace PlanetaGameLabo.MatchMaker {
         RoomGroupIndexOutOfRange,
     };
 
-    public enum MessageType : byte {
+    internal enum MessageType : byte
+    {
         AuthenticationRequest,
         AuthenticationReply,
         ListRoomGroupRequest,
@@ -37,165 +40,159 @@ namespace PlanetaGameLabo.MatchMaker {
         RandomMatchRequest
     }
 
-    [Serializable]
-    [Flags]
-    public enum RoomFlag : byte {
-        IsPrivate = 1,
-        IsOpen = 2
-    }
-
-    [Serializable]
-    public enum RoomDataSortKind : byte {
-        NameAscending,
-        NameDescending,
-        CreateDatetimeAscending,
-        CreateDatetimeDescending
-    }
-
     // 5 bytes. Use for notice message too
     [Serializable]
-    public struct RequestMessageHeader {
-        public MessageType messageType;
-        public SessionKeyType sessionKey;
+    internal struct RequestMessageHeader
+    {
+        public MessageType MessageType;
+        public SessionKeyType SessionKey;
     }
 
     // 2 bytes
     [Serializable]
-    public struct ReplyMessageHeader {
-        public MessageType messageType;
-        public MessageErrorCode errorCode;
+    internal struct ReplyMessageHeader
+    {
+        public MessageType MessageType;
+        public MessageErrorCode ErrorCode;
     }
 
     // 2 bytes
     [Serializable]
     [Message(MessageType.AuthenticationRequest)]
-    public struct AuthenticationRequestMessage {
-        public VersionType version;
+    internal struct AuthenticationRequestMessage
+    {
+        public VersionType Version;
     }
 
     // 6 bytes
     [Serializable]
     [Message(MessageType.AuthenticationReply)]
-    public struct AuthenticationReplyMessage {
-        public VersionType version;
-        public SessionKeyType sessionKey;
+    internal struct AuthenticationReplyMessage
+    {
+        public VersionType Version;
+        public SessionKeyType SessionKey;
     }
 
     // 1 bytes
     [Serializable]
     [Message(MessageType.ListRoomGroupRequest)]
-    public struct ListRoomGroupRequestMessage {
-        public byte dummy;
+    internal struct ListRoomGroupRequestMessage
+    {
+        public byte Dummy;
     }
 
     // 241 bytes
     [Serializable]
     [Message(MessageType.ListRoomGroupReply)]
-    public struct ListRoomGroupReplyMessage {
+    internal struct ListRoomGroupReplyMessage
+    {
         [Serializable]
-        public struct RoomGroupInfo {
-            [FixedLength(ClientConstants.roomGroupNameLength)]
-            public string name;
+        public struct RoomGroupInfo
+        {
+            [FixedLength(RoomConstants.RoomGroupNameLength)]
+            public string Name;
         }
 
-        public byte roomGroupCount;
+        public byte RoomGroupCount;
 
-        [FixedLength(ClientConstants.roomGroupMaxCount)]
-        public RoomGroupInfo[] roomGroupInfoList;
+        [FixedLength(RoomConstants.RoomGroupMaxCount)]
+        public RoomGroupInfo[] RoomGroupInfoList;
     }
 
     // 43 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
-    public struct CreateRoomRequestMessage {
-        public RoomGroupIndexType groupIndex;
+    internal struct CreateRoomRequestMessage
+    {
+        public RoomGroupIndexType GroupIndex;
 
-        [FixedLength(ClientConstants.roomNameLength)]
-        public string name;
+        [FixedLength(RoomConstants.RoomNameLength)]
+        public string Name;
 
-        public RoomFlag flags;
+        public RoomFlag Flags;
 
-        [FixedLength(ClientConstants.roomPasswordLength)]
-        public string password;
+        [FixedLength(RoomConstants.RoomPasswordLength)]
+        public string Password;
 
-        public byte maxPlayerCount;
+        public byte MaxPlayerCount;
     }
 
     // 4 bytes
     [Serializable]
     [Message(MessageType.CreateRoomReply)]
-    public struct CreateRoomReplyMessage {
-        public RoomIdType roomId;
+    internal struct CreateRoomReplyMessage
+    {
+        public RoomIdType RoomId;
     }
 
     // 5 bytes
     [Serializable]
     [Message(MessageType.ListRoomRequest)]
-    public struct ListRoomRequestMessage {
-        public RoomGroupIndexType groupIndex;
-        public byte startIndex;
-        public byte endIndex;
-        public RoomDataSortKind sortKind;
-        public byte flags; //filter conditions about room
+    internal struct ListRoomRequestMessage
+    {
+        public RoomGroupIndexType GroupIndex;
+        public byte StartIndex;
+        public byte EndIndex;
+        public RoomDataSortKind SortKind;
+        public byte Flags; //filter conditions about room
     }
 
     // 238 bytes
     [Serializable]
     [Message(MessageType.ListRoomReply)]
-    public struct ListRoomReplyMessage {
+    internal struct ListRoomReplyMessage
+    {
         //39 bytes
         [Serializable]
-        public struct RoomInfo {
-            public RoomIdType roomId;
+        public struct RoomInfo
+        {
+            public RoomIdType RoomId;
 
-            [FixedLength(ClientConstants.roomNameLength)]
-            public string name;
+            [FixedLength(RoomConstants.RoomNameLength)]
+            public string Name;
 
-            public RoomFlag flags;
-            public byte maxPlayerCount;
-            public byte currentPlayerCount;
-            public Datetime createDatetime;
+            public RoomFlag Flags;
+            public byte MaxPlayerCount;
+            public byte CurrentPlayerCount;
+            public Datetime CreateDatetime;
         }
 
-        public byte totalRoomCount; // the number of rooms server managing
-        public byte resultRoomCount; // the number of rooms for request
-        public byte replyRoomStartIndex; // the index of start room in this message
-        public byte replyRoomEndIndex; // the index of end room in this message
+        public byte TotalRoomCount; // the number of rooms server managing
+        public byte ResultRoomCount; // the number of rooms for request
+        public byte ReplyRoomStartIndex; // the index of start room in this message
+        public byte ReplyRoomEndIndex; // the index of end room in this message
 
-        [FixedLength(ClientConstants.listRoomReplyRoomInfoCount)]
-        public RoomInfo[] roomInfoList;
+        [FixedLength(RoomConstants.ListRoomReplyRoomInfoCount)]
+        public RoomInfo[] RoomInfoList;
     }
 
     // 21 bytes
     [Serializable]
     [Message(MessageType.JoinRoomRequest)]
-    public struct JoinRoomRequestMessage {
-        public RoomGroupIndexType groupIndex;
-        public RoomIdType roomId;
+    internal struct JoinRoomRequestMessage
+    {
+        public RoomGroupIndexType GroupIndex;
+        public RoomIdType RoomId;
 
-        [FixedLength(ClientConstants.roomPasswordLength)]
-        public string password;
+        [FixedLength(RoomConstants.RoomPasswordLength)]
+        public string Password;
     }
 
     //18 bytes
     [Serializable]
     [Message(MessageType.JoinRoomReply)]
-    public struct JoinRoomReplyMessage {
-        public ClientAddress hostAddress;
+    internal struct JoinRoomReplyMessage
+    {
+        public ClientAddress HostAddress;
     }
 
     // 6 bytes
     [Serializable]
     [Message(MessageType.UpdateRoomStatusNotice)]
-    public struct UpdateRoomStatusNoticeMessage {
-        public enum Status : byte {
-            Open,
-            Close,
-            Remove
-        }
-
-        public RoomGroupIndexType groupIndex;
-        public RoomIdType roomId;
-        public Status status;
+    internal struct UpdateRoomStatusNoticeMessage
+    {
+        public RoomGroupIndexType GroupIndex;
+        public RoomIdType RoomId;
+        public RoomStatus Status;
     }
 }

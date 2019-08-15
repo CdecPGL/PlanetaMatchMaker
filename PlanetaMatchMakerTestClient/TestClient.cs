@@ -3,77 +3,94 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace PlanetaGameLabo.MatchMaker {
-    internal sealed class TestClient : IDisposable {
-        public TestClient(string address, ushort port) {
-            _client = new MatchMakerClient();
-            _address = address;
-            _port = port;
+namespace PlanetaGameLabo.MatchMaker
+{
+    internal sealed class TestClient : IDisposable
+    {
+        public TestClient(string address, ushort port)
+        {
+            client = new MatchMakerClient();
+            this.address = address;
+            this.port = port;
         }
 
         public async Task
-            RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmark_results) {
-            var connection_response_benchmark_results =
-                benchmark_results.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
-            try {
-                _stopwatch.Restart();
-                await _client.ConnectAsync(_address, _port);
-                _stopwatch.Stop();
-                connection_response_benchmark_results.Enqueue((1, _stopwatch.ElapsedMilliseconds));
+            RunConnectAndStayTest(ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults)
+        {
+            var connectionResponseBenchmarkResults =
+                benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
+            try
+            {
+                stopwatch.Restart();
+                await client.ConnectAsync(address, port);
+                stopwatch.Stop();
+                connectionResponseBenchmarkResults.Enqueue((1, stopwatch.ElapsedMilliseconds));
                 await EternalDelay();
             }
-            catch (ClientErrorException e) {
+            catch (ClientErrorException e)
+            {
                 Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
         public async Task RunConnectAndDisconnectTest(
-            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmark_results) {
-            var connection_response_benchmark_results =
-                benchmark_results.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
-            try {
-                while (true) {
-                    _stopwatch.Restart();
-                    await _client.ConnectAsync(_address, _port);
-                    _stopwatch.Stop();
-                    connection_response_benchmark_results.Enqueue((1, _stopwatch.ElapsedMilliseconds));
-                    _client.Close();
+            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults)
+        {
+            var connectionResponseBenchmarkResults =
+                benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
+            try
+            {
+                while (true)
+                {
+                    stopwatch.Restart();
+                    await client.ConnectAsync(address, port);
+                    stopwatch.Stop();
+                    connectionResponseBenchmarkResults.Enqueue((1, stopwatch.ElapsedMilliseconds));
+                    client.Close();
                 }
             }
-            catch (ClientErrorException e) {
+            catch (ClientErrorException e)
+            {
                 Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
         public async Task RunGetRoomGroupListTest(
-            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmark_results) {
-            var get_room_group_list_response_benchmark_results =
-                benchmark_results.GetOrAdd("get_room_group_list", new ConcurrentQueue<(int, double)>());
-            try {
-                await _client.ConnectAsync(_address, _port);
-                while (true) {
-                    _stopwatch.Restart();
-                    await _client.GetRoomGroupListAsync();
-                    _stopwatch.Stop();
-                    get_room_group_list_response_benchmark_results.Enqueue((1, _stopwatch.ElapsedMilliseconds));
+            ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults)
+        {
+            var getRoomGroupListResponseBenchmarkResults =
+                benchmarkResults.GetOrAdd("get_room_group_list", new ConcurrentQueue<(int, double)>());
+            try
+            {
+                await client.ConnectAsync(address, port);
+                while (true)
+                {
+                    stopwatch.Restart();
+                    await client.GetRoomGroupListAsync();
+                    stopwatch.Stop();
+                    getRoomGroupListResponseBenchmarkResults.Enqueue((1, stopwatch.ElapsedMilliseconds));
                 }
             }
-            catch (ClientErrorException e) {
+            catch (ClientErrorException e)
+            {
                 Console.WriteLine($"Client error: {e.Message}");
             }
         }
 
-        public void Dispose() {
-            _client?.Dispose();
+        public void Dispose()
+        {
+            client?.Dispose();
         }
 
-        private readonly MatchMakerClient _client;
-        private readonly string _address;
-        private readonly ushort _port;
-        private readonly Stopwatch _stopwatch = new Stopwatch();
+        private readonly MatchMakerClient client;
+        private readonly string address;
+        private readonly ushort port;
+        private readonly Stopwatch stopwatch = new Stopwatch();
 
-        private static async Task EternalDelay() {
-            while (true) {
+        private static async Task EternalDelay()
+        {
+            while (true)
+            {
                 await Task.Delay(1000);
             }
         }

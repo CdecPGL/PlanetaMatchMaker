@@ -6,76 +6,66 @@ A match making server and client for network game.
 
 ### Dependencies
 
-- Boost Library 1.70 (from vcpgk)
-- CMake 3.15
+- Boost Library 1.70
+- CMake 3.8
 
 ### Functions
 
 - Create rooms and join rooms
 - Random match making (not implemented)
 
-### Environment Requirement
+### Supported Platforms
 
 - Windowds 7 or higher
-- Linux
+- Linux(Ubuntu)
+- Docker
 
 ### Build
 
 #### Windows
 
-1. Install Boost Library 1.70 or higher
-1. Install a compiler (at least, VC++15.7, g++7 or clang5) which is compatible with C++17
-1. Unknown
+1. Install a compiler (VC++15.7, g++7 or clang5) which is compatible with C++17
+1. Install vcpkg
+1. Install Boost Library 1.70 or higher by vcpkg
+1. Execute (1) or (2) process
+1. (1)Open PlanetaMatchMaker.sln and build PlanetaMatchMakerServer project
+1. (2)Install cmake
+1. (2)mkdir build
+1. (2)cmake ..
+1. (2)make install
 
-#### Linux
+#### Linux(Ubuntu)
 
-1. Install CMake
-1. mkdir build
-1. cmake ..
-1. make
+Install by refering to Docker/pmms/Dockerfile .
 
-##### Ex. Cent OS 7
+Ubuntu18.0.4 is supported.
 
-```bash
-# install neccesarry packages
-sudo yum -y install git
-sudo yum -y install wget
-sudo yum -y install gcc-c++ # use for build latest clang
-sudo yum -y install bzip2 # use for installing latest g++
+#### Docker
 
-sudo yum -y install centos-release-scl
+1. Install Git
+1. Install Docker and Docker-Compose
+1. Clone https://github.com/CdecPGL/PlanetaMatchMaker.git
+1. Move to Docker directory in the cloned repository
+1. Execute docker-compose up
 
-# install boost library 1.70+
-install boost?
-# install latest cmake manually because cmake installed through yum is old.
-wget https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1.tar.gz
-tar zxvf cmake-3.15.1.tar.gz
-cd cmake-3.15.1
-./bootstrap --prefix=/opt/cmake --no-system-libs
-make
-sudo make install
-vi ~/.bashrc # add PATH=$PATH:/opt/cmake/bin
-source ~/.bashrc
-cmake -version # check if cmake is installed successfully.
-cd ~
-# install latest clang manually because clang installed through yum is old. http://clang.llvm.org/get_started.html
-cd ~
-git clone https://github.com/llvm/llvm-project.git
-cd llvm-project
-mkdir build
-cd build
-cmake -DCMAKE_CXX_COMPILER=g++ -DLLVM_ENABLE_PROJECTS=clang -G "Unix Makefiles" ../llvm
-# build match maker server
-git clone https://github.com/CdecPGL/PlanetaMatchMaker.git
-cd PlanetaMatchMaker
-mkdir build
-cd build
-cmake  -DCMAKE_CXX_COMPILER=clang++ ..
-make
-sudo make install
-# change setting if need
-vi ~/.pmms/setting.json
-```
+### Run
+
+#### Windows
+
+1. Change `~/.pmms/setting.json` if need
+1. Open CommandPrompt or PowerShell
+1. Execute `pmms` command
+
+#### Linux(Ubuntu)
+
+1. Change `~/.pmms/setting.json` if need
+1. Open bash
+1. Execute `pmms` command
+
+#### Docker
+
+1. Move to `[PlanetaMatchMaker Root]/Docker` directory
+1. Execute `docker-compose up` command
 
 ### Setting File
 
@@ -100,3 +90,13 @@ You can locate a setting file `setting.json` to `.pmms` directory in home direct
 - Command Line Parser v2.6.0 (from NuGet)
 
 ## UnityClient
+
+## Coding Rule
+
+### C++ Project
+
+### Standard C# Project
+
+- Naming Rule: https://qiita.com/Ted-HM/items/67eddbe36b88bf2d441d
+
+### Unity C# Project

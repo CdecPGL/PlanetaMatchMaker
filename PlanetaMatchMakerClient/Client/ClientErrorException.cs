@@ -1,24 +1,28 @@
 ﻿using System;
-using System.Net.Http.Headers;
 
-namespace PlanetaGameLabo.MatchMaker {
-    public sealed class ClientErrorException : Exception {
-        public ClientErrorCode clientErrorCode { get; }
+namespace PlanetaGameLabo.MatchMaker
+{
+    public sealed class ClientErrorException : Exception
+    {
+        public ClientErrorCode ClientErrorCode { get; }
 
-        public string extraMessage { get; }
+        public string ExtraMessage { get; }
 
-        public ClientErrorException(ClientErrorCode error_code) : base(error_code.GetClientErrorMessage()) {
-            clientErrorCode = error_code;
+        public ClientErrorException(ClientErrorCode error_code) : base(error_code.GetClientErrorMessage())
+        {
+            ClientErrorCode = error_code;
         }
 
         public ClientErrorException(ClientErrorCode error_code, string extra_message) : base(
-            error_code.GetClientErrorMessage() + ": " + extra_message) {
-            clientErrorCode = error_code;
-            extraMessage = extra_message;
+            error_code.GetClientErrorMessage() + ": " + extra_message)
+        {
+            ClientErrorCode = error_code;
+            ExtraMessage = extra_message;
         }
     }
 
-    public enum ClientErrorCode {
+    public enum ClientErrorCode
+    {
         Ok,
         FailedToConnect,
         AlreadyConnected,
@@ -31,9 +35,12 @@ namespace PlanetaGameLabo.MatchMaker {
         ConnectionClosed
     };
 
-    public static class ClientErrorCodeExtensions {
-        public static string GetClientErrorMessage(this ClientErrorCode error_code) {
-            switch (error_code) {
+    public static class ClientErrorCodeExtensions
+    {
+        public static string GetClientErrorMessage(this ClientErrorCode error_code)
+        {
+            switch (error_code)
+            {
                 case ClientErrorCode.Ok:
                     return "Ok";
                 case ClientErrorCode.FailedToConnect:

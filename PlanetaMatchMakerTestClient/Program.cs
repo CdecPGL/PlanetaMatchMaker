@@ -5,118 +5,137 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PlanetaGameLabo.MatchMaker {
-    internal static class Program {
-        private static void Main(string[] args) {
-            var parsed_result = CommandLine.Parser.Default.ParseArguments<Options>(args);
+namespace PlanetaGameLabo.MatchMaker
+{
+    internal static class Program
+    {
+        private static void Main(string[] args)
+        {
+            var parsedResult = CommandLine.Parser.Default.ParseArguments<Options>(args);
 
-            if (parsed_result.Tag != CommandLine.ParserResultType.Parsed) {
+            if (parsedResult.Tag != CommandLine.ParserResultType.Parsed)
+            {
                 return;
             }
 
-            var parsed = (CommandLine.Parsed<Options>) parsed_result;
+            var parsed = (CommandLine.Parsed<Options>) parsedResult;
             parsed.Value.Display();
 
             Console.CancelKeyPress += (sender, eargs) => DisposeAllTestClients();
-            try {
-                for (var i = 0; i < parsed.Value.clientCount; ++i) {
-                    _testClientList.Add(new TestClient(parsed.Value.serverAddress, parsed.Value.serverPort));
+            try
+            {
+                for (var i = 0; i < parsed.Value.ClientCount; ++i)
+                {
+                    TestClientList.Add(new TestClient(parsed.Value.ServerAddress, parsed.Value.ServerPort));
                 }
 
                 Console.WriteLine("Start test.");
 
-                var benchmark_results = new ConcurrentDictionary<string, ConcurrentQueue<(int, double)>>();
-                var task_list = new List<Task>();
-                foreach (var client in _testClientList) {
+                var benchmarkResults = new ConcurrentDictionary<string, ConcurrentQueue<(int, double)>>();
+                var taskList = new List<Task>();
+                foreach (var client in TestClientList)
+                {
                     Task task;
-                    switch (parsed.Value.mode) {
+                    switch (parsed.Value.Mode)
+                    {
                         case Mode.ConnectAndStay:
-                            task = Task.Run(async () => await client.RunConnectAndStayTest(benchmark_results));
+                            task = Task.Run(async () => await client.RunConnectAndStayTest(benchmarkResults));
                             break;
                         case Mode.ConnectAndDisconnect:
-                            task = Task.Run(async () => await client.RunConnectAndDisconnectTest(benchmark_results));
+                            task = Task.Run(async () => await client.RunConnectAndDisconnectTest(benchmarkResults));
                             break;
                         case Mode.GetRoomGroupList:
-                            task = Task.Run(async () => await client.RunGetRoomGroupListTest(benchmark_results));
+                            task = Task.Run(async () => await client.RunGetRoomGroupListTest(benchmarkResults));
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
 
-                    task_list.Add(task);
+                    taskList.Add(task);
                 }
 
-                while (task_list.Any(task => !task.IsCompleted)) {
+                while (taskList.Any(task => !task.IsCompleted))
+                {
                     Thread.Sleep(1000);
-                    var line_list = new List<string>();
-                    foreach (var pair in benchmark_results) {
-                        if (pair.Value.IsEmpty) {
+                    var lineList = new List<string>();
+                    foreach (var pair in benchmarkResults)
+                    {
+                        if (pair.Value.IsEmpty)
+                        {
                             continue;
                         }
 
-                        var queue_count = pair.Value.Count;
-                        var result_list = new List<double>();
-                        var result_count = 0;
-                        for (var i = 0; i < queue_count; ++i) {
-                            if (!pair.Value.TryDequeue(out var result)) {
+                        var queueCount = pair.Value.Count;
+                        var resultList = new List<double>();
+                        var resultCount = 0;
+                        for (var i = 0; i < queueCount; ++i)
+                        {
+                            if (!pair.Value.TryDequeue(out var result))
+                            {
                                 break;
                             }
 
-                            var (count, average_time) = result;
-                            result_count += count;
-                            result_list.Add(average_time);
+                            var (count, averageTime) = result;
+                            resultCount += count;
+                            resultList.Add(averageTime);
                         }
 
-                        line_list.Add(
-                            $"{pair.Key}: response={result_list.Average():f03}ms, operation={result_count}/s");
+                        lineList.Add(
+                            $"{pair.Key}: response={resultList.Average():f03}ms, operation={resultCount}/s");
                     }
 
-                    if (line_list.Count == 0) {
+                    if (lineList.Count == 0)
+                    {
                         continue;
                     }
 
                     Console.WriteLine("--------Benchmark Results--------");
-                    line_list.ForEach(Console.WriteLine);
+                    lineList.ForEach(Console.WriteLine);
                     Console.WriteLine("---------------------------------");
                 }
             }
-            finally {
+            finally
+            {
                 DisposeAllTestClients();
             }
         }
 
-        private static readonly List<TestClient> _testClientList = new List<TestClient>();
+        private static readonly List<TestClient> TestClientList = new List<TestClient>();
 
-        private static void DisposeAllTestClients() {
-            _testClientList.ForEach(client => client.Dispose());
+        private static void DisposeAllTestClients()
+        {
+            TestClientList.ForEach(client => client.Dispose());
         }
     }
 
-    internal enum Mode {
+    internal enum Mode
+    {
         ConnectAndStay,
         ConnectAndDisconnect,
         GetRoomGroupList
     };
 
-    internal sealed class Options {
+    internal sealed class Options
+    {
         [CommandLine.Option('a', "server_address", Required = true, HelpText = "An address of the server.")]
-        public string serverAddress { get; set; }
+        public string ServerAddress { get; set; }
 
         [CommandLine.Option('p', "server_port", Required = true, HelpText = "A port of the server.")]
-        public ushort serverPort { get; set; }
+        public ushort ServerPort { get; set; }
 
         [CommandLine.Option('m', "mode", Required = true, HelpText = "A mode of the test client.")]
-        public Mode mode { get; set; }
+        public Mode Mode { get; set; }
 
         [CommandLine.Option('c', "client_count", Required = true, HelpText = "The number of clients.")]
-        public int clientCount { get; set; }
+        public int ClientCount { get; set; }
 
-        public void Display() {
+        public void Display()
+        {
             Console.WriteLine("========Options========");
-            Console.WriteLine($"Server Address: {serverAddress}");
-            Console.WriteLine($"Server Port: {serverPort}");
-            Console.WriteLine($"Mode: {mode}");
-            Console.WriteLine($"ClientCount: {clientCount}");
+            Console.WriteLine($"Server Address: {ServerAddress}");
+            Console.WriteLine($"Server Port: {ServerPort}");
+            Console.WriteLine($"Mode: {Mode}");
+            Console.WriteLine($"ClientCount: {ClientCount}");
             Console.WriteLine("=======================");
         }
     }

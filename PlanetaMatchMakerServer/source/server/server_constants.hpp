@@ -3,5 +3,5 @@
 #include "data/data_constants.hpp"
 
 namespace pgl {
-	constexpr version_type server_version = 0;
+	constexpr version_type api_version = 0;
 }

@@ -5,36 +5,43 @@ using System.Reflection;
 using System.Threading.Tasks;
 using PlanetaGameLabo.Serializer;
 
-namespace PlanetaGameLabo.MatchMaker {
-    internal static class MessageUtilities {
+namespace PlanetaGameLabo.MatchMaker
+{
+    internal static class MessageUtilities
+    {
         /// <summary>
         /// Send a request or notice message to the server.
         /// </summary>
         /// <typeparam name="T">A type of message</typeparam>
         /// <param name="client"></param>
-        /// <param name="message_body"></param>
+        /// <param name="messageBody"></param>
         /// <param name="sessionKey"></param>
         /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
         /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
         /// <returns></returns>
-        internal static async Task SendRequestMessage<T>(this TcpClient client, T message_body, uint sessionKey = 0) {
-            var message_attribute = message_body.GetType().GetCustomAttribute<MessageAttribute>();
-            if (message_attribute == null) {
+        internal static async Task SendRequestMessage<T>(this TcpClient client, T messageBody, uint sessionKey = 0)
+        {
+            var messageAttribute = messageBody.GetType().GetCustomAttribute<MessageAttribute>();
+            if (messageAttribute == null)
+            {
                 throw new MessageErrorException(
                     "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
-            try {
-                var header = new RequestMessageHeader {
-                    messageType = message_attribute.messageType,
-                    sessionKey = sessionKey
+            try
+            {
+                var header = new RequestMessageHeader
+                {
+                    MessageType = messageAttribute.MessageType,
+                    SessionKey = sessionKey
                 };
-                var request_header_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(header));
-                var request_body_data = new ArraySegment<byte>(Serializer.Serializer.Serialize(message_body));
-                var data = new List<ArraySegment<byte>> {request_header_data, request_body_data};
+                var requestHeaderData = new ArraySegment<byte>(Serializer.Serializer.Serialize(header));
+                var requestBodyData = new ArraySegment<byte>(Serializer.Serializer.Serialize(messageBody));
+                var data = new List<ArraySegment<byte>> {requestHeaderData, requestBodyData};
                 await client.Client.SendAsync(data, SocketFlags.None);
             }
-            catch (InvalidSerializationException e) {
+            catch (InvalidSerializationException e)
+            {
                 throw new MessageErrorException("Failed to serialize a message: " + e.Message);
             }
         }
@@ -47,23 +54,28 @@ namespace PlanetaGameLabo.MatchMaker {
         /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
         /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
         /// <returns></returns>
-        internal static async Task<(MessageErrorCode, T)> ReceiveReplyMessage<T>(this TcpClient client) {
-            var message_attribute = typeof(T).GetCustomAttribute<MessageAttribute>();
-            if (message_attribute == null) {
+        internal static async Task<(MessageErrorCode, T)> ReceiveReplyMessage<T>(this TcpClient client)
+        {
+            var messageAttribute = typeof(T).GetCustomAttribute<MessageAttribute>();
+            if (messageAttribute == null)
+            {
                 throw new MessageErrorException(
                     "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
-            try {
+            try
+            {
                 var buffer =
                     new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<ReplyMessageHeader>()]);
                 await client.Client.ReceiveAsync(buffer, SocketFlags.None);
                 var header = Serializer.Serializer.Deserialize<ReplyMessageHeader>(buffer.Array);
-                if (header.errorCode != MessageErrorCode.Ok) {
-                    return (header.errorCode, default);
+                if (header.ErrorCode != MessageErrorCode.Ok)
+                {
+                    return (header.ErrorCode, default);
                 }
 
-                if (header.messageType != message_attribute.messageType) {
+                if (header.MessageType != messageAttribute.MessageType)
+                {
                     throw new MessageErrorException("The type of received message is invalid.");
                 }
 
@@ -72,7 +84,8 @@ namespace PlanetaGameLabo.MatchMaker {
                 var body = Serializer.Serializer.Deserialize<T>(buffer.Array);
                 return (MessageErrorCode.Ok, body);
             }
-            catch (InvalidSerializationException e) {
+            catch (InvalidSerializationException e)
+            {
                 throw new MessageErrorException("Failed to deserialize a message: " + e.Message);
             }
         }

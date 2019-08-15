@@ -1,36 +1,43 @@
 ﻿using System;
 
-namespace PlanetaGameLabo.MatchMaker {
+namespace PlanetaGameLabo.MatchMaker
+{
     [Serializable]
-    public sealed class Datetime {
-        public Datetime(int year, int month, int day) : this(year, month, day, 0, 0, 0) { }
-
-        public Datetime(int year, int month, int day, int hour, int minute, int second) {
-            var datetime = new DateTime(year, month, day, hour, minute, second);
-            _unixTime = new DateTimeOffset(datetime.Ticks, new TimeSpan(0, 0, 0)).ToUnixTimeSeconds();
+    public sealed class Datetime
+    {
+        public Datetime(int year, int month, int day) : this(year, month, day, 0, 0, 0)
+        {
         }
 
-        public int year => GetUtcDatetime().Year;
+        public Datetime(int year, int month, int day, int hour, int minute, int second)
+        {
+            var datetime = new DateTime(year, month, day, hour, minute, second);
+            unixTime = new DateTimeOffset(datetime.Ticks, new TimeSpan(0, 0, 0)).ToUnixTimeSeconds();
+        }
 
-        public int month => GetUtcDatetime().Month;
+        public int Year => GetUtcDatetime().Year;
 
-        public int day => GetUtcDatetime().Day;
+        public int Month => GetUtcDatetime().Month;
 
-        public int hour => GetUtcDatetime().Hour;
+        public int Day => GetUtcDatetime().Day;
 
-        public int minute => GetUtcDatetime().Minute;
+        public int Hour => GetUtcDatetime().Hour;
 
-        public int second => GetUtcDatetime().Second;
+        public int Minute => GetUtcDatetime().Minute;
 
-        public static Datetime Now() {
+        public int Second => GetUtcDatetime().Second;
+
+        public static Datetime Now()
+        {
             var now = DateTime.UtcNow;
             return new Datetime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
         }
 
-        private long _unixTime;
+        private readonly long unixTime;
 
-        private DateTime GetUtcDatetime() {
-            return DateTimeOffset.FromUnixTimeSeconds(_unixTime).UtcDateTime;
+        private DateTime GetUtcDatetime()
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(unixTime).UtcDateTime;
         }
     }
 }
