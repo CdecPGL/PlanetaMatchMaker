@@ -135,7 +135,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="flags"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task<(int totalRoomCount, RoomResult[] roomInfoList)> GetRoomList(
+        public async Task<(int totalRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
             byte roomGroupIndex, byte startIndex,
             byte count, RoomDataSortKind sortKind, byte flags)
         {
@@ -186,7 +186,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomId"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task<ClientAddress> JoinRoom(byte roomGroupIndex, uint roomId)
+        public async Task<ClientAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId)
         {
             if (!Connected)
             {
@@ -216,7 +216,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomStatus"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task UpdateHostingRoomStatus(RoomStatus roomStatus)
+        public async Task UpdateHostingRoomStatusAsync(RoomStatus roomStatus)
         {
             if (!Connected)
             {
@@ -247,9 +247,9 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task RemoveHostingRoom()
+        public async Task RemoveHostingRoomAsync()
         {
-            await UpdateHostingRoomStatus(RoomStatus.Remove);
+            await UpdateHostingRoomStatusAsync(RoomStatus.Remove);
         }
 
         public void Dispose()
