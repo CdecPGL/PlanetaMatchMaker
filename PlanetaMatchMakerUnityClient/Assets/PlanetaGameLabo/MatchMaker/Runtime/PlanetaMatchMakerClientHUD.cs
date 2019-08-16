@@ -8,12 +8,12 @@ namespace PlanetaGameLabo.MatchMaker {
 	 DisallowMultipleComponent]
 	public sealed class PlanetaMatchMakerClientHUD : MonoBehaviour {
 		private PlanetaMatchMakerClient _client;
-		private RoomGroupResult[] _roomGroupList;
-		private RoomResult[] _roomList;
+		private RoomGroupResult[] _roomGroupList = { };
+		private RoomResult[] _roomList = { };
 		private bool _isErrorOccured;
 		private string _errorMessage;
-		private byte _roomGroupIndex;
-		private string _roomName;
+		private byte _selectedRoomGroupIndex;
+		private string _selectedRoomName;
 		private bool _isJoinedRoom;
 		private ClientAddress _joinedRoomHost;
 		private Task _currentTask;
@@ -32,24 +32,28 @@ namespace PlanetaGameLabo.MatchMaker {
 					}
 					else {
 						// Display room group list
+						GUILayout.Label("Room Group List");
 						for (var i = 0; i < _roomGroupList.Length; ++i) {
 							GUILayout.Label($"{i}: {_roomGroupList[i].Name}");
 						}
 
-						var room_group_index_str = GUILayout.TextField("Room Group Index");
+						GUILayout.Label("Selected Room Group Index");
+						var room_group_index_str = GUILayout.TextField(_selectedRoomGroupIndex.ToString());
 						byte.TryParse(room_group_index_str, out var room_group_index);
-						if (_roomGroupIndex != room_group_index) {
-							_roomGroupIndex = room_group_index;
+						if (_selectedRoomGroupIndex != room_group_index) {
+							_selectedRoomGroupIndex = room_group_index;
 							_currentTask = GetRoomListAsync();
 						}
 
 						// Display room list
+						GUILayout.Label($"Room List in Group {_selectedRoomGroupIndex}");
 						foreach (var room in _roomList) {
 							GUILayout.Label(
 								$"{room.RoomId}: {room.Name} ({room.CurrentPlayerCount}/{room.MaxPlayerCount}) [{room.Flags}] @{room.CreateDatetime}");
 						}
 
-						_roomName = GUILayout.TextField("Room Name");
+						GUILayout.Label("Selected Room Name");
+						_selectedRoomName = GUILayout.TextField(_selectedRoomName);
 
 						if (GUILayout.Button("Create") && !IsTaskRunning()) {
 							_currentTask = CreateRoomAsync();
@@ -91,6 +95,12 @@ namespace PlanetaGameLabo.MatchMaker {
 			}
 
 			await GetRoomGroupListAsync();
+			if (_isErrorOccured) {
+				return;
+			}
+
+			_selectedRoomGroupIndex = 0;
+			await GetRoomListAsync();
 		}
 
 		private async Task ConnectAsync() {
@@ -108,9 +118,9 @@ namespace PlanetaGameLabo.MatchMaker {
 			_client.Close();
 			_isErrorOccured = false;
 			_isJoinedRoom = false;
-			_roomList = null;
-			_roomGroupList = null;
-			_roomGroupIndex = 0;
+			_roomList = new RoomResult[] { };
+			_roomGroupList = new RoomGroupResult[] { };
+			_selectedRoomGroupIndex = 0;
 		}
 
 		private async Task GetRoomGroupListAsync() {
@@ -127,7 +137,8 @@ namespace PlanetaGameLabo.MatchMaker {
 		private async Task GetRoomListAsync() {
 			_isErrorOccured = false;
 			try {
-				var result = await _client.GetRoomListAsync(_roomGroupIndex, 0, 100, RoomDataSortKind.NameAscending,
+				var result = await _client.GetRoomListAsync(_selectedRoomGroupIndex, 0, 100,
+					RoomDataSortKind.NameAscending,
 					byte.MaxValue);
 				_roomList = result.roomInfoList;
 			}
@@ -140,7 +151,7 @@ namespace PlanetaGameLabo.MatchMaker {
 		private async Task CreateRoomAsync() {
 			_isErrorOccured = false;
 			try {
-				await _client.CreateRoomAsync(_roomGroupIndex, _roomName);
+				await _client.CreateRoomAsync(_selectedRoomGroupIndex, _selectedRoomName);
 			}
 			catch (ClientErrorException e) {
 				_isErrorOccured = true;
@@ -151,8 +162,8 @@ namespace PlanetaGameLabo.MatchMaker {
 		private async Task JoinRoomAsync() {
 			_isErrorOccured = false;
 			try {
-				var room_id = _roomList.First(r => r.Name == _roomName).RoomId;
-				_joinedRoomHost = await _client.JoinRoomAsync(_roomGroupIndex, room_id);
+				var room_id = _roomList.First(r => r.Name == _selectedRoomName).RoomId;
+				_joinedRoomHost = await _client.JoinRoomAsync(_selectedRoomGroupIndex, room_id);
 				_isJoinedRoom = true;
 			}
 			catch (ClientErrorException e) {
