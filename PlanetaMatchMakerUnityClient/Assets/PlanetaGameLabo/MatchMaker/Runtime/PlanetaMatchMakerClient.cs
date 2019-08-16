@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
 namespace PlanetaGameLabo.MatchMaker {
-	[AddComponentMenu("PlanetaGameLabo/MatchMaker/Client"), DisallowMultipleComponent]
+	[AddComponentMenu("PlanetaGameLabo/MatchMaker/PlanetaMatchMakerClient"), DisallowMultipleComponent]
 	public sealed class PlanetaMatchMakerClient : MonoBehaviour, IDisposable {
 		/// <summary>
 		/// true if connected to the server.
