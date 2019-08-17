@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -11,6 +12,8 @@ namespace PlanetaGameLabo.MatchMaker
     public sealed class PlanetaMatchMakerClientHUD : MonoBehaviour
     {
         [SerializeField] private Vector2Int _position;
+
+        [SerializeField] private float _roomListUpdateIntervalSeconds = 3;
 
         private PlanetaMatchMakerClient _client;
         private RoomGroupResult[] _roomGroupList = { };
@@ -113,6 +116,25 @@ namespace PlanetaGameLabo.MatchMaker
                 {
                     GUILayout.Label(_errorMessage);
                 }
+            }
+        }
+
+        private void OnEnable()
+        {
+            StartCoroutine(CrtUpdate());
+        }
+
+        private IEnumerator CrtUpdate()
+        {
+            while (true)
+            {
+                if (_client.connected && !_client.isHostingRoom && !IsTaskRunning() &&
+                    _selectedRoomGroupIndex < _roomGroupList.Length)
+                {
+                    _currentTask = GetRoomListAsync();
+                }
+
+                yield return new WaitForSeconds(_roomListUpdateIntervalSeconds);
             }
         }
 

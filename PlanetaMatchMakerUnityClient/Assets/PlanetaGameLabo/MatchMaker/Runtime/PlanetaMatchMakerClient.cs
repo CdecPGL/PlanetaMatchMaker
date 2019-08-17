@@ -10,12 +10,12 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// true if connected to the server.
         /// </summary>
-        public bool connected => _client.Connected;
+        public bool connected => _client?.Connected ?? false;
 
         /// <summary>
         /// true if this client hosting a room.
         /// </summary>
-        public bool isHostingRoom => _client.IsHostingRoom;
+        public bool isHostingRoom => _client?.IsHostingRoom ?? false;
 
         public string serverAddress
         {
