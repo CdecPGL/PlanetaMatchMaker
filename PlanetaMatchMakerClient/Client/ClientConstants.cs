@@ -1,7 +1,7 @@
-﻿namespace PlanetaGameLabo.MatchMaker
+namespace PlanetaGameLabo.MatchMaker
 {
     public static class ClientConstants
     {
-        public const int ApiVersion = 1;
+        public const int ApiVersion = 2;
     }
 }

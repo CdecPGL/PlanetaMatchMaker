@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using PlanetaGameLabo.Serializer;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -81,7 +81,7 @@ namespace PlanetaGameLabo.MatchMaker
         public byte Dummy;
     }
 
-    // 241 bytes
+    // 245 bytes
     [Serializable]
     [Message(MessageType.ListRoomGroupReply)]
     internal struct ListRoomGroupReplyMessage
@@ -93,7 +93,8 @@ namespace PlanetaGameLabo.MatchMaker
             public string Name;
         }
 
-        public byte RoomGroupCount;
+        public uint RoomGroupCount;
+        public byte MaxRoomCountPerRoomGroup;
 
         [FixedLength(RoomConstants.RoomGroupMaxCount)]
         public RoomGroupInfo[] RoomGroupInfoList;

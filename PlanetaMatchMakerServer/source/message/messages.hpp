@@ -81,7 +81,7 @@ namespace pgl {
 		}
 	};
 
-	// 241 bytes
+	// 245 bytes
 	struct list_room_group_reply_message final {
 		struct room_group_info final {
 			room_group_name_type name;
@@ -92,6 +92,7 @@ namespace pgl {
 		};
 
 		uint8_t room_group_count;
+		uint32_t max_room_count_per_room_group;
 		std::array<room_group_info, room_group_max_count> room_group_info_list;
 
 		void on_serialize(serializer& serializer) {
