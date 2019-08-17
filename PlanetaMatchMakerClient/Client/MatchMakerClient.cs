@@ -107,7 +107,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, string password = "")
+        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount, string password = "")
         {
             if (roomName == null)
             {
@@ -134,7 +134,8 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 GroupIndex = roomGroupIndex,
                 Name = roomName,
-                Password = password
+                Password = password,
+                MaxPlayerCount = maxPlayerCount
             };
             await SendRequestAsync(requestBody);
 
@@ -203,9 +204,10 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="roomGroupIndex"></param>
         /// <param name="roomId"></param>
+        /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task<ClientAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId)
+        public async Task<ClientAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password="")
         {
             if (!Connected)
             {
@@ -221,7 +223,8 @@ namespace PlanetaGameLabo.MatchMaker
             var requestBody = new JoinRoomRequestMessage
             {
                 GroupIndex = roomGroupIndex,
-                RoomId = roomId
+                RoomId = roomId,
+                Password = password
             };
             await SendRequestAsync(requestBody);
 

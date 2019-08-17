@@ -10,6 +10,8 @@ namespace PlanetaGameLabo.MatchMaker
      DisallowMultipleComponent]
     public sealed class PlanetaMatchMakerClientHUD : MonoBehaviour
     {
+        [SerializeField] private Vector2Int _position;
+
         private PlanetaMatchMakerClient _client;
         private RoomGroupResult[] _roomGroupList = { };
         private RoomResult[] _roomList = { };
@@ -20,6 +22,7 @@ namespace PlanetaGameLabo.MatchMaker
         private bool _isJoinedRoom;
         private ClientAddress _joinedRoomHost;
         private Task _currentTask;
+        private byte _maxPlayerCount;
 
         private void Awake()
         {
@@ -28,7 +31,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void OnGUI()
         {
-            using (var _ = new GUILayout.AreaScope(new Rect(10, 40, 215, 9999)))
+            using (var _ = new GUILayout.AreaScope(new Rect(10 + _position.x, 40 + _position.y, 215, 9999)))
             {
                 if (_client.connected)
                 {
@@ -67,6 +70,10 @@ namespace PlanetaGameLabo.MatchMaker
 
                         GUILayout.Label("Selected Room Name");
                         _selectedRoomName = GUILayout.TextField(_selectedRoomName);
+
+                        GUILayout.Label("Max Player Count");
+                        byte.TryParse(GUILayout.TextField(_maxPlayerCount.ToString()), out _maxPlayerCount);
+
 
                         if (GUILayout.Button("Create") && !IsTaskRunning())
                         {
@@ -137,7 +144,7 @@ namespace PlanetaGameLabo.MatchMaker
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;                
+                _errorMessage = e.Message;
             }
         }
 
@@ -178,7 +185,7 @@ namespace PlanetaGameLabo.MatchMaker
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;            
+                _errorMessage = e.Message;
             }
         }
 
@@ -187,12 +194,12 @@ namespace PlanetaGameLabo.MatchMaker
             _isErrorOccured = false;
             try
             {
-                await _client.CreateRoomAsync(_selectedRoomGroupIndex, _selectedRoomName);
+                await _client.CreateRoomAsync(_selectedRoomGroupIndex, _selectedRoomName, _maxPlayerCount);
             }
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;         
+                _errorMessage = e.Message;
             }
         }
 

@@ -80,11 +80,11 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomName"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName)
+        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount)
         {
             try
             {
-                await Task.Run(() => _client.CreateRoomAsync(roomGroupIndex, roomName));
+                await Task.Run(() => _client.CreateRoomAsync(roomGroupIndex, roomName, maxPlayerCount));
             }
             catch (Exception e)
             {
