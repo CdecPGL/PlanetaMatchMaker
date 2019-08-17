@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    [Serializable]
+    [Serializable, StructLayout(LayoutKind.Sequential)]
     public sealed class Datetime
     {
         public Datetime(int year, int month, int day) : this(year, month, day, 0, 0, 0)

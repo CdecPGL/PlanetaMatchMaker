@@ -1,20 +1,25 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace PlanetaGameLabo.Serializer {
-    public static class Serializer {
-        public static int GetSerializedSize<T>() {
+namespace PlanetaGameLabo.Serializer
+{
+    public static class Serializer
+    {
+        public static int GetSerializedSize<T>()
+        {
             return GetSerializedSizeImpl(typeof(T));
         }
 
-        public static int GetSerializedSize(Type type) {
+        public static int GetSerializedSize(Type type)
+        {
             return GetSerializedSizeImpl(type);
         }
 
-        public static byte[] Serialize(object obj) {
+        public static byte[] Serialize(object obj)
+        {
             var size = GetSerializedSize(obj.GetType());
             var data = new byte[size];
             var pos = 0;
@@ -22,29 +27,41 @@ namespace PlanetaGameLabo.Serializer {
             return data;
         }
 
-        public static T Deserialize<T>(byte[] source) {
+        public static T Deserialize<T>(byte[] source)
+        {
             var size = GetSerializedSize(typeof(T));
-            if (size != source.Length) {
+            if (size != source.Length)
+            {
                 throw new InvalidSerializationException(
                     $"The size of source ({source.Length}) does not match the size of serialize target type ({typeof(T)}: {size})");
             }
 
             var pos = 0;
             DeserializeImpl(typeof(T), source, ref pos, out var obj);
-            return (T) obj;
+            return (T)obj;
         }
 
-        private static readonly HashSet<Type> DirectSerializableTypeSet = new HashSet<Type>() {
-            typeof(bool), typeof(byte), typeof(sbyte),
-            typeof(double), typeof(short), typeof(int), typeof(long),
-            typeof(float), typeof(ushort), typeof(uint), typeof(ulong)
+        private static readonly HashSet<Type> directSerializableTypeSet = new HashSet<Type>()
+        {
+            typeof(bool),
+            typeof(byte),
+            typeof(sbyte),
+            typeof(double),
+            typeof(short),
+            typeof(int),
+            typeof(long),
+            typeof(float),
+            typeof(ushort),
+            typeof(uint),
+            typeof(ulong)
         };
 
-        private static readonly Dictionary<Type, Func<byte[], int, object>> BytesToDirectSerializableTypeConverterDict
-            = new Dictionary<Type, Func<byte[], int, object>>() {
+        private static readonly Dictionary<Type, Func<byte[], int, object>> bytesToDirectSerializableTypeConverterDict
+            = new Dictionary<Type, Func<byte[], int, object>>()
+            {
                 {typeof(bool), (bytes, startIdx) => BitConverter.ToBoolean(bytes, startIdx)},
                 {typeof(byte), (bytes, startIdx) => bytes[startIdx]},
-                {typeof(sbyte), (bytes, startIdx) => (sbyte) bytes[startIdx]},
+                {typeof(sbyte), (bytes, startIdx) => (sbyte)bytes[startIdx]},
                 {typeof(double), (bytes, startIdx) => BitConverter.ToDouble(bytes, startIdx)},
                 {typeof(short), (bytes, startIdx) => BitConverter.ToInt16(bytes, startIdx)},
                 {typeof(int), (bytes, startIdx) => BitConverter.ToInt32(bytes, startIdx)},
@@ -55,78 +72,95 @@ namespace PlanetaGameLabo.Serializer {
                 {typeof(ulong), (bytes, startIdx) => BitConverter.ToUInt64(bytes, startIdx)},
             };
 
-        private static readonly Dictionary<Type, int> SerializedSizeCache = new Dictionary<Type, int>();
+        private static readonly Dictionary<Type, int> serializedSizeCache = new Dictionary<Type, int>();
 
-        private static int GetSerializedSizeImpl(Type type) {
-            if (SerializedSizeCache.ContainsKey(type)) {
-                return SerializedSizeCache[type];
+        private static int GetSerializedSizeImpl(Type type)
+        {
+            if (serializedSizeCache.ContainsKey(type))
+            {
+                return serializedSizeCache[type];
             }
 
             int size;
-            if (IsDirectSerializableType(type)) {
+            if (IsDirectSerializableType(type))
+            {
                 size = GetSerializedSizeOfDirectSerializableType(type);
             }
-            else if (IsFieldSerializableType(type)) {
+            else if (IsFieldSerializableType(type))
+            {
                 throw new InvalidSerializationException(
                     $"The type ({type}) is serializable only when it is declared as a field");
             }
-            else if (IsComplexSerializableType(type)) {
+            else if (IsComplexSerializableType(type))
+            {
                 size = GetSerializedSizeOfComplexSerializableType(type);
             }
-            else {
-                throw new InvalidSerializationException(
-                    $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
+            else
+            {
+                ThrowNotSerializableException(type);
+                throw new InvalidSerializationException("Logical error of serializable check.");
             }
 
-            SerializedSizeCache.Add(type, size);
+            serializedSizeCache.Add(type, size);
             return size;
         }
 
-        private static int GetSerializedSizeOfDirectSerializableType(Type type) {
+        private static int GetSerializedSizeOfDirectSerializableType(Type type)
+        {
             // Return 1 if type is bool because Marshal.SizeOf returns 4 for bool due to C compability.
-            if (type == typeof(bool)) {
+            if (type == typeof(bool))
+            {
                 return 1;
             }
 
-            if (type.IsEnum) {
+            if (type.IsEnum)
+            {
                 type = type.GetEnumUnderlyingType();
             }
 
             return type == typeof(bool) ? 1 : Marshal.SizeOf(type);
         }
 
-        private static int GetSerializedSizeOfFieldSerializableType(FieldInfo field, Type type) {
+        private static int GetSerializedSizeOfFieldSerializableType(FieldInfo field, Type type)
+        {
             // check cache here because this method doesn't called by GetSerializableSizeImpl, which checks cache
-            if (SerializedSizeCache.ContainsKey(type)) {
-                return SerializedSizeCache[type];
+            if (serializedSizeCache.ContainsKey(type))
+            {
+                return serializedSizeCache[type];
             }
 
             int size;
-            if (type == typeof(string)) {
+            if (type == typeof(string))
+            {
                 size = GetLengthOfFixedLengthAttribute(field);
                 // Not add to cache because the size is not fixed for same string type.
             }
-            else if (field.FieldType.IsArray) {
+            else if (field.FieldType.IsArray)
+            {
                 var length = GetLengthOfFixedLengthAttribute(field);
                 var elementType = field.FieldType.GetElementType();
                 size = GetSerializedSizeImpl(elementType) * length;
                 // Not add to cache because the size is not fixed for same array type.
             }
-            else {
+            else
+            {
                 throw new InvalidSerializationException("Invalid type.");
             }
 
             return size;
         }
 
-        private static int GetSerializedSizeOfComplexSerializableType(Type type) {
+        private static int GetSerializedSizeOfComplexSerializableType(Type type)
+        {
             var sum = 0;
-            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic |
-                                                 BindingFlags.Instance)) {
-                if (IsFieldSerializableType(field.FieldType)) {
+            foreach (var field in GetFieldsOfComplexSerializableType(type))
+            {
+                if (IsFieldSerializableType(field.FieldType))
+                {
                     sum += GetSerializedSizeOfFieldSerializableType(field, field.FieldType);
                 }
-                else {
+                else
+                {
                     sum += GetSerializedSizeImpl(field.FieldType);
                 }
             }
@@ -134,33 +168,41 @@ namespace PlanetaGameLabo.Serializer {
             return sum;
         }
 
-        private static void SerializeImpl(object obj, byte[] destination, ref int pos) {
+        private static void SerializeImpl(object obj, byte[] destination, ref int pos)
+        {
             var type = obj.GetType();
-            if (IsDirectSerializableType(type)) {
+            if (IsDirectSerializableType(type))
+            {
                 SerializeDirectSerializableType(obj, destination, ref pos);
             }
-            else if (IsFieldSerializableType(type)) {
+            else if (IsFieldSerializableType(type))
+            {
                 throw new InvalidSerializationException(
                     $"The type ({type}) is serializable only when it is declared as a field");
             }
-            else if (IsComplexSerializableType(type)) {
+            else if (IsComplexSerializableType(type))
+            {
                 SerializeComplexSerializableType(obj, destination, ref pos);
             }
-            else {
-                throw new InvalidSerializationException(
-                    $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
+            else
+            {
+                ThrowNotSerializableException(type);
+                throw new InvalidSerializationException("Logical error of serializable check.");
             }
         }
 
-        private static void SerializeDirectSerializableType(object obj, byte[] destination, ref int pos) {
+        private static void SerializeDirectSerializableType(object obj, byte[] destination, ref int pos)
+        {
             var type = obj.GetType();
-            if (type.IsEnum) {
+            if (type.IsEnum)
+            {
                 type = type.GetEnumUnderlyingType();
                 obj = Convert.ChangeType(obj, type);
             }
 
             byte[] data;
-            switch (obj) {
+            switch (obj)
+            {
                 case bool value:
                     data = BitConverter.GetBytes(value);
                     break;
@@ -168,7 +210,7 @@ namespace PlanetaGameLabo.Serializer {
                     data = new[] {value};
                     break;
                 case sbyte value:
-                    data = new[] {(byte) value};
+                    data = new[] {(byte)value};
                     break;
                 case double value:
                     data = BitConverter.GetBytes(value);
@@ -198,7 +240,8 @@ namespace PlanetaGameLabo.Serializer {
                     throw new InvalidSerializationException("Invalid type for serialization.");
             }
 
-            if (BitConverter.IsLittleEndian) {
+            if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(data);
             }
 
@@ -207,93 +250,116 @@ namespace PlanetaGameLabo.Serializer {
         }
 
         private static void
-            SerializeFieldSerializableType(object ownerObj, FieldInfo field, byte[] destination, ref int pos) {
+            SerializeFieldSerializableType(object ownerObj, FieldInfo field, byte[] destination, ref int pos)
+        {
             var obj = field.GetValue(ownerObj);
-            if (field.FieldType == typeof(string)) {
+            if (field.FieldType == typeof(string))
+            {
                 var maxLength = GetLengthOfFixedLengthAttribute(field);
                 // Encoding.UTF8.GetBytes doesn't include '\0' of end
-                var data = Encoding.UTF8.GetBytes((string) obj);
-                if (data.Length > maxLength) {
+                var data = Encoding.UTF8.GetBytes((string)obj);
+                if (data.Length > maxLength)
+                {
                     throw new InvalidSerializationException(
                         $"The length of string ({data.Length}) exceeds max length indicated by attribute ({maxLength}).");
                 }
 
-                for (var i = 0; i < maxLength; ++i) {
-                    destination[pos + i] = i < data.Length ? data[i] : (byte) '\0';
+                for (var i = 0; i < maxLength; ++i)
+                {
+                    destination[pos + i] = i < data.Length ? data[i] : (byte)'\0';
                 }
 
                 pos += maxLength;
             }
-            else if (field.FieldType.IsArray) {
+            else if (field.FieldType.IsArray)
+            {
                 var length = GetLengthOfFixedLengthAttribute(field);
-                var array = (Array) obj;
-                if (array.Length != length) {
+                var array = (Array)obj;
+                if (array.Length != length)
+                {
                     throw new InvalidSerializationException(
                         $"The size of array ({array.Length}) does not match the size indicated by attribute ({length}).");
                 }
 
-                for (var i = 0; i < length; ++i) {
+                for (var i = 0; i < length; ++i)
+                {
                     SerializeImpl(array.GetValue(i), destination, ref pos);
                 }
             }
-            else {
+            else
+            {
                 throw new InvalidSerializationException("Invalid type.");
             }
         }
 
-        private static void SerializeComplexSerializableType(object obj, byte[] destination, ref int pos) {
+        private static void SerializeComplexSerializableType(object obj, byte[] destination, ref int pos)
+        {
             var type = obj.GetType();
-            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic |
-                                                 BindingFlags.Instance)
-            ) {
-                if (IsFieldSerializableType(field.FieldType)) {
+            foreach (var field in GetFieldsOfComplexSerializableType(type))
+            {
+                if (IsFieldSerializableType(field.FieldType))
+                {
                     SerializeFieldSerializableType(obj, field, destination, ref pos);
                 }
-                else {
+                else
+                {
                     SerializeImpl(field.GetValue(obj), destination, ref pos);
                 }
             }
         }
 
-        private static void DeserializeImpl(Type type, byte[] source, ref int pos, out object obj) {
-            if (IsDirectSerializableType(type)) {
+        private static void DeserializeImpl(Type type, byte[] source, ref int pos, out object obj)
+        {
+            if (IsDirectSerializableType(type))
+            {
                 DeserializeDirectSerializableType(type, source, ref pos, out obj);
             }
-            else if (IsFieldSerializableType(type)) {
+            else if (IsFieldSerializableType(type))
+            {
                 throw new InvalidSerializationException(
                     $"The type ({type}) is serializable only when it is declared as a field");
             }
-            else if (IsComplexSerializableType(type)) {
+            else if (IsComplexSerializableType(type))
+            {
                 DeserializeComplexSerializableType(type, source, ref pos, out obj);
             }
-            else {
-                throw new InvalidSerializationException(
-                    $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
+            else
+            {
+                ThrowNotSerializableException(type);
+                throw new InvalidSerializationException("Logical error of serializable check.");
             }
         }
 
         private static void DeserializeDirectSerializableType(Type type, byte[] source, ref int pos,
-            out object obj) {
+            out object obj)
+        {
             var size = GetSerializedSize(type);
-            if (BitConverter.IsLittleEndian) {
+            if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(source, pos, size);
             }
 
-            if (type.IsEnum) {
+            if (type.IsEnum)
+            {
                 type = type.GetEnumUnderlyingType();
             }
 
-            try {
-                if (BytesToDirectSerializableTypeConverterDict.ContainsKey(type)) {
-                    obj = BytesToDirectSerializableTypeConverterDict[type](source, pos);
+            try
+            {
+                if (bytesToDirectSerializableTypeConverterDict.ContainsKey(type))
+                {
+                    obj = bytesToDirectSerializableTypeConverterDict[type](source, pos);
                 }
-                else {
+                else
+                {
                     throw new InvalidSerializationException("Invalid type for serialization.");
                 }
             }
-            finally {
+            finally
+            {
                 // Make source to first status
-                if (BitConverter.IsLittleEndian) {
+                if (BitConverter.IsLittleEndian)
+                {
                     Array.Reverse(source, pos, size);
                 }
             }
@@ -302,71 +368,95 @@ namespace PlanetaGameLabo.Serializer {
         }
 
         private static void DeserializeFieldSerializableType(object ownerObj, FieldInfo field, byte[] source,
-            ref int pos) {
+            ref int pos)
+        {
             object obj;
-            if (field.FieldType == typeof(string)) {
+            if (field.FieldType == typeof(string))
+            {
                 var maxLength = GetLengthOfFixedLengthAttribute(field);
-                var realLength = Array.IndexOf(source, (byte) '\0', pos, maxLength) - pos;
-                if (realLength < 0) {
+                var realLength = Array.IndexOf(source, (byte)'\0', pos, maxLength) - pos;
+                if (realLength < 0)
+                {
                     realLength = maxLength;
                 }
 
                 obj = Encoding.UTF8.GetString(source, pos, realLength);
                 pos += maxLength;
             }
-            else if (field.FieldType.IsArray) {
+            else if (field.FieldType.IsArray)
+            {
                 var length = GetLengthOfFixedLengthAttribute(field);
                 obj = Activator.CreateInstance(field.FieldType, length);
-                var array = (Array) obj;
+                var array = (Array)obj;
                 var elementType = field.FieldType.GetElementType();
-                for (var i = 0; i < length; ++i) {
+                for (var i = 0; i < length; ++i)
+                {
                     DeserializeImpl(elementType, source, ref pos, out var elementObj);
                     array.SetValue(elementObj, i);
                 }
             }
-            else {
+            else
+            {
                 throw new InvalidSerializationException("Invalid type.");
             }
 
             field.SetValue(ownerObj, obj);
         }
 
-        private static void
-            DeserializeComplexSerializableType(Type type, byte[] source, ref int pos, out object obj) {
+        private static void DeserializeComplexSerializableType(Type type, byte[] source, ref int pos, out object obj)
+        {
             obj = Activator.CreateInstance(type);
 
-            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic |
-                                                 BindingFlags.Instance)
-            ) {
-                if (IsFieldSerializableType(field.FieldType)) {
+            foreach (var field in GetFieldsOfComplexSerializableType(type))
+            {
+                if (IsFieldSerializableType(field.FieldType))
+                {
                     DeserializeFieldSerializableType(obj, field, source, ref pos);
                 }
-                else {
+                else
+                {
                     DeserializeImpl(field.FieldType, source, ref pos, out var fieldObj);
                     field.SetValue(obj, fieldObj);
                 }
             }
         }
 
-        private static int GetLengthOfFixedLengthAttribute(FieldInfo field) {
+        private static int GetLengthOfFixedLengthAttribute(FieldInfo field)
+        {
             var fixedLengthAttribute = field.GetCustomAttribute<FixedLengthAttribute>();
-            if (fixedLengthAttribute == null) {
+            if (fixedLengthAttribute == null)
+            {
                 throw new InvalidSerializationException("There is no FixedLengthAttribute set to the field.");
             }
 
             return fixedLengthAttribute.Length;
         }
 
-        private static bool IsDirectSerializableType(Type type) {
-            return DirectSerializableTypeSet.Contains(type) || type.IsEnum;
+        private static bool IsDirectSerializableType(Type type)
+        {
+            return directSerializableTypeSet.Contains(type) || type.IsEnum;
         }
 
-        private static bool IsFieldSerializableType(Type type) {
+        private static bool IsFieldSerializableType(Type type)
+        {
             return type == typeof(string) || type.IsArray;
         }
 
-        private static bool IsComplexSerializableType(Type type) {
-            return type.GetFields().Length > 0 && type.IsLayoutSequential && type.IsSerializable;
+        private static bool IsComplexSerializableType(Type type)
+        {
+            return GetFieldsOfComplexSerializableType(type).Length > 0 && type.IsLayoutSequential &&
+                   type.IsSerializable;
+        }
+
+        private static void ThrowNotSerializableException(Type type)
+        {
+            throw new InvalidSerializationException(
+                $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
+        }
+
+        private static FieldInfo[] GetFieldsOfComplexSerializableType(Type type)
+        {
+            return type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         }
     }
 }
