@@ -23,9 +23,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="serverAddress"></param>
         /// <param name="serverPort"></param>
         /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task ConnectAsync(string serverAddress, ushort serverPort)
         {
+            if (string.IsNullOrWhiteSpace(serverAddress))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(serverAddress));
+            }
+
             if (Connected)
             {
                 throw new ClientErrorException(ClientErrorCode.AlreadyConnected);
@@ -97,10 +103,22 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="roomGroupIndex"></param>
         /// <param name="roomName"></param>
+        /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName)
+        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, string password = "")
         {
+            if (roomName == null)
+            {
+                throw new ArgumentNullException(nameof(roomName));
+            }
+
+            if (password == null)
+            {
+                throw new ArgumentNullException(nameof(password));
+            }
+
             if (!Connected)
             {
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
@@ -115,7 +133,8 @@ namespace PlanetaGameLabo.MatchMaker
             var requestBody = new CreateRoomRequestMessage
             {
                 GroupIndex = roomGroupIndex,
-                Name = roomName
+                Name = roomName,
+                Password = password
             };
             await SendRequestAsync(requestBody);
 

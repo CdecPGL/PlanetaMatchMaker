@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -133,10 +134,10 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 await _client.ConnectAsync();
             }
-            catch (ClientErrorException e)
+            catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;
+                _errorMessage = e.Message;                
             }
         }
 
@@ -157,10 +158,10 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 _roomGroupList = await _client.GetRoomGroupListAsync();
             }
-            catch (ClientErrorException e)
+            catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;
+                _errorMessage = e.Message;                
             }
         }
 
@@ -174,10 +175,10 @@ namespace PlanetaGameLabo.MatchMaker
                     byte.MaxValue);
                 _roomList = result.roomInfoList;
             }
-            catch (ClientErrorException e)
+            catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;
+                _errorMessage = e.Message;                
             }
         }
 
@@ -188,10 +189,10 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 await _client.CreateRoomAsync(_selectedRoomGroupIndex, _selectedRoomName);
             }
-            catch (ClientErrorException e)
+            catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;
+                _errorMessage = e.Message;                
             }
         }
 
@@ -204,10 +205,10 @@ namespace PlanetaGameLabo.MatchMaker
                 _joinedRoomHost = await _client.JoinRoomAsync(_selectedRoomGroupIndex, roomId);
                 _isJoinedRoom = true;
             }
-            catch (ClientErrorException e)
+            catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;
+                _errorMessage = e.Message;                
             }
         }
 
@@ -218,10 +219,10 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 await _client.RemoveHostingRoomAsync();
             }
-            catch (ClientErrorException e)
+            catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;
+                _errorMessage = e.Message;                
             }
         }
 
