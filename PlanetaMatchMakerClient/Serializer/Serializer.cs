@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace PlanetaGameLabo.Serializer
@@ -260,7 +261,8 @@ namespace PlanetaGameLabo.Serializer
             var obj = field.GetValue(ownerObj);
             if (obj == null)
             {
-                throw new InvalidSerializationException($"Null reference is not serializable.({field.Name} in {ownerObj})");
+                throw new InvalidSerializationException(
+                    $"Null reference is not serializable.({field.Name} in {ownerObj})");
             }
 
             if (field.FieldType == typeof(string))
@@ -420,7 +422,7 @@ namespace PlanetaGameLabo.Serializer
 
         private static void DeserializeComplexSerializableType(Type type, byte[] source, ref int pos, out object obj)
         {
-            obj = Activator.CreateInstance(type);
+            obj = FormatterServices.GetUninitializedObject(type);
 
             foreach (var field in GetFieldsOfComplexSerializableType(type))
             {
@@ -466,7 +468,7 @@ namespace PlanetaGameLabo.Serializer
         private static void ThrowNotSerializableException(Type type)
         {
             throw new InvalidSerializationException(
-                $"The type ({type}) is not serializable. Primitive types, fixed string and class (struct) which is sequential and serializable are available.");
+                $"The type ({type}) is not serializable. Primitive types, fixed string, fixed array and class (struct) which is sequential and serializable are available.");
         }
 
         private static FieldInfo[] GetFieldsOfComplexSerializableType(Type type)
