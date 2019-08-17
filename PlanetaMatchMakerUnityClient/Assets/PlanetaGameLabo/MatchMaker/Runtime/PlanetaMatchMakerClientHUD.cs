@@ -210,6 +210,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var roomId = _roomList.First(r => r.Name == _selectedRoomName).RoomId;
                 _joinedRoomHost = await _client.JoinRoomAsync(_selectedRoomGroupIndex, roomId);
+                Close();
                 _isJoinedRoom = true;
             }
             catch (Exception e)

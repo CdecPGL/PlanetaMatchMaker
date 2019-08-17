@@ -7,8 +7,7 @@ namespace PlanetaGameLabo.MatchMaker
     public sealed class Datetime
     {
         public Datetime(int year, int month, int day) : this(year, month, day, 0, 0, 0)
-        {
-        }
+        { }
 
         public Datetime(int year, int month, int day, int hour, int minute, int second)
         {
@@ -27,6 +26,11 @@ namespace PlanetaGameLabo.MatchMaker
         public int Minute => GetUtcDatetime().Minute;
 
         public int Second => GetUtcDatetime().Second;
+
+        public override string ToString()
+        {
+            return $"{nameof(DateTime)}({GetUtcDatetime().ToShortDateString()} {GetUtcDatetime().ToShortTimeString()})";
+        }
 
         public static Datetime Now()
         {

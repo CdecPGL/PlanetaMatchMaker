@@ -16,6 +16,8 @@ namespace pgl {
 
 		bool operator==(const client_address& other) const;
 
+		ip_version ip_version()const;
+
 		static client_address make_from_endpoint(
 			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint);
 
