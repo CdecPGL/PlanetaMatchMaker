@@ -14,7 +14,7 @@ namespace pgl {
 		message_reception_error,
 		invalid_message_type,
 		message_type_mismatch,
-		version_mismatch,
+		api_version_mismatch,
 		message_send_error,
 		permission_error,
 		room_group_index_out_of_range,

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <cstdint>
 
@@ -167,14 +167,14 @@ namespace pgl {
 		uint8_t total_room_count; // the number of rooms server managing
 		uint8_t result_room_count; // the number of rooms for request
 		uint8_t reply_room_start_index; // the index of start room in this message
-		uint8_t reply_room_end_index; // the index of end room in this message
+		uint8_t reply_room_count; // the number of rooms in this reply
 		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 
 		void on_serialize(serializer& serializer) {
 			serializer += total_room_count;
 			serializer += result_room_count;
 			serializer += reply_room_start_index;
-			serializer += reply_room_end_index;
+			serializer += reply_room_count;
 			serializer += room_info_list;
 		}
 	};

@@ -17,8 +17,8 @@ namespace pgl {
 				return "The message type is invalid.";
 			case server_error_code::message_type_mismatch:
 				return "The message type does not match to expected one.";
-			case server_error_code::version_mismatch:
-				return "The client version does not match to the server version.";
+			case server_error_code::api_version_mismatch:
+				return "The client api version does not match to the server api version.";
 			case server_error_code::message_send_error:
 				return "Failed to send a message to client.";
 			case server_error_code::permission_error:

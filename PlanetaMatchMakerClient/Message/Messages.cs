@@ -12,7 +12,7 @@ namespace PlanetaGameLabo.MatchMaker
     {
         Ok,
         UnknownError,
-        VersionMismatch,
+        ApiVersionMismatch,
         AuthenticationError,
         AccessDenied,
         RoomNameDuplicated,
@@ -160,7 +160,7 @@ namespace PlanetaGameLabo.MatchMaker
         public byte TotalRoomCount; // the number of rooms server managing
         public byte ResultRoomCount; // the number of rooms for request
         public byte ReplyRoomStartIndex; // the index of start room in this message
-        public byte ReplyRoomEndIndex; // the index of end room in this message
+        public byte ReplyRoomCount; // the number of rooms in this reply
 
         [FixedLength(RoomConstants.ListRoomReplyRoomInfoCount)]
         public RoomInfo[] RoomInfoList;

@@ -1,4 +1,4 @@
-﻿#include <boost/asio.hpp>
+#include <boost/asio.hpp>
 
 #include "server/server_data.hpp"
 #include "server/server_constants.hpp"
@@ -22,16 +22,16 @@ namespace pgl {
 		// Check if the client version matches the server version. If not, send an error to the client
 		if (message.version != api_version) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-				"Authentication failed. The client version doesn't match to the server version. (server version: ",
+				"Authentication failed. The client api version doesn't match to the server api version. (server api version: ",
 				api_version,
-				", client version: ", message.version, ")");
+				", client api version: ", message.version, ")");
 
 			reply_message_header header{
 				message_type::authentication_reply,
-				message_error_code::version_mismatch,
+				message_error_code::api_version_mismatch,
 			};
 			send(param, header, reply);
-			throw server_error(server_error_code::version_mismatch);
+			throw server_error(server_error_code::api_version_mismatch);
 		}
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Authentication succeeded.");
 

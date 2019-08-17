@@ -179,7 +179,7 @@ namespace PlanetaGameLabo.MatchMaker
             // Set results of reply to result list
             void SetResult(in ListRoomReplyMessage reply)
             {
-                for (var i = 0; i < reply.ReplyRoomEndIndex - reply.ReplyRoomStartIndex + 1; ++i)
+                for (var i = 0; i < reply.ReplyRoomCount; ++i)
                 {
                     result[reply.ReplyRoomStartIndex + i] = new RoomResult(reply.RoomInfoList[i]);
                 }

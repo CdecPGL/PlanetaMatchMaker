@@ -1,4 +1,4 @@
-﻿#include "list_room_request_message_handler.hpp"
+#include "list_room_request_message_handler.hpp"
 
 #include "server/server_data.hpp"
 #include "utilities/checked_static_cast.hpp"
@@ -45,9 +45,7 @@ namespace pgl {
 											: list_room_reply_room_info_count;
 			reply.reply_room_start_index = range_checked_static_cast<uint8_t>(
 				message.start_index + i * separation);
-			reply.reply_room_end_index = range_checked_static_cast<uint8_t>(
-				message.start_index + i * separation + send_room_count
-				- 1);
+			reply.reply_room_count = range_checked_static_cast<uint8_t>(send_room_count);
 			for (auto j = 0; j < list_room_reply_room_info_count; ++j) {
 				const auto send_room_idx = i * separation + j;
 				if (send_room_idx < send_room_count) {
@@ -73,7 +71,7 @@ namespace pgl {
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(),
 				"There are no room which matches request.");
 			reply.reply_room_start_index = 0;
-			reply.reply_room_end_index = 0;
+			reply.reply_room_count = 0;
 			reply.room_info_list = {};
 			send(param, header, reply);
 		}

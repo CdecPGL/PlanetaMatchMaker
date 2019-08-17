@@ -2,6 +2,6 @@
 {
     public static class ClientConstants
     {
-        public const int ApiVersion = 0;
+        public const int ApiVersion = 1;
     }
 }

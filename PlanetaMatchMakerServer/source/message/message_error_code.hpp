@@ -6,8 +6,8 @@ namespace pgl {
 	enum class message_error_code : uint8_t {
 		ok,
 		unknown_error,
-		// server version and client version are not same
-		version_mismatch,
+		// server api version and client api version are not same
+		api_version_mismatch,
 		authentication_error,
 		// when in black list
 		access_denied,
