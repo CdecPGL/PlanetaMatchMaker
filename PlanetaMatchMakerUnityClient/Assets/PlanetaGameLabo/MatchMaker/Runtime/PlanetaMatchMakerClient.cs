@@ -36,7 +36,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task ConnectAsync()
         {
-            await _client.ConnectAsync(_serverAddress, _serverPort);
+            try
+            {
+                await Task.Run(() => _client.ConnectAsync(_serverAddress, _serverPort));
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -54,7 +62,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task<RoomGroupResult[]> GetRoomGroupListAsync()
         {
-            return await _client.GetRoomGroupListAsync();
+            try
+            {
+                return await Task.Run(() => _client.GetRoomGroupListAsync());
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -66,7 +82,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task CreateRoomAsync(byte roomGroupIndex, string roomName)
         {
-            await _client.CreateRoomAsync(roomGroupIndex, roomName);
+            try
+            {
+                await Task.Run(() => _client.CreateRoomAsync(roomGroupIndex, roomName));
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -83,7 +107,16 @@ namespace PlanetaGameLabo.MatchMaker
             byte roomGroupIndex, byte startIndex,
             byte count, RoomDataSortKind sortKind, byte flags)
         {
-            return await _client.GetRoomListAsync(roomGroupIndex, startIndex, count, sortKind, flags);
+            try
+            {
+                return await Task.Run(
+                    () => _client.GetRoomListAsync(roomGroupIndex, startIndex, count, sortKind, flags));
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -95,7 +128,16 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task<ClientAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId)
         {
-            return await _client.JoinRoomAsync(roomGroupIndex, roomId);
+            try
+            {
+                return await Task.Run(
+                    () => _client.JoinRoomAsync(roomGroupIndex, roomId));
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -106,7 +148,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task UpdateHostingRoomStatusAsync(RoomStatus roomStatus)
         {
-            await _client.UpdateHostingRoomStatusAsync(roomStatus);
+            try
+            {
+                await Task.Run(() => _client.UpdateHostingRoomStatusAsync(roomStatus));
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -116,7 +166,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task RemoveHostingRoomAsync()
         {
-            await _client.RemoveHostingRoomAsync();
+            try
+            {
+                await Task.Run(() => _client.RemoveHostingRoomAsync());
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                throw;
+            }
         }
 
         public void Dispose()

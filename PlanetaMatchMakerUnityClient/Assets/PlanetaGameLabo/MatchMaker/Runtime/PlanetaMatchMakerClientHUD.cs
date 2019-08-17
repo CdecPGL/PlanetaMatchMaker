@@ -16,7 +16,7 @@ namespace PlanetaGameLabo.MatchMaker
         private bool _isErrorOccured;
         private string _errorMessage;
         private byte _selectedRoomGroupIndex;
-        private string _selectedRoomName;
+        private string _selectedRoomName = "";
         private bool _isJoinedRoom;
         private ClientAddress _joinedRoomHost;
         private Task _currentTask;
@@ -161,7 +161,7 @@ namespace PlanetaGameLabo.MatchMaker
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;                
+                _errorMessage = e.Message;
             }
         }
 
@@ -178,7 +178,7 @@ namespace PlanetaGameLabo.MatchMaker
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;                
+                _errorMessage = e.Message;            
             }
         }
 
@@ -192,7 +192,7 @@ namespace PlanetaGameLabo.MatchMaker
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;                
+                _errorMessage = e.Message;         
             }
         }
 
@@ -208,7 +208,7 @@ namespace PlanetaGameLabo.MatchMaker
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;                
+                _errorMessage = e.Message;
             }
         }
 
@@ -222,7 +222,7 @@ namespace PlanetaGameLabo.MatchMaker
             catch (Exception e)
             {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;                
+                _errorMessage = e.Message;
             }
         }
 
