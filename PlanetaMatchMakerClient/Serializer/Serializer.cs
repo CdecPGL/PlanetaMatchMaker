@@ -193,6 +193,11 @@ namespace PlanetaGameLabo.Serializer
 
         private static void SerializeDirectSerializableType(object obj, byte[] destination, ref int pos)
         {
+            if (obj == null)
+            {
+                throw new InvalidSerializationException("Null reference is not serializable.");
+            }
+
             var type = obj.GetType();
             if (type.IsEnum)
             {
@@ -249,10 +254,15 @@ namespace PlanetaGameLabo.Serializer
             pos += GetSerializedSize(type);
         }
 
-        private static void
-            SerializeFieldSerializableType(object ownerObj, FieldInfo field, byte[] destination, ref int pos)
+        private static void SerializeFieldSerializableType(object ownerObj, FieldInfo field, byte[] destination,
+            ref int pos)
         {
             var obj = field.GetValue(ownerObj);
+            if (obj == null)
+            {
+                throw new InvalidSerializationException($"Null reference is not serializable.({field.Name} in {ownerObj})");
+            }
+
             if (field.FieldType == typeof(string))
             {
                 var maxLength = GetLengthOfFixedLengthAttribute(field);
@@ -294,6 +304,11 @@ namespace PlanetaGameLabo.Serializer
 
         private static void SerializeComplexSerializableType(object obj, byte[] destination, ref int pos)
         {
+            if (obj == null)
+            {
+                throw new InvalidSerializationException("Null reference is not serializable.");
+            }
+
             var type = obj.GetType();
             foreach (var field in GetFieldsOfComplexSerializableType(type))
             {
