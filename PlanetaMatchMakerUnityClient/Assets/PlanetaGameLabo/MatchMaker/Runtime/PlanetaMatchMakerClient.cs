@@ -100,17 +100,20 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="startIndex"></param>
         /// <param name="count"></param>
         /// <param name="sortKind"></param>
-        /// <param name="flags"></param>
+        /// <param name="searchTargetFlags"></param>
+        /// <param name="searchName"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task<(int totalRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
             byte roomGroupIndex, byte startIndex,
-            byte count, RoomDataSortKind sortKind, byte flags)
+            byte count, RoomDataSortKind sortKind, RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
+            string searchName = "")
         {
             try
             {
                 return await Task.Run(
-                    () => _client.GetRoomListAsync(roomGroupIndex, startIndex, count, sortKind, flags));
+                    () => _client.GetRoomListAsync(roomGroupIndex, startIndex, count, sortKind, searchTargetFlags,
+                        searchName));
             }
             catch (Exception e)
             {

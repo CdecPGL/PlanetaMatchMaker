@@ -26,6 +26,11 @@ namespace PlanetaGameLabo.MatchMaker
         private ClientAddress _joinedRoomHost;
         private Task _currentTask;
         private byte _maxPlayerCount;
+        private string searchRoomName = "";
+        private bool searchPublicRoom = true;
+        private bool searchPrivateRoom = true;
+        private bool searchOpenRoom = true;
+        private bool searchClosedRoom = true;
 
         private void Awake()
         {
@@ -34,8 +39,11 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void OnGUI()
         {
-            using (var _ = new GUILayout.AreaScope(new Rect(10 + _position.x, 40 + _position.y, 215, 9999)))
+            var position = new Vector2( _position.x, _position.y);
+            var size = new Vector2(215, 9999);
+            using (var _ = new GUILayout.AreaScope(new Rect(position, size)))
             {
+                GUI.Box(new Rect(Vector2.zero, size), "");
                 if (_client.connected)
                 {
                     if (_client.isHostingRoom)
@@ -64,11 +72,18 @@ namespace PlanetaGameLabo.MatchMaker
                         }
 
                         // Display room list
+                        GUILayout.Label($"Room List Setting");
+                        searchPublicRoom = GUILayout.Toggle(searchPublicRoom, "Search Public");
+                        searchPrivateRoom = GUILayout.Toggle(searchPrivateRoom, "Search Private");
+                        searchOpenRoom = GUILayout.Toggle(searchOpenRoom, "Search Open");
+                        searchClosedRoom = GUILayout.Toggle(searchClosedRoom, "Search Closed");
+                        GUILayout.Label("Search Name");
+                        searchRoomName = GUILayout.TextField(searchRoomName);
                         GUILayout.Label($"Room List in Group {_selectedRoomGroupIndex}");
                         foreach (var room in _roomList)
                         {
                             GUILayout.Label(
-                                $"{room.RoomId}: {room.Name} ({room.CurrentPlayerCount}/{room.MaxPlayerCount}) [{room.Flags}] @{room.CreateDatetime}");
+                                $"{room.RoomId}: {room.Name} ({room.CurrentPlayerCount}/{room.MaxPlayerCount}) [{room.SettingFlags}] @{room.CreateDatetime}");
                         }
 
                         GUILayout.Label("Selected Room Name");
@@ -76,7 +91,6 @@ namespace PlanetaGameLabo.MatchMaker
 
                         GUILayout.Label("Max Player Count");
                         byte.TryParse(GUILayout.TextField(_maxPlayerCount.ToString()), out _maxPlayerCount);
-
 
                         if (GUILayout.Button("Create") && !IsTaskRunning())
                         {
@@ -199,9 +213,29 @@ namespace PlanetaGameLabo.MatchMaker
             _isErrorOccured = false;
             try
             {
+                var searchTargetFlags = RoomSearchTargetFlag.None;
+                if (searchPublicRoom)
+                {
+                    searchTargetFlags |= RoomSearchTargetFlag.PublicRoom;
+                }
+
+                if (searchPrivateRoom)
+                {
+                    searchTargetFlags |= RoomSearchTargetFlag.PrivateRoom;
+                }
+
+                if (searchOpenRoom)
+                {
+                    searchTargetFlags |= RoomSearchTargetFlag.OpenRoom;
+                }
+
+                if (searchClosedRoom)
+                {
+                    searchTargetFlags |= RoomSearchTargetFlag.ClosedRoom;
+                }
+
                 var result = await _client.GetRoomListAsync(_selectedRoomGroupIndex, 0, 100,
-                    RoomDataSortKind.NameAscending,
-                    byte.MaxValue);
+                    RoomDataSortKind.NameAscending, searchTargetFlags, searchRoomName);
                 _roomList = result.roomInfoList;
             }
             catch (Exception e)
