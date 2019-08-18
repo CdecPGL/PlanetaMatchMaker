@@ -34,7 +34,7 @@ namespace pgl {
 		}
 
 		bool is_unique(s_param_t data) const {
-			return used_keys_.find(data.*UniqueVariable) != used_keys_.end();
+			return used_keys_.find(data.*UniqueVariable) == used_keys_.end();
 		}
 
 	private:
