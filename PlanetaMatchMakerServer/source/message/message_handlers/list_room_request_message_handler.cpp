@@ -20,7 +20,7 @@ namespace pgl {
 		// Generate room data list to send
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 			message.end_index - message.start_index + 1,
-			message.sort_kind, message.search_target_flags);
+			message.sort_kind, message.search_target_flags, message.search_name.to_string());
 
 		// Prepare reply header
 		reply_message_header header{

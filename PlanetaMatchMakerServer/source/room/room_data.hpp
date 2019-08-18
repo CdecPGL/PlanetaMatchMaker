@@ -55,10 +55,11 @@ namespace pgl {
 		create_datetime_descending
 	};
 
+	// The room whose name matches search name comes top if search name if not empty
 	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(
-		room_data_sort_kind sort_kind);
+		room_data_sort_kind sort_kind, const std::string& search_name);
 
-	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags);
+	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags, const std::string& search_name);
 
 	std::ostream& operator <<(std::ostream& os, const room_data& room_data);
 	std::ostream& operator <<(std::ostream& os, const room_group_data& room_group_data);
