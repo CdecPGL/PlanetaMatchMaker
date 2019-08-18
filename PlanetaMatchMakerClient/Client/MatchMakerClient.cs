@@ -257,9 +257,12 @@ namespace PlanetaGameLabo.MatchMaker
         /// Update hosting room status on the server.
         /// </summary>
         /// <param name="roomStatus"></param>
+        /// <param name="updateCurrentPlayerCount"></param>
+        /// <param name="currentPlayerCount"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task UpdateHostingRoomStatusAsync(RoomStatus roomStatus)
+        public async Task UpdateHostingRoomStatusAsync(RoomStatus roomStatus, bool updateCurrentPlayerCount = false,
+            byte currentPlayerCount = 0)
         {
             if (!Connected)
             {
@@ -273,7 +276,11 @@ namespace PlanetaGameLabo.MatchMaker
 
             var requestBody = new UpdateRoomStatusNoticeMessage
             {
-                GroupIndex = hostingRoomGroupIndex, RoomId = hostingRoomId, Status = roomStatus
+                GroupIndex = hostingRoomGroupIndex,
+                RoomId = hostingRoomId,
+                Status = roomStatus,
+                IsCurrentPlayerCountChanged = updateCurrentPlayerCount,
+                CurrentPlayerCount = currentPlayerCount
             };
             await SendRequestAsync(requestBody);
 

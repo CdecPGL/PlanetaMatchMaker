@@ -23,6 +23,9 @@ namespace pgl {
 		}
 
 		// Change status of requested room
+		if (message.is_current_player_count_changed) {
+			room_data.current_player_count = message.current_player_count;
+		}
 		switch (message.status) {
 			case update_room_status_notice_message::status::open:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Open ", room_data, ".");

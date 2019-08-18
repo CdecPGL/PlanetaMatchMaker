@@ -193,7 +193,7 @@ namespace PlanetaGameLabo.MatchMaker
         public ClientAddress HostAddress;
     }
 
-    // 6 bytes
+    // 8 bytes
     [Serializable]
     [Message(MessageType.UpdateRoomStatusNotice)]
     internal struct UpdateRoomStatusNoticeMessage
@@ -201,5 +201,7 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomGroupIndexType GroupIndex;
         public RoomIdType RoomId;
         public RoomStatus Status;
+        public bool IsCurrentPlayerCountChanged;
+        public byte CurrentPlayerCount;
     }
 }

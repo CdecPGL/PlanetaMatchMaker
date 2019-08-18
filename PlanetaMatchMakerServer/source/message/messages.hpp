@@ -205,18 +205,22 @@ namespace pgl {
 		}
 	};
 
-	// 6 bytes
+	// 8 bytes
 	struct update_room_status_notice_message final {
 		enum class status : uint8_t { open, close, remove };
 
 		room_group_index_type group_index;
 		room_id_type room_id;
 		status status;
+		bool is_current_player_count_changed;
+		uint8_t current_player_count;
 
 		void on_serialize(serializer& serializer) {
 			serializer += group_index;
 			serializer += room_id;
 			serializer += status;
+			serializer += is_current_player_count_changed;
+			serializer += current_player_count;
 		}
 	};
 
