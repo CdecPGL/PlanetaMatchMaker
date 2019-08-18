@@ -24,7 +24,8 @@ namespace PlanetaGameLabo.MatchMaker
         PublicRoom = 1,
         PrivateRoom = 2,
         OpenRoom = 4,
-        ClosedRoom = 8
+        ClosedRoom = 8,
+        All = byte.MaxValue
     }
 
     public enum RoomDataSortKind : byte

@@ -16,7 +16,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             RoomId = info.RoomId;
             Name = info.Name;
-            IsPrivate = info.IsPrivate;
+            SettingFlags = info.SettingFlags;
             MaxPlayerCount = info.MaxPlayerCount;
             CurrentPlayerCount = info.CurrentPlayerCount;
             CreateDatetime = info.CreateDatetime;
@@ -24,7 +24,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         public readonly uint RoomId;
         public readonly string Name;
-        public readonly bool IsPrivate;
+        public readonly RoomSettingFlag SettingFlags;
         public readonly byte MaxPlayerCount;
         public readonly byte CurrentPlayerCount;
         public readonly Datetime CreateDatetime;

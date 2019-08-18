@@ -126,7 +126,7 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomIdType RoomId;
     }
 
-    // 5 bytes
+    // 29 bytes
     [Serializable]
     [Message(MessageType.ListRoomRequest)]
     internal struct ListRoomRequestMessage
@@ -136,6 +136,9 @@ namespace PlanetaGameLabo.MatchMaker
         public byte EndIndex;
         public RoomDataSortKind SortKind;
         public RoomSearchTargetFlag SearchTargetFlags;
+
+        [FixedLength(RoomConstants.RoomNameLength)]
+        public string SearchName;
     }
 
     // 238 bytes
