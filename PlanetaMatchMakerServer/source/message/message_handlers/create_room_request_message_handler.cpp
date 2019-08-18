@@ -49,7 +49,7 @@ namespace pgl {
 				" message.");
 			send(param, header, reply);
 		} catch (const unique_variable_duplication_error&) {
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Failed to create new room \"",
+			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Failed to create new room \"",
 				room_data.name, "\" because the name is duplicated");
 			header.error_code = message_error_code::room_name_duplicated;
 			send(param, header, reply);

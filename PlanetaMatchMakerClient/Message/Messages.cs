@@ -18,6 +18,8 @@ namespace PlanetaGameLabo.MatchMaker
         RoomNameDuplicated,
         RoomCountReachesLimit,
         RoomDoesNotExist,
+        RoomIsNotOpened,
+        RoomPasswordIsWrong,
         PermissionDenied,
         JoinRejected,
         PlayerCountReachesLimit,

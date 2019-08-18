@@ -14,6 +14,8 @@ namespace pgl {
 		room_name_duplicated,
 		room_count_reaches_limit,
 		room_does_not_exist,
+		room_is_not_opened,
+		room_password_is_wrong,
 		// not authenticated or not host of room
 		permission_denied,
 		join_rejected,

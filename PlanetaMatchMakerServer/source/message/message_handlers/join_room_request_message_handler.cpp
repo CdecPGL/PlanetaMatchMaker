@@ -1,4 +1,4 @@
-﻿#include "join_room_request_message_handler.hpp"
+#include "join_room_request_message_handler.hpp"
 #include "../message_handle_utilities.hpp"
 
 namespace pgl {
@@ -14,6 +14,31 @@ namespace pgl {
 		// Check room existence
 		check_room_existence<message_type::join_room_reply>(param, room_data_container, message.room_id, reply);
 		const auto room_data = room_data_container.get_data(message.room_id);
+
+		// Check if the room is open
+		if ((room_data.setting_flags & room_setting_flag::open_room) != room_setting_flag::open_room) {
+			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
+				"\" in room group \"", message.group_index, "\" is not opened.");
+			const reply_message_header header{
+				message_type::join_room_reply,
+				message_error_code::room_is_not_opened
+			};
+			send(param, header, reply);
+			return;
+		}
+
+		// Check password if private room
+		if ((room_data.setting_flags & room_setting_flag::public_room) != room_setting_flag::public_room && room_data.
+			password != message.password) {
+			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "The password is wrong for requested room \"", message.room_id,
+				"\" in room group \"", message.group_index, ".");
+			const reply_message_header header{
+				message_type::join_room_reply,
+				message_error_code::room_password_is_wrong
+			};
+			send(param, header, reply);
+			return;
+		}
 
 		// Check player acceptable
 		if (room_data.current_player_count >= room_data.max_player_count) {

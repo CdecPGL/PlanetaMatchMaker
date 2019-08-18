@@ -106,12 +106,14 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="roomGroupIndex"></param>
         /// <param name="roomName"></param>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount,
-            string password = "")
+            bool isPublic = true, string password = "")
         {
             if (roomName == null)
             {
@@ -136,7 +138,11 @@ namespace PlanetaGameLabo.MatchMaker
 
             var requestBody = new CreateRoomRequestMessage
             {
-                GroupIndex = roomGroupIndex, Name = roomName, Password = password, MaxPlayerCount = maxPlayerCount
+                GroupIndex = roomGroupIndex,
+                Name = roomName,
+                Password = password,
+                MaxPlayerCount = maxPlayerCount,
+                IsPublic = isPublic
             };
             await SendRequestAsync(requestBody);
 
