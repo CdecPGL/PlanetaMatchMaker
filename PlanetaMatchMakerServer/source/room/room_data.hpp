@@ -15,9 +15,10 @@ namespace pgl {
 	};
 
 	namespace enum_concept {
-		template<> struct has_bitwise_operators<room_setting_flag> : std::true_type {};
+		template <>
+		struct has_bitwise_operators<room_setting_flag> : std::true_type {};
 	}
-	
+
 	struct room_data final {
 		room_id_type room_id;
 		room_name_type name;
@@ -38,9 +39,10 @@ namespace pgl {
 	};
 
 	namespace enum_concept {
-		template<> struct has_bitwise_operators<room_search_target_flag> : std::true_type {};
+		template <>
+		struct has_bitwise_operators<room_search_target_flag> : std::true_type {};
 	}
-	
+
 	// 24 bytes
 	struct room_group_data final {
 		room_group_name_type name;
@@ -55,6 +57,8 @@ namespace pgl {
 
 	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(
 		room_data_sort_kind sort_kind);
+
+	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags);
 
 	std::ostream& operator <<(std::ostream& os, const room_data& room_data);
 	std::ostream& operator <<(std::ostream& os, const room_group_data& room_group_data);

@@ -12,6 +12,7 @@ namespace PlanetaGameLabo.MatchMaker
     [Flags]
     public enum RoomSettingFlag : byte
     {
+        None = 0,
         PublicRoom = 1,
         OpenRoom = 2
     };
@@ -19,6 +20,7 @@ namespace PlanetaGameLabo.MatchMaker
     [Flags]
     public enum RoomSearchTargetFlag : byte
     {
+        None = 0,
         PublicRoom = 1,
         PrivateRoom = 2,
         OpenRoom = 4,

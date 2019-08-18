@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "data/thread_safe_data_container.h"
 
@@ -36,8 +36,9 @@ namespace pgl {
 		}
 
 		std::vector<room_data> get_range_data(const int start_idx, const int count,
-			const room_data_sort_kind sort_kind) const {
-			return container_.get_range_data(start_idx, count, get_room_data_compare_function(sort_kind));
+			const room_data_sort_kind sort_kind, const room_search_target_flag search_target_flags) const {
+			return container_.get_range_data(start_idx, count, get_room_data_compare_function(sort_kind),
+				get_room_data_filter_function(search_target_flags));
 		}
 
 		void update_data(data_param_type data) {

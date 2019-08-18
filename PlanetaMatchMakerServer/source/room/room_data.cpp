@@ -25,6 +25,15 @@ namespace pgl {
 		}
 	}
 
+	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags) {
+		return [search_target_flags](const room_data& data) {
+			auto search_source_flags = room_search_target_flag::none;
+			search_source_flags |= (data.setting_flags & room_setting_flag::public_room) != room_setting_flag::none ? room_search_target_flag::public_room : room_search_target_flag::private_room;
+			search_source_flags |= (data.setting_flags & room_setting_flag::open_room) != room_setting_flag::none ? room_search_target_flag::open_room : room_search_target_flag::closed_room;
+			return (search_source_flags & search_target_flags) != room_search_target_flag::none;
+		};
+	}
+
 	std::ostream& operator<<(std::ostream& os, const room_data& room_data) {
 		os << "room(ID=" << room_data.room_id << ", name=" << room_data.name << ")";
 		return os;

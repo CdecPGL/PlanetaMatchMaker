@@ -53,12 +53,15 @@ namespace pgl {
 		}
 
 		std::vector<Data> get_range_data(const size_t start_idx, size_t count,
-			std::function<bool(data_param_type, data_param_type)>&& compare_function) const {
+			std::function<bool(data_param_type, data_param_type)>&& compare_function,
+			std::function<bool(data_param_type)>&& filter_function) const {
 			std::shared_lock lock(mutex_);
 			std::vector<Data> data;
 			data.reserve(data_map_.size());
 			for (auto&& pair : data_map_) {
-				data.push_back(pair.second.load());
+				if (filter_function(pair.second)) {
+					data.push_back(pair.second.load());
+				}
 			}
 			std::sort(data.begin(), data.end(), compare_function);
 			count = std::min(count, data.size() >= start_idx ? data.size() - start_idx : 0);
