@@ -9,7 +9,7 @@ namespace pgl {
 	// A thread safe container of room data
 	class room_data_container final {
 	public:
-		using container_type = thread_safe_data_container<room_id_type, room_data>;
+		using container_type = thread_safe_data_container<room_id_type, room_data, &room_data::name>;
 		using id_param_type = container_type::id_param_type;
 		using data_param_type = container_type::data_param_type;
 
@@ -25,10 +25,12 @@ namespace pgl {
 			return container_.size();
 		}
 
+		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
 		void add_data(data_param_type data) {
 			container_.add_data(data.room_id, data);
 		}
 
+		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
 		room_id_type assign_id_and_add_data(room_data& data) {
 			return container_.assign_id_and_add_data(data, [](room_data& data, id_param_type id) {
 				data.room_id = id;
@@ -42,6 +44,7 @@ namespace pgl {
 				get_room_data_filter_function(search_target_flags, search_string));
 		}
 
+		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
 		void update_data(data_param_type data) {
 			container_.update_data(data.room_id, data);
 		}

@@ -4,6 +4,7 @@
 #include <string>
 
 #include <boost/operators.hpp>
+#include <boost/functional/hash.hpp>
 
 #include "serialize/serializer.hpp"
 #include "string_utility.hpp"
@@ -104,4 +105,22 @@ namespace pgl {
 		os << fixed_string.to_string();
 		return os;
 	}
+}
+
+namespace boost {
+	template <size_t Length>
+	size_t hash_value(const pgl::fixed_string<Length>& fixed_string) {
+		size_t seed = 0;
+		hash_combine(seed, boost::hash_value(fixed_string.to_string()));
+		return seed;
+	}
+}
+
+namespace std {
+	template <size_t Length>
+	struct hash<pgl::fixed_string<Length>> {
+		size_t operator()(const pgl::fixed_string<Length>& fixed_string) const noexcept {
+			return boost::hash_value(fixed_string);
+		}
+	};
 }
