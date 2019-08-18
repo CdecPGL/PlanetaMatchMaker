@@ -20,43 +20,69 @@ namespace pgl {
 	template <typename T>
 	using member_variable_pointer_variable_t = decltype(member_variable_pointer_t_impl(std::declval<T>()));
 
-	template <typename S, auto S::* UniqueVariable>
+	template <typename IdType, typename S, auto S::* UniqueVariable>
 	class unique_variables_container_impl {
 		using member_t = member_variable_pointer_variable_t<decltype(UniqueVariable)>;
 		using s_param_t = typename boost::call_traits<S>::param_type;
+		using id_param_t = typename boost::call_traits<IdType>::param_type;
 	protected:
-		void add_or_update_key(s_param_t data) {
-			used_keys_.insert(data.*UniqueVariable);
+		void add_or_update_variable(id_param_t id, s_param_t data) {
+			auto unique_value = get_unique_value(data);
+			used_variable_.insert(unique_value);
+			id_to_variable_map_.emplace(id, unique_value);
 		}
 
-		void remove_key(s_param_t data) {
-			used_keys_.erase(data.*UniqueVariable);
+		void remove_variable(id_param_t id, s_param_t data) {
+			used_variable_.erase(get_unique_value(data));
+			id_to_variable_map_.erase(id);
+		}
+
+		// If variable is same with variable of id, consider the variable as unique even if the variable is in used_variables.
+		bool is_unique(id_param_t id, s_param_t data) const {
+			auto unique_value = get_unique_value(data);
+			auto it = id_to_variable_map_.find(id);
+			if(it == id_to_variable_map_.end()) {
+				return used_variable_.find(unique_value) == used_variable_.end();
+			}
+
+			return it->second == unique_value;
 		}
 
 		bool is_unique(s_param_t data) const {
-			return used_keys_.find(data.*UniqueVariable) == used_keys_.end();
+			auto unique_value = get_unique_value(data);
+			return used_variable_.find(unique_value) == used_variable_.end();
 		}
 
 	private:
-		std::unordered_set<member_t> used_keys_;
+		std::unordered_map<IdType, member_t> id_to_variable_map_;
+		std::unordered_set<member_t> used_variable_;
+
+		static member_t get_unique_value(s_param_t data) {
+			return data.*UniqueVariable;
+		}
 	};
 
 	// A container which holds unique member variables.
-	template <typename S, auto S::* ... UniqueVariables>
+	template <typename IdType, typename S, auto S::* ... UniqueVariables>
 	class unique_variables_container
-		final : boost::noncopyable, unique_variables_container_impl<S, UniqueVariables>... {
+		final : boost::noncopyable, unique_variables_container_impl<IdType, S, UniqueVariables>... {
 		using s_param_t = typename boost::call_traits<S>::param_type;
+		using id_param_t = typename boost::call_traits<IdType>::param_type;
 	public:
-		void add_or_update_keys(s_param_t data) {
-			(unique_variables_container_impl<S, UniqueVariables>::add_or_update_key(data), ...);
+		void add_or_update_variables(id_param_t id, s_param_t data) {
+			(unique_variables_container_impl<IdType, S, UniqueVariables>::add_or_update_variable(id, data), ...);
 		}
 
-		void remove_keys(s_param_t data) {
-			(unique_variables_container_impl<S, UniqueVariables>::remove_key(data), ...);
+		void remove_variables(id_param_t id, s_param_t data) {
+			(unique_variables_container_impl<IdType, S, UniqueVariables>::remove_variable(id, data), ...);
+		}
+
+		bool is_unique(id_param_t id, s_param_t data) const {
+			return (unique_variables_container_impl<IdType, S, UniqueVariables>::is_unique(id, data) && ... && true);
 		}
 
 		bool is_unique(s_param_t data) const {
-			return (unique_variables_container_impl<S, UniqueVariables>::is_unique(data) && ... && true);
+			return (unique_variables_container_impl<IdType, S, UniqueVariables>::is_unique(data) && ... && true);
 		}
 	};
 
@@ -96,7 +122,7 @@ namespace pgl {
 			}
 			
 			data_map_.emplace(id, data);
-			unique_variables_.add_or_update_keys(data);
+			unique_variables_.add_or_update_variables(id, data);
 		}
 
 		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
@@ -113,9 +139,9 @@ namespace pgl {
 			do {
 				id = random_id_generator();
 			} while (data_map_.find(id) != data_map_.end());
-			id_setter(data, id);
+			id_setter(data, id);			
 			data_map_.emplace(id, data);
-			unique_variables_.add_or_update_keys(data);
+			unique_variables_.add_or_update_variables(id, data);
 			return id;
 		}
 
@@ -144,24 +170,24 @@ namespace pgl {
 		void update_data(id_param_type id, data_param_type data) {
 			std::shared_lock lock(mutex_);
 
-			if (!unique_variables_.is_unique(data)) {
+			if (!unique_variables_.is_unique(id, data)) {
 				throw unique_variable_duplication_error();
 			}
 
-			unique_variables_.add_or_update_keys(data);
+			unique_variables_.add_or_update_variables(id, data);
 			data_map_.at(id) = data;
 		}
 
 		void remove_data(id_param_type id) {
 			std::lock_guard lock(mutex_);
 			auto it = data_map_.find(id);
-			unique_variables_.remove_keys(it->second);
+			unique_variables_.remove_variables(id, it->second);
 			data_map_.erase(it);
 		}
 
 	private:
 		std::unordered_map<Id, std::atomic<Data>> data_map_;
-		unique_variables_container<Data, UniqueVariables...> unique_variables_;
+		unique_variables_container<Id, Data, UniqueVariables...> unique_variables_;
 		mutable std::shared_mutex mutex_;
 	};
 }
