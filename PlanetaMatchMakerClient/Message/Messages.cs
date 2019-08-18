@@ -93,8 +93,8 @@ namespace PlanetaGameLabo.MatchMaker
             public string Name;
         }
 
-        public uint RoomGroupCount;
-        public byte MaxRoomCountPerRoomGroup;
+        public byte RoomGroupCount;
+        public uint MaxRoomCountPerRoomGroup;
 
         [FixedLength(RoomConstants.RoomGroupMaxCount)]
         public RoomGroupInfo[] RoomGroupInfoList;

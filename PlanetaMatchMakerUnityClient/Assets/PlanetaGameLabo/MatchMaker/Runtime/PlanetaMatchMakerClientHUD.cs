@@ -26,11 +26,11 @@ namespace PlanetaGameLabo.MatchMaker
         private ClientAddress _joinedRoomHost;
         private Task _currentTask;
         private byte _maxPlayerCount;
-        private string searchRoomName = "";
-        private bool searchPublicRoom = true;
-        private bool searchPrivateRoom = true;
-        private bool searchOpenRoom = true;
-        private bool searchClosedRoom = true;
+        private string _searchRoomName = "";
+        private bool _searchPublicRoom = true;
+        private bool _searchPrivateRoom = true;
+        private bool _searchOpenRoom = true;
+        private bool _searchClosedRoom = true;
 
         private void Awake()
         {
@@ -40,7 +40,7 @@ namespace PlanetaGameLabo.MatchMaker
         private void OnGUI()
         {
             var position = new Vector2( _position.x, _position.y);
-            var size = new Vector2(215, 9999);
+            var size = new Vector2(240, 9999);
             using (var _ = new GUILayout.AreaScope(new Rect(position, size)))
             {
                 GUI.Box(new Rect(Vector2.zero, size), "");
@@ -73,12 +73,12 @@ namespace PlanetaGameLabo.MatchMaker
 
                         // Display room list
                         GUILayout.Label($"Room List Setting");
-                        searchPublicRoom = GUILayout.Toggle(searchPublicRoom, "Search Public");
-                        searchPrivateRoom = GUILayout.Toggle(searchPrivateRoom, "Search Private");
-                        searchOpenRoom = GUILayout.Toggle(searchOpenRoom, "Search Open");
-                        searchClosedRoom = GUILayout.Toggle(searchClosedRoom, "Search Closed");
+                        _searchPublicRoom = GUILayout.Toggle(_searchPublicRoom, "Search Public");
+                        _searchPrivateRoom = GUILayout.Toggle(_searchPrivateRoom, "Search Private");
+                        _searchOpenRoom = GUILayout.Toggle(_searchOpenRoom, "Search Open");
+                        _searchClosedRoom = GUILayout.Toggle(_searchClosedRoom, "Search Closed");
                         GUILayout.Label("Search Name");
-                        searchRoomName = GUILayout.TextField(searchRoomName);
+                        _searchRoomName = GUILayout.TextField(_searchRoomName);
                         GUILayout.Label($"Room List in Group {_selectedRoomGroupIndex}");
                         foreach (var room in _roomList)
                         {
@@ -214,28 +214,28 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var searchTargetFlags = RoomSearchTargetFlag.None;
-                if (searchPublicRoom)
+                if (_searchPublicRoom)
                 {
                     searchTargetFlags |= RoomSearchTargetFlag.PublicRoom;
                 }
 
-                if (searchPrivateRoom)
+                if (_searchPrivateRoom)
                 {
                     searchTargetFlags |= RoomSearchTargetFlag.PrivateRoom;
                 }
 
-                if (searchOpenRoom)
+                if (_searchOpenRoom)
                 {
                     searchTargetFlags |= RoomSearchTargetFlag.OpenRoom;
                 }
 
-                if (searchClosedRoom)
+                if (_searchClosedRoom)
                 {
                     searchTargetFlags |= RoomSearchTargetFlag.ClosedRoom;
                 }
 
                 var result = await _client.GetRoomListAsync(_selectedRoomGroupIndex, 0, 100,
-                    RoomDataSortKind.NameAscending, searchTargetFlags, searchRoomName);
+                    RoomDataSortKind.NameAscending, searchTargetFlags, _searchRoomName);
                 _roomList = result.roomInfoList;
             }
             catch (Exception e)
