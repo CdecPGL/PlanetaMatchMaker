@@ -74,12 +74,13 @@ namespace pgl {
 				shared_this->restart();
 			}
 			catch (const std::exception& e) {
-				log_with_endpoint(log_level::fatal, shared_this->socket_.remote_endpoint(), typeid(e), ": ", e.what());
-				shared_this->stop();
-				throw;
+				log_with_endpoint(log_level::error, shared_this->socket_.remote_endpoint(), typeid(e), ": ", e.what(),
+					" Restart the connection.");
+				shared_this->restart();
 			}
 			catch (...) {
-				log_with_endpoint(log_level::fatal, shared_this->socket_.remote_endpoint(), "Unknown error.");
+				log_with_endpoint(log_level::fatal, shared_this->socket_.remote_endpoint(),
+					"Unknown error. Stop the server.");
 				shared_this->stop();
 				throw;
 			}

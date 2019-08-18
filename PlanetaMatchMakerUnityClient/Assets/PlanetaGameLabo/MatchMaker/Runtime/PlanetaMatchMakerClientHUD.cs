@@ -54,6 +54,7 @@ namespace PlanetaGameLabo.MatchMaker
                 {
                     if (_client.isHostingRoom)
                     {
+                        GUILayout.Label($"Room Name: {_roomName}");
                         GUILayout.Label("Max Player Count");
                         byte.TryParse(GUILayout.TextField(_roomMaxPlayerCount.ToString()), out _roomMaxPlayerCount);
                         _openRoom = GUILayout.Toggle(_openRoom, "Open Room");
