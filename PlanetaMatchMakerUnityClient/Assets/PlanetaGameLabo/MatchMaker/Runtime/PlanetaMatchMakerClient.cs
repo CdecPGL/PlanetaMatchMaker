@@ -80,11 +80,13 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomName"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount)
+        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount,
+            bool isPublic = true, string password = "")
         {
             try
             {
-                await Task.Run(() => _client.CreateRoomAsync(roomGroupIndex, roomName, maxPlayerCount));
+                await Task.Run(() =>
+                    _client.CreateRoomAsync(roomGroupIndex, roomName, maxPlayerCount, isPublic, password));
             }
             catch (Exception e)
             {
@@ -129,12 +131,12 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomId"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task<ClientAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId)
+        public async Task<ClientAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
         {
             try
             {
                 return await Task.Run(
-                    () => _client.JoinRoomAsync(roomGroupIndex, roomId));
+                    () => _client.JoinRoomAsync(roomGroupIndex, roomId, password));
             }
             catch (Exception e)
             {
