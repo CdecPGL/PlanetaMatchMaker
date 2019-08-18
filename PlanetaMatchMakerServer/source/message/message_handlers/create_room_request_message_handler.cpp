@@ -1,4 +1,4 @@
-﻿#include "server/server_data.hpp"
+#include "server/server_data.hpp"
 #include "async/read_write.hpp"
 #include "async/timer.hpp"
 #include "message/messages.hpp"
@@ -29,7 +29,7 @@ namespace pgl {
 		room_data room_data{
 			{}, // assign in room_data_container.assign_id_and_add_data(room_data)
 			message.name,
-			message.flags,
+			(message.is_public ? room_setting_flag::public_room : room_setting_flag::none) | room_setting_flag::open_room,
 			message.password,
 			message.max_player_count,
 			datetime::now(),

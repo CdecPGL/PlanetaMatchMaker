@@ -110,7 +110,7 @@ namespace PlanetaGameLabo.MatchMaker
         [FixedLength(RoomConstants.RoomNameLength)]
         public string Name;
 
-        public RoomFlag Flags;
+        public bool IsPublic;
 
         [FixedLength(RoomConstants.RoomPasswordLength)]
         public string Password;
@@ -135,7 +135,7 @@ namespace PlanetaGameLabo.MatchMaker
         public byte StartIndex;
         public byte EndIndex;
         public RoomDataSortKind SortKind;
-        public byte Flags; //filter conditions about room
+        public RoomSearchTargetFlag SearchTargetFlags;
     }
 
     // 238 bytes
@@ -152,7 +152,7 @@ namespace PlanetaGameLabo.MatchMaker
             [FixedLength(RoomConstants.RoomNameLength)]
             public string Name;
 
-            public RoomFlag Flags;
+            public RoomSettingFlag SettingFlags;
             public byte MaxPlayerCount;
             public byte CurrentPlayerCount;
             public Datetime CreateDatetime;

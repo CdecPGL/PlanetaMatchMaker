@@ -1,4 +1,4 @@
-﻿#include "update_room_status_notice_message_handler.hpp"
+#include "update_room_status_notice_message_handler.hpp"
 #include "session/session_data.hpp"
 #include "../message_handle_utilities.hpp"
 
@@ -26,12 +26,12 @@ namespace pgl {
 		switch (message.status) {
 			case update_room_status_notice_message::status::open:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Open ", room_data, ".");
-				room_data.flags |= room_flags_bit_mask::is_open;
+				room_data.setting_flags |= room_setting_flag::open_room;
 				room_data_container.update_data(room_data);
 				break;
 			case update_room_status_notice_message::status::close:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Close ", room_data, ".");
-				room_data.flags &= ~room_flags_bit_mask::is_open;
+				room_data.setting_flags &= ~room_setting_flag::open_room;
 				room_data_container.update_data(room_data);
 				break;
 			case update_room_status_notice_message::status::remove:

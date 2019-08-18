@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace PlanetaGameLabo.MatchMaker
 {
@@ -10,10 +10,19 @@ namespace PlanetaGameLabo.MatchMaker
     }
 
     [Flags]
-    public enum RoomFlag : byte
+    public enum RoomSettingFlag : byte
     {
-        IsPrivate = 1,
-        IsOpen = 2
+        PublicRoom = 1,
+        OpenRoom = 2
+    };
+
+    [Flags]
+    public enum RoomSearchTargetFlag : byte
+    {
+        PublicRoom = 1,
+        PrivateRoom = 2,
+        OpenRoom = 4,
+        ClosedRoom = 8
     }
 
     public enum RoomDataSortKind : byte

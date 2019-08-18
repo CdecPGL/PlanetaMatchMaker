@@ -52,7 +52,7 @@ namespace pgl {
 					reply.room_info_list[j] = list_room_reply_message::room_info{
 						room_data_list[send_room_idx].room_id,
 						room_data_list[send_room_idx].name,
-						room_data_list[send_room_idx].flags,
+						room_data_list[send_room_idx].setting_flags,
 						room_data_list[send_room_idx].max_player_count,
 						room_data_list[send_room_idx].current_player_count,
 						room_data_list[send_room_idx].create_datetime,

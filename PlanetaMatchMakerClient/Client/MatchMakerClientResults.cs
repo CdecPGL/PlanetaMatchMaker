@@ -1,4 +1,4 @@
-﻿namespace PlanetaGameLabo.MatchMaker
+namespace PlanetaGameLabo.MatchMaker
 {
     public struct RoomGroupResult
     {
@@ -16,7 +16,7 @@
         {
             RoomId = info.RoomId;
             Name = info.Name;
-            Flags = info.Flags;
+            IsPrivate = info.IsPrivate;
             MaxPlayerCount = info.MaxPlayerCount;
             CurrentPlayerCount = info.CurrentPlayerCount;
             CreateDatetime = info.CreateDatetime;
@@ -24,7 +24,7 @@
 
         public readonly uint RoomId;
         public readonly string Name;
-        public readonly RoomFlag Flags;
+        public readonly bool IsPrivate;
         public readonly byte MaxPlayerCount;
         public readonly byte CurrentPlayerCount;
         public readonly Datetime CreateDatetime;

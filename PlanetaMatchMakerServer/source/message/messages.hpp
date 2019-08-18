@@ -97,6 +97,7 @@ namespace pgl {
 
 		void on_serialize(serializer& serializer) {
 			serializer += room_group_count;
+			serializer += max_room_count_per_room_group;
 			serializer += room_group_info_list;
 		}
 	};
@@ -105,14 +106,14 @@ namespace pgl {
 	struct create_room_request_message final {
 		room_group_index_type group_index;
 		room_name_type name;
-		room_flags_bit_mask::flags_type flags;
+		bool is_public;
 		room_password_type password;
 		uint8_t max_player_count;
 
 		void on_serialize(serializer& serializer) {
 			serializer += group_index;
 			serializer += name;
-			serializer += flags;
+			serializer += is_public;
 			serializer += password;
 			serializer += max_player_count;
 		}
@@ -127,20 +128,22 @@ namespace pgl {
 		}
 	};
 
-	// 5 bytes
+	// 29 bytes
 	struct list_room_request_message final {
 		room_group_index_type group_index;
 		uint8_t start_index;
 		uint8_t end_index;
 		room_data_sort_kind sort_kind;
-		uint8_t flags; //filter conditions about room
+		room_search_target_flag search_target_flags;
+		room_name_type search_name;
 
 		void on_serialize(serializer& serializer) {
 			serializer += group_index;
 			serializer += start_index;
 			serializer += end_index;
 			serializer += sort_kind;
-			serializer += flags;
+			serializer += search_target_flags;
+			serializer += search_name;
 		}
 	};
 
@@ -150,7 +153,7 @@ namespace pgl {
 		struct room_info final {
 			room_id_type room_id;
 			room_name_type name;
-			room_flags_bit_mask::flags_type flags;
+			room_setting_flag setting_flags;
 			uint8_t max_player_count;
 			uint8_t current_player_count;
 			datetime create_datetime;
@@ -158,7 +161,7 @@ namespace pgl {
 			void on_serialize(serializer& serializer) {
 				serializer += room_id;
 				serializer += name;
-				serializer += flags;
+				serializer += setting_flags;
 				serializer += max_player_count;
 				serializer += current_player_count;
 				serializer += create_datetime;
