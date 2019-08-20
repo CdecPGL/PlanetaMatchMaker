@@ -17,7 +17,7 @@ namespace pgl {
 		uint16_t port = 7777;
 		uint32_t max_connection_per_thread = 1000;
 		uint32_t thread = 1;
-		uint32_t max_room_per_room_group = 100;
+		uint8_t max_room_per_room_group = 100;
 		std::vector<std::string> room_group_list = {"default"};
 
 		bool load_from_setting_file(const std::filesystem::path& file_path);

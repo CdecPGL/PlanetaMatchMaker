@@ -16,14 +16,11 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField] private float _roomListUpdateIntervalSeconds = 3;
 
         private PlanetaMatchMakerClient _client;
-        private RoomGroupResult[] _roomGroupList = { };
-        private RoomResult[] _roomList = { };
+        private IRoomInfo[] _roomList = { };
         private bool _isErrorOccured;
         private string _errorMessage;
-        private byte _selectedRoomGroupIndex;
         private bool _isJoinedRoom;
         private ClientAddress _joinedRoomHost;
-        private Task _currentTask;
 
         private string _roomName = "";
         private string _roomPassword = "";
@@ -37,6 +34,7 @@ namespace PlanetaGameLabo.MatchMaker
         private bool _searchClosedRoom = true;
 
         private bool _openRoom = true;
+        private byte _roomCurrentPlayerCount;
 
         private void Awake()
         {
@@ -50,40 +48,38 @@ namespace PlanetaGameLabo.MatchMaker
             using (var _ = new GUILayout.AreaScope(new Rect(position, size)))
             {
                 GUI.Box(new Rect(Vector2.zero, size), "");
-                if (_client.connected)
+                switch (_client.status)
                 {
-                    if (_client.isHostingRoom)
-                    {
-                        GUILayout.Label($"Room Name: {_roomName}");
-                        GUILayout.Label("Max Player Count");
-                        byte.TryParse(GUILayout.TextField(_roomMaxPlayerCount.ToString()), out _roomMaxPlayerCount);
-                        _openRoom = GUILayout.Toggle(_openRoom, "Open Room");
-                        if (GUILayout.Button("Update") && !IsTaskRunning())
+                    case PlanetaMatchMakerClient.Status.Disconnected:
+                        if (GUILayout.Button("Connect"))
                         {
-                            _currentTask = UpdateHostingRoomStatusAsync();
+                            _client.Start();
                         }
 
-                        if (GUILayout.Button("Remove") && !IsTaskRunning())
+                        if (_isJoinedRoom)
                         {
-                            _currentTask = RemoveHostingRoomAsync();
+                            GUILayout.Label($"Joined Room Host: {_joinedRoomHost}");
                         }
-                    }
-                    else
-                    {
+
+                        break;
+                    case PlanetaMatchMakerClient.Status.Connecting:
+                        GUILayout.Label($"Connecting..");
+                        break;
+                    case PlanetaMatchMakerClient.Status.SearchingRoom:
                         // Display room group list
                         GUILayout.Label("===Room Group List===");
-                        for (var i = 0; i < _roomGroupList.Length; ++i)
+                        for (var i = 0; i < _client.roomGroupInfoList.Count; ++i)
                         {
-                            GUILayout.Label($"{i}: {_roomGroupList[i].Name}");
+                            GUILayout.Label($"{i}: {_client.roomGroupInfoList[i].name}");
                         }
 
                         GUILayout.Label("Selected Room Group Index");
-                        var roomGroupIndexStr = GUILayout.TextField(_selectedRoomGroupIndex.ToString());
+                        var roomGroupIndexStr = GUILayout.TextField(_client.roomGroupIndex.ToString());
                         byte.TryParse(roomGroupIndexStr, out var roomGroupIndex);
-                        if (_selectedRoomGroupIndex != roomGroupIndex)
+                        if (_client.roomGroupIndex != roomGroupIndex)
                         {
-                            _selectedRoomGroupIndex = roomGroupIndex;
-                            _currentTask = GetRoomListAsync();
+                            _client.roomGroupIndex = roomGroupIndex;
+                            RequestRoomList();
                         }
 
                         // Display room list
@@ -94,11 +90,11 @@ namespace PlanetaGameLabo.MatchMaker
                         _searchClosedRoom = GUILayout.Toggle(_searchClosedRoom, "Search Closed");
                         GUILayout.Label("Search Name");
                         _searchRoomName = GUILayout.TextField(_searchRoomName);
-                        GUILayout.Label($"===Room List in Group {_selectedRoomGroupIndex}===");
+                        GUILayout.Label($"===Room List in Group {_client.roomGroupIndex}===");
                         foreach (var room in _roomList)
                         {
                             GUILayout.Label(
-                                $"{room.RoomId}: {room.Name} ({room.CurrentPlayerCount}/{room.MaxPlayerCount}) [{room.SettingFlags}] @{room.CreateDatetime}");
+                                $"{room.roomId}: {room.name} ({room.currentPlayerCount}/{room.maxPlayerCount}) [{room.settingFlags}] @{room.createDatetime}");
                         }
 
                         GUILayout.Label($"===Selected or Create Room Info===");
@@ -112,38 +108,55 @@ namespace PlanetaGameLabo.MatchMaker
                         _createPublicRoom = GUILayout.Toggle(_createPublicRoom, "Create Public Room");
 
                         GUILayout.Label($"===Operations===");
-                        if (GUILayout.Button("Create") && !IsTaskRunning())
+                        if (GUILayout.Button("Create"))
                         {
-                            _currentTask = CreateRoomAsync();
+                            HostRoom();
                         }
 
-                        if (GUILayout.Button("Join") && !IsTaskRunning())
+                        if (GUILayout.Button("Join"))
                         {
-                            _currentTask = JoinRoomAsync();
+                            JoinRoom();
                         }
-                    }
 
-                    if (GUILayout.Button("Disconnect") && !IsTaskRunning())
-                    {
-                        Close();
-                    }
-                }
-                else
-                {
-                    if (GUILayout.Button("Connect") && !IsTaskRunning())
-                    {
-                        _currentTask = ConnectAndGetRoomGroup();
-                    }
+                        if (GUILayout.Button("Disconnect"))
+                        {
+                            Close();
+                        }
 
-                    if (_isJoinedRoom)
-                    {
-                        GUILayout.Label($"Joined Room Host: {_joinedRoomHost}");
-                    }
-                }
+                        break;
+                    case PlanetaMatchMakerClient.Status.CreatingRoom:
+                        GUILayout.Label($"Creating hosting room...");
+                        break;
+                    case PlanetaMatchMakerClient.Status.HostingRoom:
+                        GUILayout.Label($"Room Name: {_client.hostingRoomInfo.name}");
+                        GUILayout.Label("Current Player Count");
+                        byte.TryParse(GUILayout.TextField(_roomCurrentPlayerCount.ToString()),
+                            out _roomCurrentPlayerCount);
+                        _openRoom = GUILayout.Toggle(_openRoom, "Open Room");
+                        if (GUILayout.Button("Update"))
+                        {
+                            UpdateHostingRoomStatus();
+                        }
 
-                if (IsTaskRunning())
-                {
-                    GUILayout.Label("Processing...");
+                        if (GUILayout.Button("Remove"))
+                        {
+                            RemoveHostingRoom();
+                        }
+
+                        if (GUILayout.Button("Disconnect"))
+                        {
+                            Close();
+                        }
+
+                        break;
+                    case PlanetaMatchMakerClient.Status.RemovingRoom:
+                        GUILayout.Label($"Removing hosting room...");
+                        break;
+                    case PlanetaMatchMakerClient.Status.JoiningRoom:
+                        GUILayout.Label($"Joining to room...");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 if (_isErrorOccured)
@@ -162,172 +175,134 @@ namespace PlanetaGameLabo.MatchMaker
         {
             while (true)
             {
-                if (_client.connected && !_client.isHostingRoom && !IsTaskRunning() &&
-                    _selectedRoomGroupIndex < _roomGroupList.Length)
+                if (_client.status == PlanetaMatchMakerClient.Status.SearchingRoom &&
+                    _client.roomGroupIndex < _client.roomGroupInfoList.Count)
                 {
-                    _currentTask = GetRoomListAsync();
+                    RequestRoomList();
                 }
 
                 yield return new WaitForSeconds(_roomListUpdateIntervalSeconds);
             }
         }
 
-        private async Task ConnectAndGetRoomGroup()
-        {
-            await ConnectAsync();
-            if (_isErrorOccured)
-            {
-                return;
-            }
-
-            await GetRoomGroupListAsync();
-            if (_isErrorOccured)
-            {
-                return;
-            }
-
-            _selectedRoomGroupIndex = 0;
-            await GetRoomListAsync();
-        }
-
-        private async Task ConnectAsync()
-        {
-            _isErrorOccured = false;
-            try
-            {
-                await _client.ConnectAsync();
-            }
-            catch (Exception e)
-            {
-                _isErrorOccured = true;
-                _errorMessage = e.Message;
-            }
-        }
 
         private void Close()
         {
-            _client.Close();
+            _client.Stop();
             _isErrorOccured = false;
             _isJoinedRoom = false;
-            _roomList = new RoomResult[] { };
-            _roomGroupList = new RoomGroupResult[] { };
-            _selectedRoomGroupIndex = 0;
+            _roomList = new IRoomInfo[] { };
         }
 
-        private async Task GetRoomGroupListAsync()
+        private void RequestRoomList()
         {
             _isErrorOccured = false;
-            try
+            var searchTargetFlags = RoomSearchTargetFlag.None;
+            if (_searchPublicRoom)
             {
-                _roomGroupList = await _client.GetRoomGroupListAsync();
+                searchTargetFlags |= RoomSearchTargetFlag.PublicRoom;
             }
-            catch (Exception e)
-            {
-                _isErrorOccured = true;
-                _errorMessage = e.Message;
-            }
-        }
 
-        private async Task GetRoomListAsync()
-        {
-            _isErrorOccured = false;
-            try
+            if (_searchPrivateRoom)
             {
-                var searchTargetFlags = RoomSearchTargetFlag.None;
-                if (_searchPublicRoom)
+                searchTargetFlags |= RoomSearchTargetFlag.PrivateRoom;
+            }
+
+            if (_searchOpenRoom)
+            {
+                searchTargetFlags |= RoomSearchTargetFlag.OpenRoom;
+            }
+
+            if (_searchClosedRoom)
+            {
+                searchTargetFlags |= RoomSearchTargetFlag.ClosedRoom;
+            }
+
+            _client.RequestRoomList(0, 100,
+                RoomDataSortKind.NameAscending, searchTargetFlags, _searchRoomName, (errorInfo, args) =>
                 {
-                    searchTargetFlags |= RoomSearchTargetFlag.PublicRoom;
+                    if (errorInfo)
+                    {
+                        _roomList = args.roomInfoList.ToArray();
+                        return;
+                    }
+
+                    _isErrorOccured = true;
+                    _errorMessage = errorInfo.message;
+                });
+        }
+
+        private void HostRoom()
+        {
+            _isErrorOccured = false;
+            _client.HostRoom(_roomName, _roomMaxPlayerCount, _createPublicRoom, _roomPassword, (errorInfo, args) =>
+            {
+                if (errorInfo)
+                {
+                    return;
                 }
 
-                if (_searchPrivateRoom)
+                _isErrorOccured = true;
+                _errorMessage = errorInfo.message;
+            });
+        }
+
+        private void JoinRoom()
+        {
+            try
+            {
+                _isErrorOccured = false;
+                var roomId = _roomList.First(r => r.name == _roomName).roomId;
+                _client.JoinRoom(roomId, _roomPassword, (errorInfo, args) =>
                 {
-                    searchTargetFlags |= RoomSearchTargetFlag.PrivateRoom;
+                    if (errorInfo)
+                    {
+                        Close();
+                        _isJoinedRoom = true;
+                        _joinedRoomHost = args.roomHostClientAddress;
+                        return;
+                    }
+
+                    _isErrorOccured = true;
+                    _errorMessage = errorInfo.message;
+                });
+            }
+            catch (InvalidOperationException e)
+            {
+                Debug.LogException(e);
+                _isErrorOccured = true;
+                _errorMessage = e.Message;
+            }
+        }
+
+        private void RemoveHostingRoom()
+        {
+            _isErrorOccured = false;
+            _client.RemoveHostingRoom(errorInfo =>
+            {
+                if (errorInfo)
+                {
+                    return;
                 }
 
-                if (_searchOpenRoom)
+                _isErrorOccured = true;
+                _errorMessage = errorInfo.message;
+            });
+        }
+
+        private void UpdateHostingRoomStatus()
+        {
+            _isErrorOccured = false;
+            _client.ChangeOpenOrCloseHostingRoom(_openRoom, _roomCurrentPlayerCount, errorInfo =>
+            {
+                if (errorInfo)
                 {
-                    searchTargetFlags |= RoomSearchTargetFlag.OpenRoom;
+                    return;
                 }
 
-                if (_searchClosedRoom)
-                {
-                    searchTargetFlags |= RoomSearchTargetFlag.ClosedRoom;
-                }
-
-                var result = await _client.GetRoomListAsync(_selectedRoomGroupIndex, 0, 100,
-                    RoomDataSortKind.NameAscending, searchTargetFlags, _searchRoomName);
-                _roomList = result.roomInfoList;
-            }
-            catch (Exception e)
-            {
                 _isErrorOccured = true;
-                _errorMessage = e.Message;
-            }
-        }
-
-        private async Task CreateRoomAsync()
-        {
-            _isErrorOccured = false;
-            try
-            {
-                await _client.CreateRoomAsync(_selectedRoomGroupIndex, _roomName, _roomMaxPlayerCount,
-                    _createPublicRoom, _roomPassword);
-            }
-            catch (Exception e)
-            {
-                _isErrorOccured = true;
-                _errorMessage = e.Message;
-            }
-        }
-
-        private async Task JoinRoomAsync()
-        {
-            _isErrorOccured = false;
-            try
-            {
-                var roomId = _roomList.First(r => r.Name == _roomName).RoomId;
-                _joinedRoomHost = await _client.JoinRoomAsync(_selectedRoomGroupIndex, roomId, _roomPassword);
-                Close();
-                _isJoinedRoom = true;
-            }
-            catch (Exception e)
-            {
-                _isErrorOccured = true;
-                _errorMessage = e.Message;
-            }
-        }
-
-        private async Task RemoveHostingRoomAsync()
-        {
-            _isErrorOccured = false;
-            try
-            {
-                await _client.RemoveHostingRoomAsync();
-            }
-            catch (Exception e)
-            {
-                _isErrorOccured = true;
-                _errorMessage = e.Message;
-            }
-        }
-
-        private async Task UpdateHostingRoomStatusAsync()
-        {
-            _isErrorOccured = false;
-            try
-            {
-                await _client.UpdateHostingRoomStatusAsync(_openRoom ? RoomStatus.Open : RoomStatus.Close);
-            }
-            catch (Exception e)
-            {
-                _isErrorOccured = true;
-                _errorMessage = e.Message;
-            }
-        }
-
-        private bool IsTaskRunning()
-        {
-            return _currentTask != null && !_currentTask.IsCompleted;
+                _errorMessage = errorInfo.message;
+            });
         }
     }
 }

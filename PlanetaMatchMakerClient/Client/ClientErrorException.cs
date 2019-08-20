@@ -32,7 +32,8 @@ namespace PlanetaGameLabo.MatchMaker
         RequestError,
         AlreadyHostingRoom,
         NotHostingRoom,
-        ConnectionClosed
+        ConnectionClosed,
+        UnknownError,
     };
 
     public static class ClientErrorCodeExtensions

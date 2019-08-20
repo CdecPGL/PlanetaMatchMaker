@@ -20,6 +20,16 @@ namespace PlanetaGameLabo.MatchMaker
         public bool IsHostingRoom { get; private set; }
 
         /// <summary>
+        /// Hosting room id. This is valid when hosting room.
+        /// </summary>
+        public uint HostingRoomId { get; private set; }
+
+        /// <summary>
+        /// Hosting room id. This is valid when hosting room.
+        /// </summary>
+        public byte HostingRoomGroupIndex { get; private set; }
+
+        /// <summary>
         /// Connect to matching server.
         /// </summary>
         /// <param name="serverAddress"></param>
@@ -148,8 +158,8 @@ namespace PlanetaGameLabo.MatchMaker
 
             var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>();
             IsHostingRoom = true;
-            hostingRoomGroupIndex = roomGroupIndex;
-            hostingRoomId = replyBody.RoomId;
+            HostingRoomGroupIndex = roomGroupIndex;
+            HostingRoomId = replyBody.RoomId;
         }
 
         /// <summary>
@@ -163,7 +173,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="searchName"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task<(int totalRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
+        public async Task<(byte totalRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
             byte roomGroupIndex, byte startIndex,
             byte count, RoomDataSortKind sortKind, RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
             string searchName = "")
@@ -276,8 +286,8 @@ namespace PlanetaGameLabo.MatchMaker
 
             var requestBody = new UpdateRoomStatusNoticeMessage
             {
-                GroupIndex = hostingRoomGroupIndex,
-                RoomId = hostingRoomId,
+                GroupIndex = HostingRoomGroupIndex,
+                RoomId = HostingRoomId,
                 Status = roomStatus,
                 IsCurrentPlayerCountChanged = updateCurrentPlayerCount,
                 CurrentPlayerCount = currentPlayerCount
@@ -307,8 +317,6 @@ namespace PlanetaGameLabo.MatchMaker
 
         private TcpClient tcpClient;
         private uint sessionKey;
-        private byte hostingRoomGroupIndex;
-        private uint hostingRoomId;
 
         /// <summary>
         /// Send a request or notice message to the server.
