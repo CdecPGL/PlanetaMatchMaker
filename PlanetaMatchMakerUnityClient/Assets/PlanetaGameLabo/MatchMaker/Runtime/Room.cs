@@ -1,5 +1,3 @@
-using System;
-
 namespace PlanetaGameLabo.MatchMaker
 {
     public interface IRoomInfo
@@ -19,6 +17,7 @@ namespace PlanetaGameLabo.MatchMaker
         uint roomId { get; }
         string name { get; }
         byte maxPlayerCount { get; }
+        bool isPublic { get; }
     }
 
     public interface IRoomGroupInfo

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -13,7 +12,8 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public enum Status
         {
-            Disconnected, Connecting, SearchingRoom, CreatingRoom, HostingRoom, RemovingRoom, JoiningRoom
+            Disconnected, Connecting, SearchingRoom, StartingHostingRoom, HostingRoom, FinishingHostingRoom,
+            StartingJoiningRoom
         }
 
         public struct ErrorInfo
@@ -82,7 +82,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// Connect to the matching server
         /// </summary>
         /// <param name="callback"></param>
-        public void Start(Action<ErrorInfo> callback = null)
+        public void Connect(Action<ErrorInfo> callback = null)
         {
             if (status != Status.Disconnected)
             {
@@ -108,7 +108,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Close the connection.
         /// </summary>
-        public void Stop()
+        public void Disconnect()
         {
             if (status == Status.Disconnected)
             {
@@ -202,7 +202,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             RunTaskWithErrorHandling(async () =>
             {
-                status = Status.CreatingRoom;
+                status = Status.StartingHostingRoom;
                 await CreateRoomAsync(roomName, maxPlayerCount, isPublic, password);
                 status = Status.HostingRoom;
                 return new HostRoomCallbackArgs(hostingRoomInfo);
@@ -296,8 +296,9 @@ namespace PlanetaGameLabo.MatchMaker
 
             RunTaskWithErrorHandling(async () =>
             {
-                status = Status.RemovingRoom;
+                status = Status.FinishingHostingRoom;
                 await RemoveHostingRoomAsync();
+                status = Status.SearchingRoom;
                 hostingRoomInfo = null;
             }, () => status = Status.HostingRoom, callback);
         }
@@ -331,8 +332,9 @@ namespace PlanetaGameLabo.MatchMaker
 
             RunTaskWithErrorHandling(async () =>
             {
-                status = Status.JoiningRoom;
+                status = Status.StartingJoiningRoom;
                 var roomHostClientAddress = await JoinRoomAsync(roomId, password);
+                Disconnect();
                 return new JoinRoomCallbackArgs(roomHostClientAddress);
             }, () => status = Status.SearchingRoom, callback);
         }
@@ -377,18 +379,20 @@ namespace PlanetaGameLabo.MatchMaker
 
         private sealed class HostingRoomInfo : IHostingRoomInfo
         {
-            public HostingRoomInfo(byte roomGroupIndex, uint roomId, string name, byte maxPlayerCount)
+            public HostingRoomInfo(byte roomGroupIndex, bool isPublic, uint roomId, string name, byte maxPlayerCount)
             {
                 this.roomGroupIndex = roomGroupIndex;
                 this.roomId = roomId;
                 this.name = name;
                 this.maxPlayerCount = maxPlayerCount;
+                this.isPublic = isPublic;
             }
 
             public byte roomGroupIndex { get; }
             public uint roomId { get; }
             public string name { get; }
             public byte maxPlayerCount { get; }
+            public bool isPublic { get; }
         }
 
         [SerializeField, Tooltip("IP Address of Match Making Server")]
@@ -399,7 +403,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private MatchMakerClient _client;
 
-        private List<RoomGroupInfo> _roomGroupInfoList;
+        private List<RoomGroupInfo> _roomGroupInfoList = new List<RoomGroupInfo>();
 
         private void Awake()
         {
@@ -429,7 +433,7 @@ namespace PlanetaGameLabo.MatchMaker
                     {
                         case SocketException _:
                             callback?.Invoke(new ErrorInfo(e));
-                            Stop();
+                            Disconnect();
                             break;
                         default:
                             callback?.Invoke(new ErrorInfo(e));
@@ -459,7 +463,7 @@ namespace PlanetaGameLabo.MatchMaker
                     {
                         case SocketException _:
                             callback?.Invoke(new ErrorInfo(e), defaultResult);
-                            Stop();
+                            Disconnect();
                             break;
                         default:
                             callback?.Invoke(new ErrorInfo(e), defaultResult);
@@ -486,8 +490,8 @@ namespace PlanetaGameLabo.MatchMaker
             string password = "")
         {
             await _client.CreateRoomAsync(roomGroupIndex, roomName, maxPlayerCount, isPublic, password);
-            hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, _client.HostingRoomId, roomName,
-                maxPlayerCount);
+            hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, isPublic, _client.HostingRoomId,
+                roomName, maxPlayerCount);
         }
 
         private async Task<ClientAddress> JoinRoomAsync(uint roomId, string password = "")

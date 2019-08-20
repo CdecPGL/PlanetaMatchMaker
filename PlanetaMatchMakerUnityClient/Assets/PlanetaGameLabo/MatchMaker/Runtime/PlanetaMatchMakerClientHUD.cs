@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -53,7 +52,7 @@ namespace PlanetaGameLabo.MatchMaker
                     case PlanetaMatchMakerClient.Status.Disconnected:
                         if (GUILayout.Button("Connect"))
                         {
-                            _client.Start();
+                            _client.Connect();
                         }
 
                         if (_isJoinedRoom)
@@ -124,7 +123,7 @@ namespace PlanetaGameLabo.MatchMaker
                         }
 
                         break;
-                    case PlanetaMatchMakerClient.Status.CreatingRoom:
+                    case PlanetaMatchMakerClient.Status.StartingHostingRoom:
                         GUILayout.Label($"Creating hosting room...");
                         break;
                     case PlanetaMatchMakerClient.Status.HostingRoom:
@@ -149,10 +148,10 @@ namespace PlanetaGameLabo.MatchMaker
                         }
 
                         break;
-                    case PlanetaMatchMakerClient.Status.RemovingRoom:
+                    case PlanetaMatchMakerClient.Status.FinishingHostingRoom:
                         GUILayout.Label($"Removing hosting room...");
                         break;
-                    case PlanetaMatchMakerClient.Status.JoiningRoom:
+                    case PlanetaMatchMakerClient.Status.StartingJoiningRoom:
                         GUILayout.Label($"Joining to room...");
                         break;
                     default:
@@ -188,7 +187,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void Close()
         {
-            _client.Stop();
+            _client.Disconnect();
             _isErrorOccured = false;
             _isJoinedRoom = false;
             _roomList = new IRoomInfo[] { };

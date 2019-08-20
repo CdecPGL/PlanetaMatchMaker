@@ -62,6 +62,8 @@ namespace PlanetaGameLabo.MatchMaker
                     return "The client is not hosting a room.";
                 case ClientErrorCode.ConnectionClosed:
                     return "The connection is closed.";
+                case ClientErrorCode.UnknownError:
+                    return "Unexpected error.";
                 default:
                     return "";
             }
