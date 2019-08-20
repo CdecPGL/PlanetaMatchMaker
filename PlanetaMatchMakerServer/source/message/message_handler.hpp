@@ -2,6 +2,7 @@
 
 #include <boost/asio/spawn.hpp>
 
+#include "serialize/serializer.hpp"
 #include "message_handle_utilities.hpp"
 #include "message_handle_parameter.hpp"
 
@@ -15,7 +16,7 @@ namespace pgl {
 		message_handler& operator=(const message_handler& message_handler) = delete;
 		message_handler& operator=(message_handler&& message_handler) = delete;
 		virtual void operator()(std::shared_ptr<message_handle_parameter> param) = 0;
-		[[nodiscard]] virtual int get_message_size() const = 0;
+		[[nodiscard]] virtual size_t get_message_size() const = 0;
 	};
 
 	template <class Message>
@@ -28,8 +29,8 @@ namespace pgl {
 		message_handler_base& operator=(const message_handler_base& message_handler_base) = delete;
 		message_handler_base& operator=(message_handler_base&& message_handler_base) = delete;
 
-		[[nodiscard]] int get_message_size() const override final {
-			return sizeof(Message);
+		[[nodiscard]] size_t get_message_size() const override final {
+			return get_serialized_size<Message>();
 		}
 
 		void operator()(std::shared_ptr<message_handle_parameter> param) override final {

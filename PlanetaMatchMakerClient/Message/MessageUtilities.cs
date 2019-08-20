@@ -32,8 +32,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var header = new RequestMessageHeader
                 {
-                    MessageType = messageAttribute.MessageType,
-                    SessionKey = sessionKey
+                    MessageType = messageAttribute.MessageType, SessionKey = sessionKey
                 };
                 var requestHeaderData = new ArraySegment<byte>(Serializer.Serializer.Serialize(header));
                 var requestBodyData = new ArraySegment<byte>(Serializer.Serializer.Serialize(messageBody));
@@ -76,7 +75,8 @@ namespace PlanetaGameLabo.MatchMaker
 
                 if (header.MessageType != messageAttribute.MessageType)
                 {
-                    throw new MessageErrorException("The type of received message is invalid.");
+                    throw new MessageErrorException(
+                        $"The type of received message is invalid. (expected: {messageAttribute.MessageType}, actual: {header.MessageType})");
                 }
 
                 buffer = new ArraySegment<byte>(new byte[Serializer.Serializer.GetSerializedSize<T>()]);

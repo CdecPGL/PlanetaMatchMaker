@@ -1,4 +1,4 @@
-﻿#include "message_handler_invoker.hpp"
+#include "message_handler_invoker.hpp"
 
 #include <boost/asio.hpp>
 
@@ -52,15 +52,15 @@ namespace pgl {
 		}
 
 		const auto message_handler = make_message_handler(header.message_type);
+		const auto header_size = get_serialized_size<request_message_header>();
 		const auto message_size = message_handler->get_message_size();
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message header received. (type: ",
-			header.message_type, ", size: ", sizeof(header), ")");
+			header.message_type, ", size: ", header_size, ")");
 
 		// Receive and process a body of message
 		(*message_handler)(param);
 
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message processed. (type: ",
 			header.message_type, ", size: ", message_size, ")");
-
 	}
 }
