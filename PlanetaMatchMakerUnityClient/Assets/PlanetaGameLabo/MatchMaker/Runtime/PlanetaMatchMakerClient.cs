@@ -404,6 +404,7 @@ namespace PlanetaGameLabo.MatchMaker
         private MatchMakerClient _client;
 
         private List<RoomGroupInfo> _roomGroupInfoList = new List<RoomGroupInfo>();
+        private Task _task;
 
         private void Awake()
         {
@@ -431,9 +432,13 @@ namespace PlanetaGameLabo.MatchMaker
                     errorHandler?.Invoke();
                     switch (e)
                     {
-                        case SocketException _:
+                        case ClientErrorException ce:
                             callback?.Invoke(new ErrorInfo(e));
-                            Disconnect();
+                            if (ce.ClientErrorCode == ClientErrorCode.ConnectionClosed)
+                            {
+                                Disconnect();
+                            }
+
                             break;
                         default:
                             callback?.Invoke(new ErrorInfo(e));
@@ -442,7 +447,7 @@ namespace PlanetaGameLabo.MatchMaker
                 }
             }
 
-            Task.Run(Wrapper);
+            _task = Task.Run(Wrapper);
         }
 
         private void RunTaskWithErrorHandling<T>(Func<Task<T>> task, Action errorHandler,
@@ -461,9 +466,13 @@ namespace PlanetaGameLabo.MatchMaker
                     errorHandler?.Invoke();
                     switch (e)
                     {
-                        case SocketException _:
+                        case ClientErrorException ce:
                             callback?.Invoke(new ErrorInfo(e), defaultResult);
-                            Disconnect();
+                            if (ce.ClientErrorCode == ClientErrorCode.ConnectionClosed)
+                            {
+                                Disconnect();
+                            }
+
                             break;
                         default:
                             callback?.Invoke(new ErrorInfo(e), defaultResult);
@@ -472,7 +481,7 @@ namespace PlanetaGameLabo.MatchMaker
                 }
             }
 
-            Task.Run(Wrapper);
+            _task = Task.Run(Wrapper);
         }
 
         private async Task ConnectAsync()
@@ -523,7 +532,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private void Reset()
-        {
+        { 
             status = Status.Disconnected;
             hostingRoomInfo = null;
             _roomGroupInfoList.Clear();
