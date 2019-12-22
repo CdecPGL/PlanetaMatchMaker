@@ -6,7 +6,7 @@
 #include <boost/functional/hash.hpp>
 #include <boost/operators.hpp>
 
-#include "serialize/serializer.hpp"
+#include "minimal_serializer/serializer.hpp"
 
 namespace pgl {
 	// 8 bytes
@@ -35,7 +35,7 @@ namespace pgl {
 
 		static datetime now();
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += unix_time_;
 		}
 

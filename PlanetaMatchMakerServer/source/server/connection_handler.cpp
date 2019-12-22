@@ -35,7 +35,7 @@ namespace pgl {
 				try {
 					shared_this->acceptor_.async_accept(shared_this->socket_, yield);
 				} catch (system::system_error& e) {
-					const auto extra_message = generate_string(e, " @", shared_this->socket_.remote_endpoint());
+					const auto extra_message = minimal_serializer::generate_string(e, " @", shared_this->socket_.remote_endpoint());
 					throw server_error(server_error_code::acception_failed, extra_message);
 				}
 

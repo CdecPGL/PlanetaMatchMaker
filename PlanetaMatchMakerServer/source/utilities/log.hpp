@@ -1,6 +1,6 @@
 #pragma once
 
-#include "string_utility.hpp"
+#include "minimal_serializer/string_utility.hpp"
 #include "asio_stream_compatibility.hpp"
 
 namespace pgl {
@@ -18,7 +18,7 @@ namespace pgl {
 	// Log thread safely.
 	template <typename ... Params>
 	void log(const log_level level, Params&& ... params) {
-		log_impl(level, "", generate_string(params...));
+		log_impl(level, "", minimal_serializer::generate_string(params...));
 	}
 
 	// Log thread safely with information of endpoint.
@@ -26,6 +26,6 @@ namespace pgl {
 	void log_with_endpoint(const log_level level,
 		const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint,
 		Params&& ... params) {
-		log_impl(level, generate_string(" @", endpoint), generate_string(params...));
+		log_impl(level, minimal_serializer::generate_string(" @", endpoint), minimal_serializer::generate_string(params...));
 	}
 }

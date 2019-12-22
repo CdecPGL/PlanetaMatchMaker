@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace boost;
+using namespace minimal_serializer;
 
 namespace pgl {
 	static log_level output_log_level = log_level::info;
@@ -27,7 +28,7 @@ namespace pgl {
 				break;
 		}
 
-		*os << "[" << get_now_datetime_string() << "] " << level << log_header << ": " << log_body << endl;
+		*os << "[" << get_now_datetime_string() << "] " << generate_string(level) << log_header << ": " << log_body << endl;
 	}
 
 	log_level string_to_log_level(const std::string& str) {
@@ -44,7 +45,7 @@ namespace pgl {
 	void set_output_log_level(const log_level level) {
 		std::scoped_lock locks{output_log_level_mutex, output_mutex};
 		output_log_level = level;
-		log_impl_without_mutex(log_level::info, "", generate_string("Output log level is set to \"", level, "\"."));
+		log_impl_without_mutex(log_level::info, "", minimal_serializer::generate_string("Output log level is set to \"", level, "\"."));
 	}
 
 	void log_impl(const log_level level, string&& log_header, string&& log_body) {

@@ -3,8 +3,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 
-#include "utilities/string_utility.hpp"
-#include "serialize/pack.hpp"
+#include "utilities/pack.hpp"
 
 namespace pgl {
 	/*

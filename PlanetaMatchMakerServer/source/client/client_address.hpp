@@ -4,7 +4,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/operators.hpp>
 
-#include "serialize/serializer.hpp"
+#include "minimal_serializer/serializer.hpp"
 #include "network/network_layer.hpp"
 #include "network/transport_layer.hpp"
 
@@ -21,7 +21,7 @@ namespace pgl {
 		static client_address make_from_endpoint(
 			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint);
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += ip_address;
 			serializer += port_number;
 		}

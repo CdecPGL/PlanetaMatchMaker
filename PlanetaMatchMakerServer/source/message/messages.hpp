@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "serialize/serializer.hpp"
+#include "minimal_serializer//serializer.hpp"
 #include "message/message_error_code.hpp"
 #include "datetime/datetime.hpp"
 #include "client/client_address.hpp"
@@ -33,7 +33,7 @@ namespace pgl {
 		message_type message_type;
 		session_key_type session_key;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += message_type;
 			serializer += session_key;
 		}
@@ -44,7 +44,7 @@ namespace pgl {
 		message_type message_type;
 		message_error_code error_code;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += message_type;
 			serializer += error_code;
 		}
@@ -56,7 +56,7 @@ namespace pgl {
 	struct authentication_request_message final {
 		version_type version;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += version;
 		}
 	};
@@ -66,7 +66,7 @@ namespace pgl {
 		version_type version;
 		session_key_type session_key;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += version;
 			serializer += session_key;
 		}
@@ -76,7 +76,7 @@ namespace pgl {
 	struct list_room_group_request_message final {
 		uint8_t dummy;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += dummy;
 		}
 	};
@@ -86,7 +86,7 @@ namespace pgl {
 		struct room_group_info final {
 			room_group_name_type name;
 
-			void on_serialize(serializer& serializer) {
+			void on_serialize(minimal_serializer::serializer& serializer) {
 				serializer += name;
 			}
 		};
@@ -95,7 +95,7 @@ namespace pgl {
 		uint32_t max_room_count_per_room_group;
 		std::array<room_group_info, room_group_max_count> room_group_info_list;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += room_group_count;
 			serializer += max_room_count_per_room_group;
 			serializer += room_group_info_list;
@@ -110,7 +110,7 @@ namespace pgl {
 		room_password_type password;
 		uint8_t max_player_count;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
 			serializer += name;
 			serializer += is_public;
@@ -123,7 +123,7 @@ namespace pgl {
 	struct create_room_reply_message final {
 		room_id_type room_id;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += room_id;
 		}
 	};
@@ -137,7 +137,7 @@ namespace pgl {
 		room_search_target_flag search_target_flags;
 		room_name_type search_name;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
 			serializer += start_index;
 			serializer += end_index;
@@ -158,7 +158,7 @@ namespace pgl {
 			uint8_t current_player_count;
 			datetime create_datetime;
 
-			void on_serialize(serializer& serializer) {
+			void on_serialize(minimal_serializer::serializer& serializer) {
 				serializer += room_id;
 				serializer += name;
 				serializer += setting_flags;
@@ -174,7 +174,7 @@ namespace pgl {
 		uint8_t reply_room_count; // the number of rooms in this reply
 		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += total_room_count;
 			serializer += result_room_count;
 			serializer += reply_room_start_index;
@@ -189,7 +189,7 @@ namespace pgl {
 		room_id_type room_id;
 		room_password_type password;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
 			serializer += room_id;
 			serializer += password;
@@ -200,7 +200,7 @@ namespace pgl {
 	struct join_room_reply_message final {
 		client_address host_address;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += host_address;
 		}
 	};
@@ -215,7 +215,7 @@ namespace pgl {
 		bool is_current_player_count_changed;
 		uint8_t current_player_count;
 
-		void on_serialize(serializer& serializer) {
+		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
 			serializer += room_id;
 			serializer += status;
@@ -225,6 +225,6 @@ namespace pgl {
 	};
 
 	struct random_match_request_message final {
-		void on_serialize(serializer& serializer [[maybe_unused]]) { }
+		void on_serialize(minimal_serializer::serializer& serializer [[maybe_unused]]) { }
 	};
 }

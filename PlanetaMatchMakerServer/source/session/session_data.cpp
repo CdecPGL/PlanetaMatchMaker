@@ -28,11 +28,11 @@ namespace pgl {
 			throw std::runtime_error("A hosting room is not set.");
 		}
 		if (hosting_room_group_index_ != room_group_index) {
-			throw std::runtime_error(generate_string("A passed room group index(", room_group_index,
+			throw std::runtime_error(minimal_serializer::generate_string("A passed room group index(", room_group_index,
 				") is different from hosting room group index(", hosting_room_group_index_, ")."));
 		}
 		if (hosting_room_id_ != room_id) {
-			throw std::runtime_error(generate_string("A passed room id(", room_id,
+			throw std::runtime_error(minimal_serializer::generate_string("A passed room id(", room_id,
 				") is different from hosting room id(", hosting_room_id_, ")."));
 		}
 

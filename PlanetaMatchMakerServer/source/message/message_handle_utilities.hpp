@@ -12,7 +12,7 @@ namespace pgl {
 	// Send data to remote endpoint. server_error will be thrown when send error occured.
 	template <typename FirstData, typename... RestData>
 	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&& ... rest_data) {
-		auto data_summary = generate_string(sizeof...(rest_data) + 1, " data (",
+		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
@@ -24,7 +24,7 @@ namespace pgl {
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Send ", data_summary,
 				" to the client.");
 		} catch (const boost::system::system_error& e) {
-			auto extra_message = generate_string("Failed to send ", data_summary, " to the client. ",
+			auto extra_message = minimal_serializer::generate_string("Failed to send ", data_summary, " to the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
 				throw server_error(server_error_code::message_send_timeout, extra_message);
@@ -42,7 +42,7 @@ namespace pgl {
 	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData& ... rest_data) {
 		static_assert(!(std::is_const_v<FirstData> || (std::is_const_v<RestData> || ...)),
 			"FirstData and all RestData must not be const.");
-		auto data_summary = generate_string(sizeof...(rest_data) + 1, " data (",
+		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
@@ -53,7 +53,7 @@ namespace pgl {
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Receive ", data_summary,
 				" from the client.");
 		} catch (const boost::system::system_error& e) {
-			auto extra_message = generate_string("Failed to receive ", data_summary, " from the client. ",
+			auto extra_message = minimal_serializer::generate_string("Failed to receive ", data_summary, " from the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
 				throw server_error(server_error_code::message_reception_timeout, extra_message);

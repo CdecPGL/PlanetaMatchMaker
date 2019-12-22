@@ -189,11 +189,8 @@
   <ItemGroup>
     <ClCompile Include="checked_static_cast_test.cpp" />
     <ClCompile Include="datetime_test.cpp" />
-    <ClCompile Include="fixed_string_test.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="serializer_pack_test.cpp" />
-    <ClCompile Include="serialize_test.cpp" />
-    <ClCompile Include="string_utilities_test.cpp" />
+    <ClCompile Include="serialize_pack_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PlanetaMatchMakerServer\PlanetaMatchMakerServer.vcxproj">

@@ -2,7 +2,7 @@
 
 #include <boost/asio/spawn.hpp>
 
-#include "serialize/serializer.hpp"
+#include "minimal_serializer/serializer.hpp"
 #include "message_handle_utilities.hpp"
 #include "message_handle_parameter.hpp"
 
@@ -30,7 +30,7 @@ namespace pgl {
 		message_handler_base& operator=(message_handler_base&& message_handler_base) = delete;
 
 		[[nodiscard]] size_t get_message_size() const override final {
-			return get_serialized_size<Message>();
+			return minimal_serializer::get_serialized_size<Message>();
 		}
 
 		void operator()(std::shared_ptr<message_handle_parameter> param) override final {

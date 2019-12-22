@@ -37,22 +37,22 @@ namespace pgl {
 			}
 			if (!param->session_data.check_session_key(header.session_key)) {
 				throw server_error(server_error_code::invalid_session,
-					generate_string("A session key(", header.session_key, ") is not valid."));
+					minimal_serializer::generate_string("A session key(", header.session_key, ") is not valid."));
 			}
 		}
 
 		if (!is_handler_exist(header.message_type)) {
 			throw server_error(server_error_code::invalid_message_type,
-				generate_string(static_cast<int>(header.message_type)));
+				minimal_serializer::generate_string(static_cast<int>(header.message_type)));
 		}
 
 		if (enable_message_specification && header.message_type != specified_message_type) {
 			throw server_error(server_error_code::message_type_mismatch,
-				generate_string("expected: ", specified_message_type, ", actual: ", header.message_type));
+				minimal_serializer::generate_string("expected: ", specified_message_type, ", actual: ", header.message_type));
 		}
 
 		const auto message_handler = make_message_handler(header.message_type);
-		const auto header_size = get_serialized_size<request_message_header>();
+		const auto header_size = minimal_serializer::get_serialized_size<request_message_header>();
 		const auto message_size = message_handler->get_message_size();
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message header received. (type: ",
 			header.message_type, ", size: ", header_size, ")");
