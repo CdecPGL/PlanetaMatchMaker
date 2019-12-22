@@ -6,6 +6,12 @@ file(GLOB_RECURSE source_files "*.cpp")
 list(REMOVE_ITEM source_files ${main_source})
 add_library (PlanetaMatchMakerServerLib ${source_files})
 
+# to avoid linker error "undefined reference to `std::filesystem::__cxx11::**"
+# http://nanapro.org/en-us/forum/index.php?u=/topic/266/ggcompiling-with-std-filesystem
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	target_link_libraries(PlanetaMatchMakerServerLib stdc++fs)
+endif()
+
 # Headers in this project
 set (includes "library" "source")
 target_include_directories(PlanetaMatchMakerServerLib PUBLIC ${includes})
@@ -18,7 +24,7 @@ target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCL
 target_link_libraries(PlanetaMatchMakerServerLib ${boost_library_paths})
 
 # Avoid to error of Boost Library 1.70 for MSVC
-if (MSVC)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_definitions(-D_WIN32_WINNT=0x0601)
 endif()
 

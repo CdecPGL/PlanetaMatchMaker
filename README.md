@@ -8,7 +8,7 @@ A match making server and client for network game.
 
 - Boost Library 1.70
 - CMake 3.8
-- minimal-serializer v0.1.1 (included in this repogitory)
+- minimal-serializer v0.1.3 (included in this repogitory)
 
 ### Functions
 
@@ -76,7 +76,7 @@ You can locate a setting file `setting.json` to `.pmms` directory in home direct
 
 ### Dependencies
 
-- minimal-serializer v0.1.1 (included in this repogitory)
+- minimal-serializer v0.1.3 (included in this repogitory)
 
 ### Windows
 

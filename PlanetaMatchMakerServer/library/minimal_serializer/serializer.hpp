@@ -22,6 +22,26 @@ namespace minimal_serializer {
 	class serialization_error final : public std::logic_error {
 		using logic_error::logic_error;
 	};
+
+	template <typename T>
+	T convert_endian_native_to_big(T value) {
+		return boost::endian::native_to_big(value);
+	}
+
+	// bool type is endian independent. IN addtion, bool type is not supported in boost endian conversion from boost library 1.71.0.
+	template<>
+	inline bool convert_endian_native_to_big(bool value) {
+		return value;
+	}
+
+	template <typename T>
+	void convert_endian_big_to_native_inplace(T& value) {
+		boost::endian::big_to_native_inplace(value);
+	}
+
+	// bool type is endian independent. IN addtion, bool type is not supported in boost endian conversion from boost library 1.71.0.
+	template<>
+	inline void convert_endian_big_to_native_inplace(bool& value) { }
 	
 	/* A function to raise error for not serializable type.
 	 * This function always fails static assertion and throws serialization_error in runtime.
@@ -77,7 +97,7 @@ namespace minimal_serializer {
 			switch (status_) {
 				case status::serializing:
 					serializers_.push_back([&value](std::vector<uint8_t>& data, size_t& pos) {
-						auto e_value = boost::endian::native_to_big(value);
+						auto e_value = convert_endian_native_to_big(value);
 						const auto size = sizeof(T);
 						std::memcpy(data.data() + pos, &e_value, size);
 						pos += size;
@@ -87,7 +107,7 @@ namespace minimal_serializer {
 					deserializers_.push_back([&value](const std::vector<uint8_t>& data, size_t& pos) {
 						const auto size = sizeof(T);
 						std::memcpy(&value, data.data() + pos, size);
-						boost::endian::big_to_native_inplace(value);
+						convert_endian_big_to_native_inplace(value);
 						pos += size;
 					});
 					break;
@@ -108,7 +128,7 @@ namespace minimal_serializer {
 				case status::serializing:
 					serializers_.push_back([&value](std::vector<uint8_t>& data, size_t& pos) {
 						auto base_value = static_cast<base_t>(value);
-						auto e_value = boost::endian::native_to_big(base_value);
+						auto e_value = convert_endian_native_to_big(base_value);
 						const auto size = sizeof(base_t);
 						std::memcpy(data.data() + pos, &e_value, size);
 						pos += size;
@@ -119,7 +139,7 @@ namespace minimal_serializer {
 						const auto size = sizeof(base_t);
 						base_t base_value;
 						std::memcpy(&base_value, data.data() + pos, size);
-						boost::endian::big_to_native_inplace(base_value);
+						convert_endian_big_to_native_inplace(base_value);
 						value = static_cast<T>(base_value);
 						pos += size;
 					});

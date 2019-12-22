@@ -38,7 +38,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
   message(FATAL_ERROR "Currently, gcc is not supported. (add -DCMAKE_CXX_COMPILER=clang++)")
 elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -lpthread -latomic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -lpthread -latomic -fpermissive")
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # for code compability of MSVC 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdelayed-template-parsing")

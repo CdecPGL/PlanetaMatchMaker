@@ -8,7 +8,7 @@ namespace pgl {
 	}
 
 	ip_version client_address::ip_version() const {
-		if (equal(ipv4_prefix.begin(), ipv4_prefix.end(), ip_address.begin())) {
+		if (std::equal(ipv4_prefix.begin(), ipv4_prefix.end(), ip_address.begin())) {
 			return ip_version::v4;
 		}
 
