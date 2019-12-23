@@ -1,5 +1,4 @@
 cmake_minimum_required (VERSION 3.8)
-enable_testing()
 
 file(GLOB_RECURSE source_files "*.cpp")
 add_executable (PlanetaMatchMakerServerTest ${source_files})
@@ -17,6 +16,4 @@ target_link_libraries(PlanetaMatchMakerServerTest PlanetaMatchMakerServerLib)
 add_test(
   NAME PlanetaMatchMakerServerTest
   COMMAND $<TARGET_FILE:PlanetaMatchMakerServerTest>
-#  CONFIGURATIONS Release
-  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tmp
 )
