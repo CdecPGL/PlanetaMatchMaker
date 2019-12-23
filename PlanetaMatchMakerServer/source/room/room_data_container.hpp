@@ -1,6 +1,6 @@
 #pragma once
 
-#include "data/thread_safe_data_container.h"
+#include "data/thread_safe_data_container.hpp"
 
 #include "room_constants.hpp"
 #include "room_data.hpp"

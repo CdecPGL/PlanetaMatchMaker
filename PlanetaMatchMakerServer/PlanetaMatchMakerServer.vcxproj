@@ -180,7 +180,7 @@
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
     <ClInclude Include="source\data\random_id_generator.hpp" />
-    <ClInclude Include="source\data\thread_safe_data_container.h" />
+    <ClInclude Include="source\data\thread_safe_data_container.hpp" />
     <ClInclude Include="source\datetime\datetime.hpp" />
     <ClInclude Include="source\message\message_constants.hpp" />
     <ClInclude Include="source\message\message_error_code.hpp" />

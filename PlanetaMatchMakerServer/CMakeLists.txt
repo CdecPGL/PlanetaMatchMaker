@@ -17,11 +17,9 @@ set (includes "library" "source")
 target_include_directories(PlanetaMatchMakerServerLib PUBLIC ${includes})
 
 # Boost Library
-find_package(Boost REQUIRED)
-file(GLOB_RECURSE boost_library_paths "${Boost_LIBRARY_DIRS}/*boost*")
-# to avoid warnings, use SYSTEM (-isystem option of gcc)
-target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(PlanetaMatchMakerServerLib ${boost_library_paths})
+find_package(Boost REQUIRED COMPONENTS thread coroutine date_time filesystem)
+target_include_directories(PlanetaMatchMakerServerLib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(PlanetaMatchMakerServerLib ${Boost_LIBRARIES})
 
 # Avoid to error of Boost Library 1.70 for MSVC
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -31,7 +29,7 @@ endif()
 # Main executable
 add_executable (PlanetaMatchMakerServer ${main_source})
 target_link_libraries(PlanetaMatchMakerServer PlanetaMatchMakerServerLib)
-# Install bunary
+# Install binary
 install (TARGETS PlanetaMatchMakerServer DESTINATION bin)
 # Create symbolic link to binary
 install_symlink ("${CMAKE_INSTALL_PREFIX}/bin/PlanetaMatchMakerServer" "${CMAKE_INSTALL_PREFIX}/bin/pmms")
@@ -42,11 +40,3 @@ if((CMAKE_SYSTEM_NAME STREQUAL "Windows") OR (CMAKE_SYSTEM_NAME STREQUAL "MSYS")
 else()
 	install (FILES "setting.json" PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ DESTINATION "$ENV{HOME}/.pmms")
 endif()
-
-# for debug
-#message(STATUS "*** dump start cmake variables ***")
-#get_cmake_property(_variableNames VARIABLES)
-#foreach(_variableName ${_variableNames})
-#        message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
-#message(STATUS "*** dump end ***")
