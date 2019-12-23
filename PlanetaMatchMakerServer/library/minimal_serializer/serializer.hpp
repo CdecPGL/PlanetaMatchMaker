@@ -41,7 +41,7 @@ namespace minimal_serializer {
 
 	// bool type is endian independent. IN addtion, bool type is not supported in boost endian conversion from boost library 1.71.0.
 	template<>
-	inline void convert_endian_big_to_native_inplace(bool& value) { }
+	inline void convert_endian_big_to_native_inplace(bool&) { }
 	
 	/* A function to raise error for not serializable type.
 	 * This function always fails static assertion and throws serialization_error in runtime.
