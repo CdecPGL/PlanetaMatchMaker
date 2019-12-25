@@ -13,9 +13,9 @@ namespace pgl {
 	struct server_setting;
 	class session_data;
 
-	class connection_handler final : public std::enable_shared_from_this<connection_handler>, boost::noncopyable {
+	class server_session final : public std::enable_shared_from_this<server_session>, boost::noncopyable {
 	public:
-		connection_handler(boost::asio::ip::tcp::acceptor& acceptor,
+		server_session(boost::asio::ip::tcp::acceptor& acceptor,
 			server_data& server_data, const server_setting& server_setting,
 			message_handler_invoker& message_handler_invoker);
 		void start();

@@ -10,13 +10,13 @@
 #include "utilities/checked_static_cast.hpp"
 #include "server/server_setting.hpp"
 
-#include "connection_handler.hpp"
+#include "server_session.hpp"
 
 using namespace std;
 using namespace boost;
 
 namespace pgl {
-	connection_handler::connection_handler(asio::ip::tcp::acceptor& acceptor, server_data& server_data,
+	server_session::server_session(asio::ip::tcp::acceptor& acceptor, server_data& server_data,
 		const server_setting& server_setting, message_handler_invoker& message_handler_invoker):
 		acceptor_(acceptor),
 		server_data_(server_data),
@@ -24,7 +24,7 @@ namespace pgl {
 		message_handler_invoker_(message_handler_invoker),
 		socket_(acceptor.get_executor()) { }
 
-	void connection_handler::start() {
+	void server_session::start() {
 		// Reset session
 		session_data_ = std::make_unique<session_data>();
 
@@ -87,12 +87,12 @@ namespace pgl {
 		});
 	}
 
-	void connection_handler::stop() {
+	void server_session::stop() {
 		finalize();
 		socket_.close();
 	}
 
-	void connection_handler::finalize() const {
+	void server_session::finalize() const {
 		// Remove hosting room if exist
 		if (session_data_->is_hosting_room()) {
 			server_data_.get_room_data_container(session_data_->hosting_room_group_index()).remove_data(
@@ -102,7 +102,7 @@ namespace pgl {
 		}
 	}
 
-	void connection_handler::restart() {
+	void server_session::restart() {
 		log(log_level::info, "Restart server instance.");
 		stop();
 		start();

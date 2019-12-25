@@ -4,8 +4,7 @@ file(GLOB_RECURSE source_files "*.cpp")
 add_executable (PlanetaMatchMakerServerTest ${source_files})
 
 # Boost Library
-find_package(Boost REQUIRED COMPONENTS unit_test_framework)
-file(GLOB_RECURSE boost_library_paths "${Boost_LIBRARY_DIRS}/*boost*")
+find_package(Boost 1.70.0 REQUIRED COMPONENTS unit_test_framework)
 # to avoid warnings, use SYSTEM (-isystem option of gcc)
 target_include_directories(PlanetaMatchMakerServerTest SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerTest ${Boost_LIBRARIES})
