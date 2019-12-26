@@ -21,6 +21,7 @@ namespace pgl {
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 			message.end_index - message.start_index + 1,
 			message.sort_kind, message.search_target_flags, message.search_name.to_string());
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), room_data_list.size(), "rooms are found.");
 
 		// Prepare reply header
 		reply_message_header header{
