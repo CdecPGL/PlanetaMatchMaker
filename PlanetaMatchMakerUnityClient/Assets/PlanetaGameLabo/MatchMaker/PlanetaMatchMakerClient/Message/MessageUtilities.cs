@@ -68,10 +68,6 @@ namespace PlanetaGameLabo.MatchMaker
                     new ArraySegment<byte>(new byte[Serializer.GetSerializedSize<ReplyMessageHeader>()]);
                 await client.Client.ReceiveAsync(buffer, SocketFlags.None);
                 var header = Serializer.Deserialize<ReplyMessageHeader>(buffer.Array);
-                if (header.ErrorCode != MessageErrorCode.Ok)
-                {
-                    return (header.ErrorCode, default);
-                }
 
                 if (header.MessageType != messageAttribute.MessageType)
                 {
@@ -79,8 +75,14 @@ namespace PlanetaGameLabo.MatchMaker
                         $"The type of received message is invalid. (expected: {messageAttribute.MessageType}, actual: {header.MessageType})");
                 }
 
+                // Receive body data even if reply code is not OK to prevent remaining body data in receive buffer.
                 buffer = new ArraySegment<byte>(new byte[Serializer.GetSerializedSize<T>()]);
                 await client.Client.ReceiveAsync(buffer, SocketFlags.None);
+                if (header.ErrorCode != MessageErrorCode.Ok)
+                {
+                    return (header.ErrorCode, default);
+                }
+
                 var body = Serializer.Deserialize<T>(buffer.Array);
                 return (MessageErrorCode.Ok, body);
             }
