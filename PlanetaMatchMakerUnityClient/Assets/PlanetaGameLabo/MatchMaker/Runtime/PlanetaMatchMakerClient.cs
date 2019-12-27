@@ -474,6 +474,10 @@ namespace PlanetaGameLabo.MatchMaker
                             }
 
                             break;
+                        case ClientInternalErrorException _:
+                            callback?.Invoke(new ErrorInfo(e), defaultResult);
+                            Disconnect();
+                            break;
                         default:
                             callback?.Invoke(new ErrorInfo(e), defaultResult);
                             break;
@@ -532,7 +536,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private void Reset()
-        { 
+        {
             status = Status.Disconnected;
             hostingRoomInfo = null;
             _roomGroupInfoList.Clear();
