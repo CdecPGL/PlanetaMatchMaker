@@ -1,23 +1,38 @@
-﻿using System;
+using System;
 
 namespace PlanetaGameLabo.MatchMaker
 {
+    /// <summary>
+    /// An exception of client due to user operation.
+    /// When this exception is thrown, Connection will be continued if possible.
+    /// </summary>
     public sealed class ClientErrorException : Exception
     {
         public ClientErrorCode ClientErrorCode { get; }
 
         public string ExtraMessage { get; }
 
-        public ClientErrorException(ClientErrorCode error_code) : base(error_code.GetClientErrorMessage())
+        public ClientErrorException(ClientErrorCode errorCode) : base(errorCode.GetClientErrorMessage())
         {
-            ClientErrorCode = error_code;
+            ClientErrorCode = errorCode;
         }
 
-        public ClientErrorException(ClientErrorCode error_code, string extra_message) : base(
-            error_code.GetClientErrorMessage() + ": " + extra_message)
+        public ClientErrorException(ClientErrorCode errorCode, string extraMessage) : base(
+            errorCode.GetClientErrorMessage() + ": " + extraMessage)
         {
-            ClientErrorCode = error_code;
-            ExtraMessage = extra_message;
+            ClientErrorCode = errorCode;
+            ExtraMessage = extraMessage;
+        }
+    }
+
+    /// <summary>
+    /// Exception of client due to system.
+    /// When this exception is thrown, the connection will be disconnected.
+    /// </summary>
+    public sealed class ClientInternalErrorException : Exception
+    {
+        public ClientInternalErrorException(string message) : base(message)
+        {
         }
     }
 
@@ -27,8 +42,6 @@ namespace PlanetaGameLabo.MatchMaker
         FailedToConnect,
         AlreadyConnected,
         NotConnected,
-        MessageSendError,
-        MessageReceptionError,
         RequestError,
         AlreadyHostingRoom,
         NotHostingRoom,
@@ -46,10 +59,6 @@ namespace PlanetaGameLabo.MatchMaker
                     return "Ok";
                 case ClientErrorCode.FailedToConnect:
                     return "Failed to connect to the server.";
-                case ClientErrorCode.MessageSendError:
-                    return "Failed to send messages.";
-                case ClientErrorCode.MessageReceptionError:
-                    return "Failed to receive messages.";
                 case ClientErrorCode.RequestError:
                     return "Request doesn't processed correctly on the server.";
                 case ClientErrorCode.AlreadyConnected:
