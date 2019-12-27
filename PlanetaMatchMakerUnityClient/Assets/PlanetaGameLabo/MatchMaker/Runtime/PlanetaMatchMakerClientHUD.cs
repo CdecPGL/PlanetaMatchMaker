@@ -11,7 +11,6 @@ namespace PlanetaGameLabo.MatchMaker
     public sealed class PlanetaMatchMakerClientHUD : MonoBehaviour
     {
         [SerializeField] private Vector2Int _position;
-
         [SerializeField] private float _roomListUpdateIntervalSeconds = 3;
 
         private PlanetaMatchMakerClient _client;
