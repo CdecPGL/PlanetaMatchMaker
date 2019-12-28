@@ -436,7 +436,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 await tcpClient.SendRequestMessage(messageBody, sessionKey);
             }
-            catch (MessageErrorException e)
+            catch (MessageInternalErrorException e)
             {
                 throw new ClientInternalErrorException(e.Message);
             }
@@ -466,7 +466,7 @@ namespace PlanetaGameLabo.MatchMaker
 
                 return replyBody;
             }
-            catch (MessageErrorException e)
+            catch (MessageInternalErrorException e)
             {
                 throw new ClientInternalErrorException(e.Message);
             }

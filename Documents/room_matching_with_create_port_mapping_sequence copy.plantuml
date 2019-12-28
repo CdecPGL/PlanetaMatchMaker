@@ -1,0 +1,89 @@
+@startuml
+
+title Room Matching with Create Port Mapping Sequence
+
+participant GameHost
+participant GameHostNAT
+participant MatchingServer
+' NAT of Client1 is not shown in this diagram because it has no effects.
+participant Client1
+
+group Authentication
+GameHost -> GameHostNAT : authentication_request
+GameHostNAT -> MatchingServer
+activate MatchingServer
+MatchingServer -> MatchingServer: authentication
+MatchingServer --> GameHostNAT : authentication_reply[ok or error]
+GameHostNAT --> GameHost
+deactivate MatchingServer
+end
+
+...
+
+group Connectability Check
+GameHost -> GameHost : start waiting TCP connection with game port
+activate GameHost
+GameHost -> GameHostNAT : check_connectable_request
+GameHostNAT -> MatchingServer
+activate MatchingServer
+MatchingServer -> GameHostNAT : try to connect with game port
+GameHostNAT -> GameHost
+MatchingServer --> GameHostNAT : check_connectable_reply
+deactivate MatchingServer
+GameHostNAT --> GameHost
+deactivate GameHost
+end
+
+group Create Port Mapping if Need
+GameHost -> GameHostNAT: create port mapping request
+activate GameHostNAT
+GameHostNAT -> GameHostNAT: create port mapping
+deactivate GameHostNAT
+
+group Connectability Check
+GameHost -> GameHost : start waiting TCP connection with game port
+activate GameHost
+GameHost -> GameHostNAT : check_connectable_request
+GameHostNAT -> MatchingServer
+activate MatchingServer
+MatchingServer -> GameHostNAT : try to connect with game port
+GameHostNAT -> GameHost
+MatchingServer --> GameHostNAT : check_connectable_reply
+deactivate MatchingServer
+GameHostNAT --> GameHost
+deactivate GameHost
+end
+end
+
+GameHost -> GameHostNAT : create_room_request
+GameHostNAT -> MatchingServer
+activate MatchingServer
+MatchingServer -> MatchingServer : create room
+MatchingServer --> GameHostNAT : create_room_reply
+deactivate MatchingServer
+GameHostNAT --> GameHost
+
+group Game
+
+==Start Lobby==
+
+group Join Client1
+
+...
+
+Client1->MatchingServer : join_room_request
+activate MatchingServer
+MatchingServer --> Client1 : join_room_reply
+deactivate MatchingServer
+Client1->GameHostNAT : connect
+GameHostNAT->GameHost
+
+end
+
+...
+
+end
+
+...
+
+@enduml

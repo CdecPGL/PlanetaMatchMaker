@@ -1,6 +1,6 @@
 @startuml
 
-title List Room Standard Sequence
+title Room Matching Standard Sequence
 
 participant MatchingServer
 participant GameHost

@@ -1,6 +1,6 @@
 @startuml
 
-title List Room Error Sequence
+title Room Matcing Error Sequence
 
 participant MatchingServer
 participant GameHost

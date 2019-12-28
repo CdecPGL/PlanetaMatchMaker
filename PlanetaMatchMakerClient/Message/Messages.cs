@@ -40,6 +40,8 @@ namespace PlanetaGameLabo.MatchMaker
         JoinRoomRequest,
         JoinRoomReply,
         UpdateRoomStatusNotice,
+        ConnectionTestRequest,
+        ConnectionTestReply,
         RandomMatchRequest
     }
 
@@ -103,7 +105,7 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomGroupInfo[] RoomGroupInfoList;
     }
 
-    // 43 bytes
+    // 45 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     internal struct CreateRoomRequestMessage
@@ -119,6 +121,8 @@ namespace PlanetaGameLabo.MatchMaker
         public string Password;
 
         public byte MaxPlayerCount;
+
+        public ushort portNumber;
     }
 
     // 4 bytes
@@ -203,5 +207,21 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomStatus Status;
         public bool IsCurrentPlayerCountChanged;
         public byte CurrentPlayerCount;
+    }
+
+    // 21 bytes
+    [Serializable]
+    [Message(MessageType.ConnectionTestRequest)]
+    internal struct ConnectionTestRequestMessage
+    {
+        public ushort portNumber;
+    }
+
+    //18 bytes
+    [Serializable]
+    [Message(MessageType.ConnectionTestReply)]
+    internal struct ConnectionTestReplyMessage
+    {
+        public bool succeed;
     }
 }

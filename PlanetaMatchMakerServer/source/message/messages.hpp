@@ -25,7 +25,9 @@ namespace pgl {
 		join_room_request,
 		join_room_reply,
 		update_room_status_notice,
-		random_match_request
+		connection_test_request,
+		connection_test_reply,
+		random_match_request,
 	};
 
 	// 5 bytes. Use for notice message too
@@ -102,13 +104,14 @@ namespace pgl {
 		}
 	};
 
-	// 43 bytes
+	// 45 bytes
 	struct create_room_request_message final {
 		room_group_index_type group_index;
 		room_name_type name;
 		bool is_public;
 		room_password_type password;
 		uint8_t max_player_count;
+		port_number_type port_number;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
@@ -116,6 +119,7 @@ namespace pgl {
 			serializer += is_public;
 			serializer += password;
 			serializer += max_player_count;
+			serializer += port_number;
 		}
 	};
 
@@ -224,6 +228,24 @@ namespace pgl {
 		}
 	};
 
+	// 2 bytes
+	struct connection_test_request_message final {
+		port_number_type port_number;
+
+		void on_serialize(minimal_serializer::serializer& serializer) {
+			serializer += port_number;
+		}
+	};
+
+	// 1 bytes
+	struct connection_test_reply_message final {
+		bool succeed;
+
+		void on_serialize(minimal_serializer::serializer& serializer) {
+			serializer += succeed;
+		}
+	};
+	
 	struct random_match_request_message final {
 		void on_serialize(minimal_serializer::serializer& serializer [[maybe_unused]]) { }
 	};
