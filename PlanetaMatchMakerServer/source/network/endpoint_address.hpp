@@ -16,8 +16,8 @@ namespace pgl {
 		port_number_type port_number;
 
 		bool operator==(const endpoint_address& other) const;
-
 		ip_version ip_version()const;
+		boost::asio::ip::address get_boost_ip_address()const;		
 
 		static endpoint_address make_from_boost_endpoint(
 			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint);
