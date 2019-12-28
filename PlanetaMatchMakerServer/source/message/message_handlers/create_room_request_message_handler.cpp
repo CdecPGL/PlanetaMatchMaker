@@ -37,6 +37,8 @@ namespace pgl {
 
 		try {
 			// Create requested room
+			auto host_address = endpoint_address::make_from_boost_endpoint(param->socket.remote_endpoint());
+			host_address.port_number = message.port_number;			
 			room_data room_data{
 				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
 				message.name,
@@ -45,7 +47,7 @@ namespace pgl {
 				message.password,
 				message.max_player_count,
 				datetime::now(),
-				endpoint_address::make_from_boost_endpoint(param->socket.remote_endpoint()),
+				host_address,
 				1
 			};
 
