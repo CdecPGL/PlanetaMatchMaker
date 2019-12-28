@@ -5,7 +5,7 @@ using CdecPGL.MinimalSerializer;
 namespace PlanetaGameLabo.MatchMaker
 {
     [Serializable]
-    public struct ClientAddress
+    public struct EndpointAddress
     {
         [FixedLength(16)] public byte[] IpAddress;
 
@@ -21,7 +21,7 @@ namespace PlanetaGameLabo.MatchMaker
                 ? IpAddressInstance.MapToIPv4().ToString()
                 : IpAddressInstance.ToString();
 
-            return $"{nameof(ClientAddress)}({ipAddressText}:{PortNumber})";
+            return $"{nameof(EndpointAddress)}({ipAddressText}:{PortNumber})";
         }
     }
 }

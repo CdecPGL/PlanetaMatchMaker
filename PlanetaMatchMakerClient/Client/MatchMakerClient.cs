@@ -306,7 +306,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
-        public async Task<ClientAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
+        public async Task<EndpointAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
         {
             await semaphore.WaitAsync();
             try

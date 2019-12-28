@@ -16,7 +16,7 @@ namespace pgl {
 		auto room_data = room_data_container.get_data(message.room_id);
 
 		// Check if the client is host of requested room
-		if (room_data.host_address != client_address::make_from_endpoint(param->socket.remote_endpoint())) {
+		if (room_data.host_address != endpoint_address::make_from_boost_endpoint(param->socket.remote_endpoint())) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "The client is not host of requested ",
 				room_data, ".");
 			throw server_error(server_error_code::room_permission_error);

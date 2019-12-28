@@ -176,7 +176,7 @@
     <ClInclude Include="library\nameof.hpp" />
     <ClInclude Include="source\async\read_write.hpp" />
     <ClInclude Include="source\async\timer.hpp" />
-    <ClInclude Include="source\client\client_address.hpp" />
+    <ClInclude Include="source\network\endpoint_address.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
     <ClInclude Include="source\data\random_id_generator.hpp" />
@@ -222,7 +222,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\async\timer.cpp" />
-    <ClCompile Include="source\client\client_address.cpp" />
+    <ClCompile Include="source\network\endpoint_address.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\message\message_handlers\connection_test_request_message_handler.cpp" />

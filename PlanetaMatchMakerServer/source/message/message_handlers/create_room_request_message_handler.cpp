@@ -2,7 +2,7 @@
 #include "async/read_write.hpp"
 #include "async/timer.hpp"
 #include "message/messages.hpp"
-#include "client/client_address.hpp"
+#include "network/endpoint_address.hpp"
 #include "utilities/log.hpp"
 #include "datetime/datetime.hpp"
 #include "session/session_data.hpp"
@@ -45,7 +45,7 @@ namespace pgl {
 				message.password,
 				message.max_player_count,
 				datetime::now(),
-				client_address::make_from_endpoint(param->socket.remote_endpoint()),
+				endpoint_address::make_from_boost_endpoint(param->socket.remote_endpoint()),
 				1
 			};
 
