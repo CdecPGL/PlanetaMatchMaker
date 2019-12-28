@@ -17,7 +17,7 @@ namespace pgl {
 		invoker.register_handler<message_type::list_room_request, list_room_request_message_handler>();
 		invoker.register_handler<message_type::update_room_status_notice, update_room_status_notice_message_handler
 		>();
-		invoker.register_handler<message_type::connection_test_request, connection_test_request_message>();
+		invoker.register_handler<message_type::connection_test_request, connection_test_request_message_handler>();
 	}
 
 	std::shared_ptr<message_handler_invoker> message_handler_invoker_factory::make_shared_standard() {

@@ -34,6 +34,7 @@ namespace pgl {
 				log(log_level::debug, "Start to accept.");
 				try {
 					shared_this->acceptor_.async_accept(shared_this->socket_, yield);
+					shared_this->session_data_->set_client_address(endpoint_address::make_from_boost_endpoint(shared_this->socket_.remote_endpoint()));
 				} catch (system::system_error& e) {
 					const auto extra_message = minimal_serializer::generate_string(e, " @", shared_this->socket_.remote_endpoint());
 					throw server_error(server_error_code::acception_failed, extra_message);

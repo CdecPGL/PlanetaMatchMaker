@@ -39,6 +39,10 @@ namespace pgl {
 		is_hosting_room_ = false;
 	}
 
+	void session_data::set_client_address(const endpoint_address& client_address) {
+		client_address_ = client_address;
+	}
+
 	room_group_index_type session_data::hosting_room_group_index() const {
 		if (!is_hosting_room_) {
 			throw std::runtime_error("A hosting room is not set.");
@@ -70,4 +74,9 @@ namespace pgl {
 
 		return is_session_key_generated_ && session_key_ == session_key;
 	}
+
+	const endpoint_address& session_data::client_address() const {
+		return client_address_;
+	}
+
 }
