@@ -77,6 +77,7 @@ You can locate a setting file `setting.json` to `.pmms` directory in home direct
 ### Dependencies
 
 - minimal-serializer v0.1.3 (included in this repogitory)
+- [Open.NAT commit 643f04e8227fe873731b884244bcee4cc84c8d49](https://github.com/lontivero/Open.NAT) (included in this repogitory)
 
 ### Windows
 
