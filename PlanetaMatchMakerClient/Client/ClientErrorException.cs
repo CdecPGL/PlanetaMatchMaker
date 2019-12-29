@@ -46,6 +46,7 @@ namespace PlanetaGameLabo.MatchMaker
         AlreadyHostingRoom,
         NotHostingRoom,
         ConnectionClosed,
+        FailedToCreatePortMapping,
         UnknownError,
     };
 

@@ -20,10 +20,10 @@ end
 
 ...
 
-group Connectability Check
+group Connection Test
 GameHost -> GameHost : start waiting TCP connection with game port
 activate GameHost
-GameHost -> GameHostNAT : check_connectable_request
+GameHost -> GameHostNAT : connection_test_request
 GameHostNAT -> MatchingServer
 activate MatchingServer
 MatchingServer -> GameHostNAT : try to connect with game port
@@ -40,10 +40,10 @@ activate GameHostNAT
 GameHostNAT -> GameHostNAT: create port mapping
 deactivate GameHostNAT
 
-group Connectability Check
+group Connection Test
 GameHost -> GameHost : start waiting TCP connection with game port
 activate GameHost
-GameHost -> GameHostNAT : check_connectable_request
+GameHost -> GameHostNAT : connection_test_request
 GameHostNAT -> MatchingServer
 activate MatchingServer
 MatchingServer -> GameHostNAT : try to connect with game port

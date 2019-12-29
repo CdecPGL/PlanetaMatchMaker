@@ -24,9 +24,16 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
+using System;
+using System.Xml;
+
 namespace Open.Nat
 {
     internal class AddPortMappingResponseMessage : ResponseMessageBase
     {
+        internal AddPortMappingResponseMessage(XmlDocument response, string serviceType)
+            : base(response, serviceType, "AddPortMappingResponseMessage")
+        {
+        }
     }
 }

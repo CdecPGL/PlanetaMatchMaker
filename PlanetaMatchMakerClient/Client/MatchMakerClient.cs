@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
@@ -29,6 +32,11 @@ namespace PlanetaGameLabo.MatchMaker
         /// Hosting room id. This is valid when hosting room.
         /// </summary>
         public byte HostingRoomGroupIndex { get; private set; }
+
+        /// <summary>
+        /// An instance of class to create port mapping to NAT.
+        /// </summary>
+        public NatPortMappingCreator PortMappingCreator { get; } = new NatPortMappingCreator();
 
         /// <summary>
         /// Connect to matching server.
@@ -142,6 +150,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Create and host new room to the server.
         /// </summary>
+        /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <param name="roomGroupIndex"></param>
         /// <param name="roomName"></param>
         /// <param name="maxPlayerCount"></param>
@@ -151,7 +160,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount,
+        public async Task CreateRoomAsync(ushort portNumber, byte roomGroupIndex, string roomName, byte maxPlayerCount,
             bool isPublic = true, string password = "")
         {
             await semaphore.WaitAsync();
@@ -178,20 +187,81 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                var requestBody = new CreateRoomRequestMessage
+                await CreateRoomAsyncCore(portNumber, roomGroupIndex, roomName, maxPlayerCount, isPublic, password);
+            }
+            catch (ClientInternalErrorException)
+            {
+                if (tcpClient.Connected)
                 {
-                    GroupIndex = roomGroupIndex,
-                    Name = roomName,
-                    Password = password,
-                    MaxPlayerCount = maxPlayerCount,
-                    IsPublic = isPublic
-                };
-                await SendRequestAsync(requestBody);
+                    Close();
+                }
 
-                var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>();
-                IsHostingRoom = true;
-                HostingRoomGroupIndex = roomGroupIndex;
-                HostingRoomId = replyBody.RoomId;
+                throw;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// Create and host new room to the server with creating port mapping to NAT.
+        /// </summary>
+        /// <param name="discoverNatTimeoutMilliSeconds"></param>
+        /// <param name="portNumberCandidates">The candidates of port number which is used for accept TCP connection of game</param>
+        /// <param name="roomGroupIndex"></param>
+        /// <param name="roomName"></param>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="isPublic"></param>
+        /// <param name="password"></param>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ClientInternalErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        public async Task CreateRoomAsyncWithCreatingPortMapping(int discoverNatTimeoutMilliSeconds,
+            IEnumerable<ushort> portNumberCandidates, byte roomGroupIndex, string roomName, byte maxPlayerCount,
+            bool isPublic = true, string password = "")
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                if (roomName == null)
+                {
+                    throw new ArgumentNullException(nameof(roomName));
+                }
+
+                if (password == null)
+                {
+                    throw new ArgumentNullException(nameof(password));
+                }
+
+                if (!Connected)
+                {
+                    throw new ClientErrorException(ClientErrorCode.NotConnected);
+                }
+
+                if (IsHostingRoom)
+                {
+                    throw new ClientErrorException(ClientErrorCode.AlreadyHostingRoom,
+                        "The client can host only one room.");
+                }
+
+                if (!PortMappingCreator.IsDiscoverNatDone)
+                {
+                    await PortMappingCreator.DiscoverNat(discoverNatTimeoutMilliSeconds);
+                }
+
+                if (!PortMappingCreator.IsNatDeviceAvailable)
+                {
+                    throw new ClientErrorException(ClientErrorCode.FailedToCreatePortMapping,
+                        "Failed to discover NAT device.");
+                }
+
+                var portNumberCandidateArray = portNumberCandidates.ToArray();
+                var (_, portNumber) = await PortMappingCreator.CreatePortMappingFromCandidate(TransportProtocol.Tcp,
+                    portNumberCandidateArray, portNumberCandidateArray, "");
+
+                await CreateRoomAsyncCore(portNumber, roomGroupIndex, roomName, maxPlayerCount, isPublic, password);
             }
             catch (ClientInternalErrorException)
             {
@@ -306,7 +376,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
-        public async Task<EndpointAddress> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
+        public async Task<IPEndPoint> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
         {
             await semaphore.WaitAsync();
             try
@@ -329,7 +399,7 @@ namespace PlanetaGameLabo.MatchMaker
                 await SendRequestAsync(requestBody);
 
                 var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>();
-                return replyBody.HostAddress;
+                return (IPEndPoint)replyBody.HostAddress;
             }
             catch (ClientInternalErrorException)
             {
@@ -412,6 +482,91 @@ namespace PlanetaGameLabo.MatchMaker
             await UpdateHostingRoomStatusAsync(RoomStatus.Remove);
         }
 
+        /// <summary>
+        /// Check if other machine can connect to this machine with the port for game.
+        /// </summary>
+        /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ClientInternalErrorException"></exception>
+        /// <exception cref="InvalidOperationException">The port is already used by other connection which is not TCP server</exception>
+        /// <returns></returns>
+        public async Task<bool> ConnectionTestAsync(ushort portNumber)
+        {
+            await semaphore.WaitAsync();
+            TcpListener tcpListener = null;
+            Socket socket = null;
+            Task task = null;
+            var cancelTokenSource = new CancellationTokenSource();
+            try
+            {
+                if (!Connected)
+                {
+                    throw new ClientErrorException(ClientErrorCode.NotConnected);
+                }
+
+                var ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+                var activeTcpListeners = ipGlobalProperties.GetActiveTcpListeners();
+                // use already listening TCP server with the port if exist
+                if (activeTcpListeners.All(l => l.Port != portNumber))
+                {
+                    // error if the port is already used by other connection which is not TCP server
+                    if (ipGlobalProperties.GetActiveTcpConnections().Any(c => c.LocalEndPoint.Port == portNumber))
+                    {
+                        throw new InvalidOperationException(
+                            $"The port \"{portNumber}\" is already used by other connection which is not TCP server.");
+                    }
+
+                    // Accept both IPv4 and IPv6
+                    tcpListener = new TcpListener(System.Net.IPAddress.IPv6Any, portNumber);
+                    tcpListener.Server.SetSocketOption(
+                        System.Net.Sockets.SocketOptionLevel.IPv6,
+                        System.Net.Sockets.SocketOptionName.IPv6Only,
+                        0);
+                    tcpListener.Start();
+                    Func<CancellationToken, Task> func = async cancellationToken =>
+                    {
+                        while (true)
+                        {
+                            socket = await Task.Run(() => tcpListener.AcceptSocketAsync(), cancellationToken);
+                            if (socket.Connected)
+                            {
+                                socket.Dispose();
+                                socket = null;
+                            }
+
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                return;
+                            }
+                        }
+                    };
+                    task = func.Invoke(cancelTokenSource.Token);
+                }
+
+                var requestBody = new ConnectionTestRequestMessage {portNumber = portNumber};
+                await SendRequestAsync(requestBody);
+                var reply = await ReceiveReplyAsync<ConnectionTestReplyMessage>();
+                return reply.succeed;
+            }
+            catch (ClientInternalErrorException)
+            {
+                if (tcpClient.Connected)
+                {
+                    Close();
+                }
+
+                throw;
+            }
+            finally
+            {
+                cancelTokenSource.Cancel();
+                socket?.Dispose();
+                task?.Dispose();
+                tcpListener?.Stop();
+                semaphore.Release();
+            }
+        }
+
         public void Dispose()
         {
             tcpClient?.Dispose();
@@ -475,6 +630,39 @@ namespace PlanetaGameLabo.MatchMaker
                 OnConnectionClosed();
                 throw new ClientErrorException(ClientErrorCode.ConnectionClosed, e.Message);
             }
+        }
+
+        /// <summary>
+        /// Create and host new room to the server without try block and parameter validations.
+        /// </summary>
+        /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
+        /// <param name="roomGroupIndex"></param>
+        /// <param name="roomName"></param>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="isPublic"></param>
+        /// <param name="password"></param>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ClientInternalErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        public async Task CreateRoomAsyncCore(ushort portNumber, byte roomGroupIndex, string roomName,
+            byte maxPlayerCount, bool isPublic = true, string password = "")
+        {
+            var requestBody = new CreateRoomRequestMessage
+            {
+                GroupIndex = roomGroupIndex,
+                Name = roomName,
+                Password = password,
+                MaxPlayerCount = maxPlayerCount,
+                IsPublic = isPublic,
+                portNumber = portNumber
+            };
+            await SendRequestAsync(requestBody);
+
+            var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>();
+            IsHostingRoom = true;
+            HostingRoomGroupIndex = roomGroupIndex;
+            HostingRoomId = replyBody.RoomId;
         }
 
         private void OnConnectionClosed()
