@@ -66,27 +66,30 @@ namespace pgl {
 				}
 			}
 			catch (const system::system_error& e) {
-				log_with_endpoint(log_level::error, shared_this->socket_.remote_endpoint(), "Unhandled error: ", e);
+				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+					"Unhandled error: ", e);
 				shared_this->restart();
 			}
 			catch (const server_error& e) {
 				if (e.error_code() == server_error_code::disconnected_expectedly) {
-					log_with_endpoint(log_level::info, shared_this->socket_.remote_endpoint(), e);
+					log_with_endpoint(log_level::info,
+						shared_this->session_data_->remote_endpoint().to_boost_endpoint(), e);
 				}
 				else {
-					log_with_endpoint(log_level::error, shared_this->socket_.remote_endpoint(),
-						"Message handling error: ", e);
+					log_with_endpoint(log_level::error,
+						shared_this->session_data_->remote_endpoint().to_boost_endpoint(), "Message handling error: ",
+						e);
 				}
 
 				shared_this->restart();
 			}
 			catch (const std::exception& e) {
-				log_with_endpoint(log_level::error, shared_this->socket_.remote_endpoint(), typeid(e), ": ", e.what(),
-					" Restart the connection.");
+				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+					typeid(e), ": ", e.what(), " Restart the connection.");
 				shared_this->restart();
 			}
 			catch (...) {
-				log_with_endpoint(log_level::fatal, shared_this->socket_.remote_endpoint(),
+				log_with_endpoint(log_level::fatal, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
 					"Unknown error. Stop the server.");
 				shared_this->stop();
 				throw;
