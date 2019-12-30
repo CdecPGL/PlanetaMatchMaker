@@ -20,7 +20,7 @@ namespace pgl {
 		read_json(file_path.string(), ptree);
 		enable_session_key_check = ptree.get("enable_session_key_check", enable_session_key_check);
 		time_out_seconds = ptree.get("time_out_seconds", time_out_seconds);
-		time_out_seconds = ptree.get("connection_check_time_out_seconds", connection_check_time_out_seconds);
+		connection_check_time_out_seconds = ptree.get("connection_check_time_out_seconds", connection_check_time_out_seconds);
 		const auto log_level_str = ptree.get("log_level", std::string(nameof::nameof_enum(log_level)));
 		try { log_level = string_to_log_level(log_level_str); }
 		catch (const std::out_of_range&) { std::cerr << log_level_str << " is invalid for log_level." << std::endl; }
