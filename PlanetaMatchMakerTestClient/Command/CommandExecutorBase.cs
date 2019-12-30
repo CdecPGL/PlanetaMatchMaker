@@ -13,6 +13,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         public abstract string Explanation { get; }
+        public abstract Command command { get; }
 
         public async Task Execute(MatchMakerClient sharedClient, string[] args, CancellationToken cancellationToken)
         {
@@ -26,6 +27,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             var options = ((CommandLine.Parsed<TOptions>)parsedResult).Value;
+            sharedClient.Logger.Enabled = false;
             await Execute(sharedClient, options, cancellationToken);
         }
 

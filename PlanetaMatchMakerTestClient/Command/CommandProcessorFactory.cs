@@ -10,14 +10,11 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var outputStream =
                 new StreamWriter(System.Console.OpenStandardOutput(), Console.OutputEncoding) {AutoFlush = true};
-            var commandMap = new Dictionary<Command, ICommandExecutor>
+            var commandMap = new ICommandExecutor[]
             {
-                {Command.StressTestConnectAndStay, new StressTestConnectAndStayCommandExecutor(outputStream)},
-                {
-                    Command.StressTestConnectAndDisconnect,
-                    new StressTestConnectAndDisconnectCommandExecutor(outputStream)
-                },
-                {Command.StressTestGetRoomGroupList, new StressTestGetRoomGroupListCommandExecutor(outputStream)}
+                new ConnectCommandExecutor(outputStream), new StressTestConnectAndStayCommandExecutor(outputStream),
+                new StressTestConnectAndDisconnectCommandExecutor(outputStream),
+                new StressTestGetRoomGroupListCommandExecutor(outputStream)
             };
             return new CommandProcessor(outputStream, commandMap);
         }

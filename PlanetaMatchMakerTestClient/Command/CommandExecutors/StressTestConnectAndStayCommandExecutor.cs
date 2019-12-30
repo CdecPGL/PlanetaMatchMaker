@@ -13,24 +13,18 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         public override string Explanation => "Connect indicated clients.";
+        public override Command command => Command.StressTestConnectAndStay;
 
-        public override async Task StressTest(MatchMakerClient client,
+        protected override async Task StressTest(MatchMakerClient client,
             ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults,
             StressTestCommandOptions options, CancellationToken cancellationToken)
         {
             var connectionResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
-            try
-            {
-                Stopwatch.Restart();
-                await client.ConnectAsync(options.ServerAddress, options.ServerPort);
-                Stopwatch.Stop();
-                connectionResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
-            }
-            catch (ClientErrorException e)
-            {
-                OutputStream.WriteLine($"Client error: {e.Message}");
-            }
+            Stopwatch.Restart();
+            await client.ConnectAsync(options.ServerAddress, options.ServerPort);
+            Stopwatch.Stop();
+            connectionResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
         }
     }
 }

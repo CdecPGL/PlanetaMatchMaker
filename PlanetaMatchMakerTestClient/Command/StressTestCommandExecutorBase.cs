@@ -88,7 +88,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        public abstract Task StressTest(MatchMakerClient client,
+        protected abstract Task StressTest(MatchMakerClient client,
             ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults,
             TOptions options, CancellationToken cancellationToken);
 

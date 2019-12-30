@@ -13,31 +13,25 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         public override string Explanation => "Connect and disconnect repeatedly.";
+        public override Command command => Command.StressTestConnectAndDisconnect;
 
-        public override async Task StressTest(MatchMakerClient client,
+        protected override async Task StressTest(MatchMakerClient client,
             ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults,
             StressTestCommandOptions options, CancellationToken cancellationToken)
         {
             var connectionResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
-            try
+            while (true)
             {
-                while (true)
+                Stopwatch.Restart();
+                await client.ConnectAsync(options.ServerAddress, options.ServerPort);
+                Stopwatch.Stop();
+                connectionResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
+                client.Close();
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    Stopwatch.Restart();
-                    await client.ConnectAsync(options.ServerAddress, options.ServerPort);
-                    Stopwatch.Stop();
-                    connectionResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
-                    client.Close();
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                    return;
                 }
-            }
-            catch (ClientErrorException e)
-            {
-                OutputStream.WriteLine($"Client error: {e.Message}");
             }
         }
     }

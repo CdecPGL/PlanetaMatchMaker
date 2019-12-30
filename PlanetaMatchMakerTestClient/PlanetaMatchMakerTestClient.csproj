@@ -47,8 +47,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command\CommandExecutorBase.cs" />
+    <Compile Include="Command\CommandExecutors\ConnectCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\StressTestConnectAndDisconnectCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\StressTestGetRoomGroupListCommandExecutor.cs" />
+    <Compile Include="Command\StandardCommandExecutorBase.cs" />
     <Compile Include="Command\StressTestCommandExecutorBase.cs" />
     <Compile Include="Command\CommandExecutors\StressTestConnectAndStayCommandExecutor.cs" />
     <Compile Include="Command\CommandProcessorFactory.cs" />

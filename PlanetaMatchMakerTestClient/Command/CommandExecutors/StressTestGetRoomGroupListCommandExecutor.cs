@@ -13,31 +13,26 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         public override string Explanation => "Connect indicated clients.";
+        public override Command command => Command.StressTestGetRoomGroupList;
 
-        public override async Task StressTest(MatchMakerClient client,
+        protected override async Task StressTest(MatchMakerClient client,
             ConcurrentDictionary<string, ConcurrentQueue<(int, double)>> benchmarkResults,
             StressTestCommandOptions options, CancellationToken cancellationToken)
         {
             var getRoomGroupListResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("get_room_group_list", new ConcurrentQueue<(int, double)>());
-            try
+
+            await client.ConnectAsync(options.ServerAddress, options.ServerPort);
+            while (true)
             {
-                await client.ConnectAsync(options.ServerAddress, options.ServerPort);
-                while (true)
+                Stopwatch.Restart();
+                await client.GetRoomGroupListAsync();
+                Stopwatch.Stop();
+                getRoomGroupListResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    Stopwatch.Restart();
-                    await client.GetRoomGroupListAsync();
-                    Stopwatch.Stop();
-                    getRoomGroupListResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                    return;
                 }
-            }
-            catch (ClientErrorException e)
-            {
-                OutputStream.WriteLine($"Client error: {e.Message}");
             }
         }
     }
