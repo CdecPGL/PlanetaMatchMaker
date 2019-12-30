@@ -46,9 +46,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Command\CommandExecutorBase.cs" />
+    <Compile Include="Command\CommandExecutors\StressTestConnectAndDisconnectCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\StressTestGetRoomGroupListCommandExecutor.cs" />
+    <Compile Include="Command\StressTestCommandExecutorBase.cs" />
+    <Compile Include="Command\CommandExecutors\StressTestConnectAndStayCommandExecutor.cs" />
+    <Compile Include="Command\CommandProcessorFactory.cs" />
+    <Compile Include="Command\ICommandExecutor.cs" />
+    <Compile Include="Command\CommandProcessor.cs" />
+    <Compile Include="Main\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -60,5 +67,6 @@
       <Name>PlanetaMatchMakerClient</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
