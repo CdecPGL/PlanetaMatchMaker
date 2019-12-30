@@ -11,16 +11,16 @@
 
 namespace pgl {
 	// 18 bytes
-	struct endpoint_address final : private boost::equality_comparable<endpoint_address> {
+	struct endpoint final : private boost::equality_comparable<endpoint> {
 		ip_address_type ip_address;
 		port_number_type port_number;
 
-		bool operator==(const endpoint_address& other) const;
+		bool operator==(const endpoint& other) const;
 		[[nodiscard]] ip_version ip_version()const;
 		[[nodiscard]] boost::asio::ip::tcp::endpoint to_boost_endpoint()const;
 
-		static endpoint_address make_from_boost_endpoint(
-			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint);
+		static endpoint make_from_boost_endpoint(
+			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& boost_endpoint);
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += ip_address;
@@ -30,19 +30,19 @@ namespace pgl {
 }
 
 namespace boost {
-	inline size_t hash_value(const pgl::endpoint_address& client_address) {
+	inline size_t hash_value(const pgl::endpoint& endpoint) {
 		size_t seed = 0;
-		hash_combine(seed, hash_value(client_address.ip_address));
-		hash_combine(seed, hash_value(client_address.port_number));
+		hash_combine(seed, hash_value(endpoint.ip_address));
+		hash_combine(seed, hash_value(endpoint.port_number));
 		return seed;
 	}
 }
 
 namespace std {
 	template <>
-	struct hash<pgl::endpoint_address> {
-		size_t operator()(const pgl::endpoint_address& client_address) const noexcept {
-			return boost::hash_value(client_address);
+	struct hash<pgl::endpoint> {
+		size_t operator()(const pgl::endpoint& endpoint) const noexcept {
+			return boost::hash_value(endpoint);
 		}
 	};
 }

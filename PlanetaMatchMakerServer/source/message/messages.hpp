@@ -5,7 +5,7 @@
 #include "minimal_serializer/serializer.hpp"
 #include "message/message_error_code.hpp"
 #include "datetime/datetime.hpp"
-#include "network/endpoint_address.hpp"
+#include "network/endpoint.hpp"
 #include "room/room_constants.hpp"
 #include "data/data_constants.hpp"
 #include "room/room_data.hpp"
@@ -202,10 +202,10 @@ namespace pgl {
 
 	//18 bytes
 	struct join_room_reply_message final {
-		endpoint_address host_address;
+		endpoint host_endpoint;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += host_address;
+			serializer += host_endpoint;
 		}
 	};
 

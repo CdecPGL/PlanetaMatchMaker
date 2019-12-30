@@ -34,8 +34,8 @@ namespace pgl {
 				log(log_level::debug, "Start to accept.");
 				try {
 					shared_this->acceptor_.async_accept(shared_this->socket_, yield);
-					shared_this->session_data_->set_client_address(
-						endpoint_address::make_from_boost_endpoint(
+					shared_this->session_data_->set_remote_endpoint(
+						endpoint::make_from_boost_endpoint(
 							shared_this->socket_.remote_endpoint()));
 				}
 				catch (system::system_error& e) {
@@ -104,7 +104,7 @@ namespace pgl {
 		if (session_data_->is_hosting_room()) {
 			server_data_.get_room_data_container(session_data_->hosting_room_group_index()).remove_data(
 				session_data_->hosting_room_id());
-			log_with_endpoint(log_level::info, session_data_->client_address().to_boost_endpoint(),
+			log_with_endpoint(log_level::info, session_data_->remote_endpoint().to_boost_endpoint(),
 				"Hosting room(Group index: ", session_data_->hosting_room_group_index(), ", ID: ",
 				session_data_->hosting_room_id(), ") is removed.");
 		}

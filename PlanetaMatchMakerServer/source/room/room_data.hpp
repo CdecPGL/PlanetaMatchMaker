@@ -2,7 +2,7 @@
 #include <cstdint>
 
 #include "datetime/datetime.hpp"
-#include "network/endpoint_address.hpp"
+#include "network/endpoint.hpp"
 #include "utilities/enum_utilities.hpp"
 
 #include "room_constants.hpp"
@@ -26,7 +26,7 @@ namespace pgl {
 		room_password_type password;
 		uint8_t max_player_count;
 		datetime create_datetime;
-		endpoint_address host_address;
+		endpoint host_endpoint;
 		uint8_t current_player_count;
 	};
 

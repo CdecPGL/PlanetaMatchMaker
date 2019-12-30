@@ -442,9 +442,9 @@ namespace PlanetaGameLabo.MatchMaker
 
                 var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>();
                 logger.Log(LogLevel.Info,
-                    $"Receive JoinRoomReply. ({nameof(replyBody.HostAddress)}: {replyBody.HostAddress})");
+                    $"Receive JoinRoomReply. ({nameof(replyBody.HostEndPoint)}: {replyBody.HostEndPoint})");
 
-                return (IPEndPoint)replyBody.HostAddress;
+                return (IPEndPoint)replyBody.HostEndPoint;
             }
             catch (ClientInternalErrorException)
             {

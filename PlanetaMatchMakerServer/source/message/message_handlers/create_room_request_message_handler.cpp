@@ -2,7 +2,7 @@
 #include "async/read_write.hpp"
 #include "async/timer.hpp"
 #include "message/messages.hpp"
-#include "network/endpoint_address.hpp"
+#include "network/endpoint.hpp"
 #include "utilities/log.hpp"
 #include "datetime/datetime.hpp"
 #include "session/session_data.hpp"
@@ -37,8 +37,8 @@ namespace pgl {
 
 		try {
 			// Create requested room
-			auto host_address = endpoint_address::make_from_boost_endpoint(param->socket.remote_endpoint());
-			host_address.port_number = message.port_number;			
+			auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
+			host_endpoint.port_number = message.port_number;			
 			room_data room_data{
 				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
 				message.name,
@@ -47,7 +47,7 @@ namespace pgl {
 				message.password,
 				message.max_player_count,
 				datetime::now(),
-				host_address,
+				host_endpoint,
 				1
 			};
 

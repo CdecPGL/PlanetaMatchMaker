@@ -3,7 +3,7 @@
 namespace boost {
 	namespace asio {
 		std::ostream& operator<<(std::ostream& os, const basic_socket<ip::tcp>::endpoint_type& endpoint) {
-			os << "endpoint(address=" << endpoint.address().to_string() << ":" << endpoint.port() << ")";
+			os << "endpoint(" << endpoint.address().to_string() << ":" << endpoint.port() << ")";
 			return os;
 		}
 	}

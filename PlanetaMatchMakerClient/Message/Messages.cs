@@ -194,7 +194,7 @@ namespace PlanetaGameLabo.MatchMaker
     [Message(MessageType.JoinRoomReply)]
     internal struct JoinRoomReplyMessage
     {
-        public EndpointAddress HostAddress;
+        public EndPoint HostEndPoint;
     }
 
     // 8 bytes
