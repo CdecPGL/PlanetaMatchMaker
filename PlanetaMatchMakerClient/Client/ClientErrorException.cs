@@ -46,7 +46,8 @@ namespace PlanetaGameLabo.MatchMaker
         AlreadyHostingRoom,
         NotHostingRoom,
         ConnectionClosed,
-        FailedToCreatePortMapping,
+        CreatingPortMappingFailed,
+        NotReachable,
         UnknownError,
     };
 
@@ -74,6 +75,10 @@ namespace PlanetaGameLabo.MatchMaker
                     return "The connection is closed.";
                 case ClientErrorCode.UnknownError:
                     return "Unexpected error.";
+                case ClientErrorCode.CreatingPortMappingFailed:
+                    return "Failed to create port mapping to NAT.";
+                case ClientErrorCode.NotReachable:
+                    return "This machine is not reachable from machines via internet.";
                 default:
                     return "";
             }

@@ -214,6 +214,7 @@ namespace PlanetaGameLabo.MatchMaker
     [Message(MessageType.ConnectionTestRequest)]
     internal struct ConnectionTestRequestMessage
     {
+        public TransportProtocol protocol;
         public ushort portNumber;
     }
 

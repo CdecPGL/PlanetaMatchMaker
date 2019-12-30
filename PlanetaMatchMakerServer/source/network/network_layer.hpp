@@ -4,7 +4,7 @@
 #include <array>
 
 namespace pgl {
-	enum class ip_version { v4, v6 };
+	enum class ip_version : uint8_t { v4, v6 };
 
 	using ip_address_type = std::array<uint8_t, 16>;
 

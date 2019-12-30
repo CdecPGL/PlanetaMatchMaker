@@ -54,7 +54,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
             catch (MappingException e)
             {
-                throw new ClientErrorException(ClientErrorCode.FailedToCreatePortMapping, e.Message);
+                throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed, e.Message);
             }
         }
 
@@ -70,8 +70,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidate(
             TransportProtocol protocol,
-            IEnumerable<ushort> candidatePrivatePorts,
-            IEnumerable<ushort> candidatePublicPorts, string description)
+            ICollection<ushort> candidatePrivatePorts,
+            ICollection<ushort> candidatePublicPorts, string description)
         {
             if (!IsDiscoverNatDone)
             {
@@ -83,28 +83,47 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new InvalidOperationException("NAT device is not available.");
             }
 
-            var mappings = (await natDevice.GetAllMappingsAsync()).ToArray();
-            var usedPublicPortSet = new HashSet<ushort>(mappings.Select(m => (ushort)m.PublicPort));
-            var availablePublicPorts = candidatePublicPorts.Where(p => !usedPublicPortSet.Contains(p)).ToArray();
-            if (!availablePublicPorts.Any())
-            {
-                throw new ClientErrorException(ClientErrorCode.FailedToCreatePortMapping,
-                    "There are not available public port in candidate.");
-            }
-
+            var proto = protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp;
             var hostname = Dns.GetHostName();
             var myAddresses = await Dns.GetHostAddressesAsync(hostname);
-            var usedPrivatePortSet = new HashSet<ushort>(mappings.Where(m => myAddresses.Contains(m.PrivateIP))
-                .Select(m => (ushort)m.PrivatePort));
-            var availablePrivatePorts = candidatePrivatePorts.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
-            if (!availablePrivatePorts.Any())
-            {
-                throw new ClientErrorException(ClientErrorCode.FailedToCreatePortMapping,
-                    "There are not available private port in candidate.");
-            }
+            var mappings = (await natDevice.GetAllMappingsAsync()).ToArray();
 
-            var publicPort = availablePublicPorts.First();
-            var privatePort = availablePrivatePorts.First();
+            var alreadyAvailableMappings = mappings.Where(m =>
+                m.Protocol == proto && myAddresses.Contains(m.PrivateIP) &&
+                candidatePrivatePorts.Contains((ushort)m.PrivatePort) &&
+                candidatePublicPorts.Contains((ushort)m.PublicPort)).ToArray();
+
+            ushort publicPort;
+            ushort privatePort;
+            if (alreadyAvailableMappings.Any())
+            {
+                privatePort = (ushort)alreadyAvailableMappings.First().PrivatePort;
+                publicPort = (ushort)alreadyAvailableMappings.First().PublicPort;
+            }
+            else
+            {
+                var usedPublicPortSet =
+                    new HashSet<ushort>(mappings.Where(m => m.Protocol == proto).Select(m => (ushort)m.PublicPort));
+                var availablePublicPorts = candidatePublicPorts.Where(p => !usedPublicPortSet.Contains(p)).ToArray();
+                if (!availablePublicPorts.Any())
+                {
+                    throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
+                        "There are not available public port in candidate.");
+                }
+
+                var usedPrivatePortSet = new HashSet<ushort>(mappings
+                    .Where(m => m.Protocol == proto && myAddresses.Contains(m.PrivateIP))
+                    .Select(m => (ushort)m.PrivatePort));
+                var availablePrivatePorts = candidatePrivatePorts.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
+                if (!availablePrivatePorts.Any())
+                {
+                    throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
+                        "There are not available private port in candidate.");
+                }
+
+                publicPort = availablePublicPorts.First();
+                privatePort = availablePrivatePorts.First();
+            }
 
             await CreatePortMapping(protocol, privatePort, publicPort, description);
             return (privatePort, publicPort);

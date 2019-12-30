@@ -228,11 +228,13 @@ namespace pgl {
 		}
 	};
 
-	// 2 bytes
+	// 3 bytes
 	struct connection_test_request_message final {
+		transport_protocol protocol;
 		port_number_type port_number;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
+			serializer += protocol;
 			serializer += port_number;
 		}
 	};
