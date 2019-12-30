@@ -23,9 +23,10 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 // create clients for stress test
+                var nullLogger = StreamLogger.CreateNullLogger();
                 for (var i = 0; i < options.ClientCount; ++i)
                 {
-                    testClientList.Add(new MatchMakerClient());
+                    testClientList.Add(new MatchMakerClient(nullLogger));
                 }
 
                 var benchmarkResults = new ConcurrentDictionary<string, ConcurrentQueue<(int, double)>>();

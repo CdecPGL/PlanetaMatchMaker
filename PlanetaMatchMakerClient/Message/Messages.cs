@@ -214,8 +214,8 @@ namespace PlanetaGameLabo.MatchMaker
     [Message(MessageType.ConnectionTestRequest)]
     internal struct ConnectionTestRequestMessage
     {
-        public TransportProtocol protocol;
-        public ushort portNumber;
+        public TransportProtocol Protocol;
+        public ushort PortNumber;
     }
 
     //18 bytes
@@ -223,6 +223,6 @@ namespace PlanetaGameLabo.MatchMaker
     [Message(MessageType.ConnectionTestReply)]
     internal struct ConnectionTestReplyMessage
     {
-        public bool succeed;
+        public bool Succeed;
     }
 }

@@ -38,6 +38,16 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         public NatPortMappingCreator PortMappingCreator { get; } = new NatPortMappingCreator();
 
+        public MatchMakerClient(ILogger logger = null)
+        {
+            if (logger == null)
+            {
+                logger = StreamLogger.CreateStandardOutputLogger();
+            }
+
+            this.logger = logger;
+        }
+
         /// <summary>
         /// Connect to matching server.
         /// </summary>
@@ -67,6 +77,7 @@ namespace PlanetaGameLabo.MatchMaker
                     tcpClient = new TcpClient();
                     tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     await tcpClient.ConnectAsync(serverAddress, serverPort);
+                    logger.Log(LogLevel.Info, $"Connect to {serverAddress}:{serverPort} successfully.");
                 }
                 catch (SocketException e)
                 {
@@ -80,8 +91,11 @@ namespace PlanetaGameLabo.MatchMaker
                 // Authentication Request
                 var requestBody = new AuthenticationRequestMessage {Version = ClientConstants.ApiVersion};
                 await SendRequestAsync(requestBody);
-
+                logger.Log(LogLevel.Info,
+                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion})");
                 var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>();
+                logger.Log(LogLevel.Info,
+                    $"Receive AuthenticationReply. ({nameof(replyBody.SessionKey)}: {replyBody.SessionKey}, {nameof(replyBody.Version)}: {replyBody.Version})...");
                 sessionKey = replyBody.SessionKey;
             }
             finally
@@ -105,6 +119,7 @@ namespace PlanetaGameLabo.MatchMaker
             tcpClient.Close();
             tcpClient.Dispose();
             tcpClient = null;
+            logger.Log(LogLevel.Info, $"Close connection to the server.");
             OnConnectionClosed();
         }
 
@@ -126,8 +141,11 @@ namespace PlanetaGameLabo.MatchMaker
 
                 var requestBody = new ListRoomGroupRequestMessage();
                 await SendRequestAsync(requestBody);
+                logger.Log(LogLevel.Info, $"Send ListRoomGroupRequest.");
 
                 var replyBody = await ReceiveReplyAsync<ListRoomGroupReplyMessage>();
+                logger.Log(LogLevel.Info,
+                    $"Receive ListRoomGroupReply. ({nameof(replyBody.RoomGroupCount)}: {replyBody.RoomGroupCount})");
                 return replyBody.RoomGroupInfoList.Take(replyBody.RoomGroupCount)
                     .Select(info => new RoomGroupResult(info))
                     .ToArray();
@@ -265,8 +283,11 @@ namespace PlanetaGameLabo.MatchMaker
                 if (!connectionTestSucceed)
                 {
                     var portNumberCandidateArray = portNumberCandidates.ToArray();
-                    portNumber = (await PortMappingCreator.CreatePortMappingFromCandidate(TransportProtocol.Tcp,
-                        portNumberCandidateArray, portNumberCandidateArray, "")).publicPort;
+                    var ret = (await PortMappingCreator.CreatePortMappingFromCandidate(TransportProtocol.Tcp,
+                        portNumberCandidateArray, portNumberCandidateArray, ""));
+                    portNumber = ret.publicPort;
+                    logger.Log(LogLevel.Info,
+                        $"Port mapping is created in NAT. (privatePortNumber: {ret.privatePort}, publicPortNumber: {ret.publicPort})");
                 }
 
                 connectionTestSucceed = await ConnectionTestCoreAsync(protocol, portNumber);
@@ -341,8 +362,12 @@ namespace PlanetaGameLabo.MatchMaker
                     SearchName = searchName
                 };
                 await SendRequestAsync(requestBody);
+                logger.Log(LogLevel.Info,
+                    $"Send ListRoomRequest. ({requestBody.GroupIndex}: {requestBody.GroupIndex}, {requestBody.StartIndex}: {requestBody.StartIndex}, {requestBody.EndIndex}: {requestBody.EndIndex}, {requestBody.SortKind}: {requestBody.SortKind}, {requestBody.SearchTargetFlags}: {requestBody.SearchTargetFlags}, {requestBody.SearchName}: {requestBody.SearchName}");
 
                 var replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>();
+                logger.Log(LogLevel.Info,
+                    $"Receive ListRoomReply. (RoomCount: {replyBody.ResultRoomCount}");
                 var result = new RoomResult[replyBody.ResultRoomCount];
 
                 // Set results of reply to result list
@@ -361,6 +386,7 @@ namespace PlanetaGameLabo.MatchMaker
                 for (var i = 1; i < separateCount; ++i)
                 {
                     replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>();
+                    logger.Log(LogLevel.Info, $"Receive additional ListRoomReply ({i + 1}/{separateCount}).");
                     SetResult(replyBody);
                 }
 
@@ -411,8 +437,13 @@ namespace PlanetaGameLabo.MatchMaker
                     GroupIndex = roomGroupIndex, RoomId = roomId, Password = password
                 };
                 await SendRequestAsync(requestBody);
+                logger.Log(LogLevel.Info,
+                    $"Send JoinRoomRequest. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.Password)}: {requestBody.Password})");
 
                 var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>();
+                logger.Log(LogLevel.Info,
+                    $"Receive JoinRoomReply. ({nameof(replyBody.HostAddress)}: {replyBody.HostAddress})");
+
                 return (IPEndPoint)replyBody.HostAddress;
             }
             catch (ClientInternalErrorException)
@@ -464,6 +495,8 @@ namespace PlanetaGameLabo.MatchMaker
                     CurrentPlayerCount = currentPlayerCount
                 };
                 await SendRequestAsync(requestBody);
+                logger.Log(LogLevel.Info,
+                    $"Send UpdateRoomStatusNotice. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.Status)}: {requestBody.Status}, {nameof(requestBody.IsCurrentPlayerCountChanged)}: {requestBody.IsCurrentPlayerCountChanged}, {nameof(requestBody.CurrentPlayerCount)}: {requestBody.CurrentPlayerCount})");
 
                 if (roomStatus == RoomStatus.Remove)
                 {
@@ -534,6 +567,7 @@ namespace PlanetaGameLabo.MatchMaker
         private TcpClient tcpClient;
         private uint sessionKey;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        private readonly ILogger logger;
 
         /// <summary>
         /// Send a request or notice message to the server.
@@ -616,8 +650,11 @@ namespace PlanetaGameLabo.MatchMaker
                 portNumber = portNumber
             };
             await SendRequestAsync(requestBody);
+            logger.Log(LogLevel.Info,
+                $"Send CreateRoomRequest. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.Name)}: {requestBody.Name}, {nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.IsPublic)}: {requestBody.IsPublic}, {nameof(requestBody.portNumber)}: {requestBody.portNumber})");
 
             var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>();
+            logger.Log(LogLevel.Info, $"Receive CreateRoomReply. ({nameof(replyBody.RoomId)}: {replyBody.RoomId})");
             IsHostingRoom = true;
             HostingRoomGroupIndex = roomGroupIndex;
             HostingRoomId = replyBody.RoomId;
@@ -708,10 +745,13 @@ namespace PlanetaGameLabo.MatchMaker
                     task = func.Invoke(udpClient, cancelTokenSource.Token);
                 }
 
-                var requestBody = new ConnectionTestRequestMessage {protocol = protocol, portNumber = portNumber};
+                var requestBody = new ConnectionTestRequestMessage {Protocol = protocol, PortNumber = portNumber};
+                logger.Log(LogLevel.Info,
+                    $"Send ConnectionTestRequest. ({nameof(requestBody.Protocol)}: {requestBody.Protocol}, {nameof(requestBody.PortNumber)}: {requestBody.PortNumber})");
                 await SendRequestAsync(requestBody);
                 var reply = await ReceiveReplyAsync<ConnectionTestReplyMessage>();
-                return reply.succeed;
+                logger.Log(LogLevel.Info, $"Receive ConnectionTestReply. ({nameof(reply.Succeed)}: {reply.Succeed})");
+                return reply.Succeed;
             }
             catch (ClientInternalErrorException)
             {

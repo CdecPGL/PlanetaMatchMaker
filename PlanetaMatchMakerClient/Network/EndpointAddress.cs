@@ -26,7 +26,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         public static explicit operator IPEndPoint(EndpointAddress value)
         {
-            return new IPEndPoint(new IPAddress(value.IpAddress), value.PortNumber);
+            return new IPEndPoint(value.IpAddressInstance, value.PortNumber);
         }
     }
 }
