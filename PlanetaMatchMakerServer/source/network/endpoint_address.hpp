@@ -16,8 +16,8 @@ namespace pgl {
 		port_number_type port_number;
 
 		bool operator==(const endpoint_address& other) const;
-		ip_version ip_version()const;
-		boost::asio::ip::address get_boost_ip_address()const;		
+		[[nodiscard]] ip_version ip_version()const;
+		[[nodiscard]] boost::asio::ip::tcp::endpoint to_boost_endpoint()const;
 
 		static endpoint_address make_from_boost_endpoint(
 			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& endpoint);
@@ -32,7 +32,7 @@ namespace pgl {
 namespace boost {
 	inline size_t hash_value(const pgl::endpoint_address& client_address) {
 		size_t seed = 0;
-		hash_combine(seed, boost::hash_value(client_address.ip_address));
+		hash_combine(seed, hash_value(client_address.ip_address));
 		hash_combine(seed, hash_value(client_address.port_number));
 		return seed;
 	}

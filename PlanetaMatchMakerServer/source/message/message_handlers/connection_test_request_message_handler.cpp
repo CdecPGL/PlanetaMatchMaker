@@ -18,7 +18,7 @@ namespace pgl {
 
 		const auto time_out_seconds = std::chrono::seconds(param->server_setting.connection_check_time_out_seconds);
 		const auto target_endpoint = asio::ip::tcp::endpoint(
-			param->session_data.client_address().get_boost_ip_address(), message.port_number);
+			param->session_data.client_address().to_boost_endpoint().address(), message.port_number);
 		try {
 			if (message.protocol == transport_protocol::tcp) {
 				// Try to connect to TCP server in the client

@@ -18,6 +18,7 @@ namespace pgl {
 		[[nodiscard]] bool is_session_key_generated() const;
 		[[nodiscard]] bool is_hosting_room() const;
 		[[nodiscard]] bool check_session_key(session_key_type session_key) const;
+		// use this instead of socket.remote_endpoint() if endpoint information is required after socket is closed because socket.remote_endpoint throws exception in such situation.
 		[[nodiscard]] const endpoint_address& client_address() const;
 	private:
 		bool is_session_key_generated_ = false;
