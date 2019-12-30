@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,11 +17,6 @@ namespace PlanetaGameLabo.MatchMaker
             ConnectCommandOptions options,
             CancellationToken cancellationToken)
         {
-            if (sharedClient.Connected)
-            {
-                throw new CommandExecutionErrorException("Already connected.");
-            }
-
             await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort);
         }
     }

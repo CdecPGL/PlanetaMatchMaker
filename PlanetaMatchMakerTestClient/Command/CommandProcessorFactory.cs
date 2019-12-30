@@ -12,7 +12,11 @@ namespace PlanetaGameLabo.MatchMaker
                 new StreamWriter(System.Console.OpenStandardOutput(), Console.OutputEncoding) {AutoFlush = true};
             var commandMap = new ICommandExecutor[]
             {
-                new ConnectCommandExecutor(outputStream), new StressTestConnectAndStayCommandExecutor(outputStream),
+                new ConnectCommandExecutor(outputStream), new DisconnectCommandExecutor(outputStream),
+                new ListRoomGroupCommandExecutor(outputStream), new CreateRoomCommandExecutor(outputStream),
+                new ListRoomCommandExecutor(outputStream), new JoinRoomCommandExecutor(outputStream),
+                new UpdateHostingRoomStatusCommandExecutor(outputStream),
+                new StressTestConnectAndStayCommandExecutor(outputStream),
                 new StressTestConnectAndDisconnectCommandExecutor(outputStream),
                 new StressTestGetRoomGroupListCommandExecutor(outputStream)
             };
@@ -28,7 +32,7 @@ namespace PlanetaGameLabo.MatchMaker
         CreateRoom,
         ListRoom,
         JoinRoom,
-        UpdateRoomStatus,
+        UpdateHostingRoomStatus,
         ConnectionTest,
         CreatePortMapping,
         JoinRoomWithCreatingPortMapping,

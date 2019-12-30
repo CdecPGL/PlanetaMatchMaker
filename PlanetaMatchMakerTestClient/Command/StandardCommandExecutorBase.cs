@@ -16,7 +16,7 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             sharedClient.Logger.Enabled = options.Verbose;
-            stopwatch.Start();
+            stopwatch.Restart();
             await ExecuteStandardCommand(sharedClient, options, cancellationToken);
             stopwatch.Stop();
             OutputStream.WriteLine($"<<{stopwatch.ElapsedMilliseconds} milli seconds>>");

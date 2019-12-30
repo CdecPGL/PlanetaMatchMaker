@@ -1,0 +1,59 @@
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace PlanetaGameLabo.MatchMaker
+{
+    internal class ListRoomCommandExecutor : StandardCommandExecutorBase<ListRoomCommandOptions>
+    {
+        public override string Explanation => "List rooms whose condition matches options.";
+        public override Command command => Command.ListRoom;
+
+        public ListRoomCommandExecutor(StreamWriter outputStream) : base(outputStream)
+        {
+        }
+
+        protected override async Task ExecuteStandardCommand(MatchMakerClient sharedClient,
+            ListRoomCommandOptions options,
+            CancellationToken cancellationToken)
+        {
+            var (totalRoomCount, results) = await sharedClient.GetRoomListAsync(options.RoomGroupIndex,
+                options.StartIndex, options.Count, options.SortKind, options.SearchTargetFlag, options.SearchName);
+
+            OutputStream.WriteLine($"{totalRoomCount} rooms are found.");
+            OutputStream.WriteLine($"{sharedClient.HostingRoomGroupIndex} rooms are returned.");
+            foreach (var result in results)
+            {
+                OutputStream.WriteLine(
+                    $"    Name: {result.Name}, ID: {result.RoomId}, Create: {result.CreateDatetime}, PlayerCount: {result.CurrentPlayerCount}/{result.MaxPlayerCount}, SettingFlags: {result.SettingFlags}");
+            }
+        }
+    }
+
+    internal class ListRoomCommandOptions : StandardCommandOptions
+    {
+        [CommandLine.Value(0, MetaName = "RoomGroupIndex", Required = true,
+            HelpText = "An index of room group where room is created.")]
+        public byte RoomGroupIndex { get; set; }
+
+        [CommandLine.Value(1, MetaName = "StartIndex", Required = true,
+            HelpText = "An start index of result.")]
+        public byte StartIndex { get; set; }
+
+        [CommandLine.Value(2, MetaName = "Count", Required = true,
+            HelpText = "Count of result.")]
+        public byte Count { get; set; }
+
+        [CommandLine.Value(3, MetaName = "SortKind", Required = true,
+            HelpText = "Sort method of result.")]
+        public RoomDataSortKind SortKind { get; set; }
+
+        [CommandLine.Option('t', "SearchTargetFlag", Default = RoomSearchTargetFlag.All, Required = false,
+            HelpText = "Flag which indicates condition of search.")]
+        public RoomSearchTargetFlag SearchTargetFlag { get; set; }
+
+        [CommandLine.Option('n', "SearchName", Default = "", Required = false,
+            HelpText = "A name to search room. Empty string means search all.")]
+        public string SearchName { get; set; }
+    }
+}

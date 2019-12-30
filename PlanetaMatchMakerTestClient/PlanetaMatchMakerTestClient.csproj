@@ -47,6 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command\CommandExecutorBase.cs" />
+    <Compile Include="Command\CommandExecutors\UpdateHostingRoomStatusCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\JoinRoomCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\ListRoomCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\CreateRoomCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\ListRoomGroupCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\DisconnectCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\ConnectCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\StressTestConnectAndDisconnectCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\StressTestGetRoomGroupListCommandExecutor.cs" />
