@@ -47,6 +47,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Command\CommandExecutorBase.cs" />
+    <Compile Include="Command\CommandExecutors\CreatePortMappingFromCandidatesCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\CreatePortMappingCommandExecutor .cs" />
+    <Compile Include="Command\CommandExecutors\ConnectionTestCommandExecutor.cs" />
+    <Compile Include="Command\CommandExecutors\CreateRoomWithCreatingPortMappingCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\UpdateHostingRoomStatusCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\JoinRoomCommandExecutor.cs" />
     <Compile Include="Command\CommandExecutors\ListRoomCommandExecutor.cs" />

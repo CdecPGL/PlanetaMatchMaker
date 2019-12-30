@@ -16,6 +16,9 @@ namespace PlanetaGameLabo.MatchMaker
                 new ListRoomGroupCommandExecutor(outputStream), new CreateRoomCommandExecutor(outputStream),
                 new ListRoomCommandExecutor(outputStream), new JoinRoomCommandExecutor(outputStream),
                 new UpdateHostingRoomStatusCommandExecutor(outputStream),
+                new ConnectionTestCommandExecutor(outputStream), new CreatePortMappingCommandExecutor(outputStream),
+                new CreatePortMappingFromCandidatesCommandExecutor(outputStream),
+                new CreateRoomWithCreatingPortMappingCommandExecutor(outputStream),
                 new StressTestConnectAndStayCommandExecutor(outputStream),
                 new StressTestConnectAndDisconnectCommandExecutor(outputStream),
                 new StressTestGetRoomGroupListCommandExecutor(outputStream)
@@ -35,7 +38,8 @@ namespace PlanetaGameLabo.MatchMaker
         UpdateHostingRoomStatus,
         ConnectionTest,
         CreatePortMapping,
-        JoinRoomWithCreatingPortMapping,
+        CreatePortMappingFromCandidates,
+        CreateRoomWithCreatingPortMapping,
         StressTestConnectAndStay,
         StressTestConnectAndDisconnect,
         StressTestGetRoomGroupList
