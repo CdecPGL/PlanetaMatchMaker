@@ -173,17 +173,17 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Create and host new room to the server.
         /// </summary>
-        /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <param name="roomGroupIndex"></param>
         /// <param name="roomName"></param>
         /// <param name="maxPlayerCount"></param>
+        /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(ushort portNumber, byte roomGroupIndex, string roomName, byte maxPlayerCount,
+        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount, ushort portNumber,
             bool isPublic = true, string password = "")
         {
             await semaphore.WaitAsync();
@@ -230,23 +230,23 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Create and host new room to the server with creating port mapping to NAT.
         /// </summary>
+        /// <param name="roomGroupIndex"></param>
+        /// <param name="roomName"></param>
+        /// <param name="maxPlayerCount"></param>
         /// <param name="discoverNatTimeoutMilliSeconds"></param>
         /// <param name="protocol">The protocol which is used for accept TCP connection of game</param>
         /// <param name="portNumberCandidates">The candidates of port number which is used for accept TCP connection of game</param>
         /// <param name="defaultPortNumber">The port number which is tried to use for accept TCP connection of game first</param>
-        /// <param name="roomGroupIndex"></param>
-        /// <param name="roomName"></param>
-        /// <param name="maxPlayerCount"></param>
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomWithCreatingPortMappingAsync(int discoverNatTimeoutMilliSeconds,
-            TransportProtocol protocol, IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber,
-            byte roomGroupIndex, string roomName,
-            byte maxPlayerCount, bool isPublic = true, string password = "")
+        public async Task CreateRoomWithCreatingPortMappingAsync(byte roomGroupIndex, string roomName,
+            byte maxPlayerCount, int discoverNatTimeoutMilliSeconds, TransportProtocol protocol,
+            IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber, bool isPublic = true,
+            string password = "")
         {
             await semaphore.WaitAsync();
             try
@@ -361,18 +361,18 @@ namespace PlanetaGameLabo.MatchMaker
                 {
                     GroupIndex = roomGroupIndex,
                     StartIndex = startIndex,
-                    EndIndex = (byte)(startIndex + count - 1),
+                    Count = count,
                     SortKind = sortKind,
                     SearchTargetFlags = searchTargetFlags,
                     SearchName = searchName
                 };
                 await SendRequestAsync(requestBody);
                 Logger.Log(LogLevel.Info,
-                    $"Send ListRoomRequest. ({requestBody.GroupIndex}: {requestBody.GroupIndex}, {requestBody.StartIndex}: {requestBody.StartIndex}, {requestBody.EndIndex}: {requestBody.EndIndex}, {requestBody.SortKind}: {requestBody.SortKind}, {requestBody.SearchTargetFlags}: {requestBody.SearchTargetFlags}, {requestBody.SearchName}: {requestBody.SearchName}");
+                    $"Send ListRoomRequest. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.StartIndex)}: {requestBody.StartIndex}, {nameof(requestBody.Count)}: {requestBody.Count}, {nameof(requestBody.SortKind)}: {requestBody.SortKind}, {nameof(requestBody.SearchTargetFlags)}: {requestBody.SearchTargetFlags}, {nameof(requestBody.SearchName)}: {requestBody.SearchName})");
 
                 var replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>();
                 Logger.Log(LogLevel.Info,
-                    $"Receive ListRoomReply. (RoomCount: {replyBody.ResultRoomCount}");
+                    $"Receive ListRoomReply. (RoomCount: {replyBody.ResultRoomCount})");
                 var result = new RoomResult[replyBody.ResultRoomCount];
 
                 // Set results of reply to result list

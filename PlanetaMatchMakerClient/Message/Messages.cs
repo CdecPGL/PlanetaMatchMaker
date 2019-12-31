@@ -140,7 +140,7 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public RoomGroupIndexType GroupIndex;
         public byte StartIndex;
-        public byte EndIndex;
+        public byte Count;
         public RoomDataSortKind SortKind;
         public RoomSearchTargetFlag SearchTargetFlags;
 

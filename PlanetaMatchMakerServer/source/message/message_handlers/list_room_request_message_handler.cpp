@@ -18,9 +18,8 @@ namespace pgl {
 		const auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
 
 		// Generate room data list to send
-		auto room_data_list = room_data_container.get_range_data(message.start_index,
-			message.end_index - message.start_index + 1,
-			message.sort_kind, message.search_target_flags, message.search_name.to_string());
+		auto room_data_list = room_data_container.get_range_data(message.start_index, message.count, message.sort_kind,
+			message.search_target_flags, message.search_name.to_string());
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), room_data_list.size(),
 			" rooms are found from ", room_data_container.size(), " rooms.");
 

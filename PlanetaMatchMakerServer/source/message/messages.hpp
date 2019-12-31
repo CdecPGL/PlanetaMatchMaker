@@ -136,7 +136,7 @@ namespace pgl {
 	struct list_room_request_message final {
 		room_group_index_type group_index;
 		uint8_t start_index;
-		uint8_t end_index;
+		uint8_t count;
 		room_data_sort_kind sort_kind;
 		room_search_target_flag search_target_flags;
 		room_name_type search_name;
@@ -144,7 +144,7 @@ namespace pgl {
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
 			serializer += start_index;
-			serializer += end_index;
+			serializer += count;
 			serializer += sort_kind;
 			serializer += search_target_flags;
 			serializer += search_name;
