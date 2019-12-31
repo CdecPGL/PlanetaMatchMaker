@@ -49,7 +49,7 @@ namespace pgl {
 
 	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags,
 		const std::string& search_name) {
-		const auto setting_filter = [search_target_flags](const room_data& data) {
+		auto setting_filter = [search_target_flags](const room_data& data) {
 			auto search_source_flags = room_search_target_flag::none;
 			search_source_flags |= (data.setting_flags & room_setting_flag::public_room) != room_setting_flag::none
 										? room_search_target_flag::public_room

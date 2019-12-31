@@ -151,7 +151,7 @@ namespace pgl {
 		}
 	};
 
-	// 238 bytes
+	// 237 bytes
 	struct list_room_reply_message final {
 		//39 bytes
 		struct room_info final {
@@ -173,15 +173,13 @@ namespace pgl {
 		};
 
 		uint8_t total_room_count; // the number of rooms server managing
-		uint8_t result_room_count; // the number of rooms for request
-		uint8_t reply_room_start_index; // the index of start room in this message
-		uint8_t reply_room_count; // the number of rooms in this reply
+		uint8_t matched_room_count; // the number of rooms matched to requested condition
+		uint8_t reply_room_count; // the number of rooms in these replies
 		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += total_room_count;
-			serializer += result_room_count;
-			serializer += reply_room_start_index;
+			serializer += matched_room_count;
 			serializer += reply_room_count;
 			serializer += room_info_list;
 		}

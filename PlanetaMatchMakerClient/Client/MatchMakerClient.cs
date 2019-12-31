@@ -330,7 +330,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
-        public async Task<(byte totalRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
+        public async Task<(byte totalRoomCount, byte matchedRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
             byte roomGroupIndex, byte startIndex,
             byte count, RoomDataSortKind sortKind, RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
             string searchName = "")
@@ -372,21 +372,28 @@ namespace PlanetaGameLabo.MatchMaker
 
                 var replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>();
                 Logger.Log(LogLevel.Info,
-                    $"Receive ListRoomReply. (RoomCount: {replyBody.ResultRoomCount})");
-                var result = new RoomResult[replyBody.ResultRoomCount];
+                    $"Receive ListRoomReply. ({nameof(replyBody.TotalRoomCount)}: {replyBody.TotalRoomCount}, {nameof(replyBody.MatchedRoomCount)}: {replyBody.MatchedRoomCount}, {nameof(replyBody.ReplyRoomCount)}: {replyBody.ReplyRoomCount})");
+                var result = new RoomResult[replyBody.ReplyRoomCount];
 
                 // Set results of reply to result list
+                var currentIndex = requestBody.StartIndex;
+
                 void SetResult(in ListRoomReplyMessage reply)
                 {
-                    for (var i = 0; i < reply.ReplyRoomCount; ++i)
+                    for (var i = 0; i < RoomConstants.ListRoomReplyRoomInfoCount; ++i)
                     {
-                        result[reply.ReplyRoomStartIndex + i] = new RoomResult(reply.RoomInfoList[i]);
+                        if (currentIndex >= replyBody.ReplyRoomCount)
+                        {
+                            return;
+                        }
+
+                        result[currentIndex++] = new RoomResult(reply.RoomInfoList[i]);
                     }
                 }
 
                 SetResult(replyBody);
 
-                var separateCount = (replyBody.ResultRoomCount - 1) / RoomConstants.ListRoomReplyRoomInfoCount + 1;
+                var separateCount = (replyBody.ReplyRoomCount - 1) / RoomConstants.ListRoomReplyRoomInfoCount + 1;
 
                 for (var i = 1; i < separateCount; ++i)
                 {
@@ -395,7 +402,7 @@ namespace PlanetaGameLabo.MatchMaker
                     SetResult(replyBody);
                 }
 
-                return (replyBody.TotalRoomCount, result);
+                return (replyBody.TotalRoomCount, replyBody.MatchedRoomCount, result);
             }
             catch (ClientInternalErrorException)
             {

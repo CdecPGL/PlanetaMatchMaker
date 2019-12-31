@@ -10,6 +10,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -483,7 +484,14 @@ namespace CdecPGL.MinimalSerializer
 
         private static FieldInfo[] GetFieldsOfComplexSerializableType(Type type)
         {
-            return type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            // GetFields() returns inconsistent order even if LayoutKind.Sequential is true in some case (I cannot find detailed condition...).
+            // To avoid this, order by MetadataToken but Marshal.OffsetOf(Type, string) is deduplicate according to the document...
+            // https://stackoverflow.com/questions/8067493/if-getfields-doesnt-guarantee-order-how-does-layoutkind-sequential-work
+            return type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .OrderBy(f => Marshal.OffsetOf(type, f.Name).ToInt64()).ToArray();
+            // This is also available solution but this behavior is not documented.
+            //return type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            //    .OrderBy(field => field.MetadataToken).ToArray();
         }
     }
 }

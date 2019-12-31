@@ -41,9 +41,7 @@ namespace pgl {
 		bool is_unique(id_param_t id, s_param_t data) const {
 			auto unique_value = get_unique_value(data);
 			auto it = id_to_variable_map_.find(id);
-			if(it == id_to_variable_map_.end()) {
-				return used_variable_.find(unique_value) == used_variable_.end();
-			}
+			if (it == id_to_variable_map_.end()) { return used_variable_.find(unique_value) == used_variable_.end(); }
 
 			return it->second == unique_value;
 		}
@@ -57,9 +55,7 @@ namespace pgl {
 		std::unordered_map<IdType, member_t> id_to_variable_map_;
 		std::unordered_set<member_t> used_variable_;
 
-		static member_t get_unique_value(s_param_t data) {
-			return data.*UniqueVariable;
-		}
+		static member_t get_unique_value(s_param_t data) { return data.*UniqueVariable; }
 	};
 
 	// A container which holds unique member variables.
@@ -109,18 +105,14 @@ namespace pgl {
 			return data_map_.at(id).load();
 		}
 
-		size_t size() const {
-			return data_map_.size();
-		}
+		size_t size() const { return data_map_.size(); }
 
 		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
 		void add_data(id_param_type id, data_param_type data) {
 			std::lock_guard lock(mutex_);
 
-			if (!unique_variables_.is_unique(data)) {
-				throw unique_variable_duplication_error();
-			}
-			
+			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
+
 			data_map_.emplace(id, data);
 			unique_variables_.add_or_update_variables(id, data);
 		}
@@ -131,38 +123,40 @@ namespace pgl {
 			std::function<Id()>&& random_id_generator = generate_random_id<Id>) {
 			std::lock_guard lock(mutex_);
 
-			if (!unique_variables_.is_unique(data)) {
-				throw unique_variable_duplication_error();
-			}
-			
+			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
+
 			Id id;
-			do {
-				id = random_id_generator();
-			} while (data_map_.find(id) != data_map_.end());
-			id_setter(data, id);			
+			do { id = random_id_generator(); }
+			while (data_map_.find(id) != data_map_.end());
+			id_setter(data, id);
 			data_map_.emplace(id, data);
 			unique_variables_.add_or_update_variables(id, data);
 			return id;
 		}
 
-		std::vector<Data> get_range_data(const size_t start_idx, size_t count,
-			std::function<bool(data_param_type, data_param_type)>&& compare_function,
+		std::vector<Data> get_data(std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
-			std::shared_lock lock(mutex_);
 			std::vector<Data> data;
-			data.reserve(data_map_.size());
-			for (auto&& pair : data_map_) {
-				if (filter_function(pair.second)) {
-					data.push_back(pair.second.load());
+			{
+				std::shared_lock lock(mutex_);
+				data.reserve(data_map_.size());
+				for (auto&& pair : data_map_) {
+					const auto data_elem = pair.second.load();
+					if (filter_function(data_elem)) { data.push_back(data_elem); }
 				}
 			}
 			std::sort(data.begin(), data.end(), compare_function);
+			return data;
+		}
+
+		std::vector<Data> get_range_data(const size_t start_idx, size_t count,
+			std::function<bool(data_param_type, data_param_type)>&& compare_function,
+			std::function<bool(data_param_type)>&& filter_function) const {
+			std::vector<Data> data = get_data(std::move(compare_function), std::move(filter_function));
 			count = std::min(count, data.size() >= start_idx ? data.size() - start_idx : 0);
 			std::vector<Data> result(count);
 			const auto end_idx_plus_one = start_idx + count;
-			for (auto i = start_idx; i < end_idx_plus_one; ++i) {
-				result[i - start_idx] = data[i];
-			}
+			for (auto i = start_idx; i < end_idx_plus_one; ++i) { result[i - start_idx] = data[i]; }
 			return result;
 		}
 
@@ -170,9 +164,7 @@ namespace pgl {
 		void update_data(id_param_type id, data_param_type data) {
 			std::shared_lock lock(mutex_);
 
-			if (!unique_variables_.is_unique(id, data)) {
-				throw unique_variable_duplication_error();
-			}
+			if (!unique_variables_.is_unique(id, data)) { throw unique_variable_duplication_error(); }
 
 			unique_variables_.add_or_update_variables(id, data);
 			data_map_.at(id) = data;

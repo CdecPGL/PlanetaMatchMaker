@@ -148,7 +148,7 @@ namespace PlanetaGameLabo.MatchMaker
         public string SearchName;
     }
 
-    // 238 bytes
+    // 237 bytes
     [Serializable]
     [Message(MessageType.ListRoomReply)]
     internal struct ListRoomReplyMessage
@@ -168,10 +168,9 @@ namespace PlanetaGameLabo.MatchMaker
             public Datetime CreateDatetime;
         }
 
-        public byte TotalRoomCount; // the number of rooms server managing
-        public byte ResultRoomCount; // the number of rooms for request
-        public byte ReplyRoomStartIndex; // the index of start room in this message
-        public byte ReplyRoomCount; // the number of rooms in this reply
+		public byte TotalRoomCount; // the number of rooms server managing
+        public byte MatchedRoomCount; // the number of rooms matched to requested condition
+        public byte ReplyRoomCount; // the number of rooms in these replies
 
         [FixedLength(RoomConstants.ListRoomReplyRoomInfoCount)]
         public RoomInfo[] RoomInfoList;
