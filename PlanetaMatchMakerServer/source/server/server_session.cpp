@@ -114,7 +114,7 @@ namespace pgl {
 	}
 
 	void server_session::restart() {
-		log(log_level::info, "Restart server instance.");
+		log(log_level::info, "Server session handler is restarted.");
 		stop();
 		start();
 	}
