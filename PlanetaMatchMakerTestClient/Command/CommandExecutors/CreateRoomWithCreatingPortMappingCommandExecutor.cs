@@ -20,7 +20,7 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomWithCreatingPortMappingCommandOptions options,
             CancellationToken cancellationToken)
         {
-            await sharedClient.CreateRoomAsyncWithCreatingPortMapping(options.DiscoverTimeoutMilliSeconds,
+            await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.DiscoverTimeoutMilliSeconds,
                 options.Protocol, options.PortCandidates, options.DefaultPortNumber, options.RoomGroupIndex,
                 options.Name, options.MaxPlayerCount, options.IsPublic, options.Password);
             OutputStream.WriteLine(

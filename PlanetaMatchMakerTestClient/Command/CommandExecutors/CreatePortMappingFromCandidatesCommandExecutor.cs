@@ -22,7 +22,7 @@ namespace PlanetaGameLabo.MatchMaker
             CreatePortMappingFromCandidatesCommandOptions options,
             CancellationToken cancellationToken)
         {
-            var (privatePort, publicPort) = await sharedClient.PortMappingCreator.CreatePortMappingFromCandidate(
+            var (privatePort, publicPort) = await sharedClient.PortMappingCreator.CreatePortMappingFromCandidates(
                 options.Protocol, options.PrivatePortCandidates,
                 options.PublicPortCandidates, options.Description);
             OutputStream.WriteLine(

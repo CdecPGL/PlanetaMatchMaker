@@ -62,16 +62,16 @@ namespace PlanetaGameLabo.MatchMaker
         /// Create port mapping by select available port pair from candidate.
         /// </summary>
         /// <param name="protocol"></param>
-        /// <param name="candidatePrivatePorts"></param>
-        /// <param name="candidatePublicPorts"></param>
+        /// <param name="privatePortCandidates"></param>
+        /// <param name="publicPortCandidates"></param>
         /// <param name="description"></param>
         /// <exception cref="InvalidOperationException">DiscoverNat is not executed or NAT device is not available</exception>
         /// <exception cref="ClientErrorException">Failed to create port mapping. There may be not available port pair in the candidates</exception>
         /// <returns></returns>
-        public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidate(
+        public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidates(
             TransportProtocol protocol,
-            ICollection<ushort> candidatePrivatePorts,
-            ICollection<ushort> candidatePublicPorts, string description)
+            ICollection<ushort> privatePortCandidates,
+            ICollection<ushort> publicPortCandidates, string description)
         {
             if (!IsDiscoverNatDone)
             {
@@ -90,8 +90,8 @@ namespace PlanetaGameLabo.MatchMaker
 
             var alreadyAvailableMappings = mappings.Where(m =>
                 m.Protocol == proto && myAddresses.Contains(m.PrivateIP) &&
-                candidatePrivatePorts.Contains((ushort)m.PrivatePort) &&
-                candidatePublicPorts.Contains((ushort)m.PublicPort)).ToArray();
+                privatePortCandidates.Contains((ushort)m.PrivatePort) &&
+                publicPortCandidates.Contains((ushort)m.PublicPort)).ToArray();
 
             ushort publicPort;
             ushort privatePort;
@@ -104,7 +104,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var usedPublicPortSet =
                     new HashSet<ushort>(mappings.Where(m => m.Protocol == proto).Select(m => (ushort)m.PublicPort));
-                var availablePublicPorts = candidatePublicPorts.Where(p => !usedPublicPortSet.Contains(p)).ToArray();
+                var availablePublicPorts = publicPortCandidates.Where(p => !usedPublicPortSet.Contains(p)).ToArray();
                 if (!availablePublicPorts.Any())
                 {
                     throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
@@ -114,7 +114,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var usedPrivatePortSet = new HashSet<ushort>(mappings
                     .Where(m => m.Protocol == proto && myAddresses.Contains(m.PrivateIP))
                     .Select(m => (ushort)m.PrivatePort));
-                var availablePrivatePorts = candidatePrivatePorts.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
+                var availablePrivatePorts = privatePortCandidates.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
                 if (!availablePrivatePorts.Any())
                 {
                     throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,

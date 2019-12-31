@@ -243,7 +243,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsyncWithCreatingPortMapping(int discoverNatTimeoutMilliSeconds,
+        public async Task CreateRoomWithCreatingPortMappingAsync(int discoverNatTimeoutMilliSeconds,
             TransportProtocol protocol, IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber,
             byte roomGroupIndex, string roomName,
             byte maxPlayerCount, bool isPublic = true, string password = "")
@@ -288,7 +288,7 @@ namespace PlanetaGameLabo.MatchMaker
                 if (!connectionTestSucceed)
                 {
                     var portNumberCandidateArray = portNumberCandidates.ToArray();
-                    var ret = (await PortMappingCreator.CreatePortMappingFromCandidate(TransportProtocol.Tcp,
+                    var ret = (await PortMappingCreator.CreatePortMappingFromCandidates(TransportProtocol.Tcp,
                         portNumberCandidateArray, portNumberCandidateArray, ""));
                     portNumber = ret.publicPort;
                     Logger.Log(LogLevel.Info,
