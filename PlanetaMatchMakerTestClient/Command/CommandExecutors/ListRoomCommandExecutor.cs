@@ -20,8 +20,8 @@ namespace PlanetaGameLabo.MatchMaker
             var (totalRoomCount, results) = await sharedClient.GetRoomListAsync(options.RoomGroupIndex,
                 options.StartIndex, options.Count, options.SortKind, options.SearchTargetFlag, options.SearchName);
 
-            OutputStream.WriteLine($"{totalRoomCount} rooms are found.");
-            OutputStream.WriteLine($"{sharedClient.HostingRoomGroupIndex} rooms are returned.");
+            OutputStream.WriteLine(
+                $"{sharedClient.HostingRoomGroupIndex} rooms are found from {totalRoomCount} rooms.");
             foreach (var result in results)
             {
                 OutputStream.WriteLine(

@@ -40,12 +40,14 @@ namespace PlanetaGameLabo.MatchMaker
                         var input = Console.ReadLine();
                         if (input == null)
                         {
+                            Console.WriteLine("Command is invalid.");
                             continue;
                         }
 
                         var items = input.Split(' ');
-                        if (!CommandProcessor.TryParseCommand(input, out var c))
+                        if (!CommandProcessor.TryParseCommand(items[0], out var c))
                         {
+                            Console.WriteLine("Command is invalid.");
                             continue;
                         }
 

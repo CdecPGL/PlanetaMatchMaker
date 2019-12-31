@@ -21,7 +21,8 @@ namespace pgl {
 		auto room_data_list = room_data_container.get_range_data(message.start_index,
 			message.end_index - message.start_index + 1,
 			message.sort_kind, message.search_target_flags, message.search_name.to_string());
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), room_data_list.size(), "rooms are found.");
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), room_data_list.size(),
+			" rooms are found from ", room_data_container.size(), " rooms.");
 
 		// Prepare reply header
 		reply_message_header header{
@@ -30,8 +31,6 @@ namespace pgl {
 		};
 		reply.total_room_count = range_checked_static_cast<uint8_t>(room_data_container.size());
 		reply.result_room_count = range_checked_static_cast<uint8_t>(room_data_list.size());
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), reply.result_room_count, "/",
-			reply.total_room_count, "are listed.");
 
 		// Reply room data list separately
 		const auto separation = range_checked_static_cast<int>(
@@ -40,10 +39,10 @@ namespace pgl {
 			message_type::list_room_request, " message by ", separation, " messages.");
 		for (auto i = 0; i < separation; ++i) {
 			const auto send_room_count = i == separation - 1
-											? range_checked_static_cast<uint8_t>(
-												range_checked_static_cast<int>(room_data_list.size()) -
-												list_room_reply_room_info_count * i)
-											: list_room_reply_room_info_count;
+				                             ? range_checked_static_cast<uint8_t>(
+					                             range_checked_static_cast<int>(room_data_list.size()) -
+					                             list_room_reply_room_info_count * i)
+				                             : list_room_reply_room_info_count;
 			reply.reply_room_start_index = range_checked_static_cast<uint8_t>(
 				message.start_index + i * separation);
 			reply.reply_room_count = range_checked_static_cast<uint8_t>(send_room_count);
@@ -58,9 +57,8 @@ namespace pgl {
 						room_data_list[send_room_idx].current_player_count,
 						room_data_list[send_room_idx].create_datetime,
 					};
-				} else {
-					reply.room_info_list[j] = {};
 				}
+				else { reply.room_info_list[j] = {}; }
 			}
 
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Reply ", i + 1, "/", separation,
