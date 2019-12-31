@@ -20,9 +20,9 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomWithCreatingPortMappingCommandOptions options,
             CancellationToken cancellationToken)
         {
-            await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.DiscoverTimeoutMilliSeconds,
-                options.Protocol, options.PortCandidates, options.DefaultPortNumber, options.RoomGroupIndex,
-                options.Name, options.MaxPlayerCount, options.IsPublic, options.Password);
+            await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex, options.Name,
+                options.MaxPlayerCount, options.DiscoverTimeoutMilliSeconds, options.Protocol, options.PortCandidates,
+                options.DefaultPortNumber, options.IsPublic, options.Password);
             OutputStream.WriteLine(
                 $"Room created with id \"{sharedClient.HostingRoomId}\" in room group {sharedClient.HostingRoomGroupIndex}.");
         }
@@ -30,33 +30,33 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class CreateRoomWithCreatingPortMappingCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "DiscoverTimeoutMilliSeconds", Required = true,
-            HelpText = "Timeout milli seconds to discover NAT.")]
-        public int DiscoverTimeoutMilliSeconds { get; set; }
-
-        [CommandLine.Value(1, MetaName = "Protocol", Required = true,
-            HelpText = "Transport protocol used to host game.")]
-        public TransportProtocol Protocol { get; set; }
-
-        [CommandLine.Value(2, MetaName = "PortCandidates", Required = true,
-            HelpText = "Candidates of port to map.")]
-        public ICollection<ushort> PortCandidates { get; set; }
-
-        [CommandLine.Value(3, MetaName = "DefaultPortNumber", Required = true,
-            HelpText = "A default port number which is used in hosting game.")]
-        public ushort DefaultPortNumber { get; set; }
-
-        [CommandLine.Value(4, MetaName = "RoomGroupIndex", Required = true,
+        [CommandLine.Value(0, MetaName = "RoomGroupIndex", Required = true,
             HelpText = "An index of room group where room is created.")]
         public byte RoomGroupIndex { get; set; }
 
-        [CommandLine.Value(5, MetaName = "RoomName", Required = true,
+        [CommandLine.Value(1, MetaName = "RoomName", Required = true,
             HelpText = "A name of room to create.")]
         public string Name { get; set; }
 
-        [CommandLine.Value(6, MetaName = "MaxPlayerCount", Required = true,
+        [CommandLine.Value(2, MetaName = "MaxPlayerCount", Required = true,
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
+
+        [CommandLine.Value(3, MetaName = "DiscoverTimeoutMilliSeconds", Required = true,
+            HelpText = "Timeout milli seconds to discover NAT.")]
+        public int DiscoverTimeoutMilliSeconds { get; set; }
+
+        [CommandLine.Value(4, MetaName = "Protocol", Required = true,
+            HelpText = "Transport protocol used to host game.")]
+        public TransportProtocol Protocol { get; set; }
+
+        [CommandLine.Value(5, MetaName = "PortCandidates", Required = true,
+            HelpText = "Candidates of port to map.")]
+        public ICollection<ushort> PortCandidates { get; set; }
+
+        [CommandLine.Value(6, MetaName = "DefaultPortNumber", Required = true,
+            HelpText = "A default port number which is used in hosting game.")]
+        public ushort DefaultPortNumber { get; set; }
 
         [CommandLine.Option('u', "isPublic", Default = true, Required = false,
             HelpText = "Create public room if true.")]

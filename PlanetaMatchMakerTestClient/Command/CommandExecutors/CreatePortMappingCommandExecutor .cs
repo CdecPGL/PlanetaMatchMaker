@@ -6,7 +6,7 @@ namespace PlanetaGameLabo.MatchMaker
 {
     internal class CreatePortMappingCommandExecutor : StandardCommandExecutorBase<CreatePortMappingCommandOptions>
     {
-        public override string Explanation => "Create port mapping to NAT which is compatible with UPnP or PMP.";
+        public override string Explanation => "Create port mapping to NAT which supports UPnP or PMP.";
         public override Command command => Command.CreatePortMapping;
 
         public CreatePortMappingCommandExecutor(StreamWriter outputStream) : base(outputStream)

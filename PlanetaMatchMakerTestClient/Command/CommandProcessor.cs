@@ -17,9 +17,10 @@ namespace PlanetaGameLabo.MatchMaker
 
         public void DisplayCommandList()
         {
-            foreach (var commandExecutor in commandExecutorMap)
+            foreach (var (commandExecutor, index) in commandExecutorMap.OrderBy(p => p.Key)
+                .Select((item, index) => (item, index)))
             {
-                outputStream.WriteLine($"{commandExecutor.Key}: {commandExecutor.Value.Explanation}");
+                outputStream.WriteLine($"{index}. {commandExecutor.Key}: {commandExecutor.Value.Explanation}");
             }
         }
 
@@ -45,6 +46,25 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             outputStream.WriteLine($"=====Finish {command} Command====");
+        }
+
+        public static bool TryParseCommand(string value, out Command command)
+        {
+            if (!int.TryParse(value, out var commandIndex))
+            {
+                return Enum.TryParse(value, out command);
+            }
+
+            try
+            {
+                command = (Command)commandIndex;
+                return true;
+            }
+            catch (InvalidCastException)
+            {
+                command = 0;
+                return false;
+            }
         }
 
         private readonly Dictionary<Command, ICommandExecutor> commandExecutorMap;

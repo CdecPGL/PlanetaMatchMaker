@@ -10,7 +10,7 @@ namespace PlanetaGameLabo.MatchMaker
             CreatePortMappingFromCandidatesCommandOptions>
     {
         public override string Explanation =>
-            "Create port mapping from port candidates to NAT which is compatible with UPnP or PMP.";
+            "Create port mapping from port candidates to NAT which supports UPnP or PMP.";
 
         public override Command command => Command.CreatePortMappingFromCandidates;
 

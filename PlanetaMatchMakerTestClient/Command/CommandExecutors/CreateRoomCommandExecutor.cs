@@ -17,8 +17,8 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomCommandOptions options,
             CancellationToken cancellationToken)
         {
-            await sharedClient.CreateRoomAsync(options.PortNumber, options.RoomGroupIndex, options.Name,
-                options.MaxPlayerCount, options.IsPublic, options.Password);
+            await sharedClient.CreateRoomAsync(options.RoomGroupIndex, options.Name,
+                options.MaxPlayerCount, options.PortNumber, options.IsPublic, options.Password);
             OutputStream.WriteLine(
                 $"Room created with id \"{sharedClient.HostingRoomId}\" in room group {sharedClient.HostingRoomGroupIndex}.");
         }
@@ -26,21 +26,21 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class CreateRoomCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "PortNumber", Required = true,
-            HelpText = "A port number which is used in hosting game.")]
-        public ushort PortNumber { get; set; }
-
-        [CommandLine.Value(1, MetaName = "RoomGroupIndex", Required = true,
+        [CommandLine.Value(0, MetaName = "RoomGroupIndex", Required = true,
             HelpText = "An index of room group where room is created.")]
         public byte RoomGroupIndex { get; set; }
 
-        [CommandLine.Value(2, MetaName = "RoomName", Required = true,
+        [CommandLine.Value(1, MetaName = "RoomName", Required = true,
             HelpText = "A name of room to create.")]
         public string Name { get; set; }
 
-        [CommandLine.Value(3, MetaName = "MaxPlayerCount", Required = true,
+        [CommandLine.Value(2, MetaName = "MaxPlayerCount", Required = true,
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
+
+        [CommandLine.Value(3, MetaName = "PortNumber", Required = true,
+            HelpText = "A port number which is used in hosting game.")]
+        public ushort PortNumber { get; set; }
 
         [CommandLine.Option('u', "isPublic", Default = true, Required = false,
             HelpText = "Create public room if true.")]

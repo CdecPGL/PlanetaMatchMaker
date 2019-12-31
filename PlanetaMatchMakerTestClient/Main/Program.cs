@@ -44,7 +44,7 @@ namespace PlanetaGameLabo.MatchMaker
                         }
 
                         var items = input.Split(' ');
-                        if (!Enum.TryParse<Command>(items[0], out var c))
+                        if (!CommandProcessor.TryParseCommand(input, out var c))
                         {
                             continue;
                         }
