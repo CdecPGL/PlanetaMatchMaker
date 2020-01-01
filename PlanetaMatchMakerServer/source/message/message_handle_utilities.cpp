@@ -23,7 +23,7 @@ namespace pgl {
 			return;
 		}
 
-		throw server_error(server_error_code::room_group_index_out_of_range);
+		throw server_error(true, server_error_code::room_group_index_out_of_range);
 	}
 
 	bool does_room_exist(const std::shared_ptr<message_handle_parameter> param,
@@ -49,6 +49,6 @@ namespace pgl {
 		}
 
 		// Send room doesn't exist error to the client
-		throw server_error(server_error_code::room_does_not_exist);
+		throw server_error(true, server_error_code::room_does_not_exist);
 	}
 }

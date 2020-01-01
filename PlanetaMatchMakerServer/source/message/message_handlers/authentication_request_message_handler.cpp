@@ -31,13 +31,13 @@ namespace pgl {
 				message_error_code::api_version_mismatch,
 			};
 			send(param, header, reply);
-			throw server_error(server_error_code::api_version_mismatch);
+			throw server_error(false, server_error_code::api_version_mismatch);
 		}
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Authentication succeeded.");
 
 		// Generate session key
 		if (param->session_data.is_session_key_generated()) {
-			throw server_error(server_error_code::invalid_session,
+			throw server_error(false, server_error_code::invalid_session,
 				"A session key is already generated. Multi time authentication is not allowed.");
 		}
 		reply.session_key = param->session_data.generate_session_key();

@@ -33,21 +33,21 @@ namespace pgl {
 		// Check if a session is valid if need
 		if (check_session_key) {
 			if (!param->session_data.is_session_key_generated()) {
-				throw server_error(server_error_code::invalid_session, "A session key is not generated.");
+				throw server_error(false, server_error_code::invalid_session, "A session key is not generated.");
 			}
 			if (!param->session_data.check_session_key(header.session_key)) {
-				throw server_error(server_error_code::invalid_session,
+				throw server_error(false, server_error_code::invalid_session,
 					minimal_serializer::generate_string("A session key(", header.session_key, ") is not valid."));
 			}
 		}
 
 		if (!is_handler_exist(header.message_type)) {
-			throw server_error(server_error_code::invalid_message_type,
+			throw server_error(false, server_error_code::invalid_message_type,
 				minimal_serializer::generate_string(static_cast<int>(header.message_type)));
 		}
 
 		if (enable_message_specification && header.message_type != specified_message_type) {
-			throw server_error(server_error_code::message_type_mismatch,
+			throw server_error(false, server_error_code::message_type_mismatch,
 				minimal_serializer::generate_string("expected: ", specified_message_type, ", actual: ", header.message_type));
 		}
 

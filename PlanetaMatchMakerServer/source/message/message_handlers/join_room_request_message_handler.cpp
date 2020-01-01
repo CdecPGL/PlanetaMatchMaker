@@ -50,7 +50,7 @@ namespace pgl {
 				message_error_code::player_count_reaches_limit
 			};
 			send(param, header, reply);
-			throw server_error(server_error_code::room_player_is_full);
+			throw server_error(true, server_error_code::room_player_is_full);
 		}
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
 			"\" in room group \"", message.group_index, "\" accepted new player. (", room_data.current_player_count,
@@ -67,6 +67,6 @@ namespace pgl {
 		send(param, header, reply);
 
 		// Disconnect
-		throw server_error(server_error_code::disconnected_expectedly);
+		throw server_error(false, server_error_code::disconnected_expectedly);
 	}
 }

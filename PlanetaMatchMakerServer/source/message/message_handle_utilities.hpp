@@ -27,12 +27,12 @@ namespace pgl {
 			auto extra_message = minimal_serializer::generate_string("Failed to send ", data_summary, " to the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
-				throw server_error(server_error_code::message_send_timeout, extra_message);
+				throw server_error(false, server_error_code::message_send_timeout, extra_message);
 			}
 			if (e.code() == boost::asio::error::eof) {
-				throw server_error(server_error_code::disconnected_by_client, extra_message);
+				throw server_error(false, server_error_code::disconnected_by_client, extra_message);
 			}
-			throw server_error(server_error_code::message_send_error, extra_message);
+			throw server_error(false, server_error_code::message_send_error, extra_message);
 		}
 	}
 
@@ -56,12 +56,12 @@ namespace pgl {
 			auto extra_message = minimal_serializer::generate_string("Failed to receive ", data_summary, " from the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
-				throw server_error(server_error_code::message_reception_timeout, extra_message);
+				throw server_error(false, server_error_code::message_reception_timeout, extra_message);
 			}
 			if (e.code() == boost::asio::error::eof) {
-				throw server_error(server_error_code::disconnected_by_client, extra_message);
+				throw server_error(false, server_error_code::disconnected_by_client, extra_message);
 			}
-			throw server_error(server_error_code::message_reception_error, extra_message);
+			throw server_error(false, server_error_code::message_reception_error, extra_message);
 		}
 	}
 
@@ -83,7 +83,7 @@ namespace pgl {
 			message_error_code::room_group_index_out_of_range
 		};
 		send(param, header, reply_message);
-		throw server_error(server_error_code::room_group_index_out_of_range);
+		throw server_error(true, server_error_code::room_group_index_out_of_range);
 	}
 
 	// Check a room group index is valid. If it is not valid, throw server error.
@@ -110,7 +110,7 @@ namespace pgl {
 			message_error_code::room_does_not_exist
 		};
 		send(param, header, reply_message);
-		throw server_error(server_error_code::room_does_not_exist);
+		throw server_error(true, server_error_code::room_does_not_exist);
 	}
 
 	// Check a room id exists. If it doesn't exist, throw server error.
