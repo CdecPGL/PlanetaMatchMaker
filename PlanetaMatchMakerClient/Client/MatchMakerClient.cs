@@ -684,7 +684,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ClientInternalErrorException"></exception>
-        /// <exception cref="InvalidOperationException">The port is already used by other connection which is not TCP server</exception>
+        /// <exception cref="InvalidOperationException">The port is already used by other connection or listener</exception>
         /// <returns></returns>
         private async Task<bool> ConnectionTestCoreAsync(TransportProtocol protocol, ushort portNumber)
         {
@@ -699,13 +699,10 @@ namespace PlanetaGameLabo.MatchMaker
                     throw new ClientErrorException(ClientErrorCode.NotConnected);
                 }
 
-                var ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
-
-                // error if the port is already used by other connection
-                if (ipGlobalProperties.GetActiveTcpConnections().Any(c => c.LocalEndPoint.Port == portNumber))
+                if (!NetworkHelper.CheckPortAvailability(protocol, portNumber))
                 {
                     throw new InvalidOperationException(
-                        $"The port \"{portNumber}\" is already used by other connection which is not TCP server.");
+                        $"The port \"{portNumber}\" is already used by other {portNumber} connection or listener.");
                 }
 
                 // Accept both IPv4 and IPv6

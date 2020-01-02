@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,9 +18,16 @@ namespace PlanetaGameLabo.MatchMaker
             ConnectionTestCommandOptions options,
             CancellationToken cancellationToken)
         {
-            var succeed = await sharedClient.ConnectionTestAsync(options.Protocol, options.PortNumber);
-            var succeedText = succeed ? "succeed" : "failed";
-            OutputStream.WriteLine($"Connection test is {succeedText}.");
+            try
+            {
+                var succeed = await sharedClient.ConnectionTestAsync(options.Protocol, options.PortNumber);
+                var succeedText = succeed ? "succeed" : "failed";
+                OutputStream.WriteLine($"Connection test is {succeedText}.");
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new CommandExecutionErrorException(e.Message);
+            }
         }
     }
 
@@ -29,7 +37,7 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Transport protocol used to host game.")]
         public TransportProtocol Protocol { get; set; }
 
-        [CommandLine.Value(0, MetaName = "Port", Required = true,
+        [CommandLine.Value(1, MetaName = "Port", Required = true,
             HelpText = "Port used to host game.")]
         public ushort PortNumber { get; set; }
     }
