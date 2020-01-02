@@ -2,6 +2,7 @@ using System;
 
 namespace PlanetaGameLabo.MatchMaker
 {
+#pragma warning disable CA1032
     /// <summary>
     /// An exception of client due to user operation.
     /// When this exception is thrown, Connection will be continued if possible.
@@ -36,6 +37,8 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
+#pragma warning restore CA1032
+
     public enum ClientErrorCode
     {
         Ok,
@@ -53,9 +56,9 @@ namespace PlanetaGameLabo.MatchMaker
 
     public static class ClientErrorCodeExtensions
     {
-        public static string GetClientErrorMessage(this ClientErrorCode error_code)
+        public static string GetClientErrorMessage(this ClientErrorCode errorCode)
         {
-            switch (error_code)
+            switch (errorCode)
             {
                 case ClientErrorCode.Ok:
                     return "Ok";

@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 
+#pragma warning disable CA1303
 namespace CdecPGL.MinimalSerializer
 {
     public static class Serializer
@@ -224,10 +225,10 @@ namespace CdecPGL.MinimalSerializer
                     data = BitConverter.GetBytes(value);
                     break;
                 case byte value:
-                    data = new[] { value };
+                    data = new[] {value};
                     break;
                 case sbyte value:
-                    data = new[] { (byte)value };
+                    data = new[] {(byte)value};
                     break;
                 case double value:
                     data = BitConverter.GetBytes(value);
@@ -495,3 +496,4 @@ namespace CdecPGL.MinimalSerializer
         }
     }
 }
+#pragma warning restore CA1303

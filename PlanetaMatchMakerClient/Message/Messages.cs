@@ -8,6 +8,8 @@ namespace PlanetaGameLabo.MatchMaker
     using RoomGroupIndexType = Byte;
     using RoomIdType = UInt32;
 
+#pragma warning disable 0649
+
     internal enum MessageErrorCode : byte
     {
         Ok,
@@ -168,7 +170,7 @@ namespace PlanetaGameLabo.MatchMaker
             public Datetime CreateDatetime;
         }
 
-		public byte TotalRoomCount; // the number of rooms server managing
+        public byte TotalRoomCount; // the number of rooms server managing
         public byte MatchedRoomCount; // the number of rooms matched to requested condition
         public byte ReplyRoomCount; // the number of rooms in these replies
 
@@ -224,4 +226,6 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public bool Succeed;
     }
+
+#pragma warning restore 0649
 }

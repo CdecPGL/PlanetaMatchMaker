@@ -50,7 +50,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 await natDevice.CreatePortMapAsync(new Mapping(
                     protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp, privatePort, publicPort,
-                    description));
+                    description)).ConfigureAwait(false);
             }
             catch (MappingException e)
             {
@@ -85,8 +85,8 @@ namespace PlanetaGameLabo.MatchMaker
 
             var proto = protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp;
             var hostname = Dns.GetHostName();
-            var myAddresses = await Dns.GetHostAddressesAsync(hostname);
-            var mappings = (await natDevice.GetAllMappingsAsync()).ToArray();
+            var myAddresses = await Dns.GetHostAddressesAsync(hostname).ConfigureAwait(false);
+            var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
 
             var alreadyAvailableMappings = mappings.Where(m =>
                 m.Protocol == proto && myAddresses.Contains(m.PrivateIP) &&
@@ -125,7 +125,7 @@ namespace PlanetaGameLabo.MatchMaker
                 privatePort = availablePrivatePorts.First();
             }
 
-            await CreatePortMapping(protocol, privatePort, publicPort, description);
+            await CreatePortMapping(protocol, privatePort, publicPort, description).ConfigureAwait(false);
             return (privatePort, publicPort);
         }
 
@@ -141,14 +141,14 @@ namespace PlanetaGameLabo.MatchMaker
 
             try
             {
-                natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts);
+                natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts).ConfigureAwait(false);
                 IsNatDeviceAvailable = true;
             }
             catch (NatDeviceNotFoundException)
             {
                 try
                 {
-                    natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Pmp, cts);
+                    natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Pmp, cts).ConfigureAwait(false);
                     IsNatDeviceAvailable = true;
                 }
                 catch (NatDeviceNotFoundException)

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CdecPGL.MinimalSerializer;
 
+#pragma warning disable CA1303
 namespace PlanetaGameLabo.MatchMaker
 {
     internal static class MessageUtilities
@@ -93,3 +94,4 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 }
+#pragma warning restore CA1303

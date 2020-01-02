@@ -2,6 +2,7 @@ using System;
 
 namespace PlanetaGameLabo.MatchMaker
 {
+#pragma warning disable CA1032
     /// <summary>
     /// An exception of message send and receive error in system.
     /// </summary>
@@ -11,4 +12,5 @@ namespace PlanetaGameLabo.MatchMaker
         {
         }
     }
+#pragma warning restore CA1032
 }
