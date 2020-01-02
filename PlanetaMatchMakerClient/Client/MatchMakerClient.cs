@@ -427,7 +427,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ClientInternalErrorException"></exception>
-        /// <returns></returns>
+        /// <returns>Game host endpoint</returns>
         public async Task<IPEndPoint> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
         {
             await semaphore.WaitAsync();
@@ -454,9 +454,10 @@ namespace PlanetaGameLabo.MatchMaker
 
                 var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>();
                 Logger.Log(LogLevel.Info,
-                    $"Receive JoinRoomReply. ({nameof(replyBody.HostEndPoint)}: {replyBody.HostEndPoint})");
+                    $"Receive JoinRoomReply. ({nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint})");
 
-                return (IPEndPoint)replyBody.HostEndPoint;
+                Close();
+                return (IPEndPoint)replyBody.GameHostEndPoint;
             }
             catch (ClientInternalErrorException)
             {

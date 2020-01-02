@@ -18,14 +18,12 @@ namespace pgl {
 		// Check if the client is host of requested room
 		if (room_data.host_endpoint != endpoint::make_from_boost_endpoint(param->socket.remote_endpoint())) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "The client is not host of requested ",
-				room_data, ".");
+				room_data, ". Room host endpoint is ", room_data.host_endpoint.to_boost_endpoint(), ".");
 			throw server_error(true, server_error_code::room_permission_error);
 		}
 
 		// Change status of requested room
-		if (message.is_current_player_count_changed) {
-			room_data.current_player_count = message.current_player_count;
-		}
+		if (message.is_current_player_count_changed) { room_data.current_player_count = message.current_player_count; }
 		switch (message.status) {
 			case update_room_status_notice_message::status::open:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Open ", room_data, ".");

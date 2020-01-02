@@ -200,10 +200,10 @@ namespace pgl {
 
 	//18 bytes
 	struct join_room_reply_message final {
-		endpoint host_endpoint;
+		endpoint game_host_endpoint;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += host_endpoint;
+			serializer += game_host_endpoint;
 		}
 	};
 

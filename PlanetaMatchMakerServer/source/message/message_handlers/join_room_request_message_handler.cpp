@@ -61,7 +61,7 @@ namespace pgl {
 			message_type::join_room_reply,
 			message_error_code::ok
 		};
-		reply.host_endpoint = room_data.host_endpoint;
+		reply.game_host_endpoint = room_data.game_host_endpoint;
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ", message_type::join_room_request,
 			" message.");
 		send(param, header, reply);

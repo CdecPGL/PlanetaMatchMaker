@@ -37,8 +37,9 @@ namespace pgl {
 
 		try {
 			// Create requested room
-			auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
-			host_endpoint.port_number = message.port_number;			
+			const auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
+			auto game_host_endpoint = host_endpoint;
+			game_host_endpoint.port_number = message.port_number;
 			room_data room_data{
 				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
 				message.name,
@@ -48,6 +49,7 @@ namespace pgl {
 				message.max_player_count,
 				datetime::now(),
 				host_endpoint,
+				game_host_endpoint,
 				1
 			};
 
@@ -61,7 +63,8 @@ namespace pgl {
 				message_type::create_room_request,
 				" message.");
 			send(param, header, reply);
-		} catch (const unique_variable_duplication_error&) {
+		}
+		catch (const unique_variable_duplication_error&) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Failed to create new room \"",
 				message.name, "\" because the name is duplicated");
 			header.error_code = message_error_code::room_name_duplicated;

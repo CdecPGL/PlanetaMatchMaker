@@ -27,6 +27,7 @@ namespace pgl {
 		uint8_t max_player_count;
 		datetime create_datetime;
 		endpoint host_endpoint;
+		endpoint game_host_endpoint;
 		uint8_t current_player_count;
 	};
 
@@ -59,7 +60,8 @@ namespace pgl {
 	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(
 		room_data_sort_kind sort_kind, const std::string& search_name);
 
-	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags, const std::string& search_name);
+	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags,
+		const std::string& search_name);
 
 	std::ostream& operator <<(std::ostream& os, const room_data& room_data);
 	std::ostream& operator <<(std::ostream& os, const room_group_data& room_group_data);
