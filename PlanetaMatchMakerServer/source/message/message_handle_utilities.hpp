@@ -16,15 +16,17 @@ namespace pgl {
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			execute_timed_async_operation(param->socket, param->timeout_seconds,
+			execute_socket_timed_async_operation(param->socket, param->timeout_seconds,
 				[param, first_data, rest_data...]() {
 					packed_async_write(
 						param->socket, param->yield, first_data, rest_data...);
 				});
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Send ", data_summary,
 				" to the client.");
-		} catch (const boost::system::system_error& e) {
-			auto extra_message = minimal_serializer::generate_string("Failed to send ", data_summary, " to the client. ",
+		}
+		catch (const boost::system::system_error& e) {
+			auto extra_message = minimal_serializer::generate_string("Failed to send ", data_summary,
+				" to the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
 				throw server_error(false, server_error_code::message_send_timeout, extra_message);
@@ -46,14 +48,16 @@ namespace pgl {
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			execute_timed_async_operation(param->socket, param->timeout_seconds,
+			execute_socket_timed_async_operation(param->socket, param->timeout_seconds,
 				[param, &first_data, &rest_data...]()mutable {
 					unpacked_async_read(param->socket, param->yield, first_data, rest_data...);
 				});
 			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Receive ", data_summary,
 				" from the client.");
-		} catch (const boost::system::system_error& e) {
-			auto extra_message = minimal_serializer::generate_string("Failed to receive ", data_summary, " from the client. ",
+		}
+		catch (const boost::system::system_error& e) {
+			auto extra_message = minimal_serializer::generate_string("Failed to receive ", data_summary,
+				" from the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
 				throw server_error(false, server_error_code::message_reception_timeout, extra_message);
@@ -74,9 +78,7 @@ namespace pgl {
 		const room_group_index_type room_group_index,
 		const ReplyMessage& reply_message) {
 		// Check if the id is valid
-		if (does_room_group_exist(param, room_group_index)) {
-			return;
-		}
+		if (does_room_group_exist(param, room_group_index)) { return; }
 
 		const reply_message_header header{
 			ReplyMessageType,
@@ -100,9 +102,7 @@ namespace pgl {
 		const room_data_container& room_data_container, const room_id_type room_id,
 		const ReplyMessage& reply_message) {
 		// Check room existence
-		if (does_room_exist(param, room_data_container, room_id)) {
-			return;
-		}
+		if (does_room_exist(param, room_data_container, room_id)) { return; }
 
 		// Send room doesn't exist error to the client
 		const reply_message_header header{

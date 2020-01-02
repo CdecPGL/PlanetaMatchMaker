@@ -19,12 +19,14 @@ namespace pgl {
 		const auto time_out_seconds = std::chrono::seconds(param->server_setting.connection_check_time_out_seconds);
 		const auto target_endpoint = asio::ip::tcp::endpoint(
 			param->session_data.remote_endpoint().to_boost_endpoint().address(), message.port_number);
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Start ", message.protocol,
+			" connectable test to ", target_endpoint, " with setting timeout ",
+			param->server_setting.connection_check_time_out_seconds, " seconds.");
 		try {
 			if (message.protocol == transport_protocol::tcp) {
 				// Try to connect to TCP server in the client
-				execute_timed_async_operation(param->socket, time_out_seconds, [param, &target_endpoint]() {
-					asio::io_service io_service;
-					asio::ip::tcp::socket socket(io_service);
+				asio::ip::tcp::socket socket(param->socket.get_executor());
+				execute_socket_timed_async_operation(socket, time_out_seconds, [param,&socket, &target_endpoint]() {
 					socket.async_connect(target_endpoint, param->yield);
 					socket.close();
 					log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Connect to ", target_endpoint,
@@ -33,11 +35,10 @@ namespace pgl {
 			}
 			else {
 				// Try to send to UDP client and check if the reply is returned
-				execute_timed_async_operation(param->socket, time_out_seconds, [param, &target_endpoint]() {
+				asio::ip::udp::socket socket(param->socket.get_executor());
+				execute_socket_timed_async_operation(socket, time_out_seconds, [param,&socket, &target_endpoint]() {
 					auto target_endpoint_udp = asio::ip::udp::endpoint(target_endpoint.address(),
 						target_endpoint.port());
-					asio::io_service io_service;
-					asio::ip::udp::socket socket(io_service);
 					socket.async_send_to(asio::buffer("Hello."), target_endpoint_udp, param->yield);
 					std::array<uint8_t, 16> buffer{};
 					socket.async_receive_from(asio::buffer(buffer), target_endpoint_udp, param->yield);
