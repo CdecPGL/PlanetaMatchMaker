@@ -476,6 +476,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         /// <summary>
         /// Update hosting room status on the server.
+        /// This method doesn't notice error in the server because the API this method uses doesn't reply.
         /// </summary>
         /// <param name="roomStatus"></param>
         /// <param name="updateCurrentPlayerCount"></param>

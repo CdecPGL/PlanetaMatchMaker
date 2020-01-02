@@ -34,6 +34,8 @@ namespace PlanetaGameLabo.MatchMaker
                 OutputStream.WriteLine(
                     $"Player count of hosting room (ID: {sharedClient.HostingRoomId}, Group: {sharedClient.HostingRoomGroupIndex}) is changed to \"{options.PlayerCount}\".");
             }
+
+            OutputStream.WriteLine("Error in the server is not noticed because this API doesn't return reply.");
         }
     }
 
