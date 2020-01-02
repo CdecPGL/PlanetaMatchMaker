@@ -24,7 +24,7 @@ namespace pgl {
 			param->server_setting.connection_check_time_out_seconds, " seconds.");
 		try {
 			if (message.protocol == transport_protocol::tcp) {
-				// Try to connect to TCP server in the client
+				// Try to establish TCP connection
 				asio::ip::tcp::socket socket(param->socket.get_executor());
 				execute_socket_timed_async_operation(socket, time_out_seconds, [param,&socket, &target_endpoint]() {
 					socket.async_connect(target_endpoint, param->yield);
@@ -34,12 +34,16 @@ namespace pgl {
 				});
 			}
 			else {
-				// Try to send to UDP client and check if the reply is returned
+				// Try to send data by UDP and check if the reply is returned
 				asio::ip::udp::socket socket(param->socket.get_executor());
+				socket.open(param->socket.local_endpoint().protocol() == asio::ip::tcp::v4()
+					? asio::ip::udp::v4()
+					: asio::ip::udp::v6());
 				execute_socket_timed_async_operation(socket, time_out_seconds, [param,&socket, &target_endpoint]() {
 					auto target_endpoint_udp = asio::ip::udp::endpoint(target_endpoint.address(),
 						target_endpoint.port());
 					socket.async_send_to(asio::buffer("Hello."), target_endpoint_udp, param->yield);
+					// check only if data received. We don't check content of data.
 					std::array<uint8_t, 16> buffer{};
 					socket.async_receive_from(asio::buffer(buffer), target_endpoint_udp, param->yield);
 					log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Connect to ", target_endpoint,
@@ -52,7 +56,7 @@ namespace pgl {
 			if (e.code() != asio::error::eof) {
 				reply.succeed = false;
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Failed to connect to ",
-					target_endpoint, ".");
+					target_endpoint, ": ", e, "");
 			}
 		}
 
