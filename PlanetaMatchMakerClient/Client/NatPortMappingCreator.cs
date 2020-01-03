@@ -42,7 +42,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException">Failed to create port mapping</exception>
         /// <returns></returns>
         public async Task CreatePortMapping(TransportProtocol protocol, ushort privatePort, ushort publicPort,
-            string description)
+            string description="")
         {
             if (!IsDiscoverNatDone)
             {
@@ -81,7 +81,7 @@ namespace PlanetaGameLabo.MatchMaker
         public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidates(
             TransportProtocol protocol,
             ICollection<ushort> privatePortCandidates,
-            ICollection<ushort> publicPortCandidates, string description)
+            ICollection<ushort> publicPortCandidates, string description="")
         {
             if (!IsDiscoverNatDone)
             {
@@ -96,14 +96,17 @@ namespace PlanetaGameLabo.MatchMaker
             string PortMappingToString(Mapping mapping)
             {
                 return
-                    $"{mapping.PrivateIP}:{mapping.PublicPort} to {mapping.PrivateIP}:{mapping.PrivatePort}({mapping.Protocol})";
+                    $"{mapping.PublicIP}:{mapping.PublicPort} to {mapping.PrivateIP}:{mapping.PrivatePort}({mapping.Protocol})";
             }
+
+            Logger.Log(LogLevel.Info, $"Private port candidates are [{string.Join(",", privatePortCandidates)}].");
+            Logger.Log(LogLevel.Info, $"Public port candidates are [{string.Join(",", publicPortCandidates)}].");
 
             var proto = protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp;
             var hostname = Dns.GetHostName();
             var myAddresses = await Dns.GetHostAddressesAsync(hostname).ConfigureAwait(false);
             var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
-            Logger.Log(LogLevel.Info, $"My addresses are {string.Join<IPAddress>(",", myAddresses)}].");
+            Logger.Log(LogLevel.Info, $"My addresses are [{string.Join<IPAddress>(",", myAddresses)}].");
 
             var alreadyAvailableMappings = mappings.Where(m =>
                 m.Protocol == proto && myAddresses.Contains(m.PrivateIP) &&

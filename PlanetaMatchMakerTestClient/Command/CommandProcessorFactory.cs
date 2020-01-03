@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -17,7 +16,6 @@ namespace PlanetaGameLabo.MatchMaker
                 new ListRoomCommandExecutor(outputStream), new JoinRoomCommandExecutor(outputStream),
                 new UpdateHostingRoomStatusCommandExecutor(outputStream),
                 new ConnectionTestCommandExecutor(outputStream), new CreatePortMappingCommandExecutor(outputStream),
-                new CreatePortMappingFromCandidatesCommandExecutor(outputStream),
                 new CreateRoomWithCreatingPortMappingCommandExecutor(outputStream),
                 new StressTestConnectAndStayCommandExecutor(outputStream),
                 new StressTestConnectAndDisconnectCommandExecutor(outputStream),
@@ -38,7 +36,6 @@ namespace PlanetaGameLabo.MatchMaker
         UpdateHostingRoomStatus,
         ConnectionTest,
         CreatePortMapping,
-        CreatePortMappingFromCandidates,
         CreateRoomWithCreatingPortMapping,
         StressTestConnectAndStay,
         StressTestConnectAndDisconnect,

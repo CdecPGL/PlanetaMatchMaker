@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,16 +31,45 @@ namespace PlanetaGameLabo.MatchMaker
                     "There are no available NAT device found which supports UPnp or PMP.");
             }
 
-            await sharedClient.PortMappingCreator.CreatePortMapping(options.Protocol, options.PrivatePort,
-                options.PublicPort, options.Description);
-            OutputStream.WriteLine("Port mapping is created to discovered NAT.");
+            if (!options.PrivatePortCandidates.Any() && !options.PublicPortCandidates.Any())
+            {
+                await sharedClient.PortMappingCreator.CreatePortMapping(options.Protocol, options.PrivatePort,
+                    options.PublicPort, options.Description);
+                OutputStream.WriteLine("Port mapping is created to discovered NAT.");
+            }
+            else
+            {
+                var privatePortCandidates = new HashSet<ushort>() {options.PrivatePort};
+                if (options.PrivatePortCandidates != null)
+                {
+                    foreach (var privatePortCandidate in options.PrivatePortCandidates)
+                    {
+                        privatePortCandidates.Add(privatePortCandidate);
+                    }
+                }
+
+                var publicPortCandidates = new HashSet<ushort>() {options.PublicPort};
+                if (options.PublicPortCandidates != null)
+                {
+                    foreach (var publicPortCandidate in options.PublicPortCandidates)
+                    {
+                        publicPortCandidates.Add(publicPortCandidate);
+                    }
+                }
+
+                var (privatePort, publicPort) =
+                    await sharedClient.PortMappingCreator.CreatePortMappingFromCandidates(options.Protocol,
+                        privatePortCandidates, publicPortCandidates, options.Description);
+                OutputStream.WriteLine(
+                    $"Port mapping is created to discovered NAT between private port \"{privatePort}\" and public port \"{publicPort}\".");
+            }
         }
     }
 
     internal class CreatePortMappingCommandOptions : StandardCommandOptions
     {
         [CommandLine.Value(0, MetaName = "Protocol", Required = true,
-            HelpText = "Transport protocol used to host game.")]
+            HelpText = "Transport protocol used for hosting game.")]
         public TransportProtocol Protocol { get; set; }
 
         [CommandLine.Value(1, MetaName = "PrivatePort", Required = true,
@@ -49,16 +80,24 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Port to external network to map.")]
         public ushort PublicPort { get; set; }
 
-        [CommandLine.Value(3, MetaName = "Description", Required = true,
+        [CommandLine.Option('d', "Description", Default = "", Required = false,
             HelpText = "A Description of port mapping.")]
         public string Description { get; set; }
 
         [CommandLine.Option('t', "discoverTimeout", Default = 5000, Required = false,
-            HelpText = "A timeout time by milliseconds for NAT Device.")]
+            HelpText = "A timeout time by milliseconds to discover NAT Device.")]
         public int DiscoverNatTimeoutMilliSeconds { get; set; }
 
         [CommandLine.Option('f', "forceToDiscover", Default = false, Required = false,
             HelpText = "Force to discover NAT device even if discover NAT device is already done.")]
         public bool EnableForceToDiscoverNat { get; set; }
+
+        [CommandLine.Option('r', "PrivatePortCandidates", Default = new ushort[] { }, Required = false, Separator = ',',
+            HelpText = "Candidates of private port to local network to map.")]
+        public IEnumerable<ushort> PrivatePortCandidates { get; set; }
+
+        [CommandLine.Option('u', "PublicPortCandidates", Default = new ushort[] { }, Required = false, Separator = ',',
+            HelpText = "Candidates of public port to external network to map.")]
+        public IEnumerable<ushort> PublicPortCandidates { get; set; }
     }
 }

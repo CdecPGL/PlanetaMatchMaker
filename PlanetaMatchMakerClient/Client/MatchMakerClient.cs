@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
@@ -293,7 +292,7 @@ namespace PlanetaGameLabo.MatchMaker
                 {
                     var portNumberCandidateArray = portNumberCandidates.ToArray();
                     var ret = (await PortMappingCreator.CreatePortMappingFromCandidates(TransportProtocol.Tcp,
-                        portNumberCandidateArray, portNumberCandidateArray, "").ConfigureAwait(false));
+                        portNumberCandidateArray, portNumberCandidateArray).ConfigureAwait(false));
                     portNumber = ret.publicPort;
                     Logger.Log(LogLevel.Info,
                         $"Port mapping is created in NAT. (privatePortNumber: {ret.privatePort}, publicPortNumber: {ret.publicPort})");
