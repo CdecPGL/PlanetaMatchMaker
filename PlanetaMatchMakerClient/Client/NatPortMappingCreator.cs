@@ -169,7 +169,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="timeoutMilliSeconds">Time to consider available NAT device doesn't exist in one method. Discover time is up to timeoutMilliSeconds*2 milli seconds by two methods.</param>
         /// <returns>true if NAT device is found</returns>
-        public async Task<bool> DiscoverNat(int timeoutMilliSeconds)
+        public async Task<bool> DiscoverNat(int timeoutMilliSeconds = 5000)
         {
             var discoverer = new NatDiscoverer();
 

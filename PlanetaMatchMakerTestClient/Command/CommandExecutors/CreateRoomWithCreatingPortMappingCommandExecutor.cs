@@ -50,11 +50,11 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "A default port number which is used in hosting game.")]
         public ushort DefaultPortNumber { get; set; }
 
-        [CommandLine.Value(5, MetaName = "DiscoverTimeoutMilliSeconds", Required = true,
+        [CommandLine.Option('t', "DiscoverTimeoutMilliSeconds", Default = 5000, Required = false,
             HelpText = "Timeout milli seconds to discover NAT.")]
         public int DiscoverTimeoutMilliSeconds { get; set; }
 
-        [CommandLine.Option('c', "PortCandidates", Default = new ushort[] { }, Required = false,
+        [CommandLine.Option('c', "PortCandidates", Default = new ushort[] { }, Required = false, Separator = ',',
             HelpText = "Candidates of port to map.")]
         public IEnumerable<ushort> PortCandidates { get; set; }
 

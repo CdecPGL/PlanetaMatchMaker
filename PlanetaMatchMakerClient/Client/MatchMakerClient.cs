@@ -252,8 +252,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task CreateRoomWithCreatingPortMappingAsync(byte roomGroupIndex, string roomName,
-            byte maxPlayerCount, int discoverNatTimeoutMilliSeconds, TransportProtocol protocol,
-            IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber, bool isPublic = true,
+            byte maxPlayerCount, TransportProtocol protocol, IEnumerable<ushort> portNumberCandidates,
+            ushort defaultPortNumber, int discoverNatTimeoutMilliSeconds = 5000, bool isPublic = true,
             string password = "")
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
@@ -293,8 +293,16 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 Logger.Log(LogLevel.Info, $"Execute first connection test (Default port: {defaultPortNumber}).");
-                var connectionTestSucceed =
-                    await ConnectionTestCoreAsync(protocol, defaultPortNumber).ConfigureAwait(false);
+                var connectionTestSucceed = false;
+                try
+                {
+                    connectionTestSucceed =
+                        await ConnectionTestCoreAsync(protocol, defaultPortNumber).ConfigureAwait(false);
+                }
+                // Consider port already used error as connection test failure
+                catch (InvalidOperationException)
+                {
+                }
 
                 var portNumber = defaultPortNumber;
                 if (!connectionTestSucceed)
@@ -303,7 +311,7 @@ namespace PlanetaGameLabo.MatchMaker
                     // Create port candidates
                     var portNumberCandidateArray = portNumberCandidates.ToList();
                     Logger.Log(LogLevel.Debug, $"Port candidates: [{string.Join(",", portNumberCandidateArray)}]");
-                    if (portNumberCandidateArray.Contains(defaultPortNumber))
+                    if (!portNumberCandidateArray.Contains(defaultPortNumber))
                     {
                         portNumberCandidateArray.Add(defaultPortNumber);
                     }
@@ -322,6 +330,7 @@ namespace PlanetaGameLabo.MatchMaker
                         $"Port mapping is created in NAT. (privatePortNumber: {ret.privatePort}, publicPortNumber: {ret.publicPort})");
 
                     Logger.Log(LogLevel.Info, "Execute second connection test.");
+
                     connectionTestSucceed = await ConnectionTestCoreAsync(protocol, portNumber).ConfigureAwait(false);
                     if (!connectionTestSucceed)
                     {
