@@ -42,21 +42,21 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
 
-        [CommandLine.Value(3, MetaName = "DiscoverTimeoutMilliSeconds", Required = true,
-            HelpText = "Timeout milli seconds to discover NAT.")]
-        public int DiscoverTimeoutMilliSeconds { get; set; }
-
-        [CommandLine.Value(4, MetaName = "Protocol", Required = true,
+        [CommandLine.Value(3, MetaName = "Protocol", Required = true,
             HelpText = "Transport protocol used to host game.")]
         public TransportProtocol Protocol { get; set; }
 
-        [CommandLine.Value(5, MetaName = "PortCandidates", Required = true,
-            HelpText = "Candidates of port to map.")]
-        public ICollection<ushort> PortCandidates { get; set; }
-
-        [CommandLine.Value(6, MetaName = "DefaultPortNumber", Required = true,
+        [CommandLine.Value(4, MetaName = "DefaultPortNumber", Required = true,
             HelpText = "A default port number which is used in hosting game.")]
         public ushort DefaultPortNumber { get; set; }
+
+        [CommandLine.Value(5, MetaName = "DiscoverTimeoutMilliSeconds", Required = true,
+            HelpText = "Timeout milli seconds to discover NAT.")]
+        public int DiscoverTimeoutMilliSeconds { get; set; }
+
+        [CommandLine.Option('c', "PortCandidates", Default = new ushort[] { }, Required = false,
+            HelpText = "Candidates of port to map.")]
+        public IEnumerable<ushort> PortCandidates { get; set; }
 
         [CommandLine.Option('u', "isPublic", Default = true, Required = false,
             HelpText = "Create public room if true.")]

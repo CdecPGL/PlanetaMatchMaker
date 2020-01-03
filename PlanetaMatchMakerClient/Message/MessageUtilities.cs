@@ -38,7 +38,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var requestHeaderData = new ArraySegment<byte>(Serializer.Serialize(header));
                 var requestBodyData = new ArraySegment<byte>(Serializer.Serialize(messageBody));
                 var data = new List<ArraySegment<byte>> {requestHeaderData, requestBodyData};
-                await client.Client.SendAsync(data, SocketFlags.None);
+                await client.Client.SendAsync(data, SocketFlags.None).ConfigureAwait(false);
             }
             catch (InvalidSerializationException e)
             {
@@ -67,7 +67,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var buffer =
                     new ArraySegment<byte>(new byte[Serializer.GetSerializedSize<ReplyMessageHeader>()]);
-                await client.Client.ReceiveAsync(buffer, SocketFlags.None);
+                await client.Client.ReceiveAsync(buffer, SocketFlags.None).ConfigureAwait(false);
                 var header = Serializer.Deserialize<ReplyMessageHeader>(buffer.Array);
 
                 if (header.MessageType != messageAttribute.MessageType)
@@ -78,7 +78,7 @@ namespace PlanetaGameLabo.MatchMaker
 
                 // Receive body data even if reply code is not OK to prevent remaining body data in receive buffer.
                 buffer = new ArraySegment<byte>(new byte[Serializer.GetSerializedSize<T>()]);
-                await client.Client.ReceiveAsync(buffer, SocketFlags.None);
+                await client.Client.ReceiveAsync(buffer, SocketFlags.None).ConfigureAwait(false);
                 if (header.ErrorCode != MessageErrorCode.Ok)
                 {
                     return (header.ErrorCode, default);

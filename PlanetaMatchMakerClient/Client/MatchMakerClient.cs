@@ -231,6 +231,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         /// <summary>
         /// Create and host new room to the server with creating port mapping to NAT.
+        /// This method doesn't create port mapping if first connection test is succeed.
+        /// If first connection test is failed, this method try to create port mapping.
+        /// The port pair to map is selected from candidates which consists of default port and port candidates from parameter.
+        /// The ports which is being used by this computer with indicated protocol is removed from candidates.
+        /// Refer NatPortMappingCreator.CreatePortMappingFromCandidates method if you want to know selection rule of port from candidates.
+        /// If second connection test after port mapping is created is failed, this method throws error.
         /// </summary>
         /// <param name="roomGroupIndex"></param>
         /// <param name="roomName"></param>
@@ -274,8 +280,9 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                if (!PortMappingCreator.IsDiscoverNatDone)
+                if (!PortMappingCreator.IsNatDeviceAvailable || !PortMappingCreator.IsDiscoverNatDone)
                 {
+                    Logger.Log(LogLevel.Info, "Execute discovering NAT device because it is not done.");
                     await PortMappingCreator.DiscoverNat(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);
                 }
 
@@ -285,23 +292,43 @@ namespace PlanetaGameLabo.MatchMaker
                         "Failed to discover NAT device.");
                 }
 
+                Logger.Log(LogLevel.Info, $"Execute first connection test (Default port: {defaultPortNumber}).");
                 var connectionTestSucceed =
                     await ConnectionTestCoreAsync(protocol, defaultPortNumber).ConfigureAwait(false);
+
                 var portNumber = defaultPortNumber;
                 if (!connectionTestSucceed)
                 {
-                    var portNumberCandidateArray = portNumberCandidates.ToArray();
-                    var ret = (await PortMappingCreator.CreatePortMappingFromCandidates(TransportProtocol.Tcp,
-                        portNumberCandidateArray, portNumberCandidateArray).ConfigureAwait(false));
+                    Logger.Log(LogLevel.Info, "Try to create port mapping because connection test is failed.");
+                    // Create port candidates
+                    var portNumberCandidateArray = portNumberCandidates.ToList();
+                    Logger.Log(LogLevel.Debug, $"Port candidates: [{string.Join(",", portNumberCandidateArray)}]");
+                    if (portNumberCandidateArray.Contains(defaultPortNumber))
+                    {
+                        portNumberCandidateArray.Add(defaultPortNumber);
+                    }
+
+                    // Remove used ports in this machine
+                    var privatePortCandidates =
+                        NetworkHelper.FilterPortsByAvailability(protocol, portNumberCandidateArray).ToArray();
+                    Logger.Log(LogLevel.Debug, $"Private port candidates: [{string.Join(",", privatePortCandidates)}]");
+                    var publicPortCandidates = portNumberCandidateArray;
+                    Logger.Log(LogLevel.Debug, $"Public port candidates: [{string.Join(",", publicPortCandidates)}]");
+
+                    var ret = await PortMappingCreator.CreatePortMappingFromCandidates(protocol,
+                        privatePortCandidates, publicPortCandidates).ConfigureAwait(false);
                     portNumber = ret.publicPort;
                     Logger.Log(LogLevel.Info,
                         $"Port mapping is created in NAT. (privatePortNumber: {ret.privatePort}, publicPortNumber: {ret.publicPort})");
-                }
 
-                connectionTestSucceed = await ConnectionTestCoreAsync(protocol, portNumber).ConfigureAwait(false);
-                if (!connectionTestSucceed)
-                {
-                    throw new ClientErrorException(ClientErrorCode.NotReachable);
+                    Logger.Log(LogLevel.Info, "Execute second connection test.");
+                    connectionTestSucceed = await ConnectionTestCoreAsync(protocol, portNumber).ConfigureAwait(false);
+                    if (!connectionTestSucceed)
+                    {
+                        throw new ClientErrorException(ClientErrorCode.NotReachable);
+                    }
+
+                    Logger.Log(LogLevel.Info, "Second connection test is succeeded. Start to create room.");
                 }
 
                 await CreateRoomCoreAsync(portNumber, roomGroupIndex, roomName, maxPlayerCount, isPublic, password)
@@ -708,10 +735,10 @@ namespace PlanetaGameLabo.MatchMaker
                 // Accept both IPv4 and IPv6
                 if (protocol == TransportProtocol.Tcp)
                 {
-                    tcpListener = new TcpListener(System.Net.IPAddress.IPv6Any, portNumber);
+                    tcpListener = new TcpListener(IPAddress.IPv6Any, portNumber);
                     tcpListener.Server.SetSocketOption(
-                        System.Net.Sockets.SocketOptionLevel.IPv6,
-                        System.Net.Sockets.SocketOptionName.IPv6Only,
+                        SocketOptionLevel.IPv6,
+                        SocketOptionName.IPv6Only,
                         0);
                     tcpListener.Start();
 

@@ -42,7 +42,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException">Failed to create port mapping</exception>
         /// <returns></returns>
         public async Task CreatePortMapping(TransportProtocol protocol, ushort privatePort, ushort publicPort,
-            string description="")
+            string description = "")
         {
             if (!IsDiscoverNatDone)
             {
@@ -70,6 +70,9 @@ namespace PlanetaGameLabo.MatchMaker
 
         /// <summary>
         /// Create port mapping by select available port pair from candidate.
+        /// If there are port mapping which matches port candidates, we reuse it.
+        /// If not, we find port pair which is not used and create port mapping with the pair.
+        /// This method doesn't consider if port is used in this computer by indicated protocol.
         /// </summary>
         /// <param name="protocol"></param>
         /// <param name="privatePortCandidates"></param>
@@ -81,7 +84,7 @@ namespace PlanetaGameLabo.MatchMaker
         public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidates(
             TransportProtocol protocol,
             ICollection<ushort> privatePortCandidates,
-            ICollection<ushort> publicPortCandidates, string description="")
+            ICollection<ushort> publicPortCandidates, string description = "")
         {
             if (!IsDiscoverNatDone)
             {
@@ -197,7 +200,7 @@ namespace PlanetaGameLabo.MatchMaker
                 }
                 catch (NatDeviceNotFoundException)
                 {
-                    Logger.Log(LogLevel.Info, $"A NAT device is not found by PMP");
+                    Logger.Log(LogLevel.Info, "A NAT device is not found by PMP");
                     return false;
                 }
             }
