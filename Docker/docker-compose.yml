@@ -1,6 +1,6 @@
 version: "2"
 services:
   pmms:
-    build: pmms
+    build: server-alpine
     ports:
       - "57000:57000"
