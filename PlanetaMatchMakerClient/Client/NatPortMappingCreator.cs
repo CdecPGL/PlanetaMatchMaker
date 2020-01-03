@@ -14,6 +14,31 @@ namespace PlanetaGameLabo.MatchMaker
     /// </summary>
     public sealed class NatPortMappingCreator
     {
+        public struct PortMapping
+        {
+            public readonly TransportProtocol Protocol;
+            public readonly IPAddress PublicIpAddress;
+            public readonly ushort PublicPort;
+            public readonly IPAddress PrivateIpAddress;
+            public readonly ushort PrivatePort;
+
+            public PortMapping(TransportProtocol protocol, IPAddress publicIpAddress, ushort publicPort,
+                IPAddress privateIpAddress, ushort privatePort)
+            {
+                Protocol = protocol;
+                PublicIpAddress = publicIpAddress;
+                PublicPort = publicPort;
+                PrivateIpAddress = privateIpAddress;
+                PrivatePort = privatePort;
+            }
+
+            public override string ToString()
+            {
+                return
+                    $"PortMapping(Protocol: {Protocol}, PrivateEndPoint: {PrivateIpAddress}:{PrivatePort}, PublicEndPoint: {PublicIpAddress}:{PublicPort})";
+            }
+        }
+
         /// <summary>
         /// true if NAT there are available NAT device.
         /// </summary>
@@ -29,6 +54,37 @@ namespace PlanetaGameLabo.MatchMaker
         public NatPortMappingCreator(ILogger logger)
         {
             Logger = logger;
+        }
+
+        /// <summary>
+        /// Get all port mappings.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">DiscoverNat is not executed or NAT device is not available</exception>
+        /// <exception cref="ClientErrorException">Failed to get port mappings</exception>
+        /// <returns></returns>
+        public async Task<PortMapping[]> GetAllPortMappingsAsync()
+        {
+            if (!IsDiscoverNatDone)
+            {
+                throw new InvalidOperationException("DiscoverNat should be executed before this method.");
+            }
+
+            if (!IsNatDeviceAvailable)
+            {
+                throw new InvalidOperationException("NAT device is not available.");
+            }
+
+            try
+            {
+                var mappings = await natDevice.GetAllMappingsAsync().ConfigureAwait(false);
+                return mappings.Select(m =>
+                    new PortMapping(m.Protocol == Protocol.Tcp ? TransportProtocol.Tcp : TransportProtocol.Udp,
+                        m.PublicIP, (ushort)m.PublicPort, m.PrivateIP, (ushort)m.PrivatePort)).ToArray();
+            }
+            catch (MappingException e)
+            {
+                throw new ClientErrorException(ClientErrorCode.UnknownError, e.Message);
+            }
         }
 
         /// <summary>

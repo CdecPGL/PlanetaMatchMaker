@@ -21,8 +21,8 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex, options.Name,
-                options.MaxPlayerCount, options.DiscoverTimeoutMilliSeconds, options.Protocol, options.PortCandidates,
-                options.DefaultPortNumber, options.IsPublic, options.Password);
+                options.MaxPlayerCount, options.Protocol, options.PortCandidates,
+                options.DefaultPortNumber, options.DiscoverTimeoutMilliSeconds, options.IsPublic, options.Password);
             OutputStream.WriteLine(
                 $"Room created with id \"{sharedClient.HostingRoomId}\" in room group {sharedClient.HostingRoomGroupIndex}.");
         }
