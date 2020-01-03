@@ -17,6 +17,18 @@ namespace PlanetaGameLabo.MatchMaker
             CreatePortMappingCommandOptions options,
             CancellationToken cancellationToken)
         {
+            if (options.EnableForceToDiscoverNat | !sharedClient.PortMappingCreator.IsDiscoverNatDone)
+            {
+                OutputStream.WriteLine(" Execute discovering NAT device.");
+                await sharedClient.PortMappingCreator.DiscoverNat(options.DiscoverNatTimeoutMilliSeconds);
+            }
+
+            if (!sharedClient.PortMappingCreator.IsNatDeviceAvailable)
+            {
+                throw new CommandExecutionErrorException(
+                    "There are no available NAT device found which supports UPnp or PMP.");
+            }
+
             await sharedClient.PortMappingCreator.CreatePortMapping(options.Protocol, options.PrivatePort,
                 options.PublicPort, options.Description);
             OutputStream.WriteLine("Port mapping is created to discovered NAT.");
@@ -40,5 +52,13 @@ namespace PlanetaGameLabo.MatchMaker
         [CommandLine.Value(3, MetaName = "Description", Required = true,
             HelpText = "A Description of port mapping.")]
         public string Description { get; set; }
+
+        [CommandLine.Option('t', "discoverTimeout", Default = 5000, Required = false,
+            HelpText = "A timeout time by milliseconds for NAT Device.")]
+        public int DiscoverNatTimeoutMilliSeconds { get; set; }
+
+        [CommandLine.Option('f', "forceToDiscover", Default = false, Required = false,
+            HelpText = "Force to discover NAT device even if discover NAT device is already done.")]
+        public bool EnableForceToDiscoverNat { get; set; }
     }
 }

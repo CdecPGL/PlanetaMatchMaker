@@ -49,7 +49,7 @@ namespace Open.Nat
 		}
 
         // (additional)
-        public override IPAddress LocalAddress => DeviceInfo.LocalAddress;
+        public override IPAddress LocalAddress => DeviceInfo.HostEndPoint.Address;
 
 #if NET35
 		public override Task<IPAddress> GetExternalIPAsync()

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Open.Nat;
 
+#pragma warning disable CA1303
 namespace PlanetaGameLabo.MatchMaker
 {
     /// <summary>
@@ -22,6 +23,13 @@ namespace PlanetaGameLabo.MatchMaker
         /// true if DiscoverNat is executed at least once.
         /// </summary>
         public bool IsDiscoverNatDone { get; private set; }
+
+        public ILogger Logger { get; }
+
+        public NatPortMappingCreator(ILogger logger)
+        {
+            Logger = logger;
+        }
 
         /// <summary>
         /// Create port mapping.
@@ -51,6 +59,8 @@ namespace PlanetaGameLabo.MatchMaker
                 await natDevice.CreatePortMapAsync(new Mapping(
                     protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp, privatePort, publicPort,
                     description)).ConfigureAwait(false);
+                Logger.Log(LogLevel.Info,
+                    $"Port Mapping (Protocol: {protocol}, PrivatePort: {privatePort}, PublicPort: {publicPort}) is Created.");
             }
             catch (MappingException e)
             {
@@ -83,10 +93,17 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new InvalidOperationException("NAT device is not available.");
             }
 
+            string PortMappingToString(Mapping mapping)
+            {
+                return
+                    $"{mapping.PrivateIP}:{mapping.PublicPort} to {mapping.PrivateIP}:{mapping.PrivatePort}({mapping.Protocol})";
+            }
+
             var proto = protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp;
             var hostname = Dns.GetHostName();
             var myAddresses = await Dns.GetHostAddressesAsync(hostname).ConfigureAwait(false);
             var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
+            Logger.Log(LogLevel.Info, $"My addresses are {string.Join<IPAddress>(",", myAddresses)}].");
 
             var alreadyAvailableMappings = mappings.Where(m =>
                 m.Protocol == proto && myAddresses.Contains(m.PrivateIP) &&
@@ -97,14 +114,21 @@ namespace PlanetaGameLabo.MatchMaker
             ushort privatePort;
             if (alreadyAvailableMappings.Any())
             {
-                privatePort = (ushort)alreadyAvailableMappings.First().PrivatePort;
-                publicPort = (ushort)alreadyAvailableMappings.First().PublicPort;
+                Logger.Log(LogLevel.Info,
+                    $"There are already available port mappings: [{string.Join(",", alreadyAvailableMappings.Select(PortMappingToString))}].");
+                var firstAvailableMapping = alreadyAvailableMappings.First();
+                privatePort = (ushort)firstAvailableMapping.PrivatePort;
+                publicPort = (ushort)firstAvailableMapping.PublicPort;
+                Logger.Log(LogLevel.Info, $"Reuse {PortMappingToString(firstAvailableMapping)} mapping.");
             }
             else
             {
                 var usedPublicPortSet =
                     new HashSet<ushort>(mappings.Where(m => m.Protocol == proto).Select(m => (ushort)m.PublicPort));
+                Logger.Log(LogLevel.Info, $"Used public ports are [{string.Join(",", usedPublicPortSet)}].");
+
                 var availablePublicPorts = publicPortCandidates.Where(p => !usedPublicPortSet.Contains(p)).ToArray();
+                Logger.Log(LogLevel.Info, $"Available public ports are [{string.Join(",", availablePublicPorts)}].");
                 if (!availablePublicPorts.Any())
                 {
                     throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
@@ -114,7 +138,9 @@ namespace PlanetaGameLabo.MatchMaker
                 var usedPrivatePortSet = new HashSet<ushort>(mappings
                     .Where(m => m.Protocol == proto && myAddresses.Contains(m.PrivateIP))
                     .Select(m => (ushort)m.PrivatePort));
+                Logger.Log(LogLevel.Info, $"Used private ports are [{string.Join(",", usedPublicPortSet)}].");
                 var availablePrivatePorts = privatePortCandidates.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
+                Logger.Log(LogLevel.Info, $"Available private ports are [{string.Join(",", availablePrivatePorts)}].");
                 if (!availablePrivatePorts.Any())
                 {
                     throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
@@ -123,9 +149,12 @@ namespace PlanetaGameLabo.MatchMaker
 
                 publicPort = availablePublicPorts.First();
                 privatePort = availablePrivatePorts.First();
+
+                Logger.Log(LogLevel.Info, $"{publicPort} to {privatePort} mapping will be created.");
+
+                await CreatePortMapping(protocol, privatePort, publicPort, description).ConfigureAwait(false);
             }
 
-            await CreatePortMapping(protocol, privatePort, publicPort, description).ConfigureAwait(false);
             return (privatePort, publicPort);
         }
 
@@ -133,26 +162,40 @@ namespace PlanetaGameLabo.MatchMaker
         /// Discover NAT with UPnP or PMP.
         /// </summary>
         /// <param name="timeoutMilliSeconds">Time to consider available NAT device doesn't exist in one method. Discover time is up to timeoutMilliSeconds*2 milli seconds by two methods.</param>
-        /// <returns></returns>
-        public async Task DiscoverNat(int timeoutMilliSeconds)
+        /// <returns>true if NAT device is found</returns>
+        public async Task<bool> DiscoverNat(int timeoutMilliSeconds)
         {
             var discoverer = new NatDiscoverer();
-            var cts = new CancellationTokenSource(timeoutMilliSeconds);
 
             try
             {
-                natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cts).ConfigureAwait(false);
-                IsNatDeviceAvailable = true;
+                using (var cancellationTokenSource = new CancellationTokenSource(timeoutMilliSeconds))
+                {
+                    natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Upnp, cancellationTokenSource)
+                        .ConfigureAwait(false);
+                    Logger.Log(LogLevel.Info, $"A NAT device ({natDevice}) is found by UPnP");
+                    IsNatDeviceAvailable = true;
+                    return true;
+                }
             }
             catch (NatDeviceNotFoundException)
             {
                 try
                 {
-                    natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Pmp, cts).ConfigureAwait(false);
-                    IsNatDeviceAvailable = true;
+                    using (var cancellationTokenSource = new CancellationTokenSource(timeoutMilliSeconds))
+                    {
+                        Logger.Log(LogLevel.Info, "A NAT device is not found by UPnP");
+                        natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Pmp, cancellationTokenSource)
+                            .ConfigureAwait(false);
+                        Logger.Log(LogLevel.Info, $"A NAT device ({natDevice}) is found by PMP");
+                        IsNatDeviceAvailable = true;
+                        return true;
+                    }
                 }
                 catch (NatDeviceNotFoundException)
                 {
+                    Logger.Log(LogLevel.Info, $"A NAT device is not found by PMP");
+                    return false;
                 }
             }
             finally
@@ -164,3 +207,4 @@ namespace PlanetaGameLabo.MatchMaker
         private NatDevice natDevice;
     }
 }
+#pragma warning restore CA1303

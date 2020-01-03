@@ -37,7 +37,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// An instance of class to create port mapping to NAT.
         /// </summary>
-        public NatPortMappingCreator PortMappingCreator { get; } = new NatPortMappingCreator();
+        public NatPortMappingCreator PortMappingCreator { get; }
 
         /// <summary>
         /// Logger used in this instance.
@@ -52,6 +52,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             Logger = logger;
+            PortMappingCreator = new NatPortMappingCreator(logger);
         }
 
         /// <summary>
