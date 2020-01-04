@@ -48,9 +48,6 @@ namespace Open.Nat
 			_soapClient = new SoapClient(DeviceInfo.ServiceControlUri, DeviceInfo.ServiceType);
 		}
 
-        // (additional)
-        public override IPAddress LocalAddress => DeviceInfo.HostEndPoint.Address;
-
 #if NET35
 		public override Task<IPAddress> GetExternalIPAsync()
 		{
@@ -67,7 +64,7 @@ namespace Open.Nat
 				});
 		}
 #else
-        public override async Task<IPAddress> GetExternalIPAsync()
+		public override async Task<IPAddress> GetExternalIPAsync()
 		{
 			NatDiscoverer.TraceSource.LogInfo("GetExternalIPAsync - Getting external IP address");
 			var message = new GetExternalIPAddressRequestMessage();

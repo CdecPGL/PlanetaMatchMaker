@@ -98,7 +98,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException">Failed to create port mapping</exception>
         /// <returns></returns>
         public async Task CreatePortMapping(TransportProtocol protocol, ushort privatePort, ushort publicPort,
-            string description = "")
+            string description = "PlanetaMatchMakerClient")
         {
             if (!IsDiscoverNatDone)
             {
@@ -112,9 +112,10 @@ namespace PlanetaGameLabo.MatchMaker
 
             try
             {
+                // Make port mapping lifetime type session
                 await natDevice.CreatePortMapAsync(new Mapping(
                     protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp, privatePort, publicPort,
-                    description)).ConfigureAwait(false);
+                    int.MaxValue, description)).ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
                     $"Port Mapping (Protocol: {protocol}, PrivatePort: {privatePort}, PublicPort: {publicPort}) is Created.");
             }
@@ -140,7 +141,7 @@ namespace PlanetaGameLabo.MatchMaker
         public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidates(
             TransportProtocol protocol,
             ICollection<ushort> privatePortCandidates,
-            ICollection<ushort> publicPortCandidates, string description = "")
+            ICollection<ushort> publicPortCandidates, string description = "PlanetaMatchMakerClient")
         {
             if (!IsDiscoverNatDone)
             {
@@ -264,6 +265,14 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 IsDiscoverNatDone = true;
             }
+        }
+
+        /// <summary>
+        /// Release created port mappings if exist.
+        /// </summary>
+        public static void ReleaseCreatedPortMappings()
+        {
+            NatDiscoverer.ReleaseSessionMappings();
         }
 
         private NatDevice natDevice;

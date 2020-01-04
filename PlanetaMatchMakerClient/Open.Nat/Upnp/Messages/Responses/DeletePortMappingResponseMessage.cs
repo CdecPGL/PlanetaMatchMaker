@@ -24,15 +24,9 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System.Xml;
-
 namespace Open.Nat
 {
     internal class DeletePortMappingResponseMessage : ResponseMessageBase
     {
-        internal DeletePortMappingResponseMessage(XmlDocument response, string serviceType)
-            : base(response, serviceType, "DeletePortMappingResponseMessage")
-        {
-        }
     }
 }

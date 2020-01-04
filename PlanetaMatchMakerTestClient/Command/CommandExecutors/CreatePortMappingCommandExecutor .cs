@@ -80,7 +80,7 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Port to external network to map.")]
         public ushort PublicPort { get; set; }
 
-        [CommandLine.Option('d', "Description", Default = "", Required = false,
+        [CommandLine.Option('d', "Description", Default = "PlanetaMatchMakerTestClient", Required = false,
             HelpText = "A Description of port mapping.")]
         public string Description { get; set; }
 

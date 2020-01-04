@@ -50,11 +50,6 @@ namespace Open.Nat
 			LastSeen = DateTime.Now;
 		}
 
-        /// <summary>
-        /// Local IP Address of NAT device (additional)
-        /// </summary>
-        public abstract IPAddress LocalAddress { get; }
-
 		/// <summary>
 		/// Creates the port map asynchronous.
 		/// </summary>

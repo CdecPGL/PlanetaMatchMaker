@@ -45,8 +45,7 @@ namespace Open.Nat
 			_publicAddress = publicAddress;
 		}
 
-        // (changed)
-		public override IPAddress LocalAddress { get; }
+		internal IPAddress LocalAddress { get; private set; }
 
 #if NET35
 		public override Task CreatePortMapAsync(Mapping mapping)

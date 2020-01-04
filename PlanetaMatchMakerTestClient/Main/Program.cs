@@ -27,43 +27,50 @@ namespace PlanetaGameLabo.MatchMaker
             var command = options.Command;
             var commandOptions = options.CommandOptions;
 
-            using (var client = new MatchMakerClient())
+            try
             {
-                Console.CancelKeyPress += OnKeyBoardInterrupted;
-
-                while (!isFinishProgram)
+                using (var client = new MatchMakerClient())
                 {
-                    if (command == null)
-                    {
-                        Console.WriteLine("Input command.");
-                        commandProcessor.DisplayCommandList();
-                        var input = Console.ReadLine();
-                        if (input == null)
-                        {
-                            Console.WriteLine("Command is invalid.");
-                            continue;
-                        }
+                    Console.CancelKeyPress += OnKeyBoardInterrupted;
 
-                        var items = input.Split(' ');
-                        if (!CommandProcessor.TryParseCommand(items[0], out var c))
-                        {
-                            Console.WriteLine("Command is invalid.");
-                            continue;
-                        }
-
-                        command = c;
-                        commandOptions = items.Skip(1);
-                    }
-                    else
+                    while (!isFinishProgram)
                     {
-                        isCommandExecuting = true;
-                        var task = commandProcessor.ProcessCommand(command.Value, client, commandOptions.ToArray(),
-                            cancellationTokenSource.Token);
-                        task.Wait();
-                        isCommandExecuting = false;
-                        command = null;
+                        if (command == null)
+                        {
+                            Console.WriteLine("Input command.");
+                            commandProcessor.DisplayCommandList();
+                            var input = Console.ReadLine();
+                            if (input == null)
+                            {
+                                Console.WriteLine("Command is invalid.");
+                                continue;
+                            }
+
+                            var items = input.Split(' ');
+                            if (!CommandProcessor.TryParseCommand(items[0], out var c))
+                            {
+                                Console.WriteLine("Command is invalid.");
+                                continue;
+                            }
+
+                            command = c;
+                            commandOptions = items.Skip(1);
+                        }
+                        else
+                        {
+                            isCommandExecuting = true;
+                            var task = commandProcessor.ProcessCommand(command.Value, client, commandOptions.ToArray(),
+                                cancellationTokenSource.Token);
+                            task.Wait();
+                            isCommandExecuting = false;
+                            command = null;
+                        }
                     }
                 }
+            }
+            finally
+            {
+                NatPortMappingCreator.ReleaseCreatedPortMappings();
             }
         }
 
