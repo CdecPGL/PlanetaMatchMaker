@@ -26,7 +26,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var nullLogger = StreamLogger.CreateNullLogger();
                 for (var i = 0; i < options.ClientCount; ++i)
                 {
-                    testClientList.Add(new MatchMakerClient(nullLogger));
+                    testClientList.Add(new MatchMakerClient(logger: nullLogger));
                 }
 
                 var benchmarkResults = new ConcurrentDictionary<string, ConcurrentQueue<(int, double)>>();

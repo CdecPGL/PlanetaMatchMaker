@@ -27,7 +27,7 @@ namespace PlanetaGameLabo.MatchMaker
     }
 
     /// <summary>
-    /// Exception of client due to system.
+    /// Exception of client due to system or network (timeout, etc.).
     /// When this exception is thrown, the connection will be disconnected.
     /// </summary>
     public sealed class ClientInternalErrorException : Exception

@@ -48,13 +48,19 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         public ILogger Logger { get; }
 
-        public MatchMakerClient(ILogger logger = null)
+        /// <summary>
+        /// コンストラクタ。
+        /// </summary>
+        /// <param name="timeoutMilliSeconds">データの送受信におけるタイムアウト時間。接続時のタイムアウト時間には影響しない。</param>
+        /// <param name="logger"></param>
+        public MatchMakerClient(int timeoutMilliSeconds = 10000, ILogger logger = null)
         {
             if (logger == null)
             {
                 logger = StreamLogger.CreateStandardOutputLogger();
             }
 
+            this.timeoutMilliSeconds = timeoutMilliSeconds;
             Logger = logger;
             PortMappingCreator = new NatPortMappingCreator(logger);
         }
@@ -85,8 +91,7 @@ namespace PlanetaGameLabo.MatchMaker
                 // Establish TCP connection
                 try
                 {
-                    tcpClient = new TcpClient();
-                    tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    tcpClient = CreateTcpClient();
                     await tcpClient.ConnectAsync(serverAddress, serverPort).ConfigureAwait(false);
                     Logger.Log(LogLevel.Info, $"Connect to {serverAddress}:{serverPort} successfully.");
                 }
@@ -634,6 +639,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private TcpClient tcpClient;
+        private readonly int timeoutMilliSeconds;
         private uint sessionKey;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
@@ -659,6 +665,10 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 OnConnectionClosed();
                 throw new ClientErrorException(ClientErrorCode.ConnectionClosed, e.Message);
+            }
+            catch (SocketException e)
+            {
+                throw new ClientInternalErrorException(e.Message);
             }
         }
 
@@ -689,6 +699,10 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 OnConnectionClosed();
                 throw new ClientErrorException(ClientErrorCode.ConnectionClosed, e.Message);
+            }
+            catch (SocketException e)
+            {
+                throw new ClientInternalErrorException(e.Message);
             }
         }
 
@@ -855,6 +869,14 @@ namespace PlanetaGameLabo.MatchMaker
                 udpClient?.Dispose();
                 cancelTokenSource.Dispose();
             }
+        }
+
+        private TcpClient CreateTcpClient()
+        {
+            var newTcpClient =
+                new TcpClient {ReceiveTimeout = timeoutMilliSeconds, SendBufferSize = timeoutMilliSeconds};
+            newTcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            return newTcpClient;
         }
 
         private void OnConnectionClosed()
