@@ -256,7 +256,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomWithCreatingPortMappingAsync(byte roomGroupIndex, string roomName,
+        public async Task<CreateRoomWithCreatingPortMappingResult> CreateRoomWithCreatingPortMappingAsync(
+            byte roomGroupIndex, string roomName,
             byte maxPlayerCount, TransportProtocol protocol, IEnumerable<ushort> portNumberCandidates,
             ushort defaultPortNumber, int discoverNatTimeoutMilliSeconds = 5000, bool isPublic = true,
             string password = "")
@@ -297,6 +298,10 @@ namespace PlanetaGameLabo.MatchMaker
                         "Failed to discover NAT device.");
                 }
 
+                var isDefaultPortUsed = true;
+                ushort usedPrivatePortFromCandidates = 0;
+                ushort usedPublicPortFromCandidates = 0;
+
                 Logger.Log(LogLevel.Info, $"Execute first connection test (Default port: {defaultPortNumber}).");
                 var connectionTestSucceed = false;
                 try
@@ -328,11 +333,13 @@ namespace PlanetaGameLabo.MatchMaker
                     var publicPortCandidates = portNumberCandidateArray;
                     Logger.Log(LogLevel.Debug, $"Public port candidates: [{string.Join(",", publicPortCandidates)}]");
 
-                    var ret = await PortMappingCreator.CreatePortMappingFromCandidates(protocol,
-                        privatePortCandidates, publicPortCandidates).ConfigureAwait(false);
-                    portNumber = ret.publicPort;
+                    isDefaultPortUsed = false;
+                    (usedPrivatePortFromCandidates, usedPublicPortFromCandidates) = await PortMappingCreator
+                        .CreatePortMappingFromCandidates(protocol, privatePortCandidates, publicPortCandidates)
+                        .ConfigureAwait(false);
+                    portNumber = usedPublicPortFromCandidates;
                     Logger.Log(LogLevel.Info,
-                        $"Port mapping is created in NAT. (privatePortNumber: {ret.privatePort}, publicPortNumber: {ret.publicPort})");
+                        $"Port mapping is created in NAT. (privatePortNumber: {usedPrivatePortFromCandidates}, publicPortNumber: {usedPublicPortFromCandidates})");
 
                     Logger.Log(LogLevel.Info, "Execute second connection test.");
 
@@ -347,6 +354,9 @@ namespace PlanetaGameLabo.MatchMaker
 
                 await CreateRoomCoreAsync(portNumber, roomGroupIndex, roomName, maxPlayerCount, isPublic, password)
                     .ConfigureAwait(false);
+
+                return new CreateRoomWithCreatingPortMappingResult(isDefaultPortUsed, usedPrivatePortFromCandidates,
+                    usedPublicPortFromCandidates);
             }
             catch (ClientInternalErrorException)
             {

@@ -29,4 +29,19 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly byte CurrentPlayerCount;
         public readonly Datetime CreateDatetime;
     }
+
+    public struct CreateRoomWithCreatingPortMappingResult
+    {
+        public readonly bool IsDefaultPortUsed;
+        public readonly ushort UsedPrivatePortFromCandidates;
+        public readonly ushort UsedPublicPortFromCandidates;
+
+        public CreateRoomWithCreatingPortMappingResult(bool isDefaultPortUsed, ushort usedPrivatePortFromCandidates,
+            ushort usedPublicPortFromCandidates)
+        {
+            IsDefaultPortUsed = isDefaultPortUsed;
+            UsedPrivatePortFromCandidates = usedPrivatePortFromCandidates;
+            UsedPublicPortFromCandidates = usedPublicPortFromCandidates;
+        }
+    }
 }

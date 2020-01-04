@@ -20,9 +20,13 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomWithCreatingPortMappingCommandOptions options,
             CancellationToken cancellationToken)
         {
-            await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex, options.Name,
+            var result = await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex, options.Name,
                 options.MaxPlayerCount, options.Protocol, options.PortCandidates,
                 options.DefaultPortNumber, options.DiscoverTimeoutMilliSeconds, options.IsPublic, options.Password);
+
+            OutputStream.WriteLine(result.IsDefaultPortUsed
+                ? "Default port is used."
+                : $"Private port {result.UsedPrivatePortFromCandidates} and public port {result.UsedPublicPortFromCandidates} from candidates are used.");
             OutputStream.WriteLine(
                 $"Room created with id \"{sharedClient.HostingRoomId}\" in room group {sharedClient.HostingRoomGroupIndex}.");
         }
