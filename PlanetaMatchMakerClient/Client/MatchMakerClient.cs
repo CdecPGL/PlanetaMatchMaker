@@ -51,7 +51,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// コンストラクタ。
         /// </summary>
-        /// <param name="timeoutMilliSeconds">データの送受信におけるタイムアウト時間。接続時のタイムアウト時間には影響しない。</param>
+        /// <param name="timeoutMilliSeconds">Timeout milli seconds for send and receive. Timeout of connect is not effected.</param>
         /// <param name="logger"></param>
         public MatchMakerClient(int timeoutMilliSeconds = 10000, ILogger logger = null)
         {
