@@ -4,7 +4,7 @@
 #include <vector>
 #include <filesystem>
 
-#include "utilities/log.hpp"
+#include "logger/log.hpp"
 #include "network/network_layer.hpp"
 
 namespace pgl {

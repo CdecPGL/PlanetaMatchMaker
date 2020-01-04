@@ -1,7 +1,7 @@
 #pragma once
 
 #include "minimal_serializer/string_utility.hpp"
-#include "asio_stream_compatibility.hpp"
+#include "utilities/asio_stream_compatibility.hpp"
 
 namespace pgl {
 	enum class log_level { debug, info, warning, error, fatal };

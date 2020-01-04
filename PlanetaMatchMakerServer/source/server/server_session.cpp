@@ -5,7 +5,7 @@
 #include "session/session_data.hpp"
 #include "server/server_data.hpp"
 #include "room/room_data_container.hpp"
-#include "utilities/log.hpp"
+#include "logger/log.hpp"
 #include "server_error.hpp"
 #include "utilities/checked_static_cast.hpp"
 #include "server/server_setting.hpp"
