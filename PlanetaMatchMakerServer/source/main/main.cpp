@@ -4,6 +4,7 @@
 
 #include "server/server.hpp"
 #include "utilities/file_utilities.hpp"
+#include "utilities/application.hpp"
 
 using namespace std;
 using namespace pgl;
@@ -13,13 +14,13 @@ int main(const int argc, char* argv[]) {
 	try {
 		const auto setting_file_path = argc > 1
 			                               ? std::filesystem::path(argv[1])
-			                               : get_application_setting_directory() / "setting.json";
+			                               : get_application_setting_directory() / application::setting_file_name;
 
 		// Load setting
 		auto setting = std::make_unique<server_setting>();
 		setting->load_from_setting_file(setting_file_path);
 
-		// Setup log		
+		// Setup log
 		if (setting->enable_console_log) { enable_console_log(setting->console_log_level, false); }
 		if (setting->enable_file_log) { enable_file_log(setting->file_log_level, setting->file_log_path, false); }
 

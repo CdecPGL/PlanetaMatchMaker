@@ -7,7 +7,7 @@ using namespace std;
 
 namespace pgl {
 	file_logger::file_logger(const log_level level_threshold, const string& file_path) : logger(level_threshold),
-		out_stream_(file_path, std::ios::app) {
+		out_stream_(file_path, std::ios_base::out | std::ios::app) {
 		if (!out_stream_) { throw runtime_error("Failed to open a log file."); }
 	}
 

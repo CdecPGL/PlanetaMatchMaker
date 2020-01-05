@@ -4,11 +4,13 @@
 
 #include <boost/predef.h>
 
-# include "file_utilities.hpp"
+#include "file_utilities.hpp"
+#include "application.hpp"
+
+using namespace std;
 
 namespace pgl {
 	constexpr size_t max_path_length = 256;
-	constexpr char application_name[] = ".pmms";
 
 	std::filesystem::path get_home_directory() {
 #if BOOST_OS_WINDOWS
@@ -30,15 +32,32 @@ namespace pgl {
 	}
 
 	std::filesystem::path get_application_setting_directory() {
-		const auto home_path(get_home_directory());
-		return home_path / application_name;
+#if BOOST_OS_WINDOWS
+		const auto system_setting_directory = filesystem::path("C:\\");
+#else
+		const auto system_setting_directory = filesystem::path("/etc");
+#endif
+		return system_setting_directory / application::application_short_name;
+	}
+
+	std::filesystem::path get_application_log_directory() {
+#if BOOST_OS_WINDOWS
+		const auto system_log_directory = filesystem::path("C:\\log");
+#else
+		const auto system_log_directory = filesystem::path("/var/log");
+#endif
+		return system_log_directory;
 	}
 
 	std::filesystem::path get_or_create_application_setting_directory() {
-		const auto application_path(get_application_setting_directory());
-		if (!exists(application_path)) {
-			create_directory(application_path);
-		}
-		return application_path;
+		const auto setting_path(get_application_setting_directory());
+		if (!exists(setting_path)) { create_directory(setting_path); }
+		return setting_path;
+	}
+
+	std::filesystem::path get_or_create_application_log_directory() {
+		const auto log_directory(get_application_log_directory());
+		if (!exists(log_directory)) { create_directory(log_directory); }
+		return log_directory;
 	}
 }

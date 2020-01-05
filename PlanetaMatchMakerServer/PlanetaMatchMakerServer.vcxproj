@@ -220,6 +220,7 @@
     <ClInclude Include="source\server\server_thread.hpp" />
     <ClInclude Include="source\session\session_data.hpp" />
     <ClInclude Include="source\session\session_key.hpp" />
+    <ClInclude Include="source\utilities\application.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
     <ClInclude Include="source\utilities\enum_utilities.hpp" />
     <ClInclude Include="source\utilities\file_utilities.hpp" />
