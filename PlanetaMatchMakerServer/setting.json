@@ -12,7 +12,7 @@
     ],
     "enable_console_log": false,
     "console_log_level": "info",
-    "enable_file_log": false,
+    "enable_file_log": true,
     "file_log_level": "info",
     "file_log_path": "/var/log/pmms.log"
 }

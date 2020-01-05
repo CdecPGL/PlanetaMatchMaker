@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
 # Sources in this project
-set(main_source "source/main.cpp")
+set(main_source "source/main/main.cpp")
 file(GLOB_RECURSE source_files "*.cpp")
 list(REMOVE_ITEM source_files ${main_source})
 add_library (PlanetaMatchMakerServerLib ${source_files})
@@ -17,7 +17,7 @@ set (includes "library" "source")
 target_include_directories(PlanetaMatchMakerServerLib PUBLIC ${includes})
 
 # Boost Library
-find_package(Boost 1.70.0 REQUIRED COMPONENTS thread coroutine date_time filesystem)
+find_package(Boost 1.70.0 REQUIRED COMPONENTS thread coroutine date_time filesystem log)
 target_include_directories(PlanetaMatchMakerServerLib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerLib ${Boost_LIBRARIES})
 

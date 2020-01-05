@@ -28,6 +28,6 @@ namespace pgl {
 			if (use_boost_log) { add_logger(std::make_unique<boost_file_logger>(level_threshold, file_path)); }
 			else { add_logger(std::make_unique<file_logger>(level_threshold, file_path)); }
 		}
-		catch (exception& e) { cerr << "Failed to initialize log system for \"" << path << "\": " << e.what() << endl; }
+		catch (exception& e) { cerr << "Failed to open log file \"" << path << "\": " << e.what() << endl; }
 	}
 }
