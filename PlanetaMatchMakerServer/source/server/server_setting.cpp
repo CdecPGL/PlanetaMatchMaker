@@ -20,10 +20,8 @@ namespace pgl {
 		read_json(file_path.string(), ptree);
 		enable_session_key_check = ptree.get("enable_session_key_check", enable_session_key_check);
 		time_out_seconds = ptree.get("time_out_seconds", time_out_seconds);
-		connection_check_time_out_seconds = ptree.get("connection_check_time_out_seconds", connection_check_time_out_seconds);
-		const auto log_level_str = ptree.get("log_level", std::string(nameof::nameof_enum(log_level)));
-		try { log_level = string_to_log_level(log_level_str); }
-		catch (const std::out_of_range&) { std::cerr << log_level_str << " is invalid for log_level." << std::endl; }
+		connection_check_time_out_seconds = ptree.get("connection_check_time_out_seconds",
+			connection_check_time_out_seconds);
 		const auto ip_version_str = ptree.get("ip_version", std::string(nameof::nameof_enum(ip_version)));
 		try { ip_version = string_to_ip_version(ip_version_str); }
 		catch (const std::out_of_range&) { std::cerr << ip_version_str << " is invalid for ip_version." << std::endl; }
@@ -41,6 +39,21 @@ namespace pgl {
 			}
 		}
 
+		enable_console_log = ptree.get("enable_console_log", enable_console_log);
+		const auto console_log_level_str = ptree.get("console_log_level",
+			std::string(nameof::nameof_enum(console_log_level)));
+		try { console_log_level = string_to_log_level(console_log_level_str); }
+		catch (const std::out_of_range&) {
+			std::cerr << console_log_level_str << " is invalid for log_level." << std::endl;
+		}
+		enable_file_log = ptree.get("enable_file_log", enable_file_log);
+		const auto file_log_level_str = ptree.get("file_log_level", std::string(nameof::nameof_enum(file_log_level)));
+		try { file_log_level = string_to_log_level(file_log_level_str); }
+		catch (const std::out_of_range&) {
+			std::cerr << file_log_level_str << " is invalid for log_level." << std::endl;
+		}
+		file_log_path = ptree.get("file_log_path", file_log_path);
+
 		return true;
 	}
 
@@ -49,7 +62,6 @@ namespace pgl {
 		log(log_level::info, NAMEOF(enable_session_key_check), ": ", enable_session_key_check);
 		log(log_level::info, NAMEOF(time_out_seconds), ": ", time_out_seconds);
 		log(log_level::info, NAMEOF(connection_check_time_out_seconds), ": ", connection_check_time_out_seconds);
-		log(log_level::info, NAMEOF(log_level), ": ", log_level);
 		log(log_level::info, NAMEOF(ip_version), ": ", ip_version);
 		log(log_level::info, NAMEOF(port), ": ", port);
 		log(log_level::info, NAMEOF(max_connection_per_thread), ": ", max_connection_per_thread);
@@ -57,6 +69,11 @@ namespace pgl {
 		log(log_level::info, NAMEOF(max_room_per_room_group), ": ", max_room_per_room_group);
 		log(log_level::info, NAMEOF(room_group_list), ": ", room_group_list.size(), "(", join(room_group_list, ","),
 			")");
+		log(log_level::info, NAMEOF(enable_console_log), ": ", enable_console_log);
+		log(log_level::info, NAMEOF(console_log_level), ": ", console_log_level);
+		log(log_level::info, NAMEOF(enable_file_log), ": ", enable_file_log);
+		log(log_level::info, NAMEOF(file_log_level), ": ", file_log_level);
+		log(log_level::info, NAMEOF(file_log_path), ": ", file_log_path);
 		log(log_level::info, "==============================================");
 	}
 }

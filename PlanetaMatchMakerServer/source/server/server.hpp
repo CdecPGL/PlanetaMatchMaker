@@ -11,12 +11,12 @@
 namespace pgl {
 	class server final : boost::noncopyable {
 	public:
-		explicit server(const std::filesystem::path& setting_file_path);
+		explicit server(std::unique_ptr<server_setting>&& setting);
 		void run();
 	private:
 		boost::asio::io_service io_service_;
 		boost::asio::ip::tcp::acceptor acceptor_;
 		std::unique_ptr<server_data> server_data_;
-		server_setting server_setting_;
+		std::unique_ptr<server_setting> server_setting_;
 	};
 }

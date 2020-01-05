@@ -176,6 +176,14 @@
     <ClInclude Include="library\nameof.hpp" />
     <ClInclude Include="source\async\read_write.hpp" />
     <ClInclude Include="source\async\timer.hpp" />
+    <ClInclude Include="source\logger\boost_console_logger.hpp" />
+    <ClInclude Include="source\logger\boost_file_logger.hpp" />
+    <ClInclude Include="source\logger\boost_logger_common.hpp" />
+    <ClInclude Include="source\logger\console_logger.hpp" />
+    <ClInclude Include="source\logger\file_logger.hpp" />
+    <ClInclude Include="source\logger\logger.hpp" />
+    <ClInclude Include="source\logger\logger_common.hpp" />
+    <ClInclude Include="source\main\log_initializer.hpp" />
     <ClInclude Include="source\network\endpoint.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
@@ -222,9 +230,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\async\timer.cpp" />
+    <ClCompile Include="source\logger\boost_console_logger.cpp" />
+    <ClCompile Include="source\logger\boost_file_logger.cpp" />
+    <ClCompile Include="source\logger\boost_logger_common.cpp" />
+    <ClCompile Include="source\logger\console_logger.cpp" />
+    <ClCompile Include="source\logger\file_logger.cpp" />
+    <ClCompile Include="source\logger\logger_common.cpp" />
+    <ClCompile Include="source\main\log_initializer.cpp" />
     <ClCompile Include="source\network\endpoint.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
-    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\main\main.cpp" />
     <ClCompile Include="source\message\message_handlers\connection_test_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\list_room_group_request_message_handler.cpp" />
     <ClCompile Include="source\message\message_handlers\update_room_status_notice_message_handler.cpp" />
