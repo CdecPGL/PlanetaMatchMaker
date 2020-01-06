@@ -2,6 +2,7 @@ using System;
 
 namespace PlanetaGameLabo.MatchMaker
 {
+#pragma warning disable CA1032
     /// <summary>
     /// An exception of client due to user operation.
     /// When this exception is thrown, Connection will be continued if possible.
@@ -26,7 +27,7 @@ namespace PlanetaGameLabo.MatchMaker
     }
 
     /// <summary>
-    /// Exception of client due to system.
+    /// Exception of client due to system or network (timeout, etc.).
     /// When this exception is thrown, the connection will be disconnected.
     /// </summary>
     public sealed class ClientInternalErrorException : Exception
@@ -35,6 +36,8 @@ namespace PlanetaGameLabo.MatchMaker
         {
         }
     }
+
+#pragma warning restore CA1032
 
     public enum ClientErrorCode
     {
@@ -46,14 +49,16 @@ namespace PlanetaGameLabo.MatchMaker
         AlreadyHostingRoom,
         NotHostingRoom,
         ConnectionClosed,
+        CreatingPortMappingFailed,
+        NotReachable,
         UnknownError,
     };
 
     public static class ClientErrorCodeExtensions
     {
-        public static string GetClientErrorMessage(this ClientErrorCode error_code)
+        public static string GetClientErrorMessage(this ClientErrorCode errorCode)
         {
-            switch (error_code)
+            switch (errorCode)
             {
                 case ClientErrorCode.Ok:
                     return "Ok";
@@ -73,6 +78,10 @@ namespace PlanetaGameLabo.MatchMaker
                     return "The connection is closed.";
                 case ClientErrorCode.UnknownError:
                     return "Unexpected error.";
+                case ClientErrorCode.CreatingPortMappingFailed:
+                    return "Failed to create port mapping to NAT.";
+                case ClientErrorCode.NotReachable:
+                    return "This machine is not reachable from machines via internet.";
                 default:
                     return "";
             }

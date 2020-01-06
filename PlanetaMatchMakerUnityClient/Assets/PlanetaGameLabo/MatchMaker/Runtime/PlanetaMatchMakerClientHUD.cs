@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Linq;
+using System.Net;
 using UnityEngine;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -18,7 +19,7 @@ namespace PlanetaGameLabo.MatchMaker
         private bool _isErrorOccured;
         private string _errorMessage;
         private bool _isJoinedRoom;
-        private ClientAddress _joinedRoomHost;
+        private IPEndPoint _joinedRoomHost;
 
         private string _roomName = "";
         private string _roomPassword = "";
@@ -257,7 +258,7 @@ namespace PlanetaGameLabo.MatchMaker
                     {
                         Close();
                         _isJoinedRoom = true;
-                        _joinedRoomHost = args.roomHostClientAddress;
+                        _joinedRoomHost = args.roomGameHostEndPoint;
                         return;
                     }
 

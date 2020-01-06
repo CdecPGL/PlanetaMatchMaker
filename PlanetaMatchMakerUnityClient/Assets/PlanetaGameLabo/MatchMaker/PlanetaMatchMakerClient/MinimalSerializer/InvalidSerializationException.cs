@@ -16,5 +16,9 @@ namespace CdecPGL.MinimalSerializer
     {
         public InvalidSerializationException() : base() { }
         public InvalidSerializationException(string message) : base(message) { }
+
+        public InvalidSerializationException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
     }
 }

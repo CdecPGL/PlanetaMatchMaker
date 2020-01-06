@@ -1,7 +1,7 @@
 {
-    "name": "PlanetaGameLabo.MatchMaker",
+    "name": "PlanetaGameLabo.MatchMake.UnityClient",
     "references": [
-        "GUID:c9c8ec3e841b6604eb698e9641d5afe8"
+        "GUID:77a0a11167b633744a76778abfb898a9"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

@@ -8,6 +8,8 @@ namespace PlanetaGameLabo.MatchMaker
     using RoomGroupIndexType = Byte;
     using RoomIdType = UInt32;
 
+#pragma warning disable 0649
+
     internal enum MessageErrorCode : byte
     {
         Ok,
@@ -40,6 +42,8 @@ namespace PlanetaGameLabo.MatchMaker
         JoinRoomRequest,
         JoinRoomReply,
         UpdateRoomStatusNotice,
+        ConnectionTestRequest,
+        ConnectionTestReply,
         RandomMatchRequest
     }
 
@@ -103,7 +107,7 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomGroupInfo[] RoomGroupInfoList;
     }
 
-    // 43 bytes
+    // 45 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     internal struct CreateRoomRequestMessage
@@ -119,6 +123,8 @@ namespace PlanetaGameLabo.MatchMaker
         public string Password;
 
         public byte MaxPlayerCount;
+
+        public ushort portNumber;
     }
 
     // 4 bytes
@@ -136,7 +142,7 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public RoomGroupIndexType GroupIndex;
         public byte StartIndex;
-        public byte EndIndex;
+        public byte Count;
         public RoomDataSortKind SortKind;
         public RoomSearchTargetFlag SearchTargetFlags;
 
@@ -144,7 +150,7 @@ namespace PlanetaGameLabo.MatchMaker
         public string SearchName;
     }
 
-    // 238 bytes
+    // 237 bytes
     [Serializable]
     [Message(MessageType.ListRoomReply)]
     internal struct ListRoomReplyMessage
@@ -165,9 +171,8 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         public byte TotalRoomCount; // the number of rooms server managing
-        public byte ResultRoomCount; // the number of rooms for request
-        public byte ReplyRoomStartIndex; // the index of start room in this message
-        public byte ReplyRoomCount; // the number of rooms in this reply
+        public byte MatchedRoomCount; // the number of rooms matched to requested condition
+        public byte ReplyRoomCount; // the number of rooms in these replies
 
         [FixedLength(RoomConstants.ListRoomReplyRoomInfoCount)]
         public RoomInfo[] RoomInfoList;
@@ -190,7 +195,7 @@ namespace PlanetaGameLabo.MatchMaker
     [Message(MessageType.JoinRoomReply)]
     internal struct JoinRoomReplyMessage
     {
-        public ClientAddress HostAddress;
+        public EndPoint GameHostEndPoint;
     }
 
     // 8 bytes
@@ -204,4 +209,23 @@ namespace PlanetaGameLabo.MatchMaker
         public bool IsCurrentPlayerCountChanged;
         public byte CurrentPlayerCount;
     }
+
+    // 21 bytes
+    [Serializable]
+    [Message(MessageType.ConnectionTestRequest)]
+    internal struct ConnectionTestRequestMessage
+    {
+        public TransportProtocol Protocol;
+        public ushort PortNumber;
+    }
+
+    //18 bytes
+    [Serializable]
+    [Message(MessageType.ConnectionTestReply)]
+    internal struct ConnectionTestReplyMessage
+    {
+        public bool Succeed;
+    }
+
+#pragma warning restore 0649
 }
