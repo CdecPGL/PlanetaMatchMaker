@@ -4,11 +4,11 @@ namespace PlanetaGameLabo.MatchMaker
 {
 #pragma warning disable CA1032
     /// <summary>
-    /// An exception of message send and receive error in system.
+    /// An exception of message send and receive error.
     /// </summary>
-    public sealed class MessageInternalErrorException : Exception
+    public sealed class MessageErrorException : Exception
     {
-        public MessageInternalErrorException(string message) : base(message)
+        public MessageErrorException(string message) : base(message)
         {
         }
     }

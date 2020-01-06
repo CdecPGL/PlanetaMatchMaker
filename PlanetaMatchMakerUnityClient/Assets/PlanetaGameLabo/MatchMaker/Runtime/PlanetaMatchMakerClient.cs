@@ -533,15 +533,11 @@ namespace PlanetaGameLabo.MatchMaker
                     {
                         case ClientErrorException ce:
                             callback?.Invoke(new ErrorInfo(e), defaultResult);
-                            if (ce.ClientErrorCode == ClientErrorCode.ConnectionClosed)
+                            if (!ce.ClientErrorCode.IsContinuable())
                             {
                                 Disconnect();
                             }
 
-                            break;
-                        case ClientInternalErrorException _:
-                            callback?.Invoke(new ErrorInfo(e), defaultResult);
-                            Disconnect();
                             break;
                         default:
                             callback?.Invoke(new ErrorInfo(e), defaultResult);

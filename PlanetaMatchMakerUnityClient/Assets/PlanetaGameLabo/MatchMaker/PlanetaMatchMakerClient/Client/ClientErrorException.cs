@@ -4,8 +4,7 @@ namespace PlanetaGameLabo.MatchMaker
 {
 #pragma warning disable CA1032
     /// <summary>
-    /// An exception of client due to user operation.
-    /// When this exception is thrown, Connection will be continued if possible.
+    /// An exception of client.
     /// </summary>
     public sealed class ClientErrorException : Exception
     {
@@ -26,17 +25,6 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    /// <summary>
-    /// Exception of client due to system or network (timeout, etc.).
-    /// When this exception is thrown, the connection will be disconnected.
-    /// </summary>
-    public sealed class ClientInternalErrorException : Exception
-    {
-        public ClientInternalErrorException(string message) : base(message)
-        {
-        }
-    }
-
 #pragma warning restore CA1032
 
     public enum ClientErrorCode
@@ -51,6 +39,7 @@ namespace PlanetaGameLabo.MatchMaker
         ConnectionClosed,
         CreatingPortMappingFailed,
         NotReachable,
+        SystemError, // Not continuable system error
         UnknownError,
     };
 
@@ -82,8 +71,33 @@ namespace PlanetaGameLabo.MatchMaker
                     return "Failed to create port mapping to NAT.";
                 case ClientErrorCode.NotReachable:
                     return "This machine is not reachable from machines via internet.";
+                case ClientErrorCode.SystemError:
+                    return "System or network internal error. Not continuable.";
                 default:
                     return "";
+            }
+        }
+
+        public static bool IsContinuable(this ClientErrorCode errorCode)
+        {
+            switch (errorCode)
+            {
+                case ClientErrorCode.Ok:
+                case ClientErrorCode.AlreadyConnected:
+                case ClientErrorCode.RequestError:
+                case ClientErrorCode.AlreadyHostingRoom:
+                case ClientErrorCode.NotHostingRoom:
+                case ClientErrorCode.ConnectionClosed:
+                case ClientErrorCode.CreatingPortMappingFailed:
+                case ClientErrorCode.NotReachable:
+                    return true;
+                case ClientErrorCode.FailedToConnect:
+                case ClientErrorCode.NotConnected:
+                case ClientErrorCode.SystemError:
+                case ClientErrorCode.UnknownError:
+                    return false;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(errorCode), errorCode, null);
             }
         }
     }

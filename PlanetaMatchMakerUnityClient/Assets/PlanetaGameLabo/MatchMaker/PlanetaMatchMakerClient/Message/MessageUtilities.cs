@@ -17,7 +17,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="client"></param>
         /// <param name="messageBody"></param>
         /// <param name="sessionKey"></param>
-        /// <exception cref="MessageInternalErrorException">Failed to receive a message.</exception>
+        /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
         /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
         /// <exception cref="SocketException">Is is possible to reach timeout</exception>
         /// <returns></returns>
@@ -26,7 +26,7 @@ namespace PlanetaGameLabo.MatchMaker
             var messageAttribute = messageBody.GetType().GetCustomAttribute<MessageAttribute>();
             if (messageAttribute == null)
             {
-                throw new MessageInternalErrorException(
+                throw new MessageErrorException(
                     "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
@@ -43,7 +43,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
             catch (InvalidSerializationException e)
             {
-                throw new MessageInternalErrorException("Failed to serialize a message: " + e.Message);
+                throw new MessageErrorException("Failed to serialize a message: " + e.Message);
             }
         }
 
@@ -52,7 +52,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <typeparam name="T">A type of message</typeparam>
         /// <param name="client"></param>
-        /// <exception cref="MessageInternalErrorException">Failed to receive a message.</exception>
+        /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
         /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
         /// <exception cref="SocketException">Is is possible to reach timeout</exception>
         /// <returns></returns>
@@ -61,7 +61,7 @@ namespace PlanetaGameLabo.MatchMaker
             var messageAttribute = typeof(T).GetCustomAttribute<MessageAttribute>();
             if (messageAttribute == null)
             {
-                throw new MessageInternalErrorException(
+                throw new MessageErrorException(
                     "The message class is invalid because it doesn't have MessageAttribute.");
             }
 
@@ -74,7 +74,7 @@ namespace PlanetaGameLabo.MatchMaker
 
                 if (header.MessageType != messageAttribute.MessageType)
                 {
-                    throw new MessageInternalErrorException(
+                    throw new MessageErrorException(
                         $"The type of received message is invalid. (expected: {messageAttribute.MessageType}, actual: {header.MessageType})");
                 }
 
@@ -91,7 +91,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
             catch (InvalidSerializationException e)
             {
-                throw new MessageInternalErrorException("Failed to deserialize a message: " + e.Message);
+                throw new MessageErrorException("Failed to deserialize a message: " + e.Message);
             }
         }
     }

@@ -49,7 +49,7 @@ namespace PlanetaGameLabo.MatchMaker
         public ILogger Logger { get; }
 
         /// <summary>
-        /// ÉRÉìÉXÉgÉâÉNÉ^ÅB
+        /// „Ç≥„É≥„Çπ„Éà„É©„ÇØ„Çø„ÄÇ
         /// </summary>
         /// <param name="timeoutMilliSeconds">Timeout milli seconds for send and receive. Timeout of connect is not effected.</param>
         /// <param name="logger"></param>
@@ -143,7 +143,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// Get a room group list from the server.
         /// </summary>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
         public async Task<RoomGroupResult[]> GetRoomGroupListAsync()
         {
@@ -166,15 +165,6 @@ namespace PlanetaGameLabo.MatchMaker
                     .Select(info => new RoomGroupResult(info))
                     .ToArray();
             }
-            catch (ClientInternalErrorException)
-            {
-                if (tcpClient.Connected)
-                {
-                    Close();
-                }
-
-                throw;
-            }
             finally
             {
                 semaphore.Release();
@@ -191,7 +181,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount, ushort portNumber,
@@ -224,15 +213,6 @@ namespace PlanetaGameLabo.MatchMaker
                 await CreateRoomCoreAsync(portNumber, roomGroupIndex, roomName, maxPlayerCount, isPublic, password)
                     .ConfigureAwait(false);
             }
-            catch (ClientInternalErrorException)
-            {
-                if (tcpClient.Connected)
-                {
-                    Close();
-                }
-
-                throw;
-            }
             finally
             {
                 semaphore.Release();
@@ -258,7 +238,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<CreateRoomWithCreatingPortMappingResult> CreateRoomWithCreatingPortMappingAsync(
@@ -363,15 +342,6 @@ namespace PlanetaGameLabo.MatchMaker
                 return new CreateRoomWithCreatingPortMappingResult(isDefaultPortUsed, usedPrivatePortFromCandidates,
                     usedPublicPortFromCandidates);
             }
-            catch (ClientInternalErrorException)
-            {
-                if (tcpClient.Connected)
-                {
-                    Close();
-                }
-
-                throw;
-            }
             finally
             {
                 semaphore.Release();
@@ -388,7 +358,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="searchTargetFlags"></param>
         /// <param name="searchName"></param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
         public async Task<(byte totalRoomCount, byte matchedRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
             byte roomGroupIndex, byte startIndex,
@@ -464,15 +433,6 @@ namespace PlanetaGameLabo.MatchMaker
 
                 return (replyBody.TotalRoomCount, replyBody.MatchedRoomCount, result);
             }
-            catch (ClientInternalErrorException)
-            {
-                if (tcpClient.Connected)
-                {
-                    Close();
-                }
-
-                throw;
-            }
             finally
             {
                 semaphore.Release();
@@ -486,7 +446,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomId"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns>Game host endpoint</returns>
         public async Task<IPEndPoint> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
         {
@@ -519,15 +478,6 @@ namespace PlanetaGameLabo.MatchMaker
                 Close();
                 return (IPEndPoint)replyBody.GameHostEndPoint;
             }
-            catch (ClientInternalErrorException)
-            {
-                if (tcpClient.Connected)
-                {
-                    Close();
-                }
-
-                throw;
-            }
             finally
             {
                 semaphore.Release();
@@ -542,7 +492,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="updateCurrentPlayerCount"></param>
         /// <param name="currentPlayerCount"></param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
         public async Task UpdateHostingRoomStatusAsync(RoomStatus roomStatus, bool updateCurrentPlayerCount = false,
             byte currentPlayerCount = 0)
@@ -577,15 +526,6 @@ namespace PlanetaGameLabo.MatchMaker
                     IsHostingRoom = false;
                 }
             }
-            catch (ClientInternalErrorException)
-            {
-                if (tcpClient.Connected)
-                {
-                    Close();
-                }
-
-                throw;
-            }
             finally
             {
                 semaphore.Release();
@@ -596,7 +536,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// Remove hosting room from the server.
         /// </summary>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
         public async Task RemoveHostingRoomAsync()
         {
@@ -610,7 +549,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="protocol">The protocol which is used for accept TCP connection of game</param>
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="InvalidOperationException">The port is already used by other connection which is not TCP server</exception>
         /// <returns></returns>
         public async Task<bool> ConnectionTestAsync(TransportProtocol protocol, ushort portNumber)
@@ -649,7 +587,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <typeparam name="T">A type of the message</typeparam>
         /// <param name="messageBody"></param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
         private async Task SendRequestAsync<T>(T messageBody)
         {
@@ -657,9 +594,14 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 await tcpClient.SendRequestMessage(messageBody, sessionKey).ConfigureAwait(false);
             }
-            catch (MessageInternalErrorException e)
+            catch (MessageErrorException e)
             {
-                throw new ClientInternalErrorException(e.Message);
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
             }
             catch (ObjectDisposedException e)
             {
@@ -668,7 +610,12 @@ namespace PlanetaGameLabo.MatchMaker
             }
             catch (SocketException e)
             {
-                throw new ClientInternalErrorException(e.Message);
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
             }
         }
 
@@ -677,7 +624,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <typeparam name="T">A type of the message</typeparam>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <returns></returns>
         private async Task<T> ReceiveReplyAsync<T>()
         {
@@ -691,9 +637,14 @@ namespace PlanetaGameLabo.MatchMaker
 
                 return replyBody;
             }
-            catch (MessageInternalErrorException e)
+            catch (MessageErrorException e)
             {
-                throw new ClientInternalErrorException(e.Message);
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
             }
             catch (ObjectDisposedException e)
             {
@@ -702,7 +653,12 @@ namespace PlanetaGameLabo.MatchMaker
             }
             catch (SocketException e)
             {
-                throw new ClientInternalErrorException(e.Message);
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
             }
         }
 
@@ -716,7 +672,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         private async Task CreateRoomCoreAsync(ushort portNumber, byte roomGroupIndex, string roomName,
@@ -748,7 +703,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="protocol">The protocol which is used for accept TCP connection of game</param>
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <exception cref="ClientErrorException"></exception>
-        /// <exception cref="ClientInternalErrorException"></exception>
         /// <exception cref="InvalidOperationException">The port is already used by other connection or listener</exception>
         /// <returns></returns>
         private async Task<bool> ConnectionTestCoreAsync(TransportProtocol protocol, ushort portNumber)
@@ -845,15 +799,6 @@ namespace PlanetaGameLabo.MatchMaker
                 var reply = await ReceiveReplyAsync<ConnectionTestReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info, $"Receive ConnectionTestReply. ({nameof(reply.Succeed)}: {reply.Succeed})");
                 return reply.Succeed;
-            }
-            catch (ClientInternalErrorException)
-            {
-                if (tcpClient.Connected)
-                {
-                    Close();
-                }
-
-                throw;
             }
             finally
             {
