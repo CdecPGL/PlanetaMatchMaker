@@ -466,6 +466,9 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("Timeout seconds to send and receive data between match making server")]
         private float _serverCommunicationTimeOutSeconds;
 
+        [SerializeField, Tooltip("Enable debug log")]
+        private bool _enableDebugLog;
+
         private MatchMakerClient _client;
 
         private List<RoomGroupInfo> _roomGroupInfoList = new List<RoomGroupInfo>();
@@ -473,7 +476,8 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void Awake()
         {
-            _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000));
+            _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000), new UnityLogger());
+            _client.Logger.Enabled = _enableDebugLog;
         }
 
         private void OnDestroy()

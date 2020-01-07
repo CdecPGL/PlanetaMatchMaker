@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -20,25 +21,9 @@ namespace PlanetaGameLabo.MatchMaker
         void Log(LogLevel level, string message);
     }
 
-    public static class LoggerExtensions
+    public abstract class LoggerBase : ILogger
     {
-        public static string FormatLog(LogLevel level, string message)
-        {
-            return $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss:ffffff} UTF] {level}: {message}";
-        }
-    }
-
-    public sealed class StreamLogger : ILogger
-    {
-        public StreamLogger(StreamWriter standardStreamWriter, StreamWriter errorStreamWriter)
-        {
-            standardStreamWriter.AutoFlush = true;
-            this.standardStreamWriter = standardStreamWriter;
-            this.errorStreamWriter = errorStreamWriter;
-        }
-
         public bool Enabled { get; set; } = true;
-
         public LogLevel LogLevel { get; } = LogLevel.Info;
 
         public void Log(LogLevel level, string message)
@@ -48,15 +33,38 @@ namespace PlanetaGameLabo.MatchMaker
                 return;
             }
 
+            LogImpl(level, FormatLog(level, message));
+        }
+
+        protected abstract void LogImpl(LogLevel level, string formattedMessage);
+
+        private static string FormatLog(LogLevel level, string message)
+        {
+            return $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss:ffffff} UTF] {level}: {message}";
+        }
+    }
+
+    public sealed class StreamLogger : LoggerBase
+    {
+        public StreamLogger(StreamWriter standardStreamWriter, StreamWriter errorStreamWriter)
+        {
+            Debug.Assert(standardStreamWriter != null, nameof(this.standardStreamWriter) + " != null");
+            standardStreamWriter.AutoFlush = true;
+            this.standardStreamWriter = standardStreamWriter;
+            this.errorStreamWriter = errorStreamWriter;
+        }
+
+        protected override void LogImpl(LogLevel level, string formatterMessage)
+        {
             switch (level)
             {
                 case LogLevel.Debug:
                 case LogLevel.Info:
-                    standardStreamWriter.WriteLine(LoggerExtensions.FormatLog(level, message));
+                    standardStreamWriter.WriteLine(formatterMessage);
                     break;
                 case LogLevel.Warning:
                 case LogLevel.Error:
-                    errorStreamWriter.WriteLine(LoggerExtensions.FormatLog(level, message));
+                    errorStreamWriter.WriteLine(formatterMessage);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(level), level, null);
