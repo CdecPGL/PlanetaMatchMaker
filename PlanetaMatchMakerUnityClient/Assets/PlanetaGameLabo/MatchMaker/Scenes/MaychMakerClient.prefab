@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c0bd66aa72df904dbbbeb10742126f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _serverAddress: 172.0.0.1
+  _serverAddress: 127.0.0.1
   _serverPort: 57000
   _gameDefaultPort: 52000
   _gamePortCandidates:
