@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -75,7 +76,17 @@ namespace PlanetaGameLabo.MatchMaker
 
         public ushort gameDefaultPort => _gameDefaultPort;
 
-        public IReadOnlyList<ushort> gamePortCandidates => _gamePortCandidates.AsReadOnly();
+        [Serializable]
+        public struct PortRange
+        {
+            public ushort startPort => _startPort;
+            public ushort endPort => _endPort;
+
+            [SerializeField] private ushort _startPort;
+            [SerializeField] private ushort _endPort;
+        }
+
+        public IReadOnlyList<PortRange> gamePortCandidates => _gamePortCandidates.AsReadOnly();
 
         public byte roomGroupIndex { get; set; }
 
@@ -458,7 +469,7 @@ namespace PlanetaGameLabo.MatchMaker
         private ushort _gameDefaultPort = 52000;
 
         [SerializeField, Tooltip("Candidates of ports used for game port")]
-        private List<ushort> _gamePortCandidates;
+        private List<PortRange> _gamePortCandidates;
 
         [SerializeField, Tooltip("Timeout seconds to discover NAT device")]
         private float _natDiscoverTimeOutSeconds;
@@ -578,8 +589,8 @@ namespace PlanetaGameLabo.MatchMaker
                 bool isPublic = true, string password = "")
         {
             var result = await _client.CreateRoomWithCreatingPortMappingAsync(roomGroupIndex, roomName, maxPlayerCount,
-                TransportProtocol.Tcp, _gamePortCandidates, _gameDefaultPort, (int)(_natDiscoverTimeOutSeconds * 1000),
-                isPublic, password);
+                TransportProtocol.Tcp, GenerateGamePortCandidateList(), _gameDefaultPort,
+                (int)(_natDiscoverTimeOutSeconds * 1000), isPublic, password);
             hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, isPublic, _client.HostingRoomId,
                 roomName, maxPlayerCount);
             return result.IsDefaultPortUsed
@@ -614,6 +625,19 @@ namespace PlanetaGameLabo.MatchMaker
                 resultStartIndex, resultCount, sortKind, targetFlags, searchName);
             return (totalRoomCount, resultStartIndex, matchedRoomCount,
                 roomInfoList.Select(result => new RoomInfo(hostRoomGroupIndex, result)).ToList().AsReadOnly());
+        }
+
+        private List<ushort> GenerateGamePortCandidateList()
+        {
+            var list = new List<ushort>();
+            foreach (var gamePortCandidate in _gamePortCandidates)
+            {
+                list.AddRange(Enumerable
+                    .Range(gamePortCandidate.startPort, gamePortCandidate.endPort - gamePortCandidate.startPort + 1)
+                    .Select(v => (ushort)v));
+            }
+
+            return list;
         }
 
         private void Reset()

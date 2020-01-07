@@ -112,6 +112,11 @@ namespace PlanetaGameLabo.MatchMaker
                             HostRoom();
                         }
 
+                        if (GUILayout.Button("CreateWithPM"))
+                        {
+                            HostRoomWithCreatingPortMapping();
+                        }
+
                         if (GUILayout.Button("Join"))
                         {
                             JoinRoom();
@@ -244,6 +249,22 @@ namespace PlanetaGameLabo.MatchMaker
                 _isErrorOccured = true;
                 _errorMessage = errorInfo.message;
             });
+        }
+
+        private void HostRoomWithCreatingPortMapping()
+        {
+            _isErrorOccured = false;
+            _client.HostRoomWithCreatingPortMapping(_roomName, _roomMaxPlayerCount, _createPublicRoom, _roomPassword,
+                (errorInfo, args) =>
+                {
+                    if (errorInfo)
+                    {
+                        return;
+                    }
+
+                    _isErrorOccured = true;
+                    _errorMessage = errorInfo.message;
+                });
         }
 
         private void JoinRoom()
