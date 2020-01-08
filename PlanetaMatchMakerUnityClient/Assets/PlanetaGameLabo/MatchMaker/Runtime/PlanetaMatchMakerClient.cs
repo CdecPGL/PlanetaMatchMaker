@@ -132,7 +132,11 @@ namespace PlanetaGameLabo.MatchMaker
                 return;
             }
 
-            _client.Close();
+            if (_client.Connected)
+            {
+                _client.Close();
+            }
+
             Reset();
         }
 

@@ -192,7 +192,11 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void Close()
         {
-            _client.Disconnect();
+            if (_client.connected)
+            {
+                _client.Disconnect();
+            }
+
             _isErrorOccured = false;
             _isJoinedRoom = false;
             _roomList = new IRoomInfo[] { };
