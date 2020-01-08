@@ -182,10 +182,10 @@ namespace PlanetaGameLabo.MatchMaker
 
             RunTaskWithErrorHandling(async () =>
                 {
-                    var result = await GetRoomListAsync(resultStartIndex, resultCount, sortKind, targetFlags,
-                        searchName);
-                    return new RequestRoomListCallbackArgs(result.totalRoomCount, result.startIndex,
-                        result.roomInfoList);
+                    var (totalRoomCount, _, startIndex, roomInfoList) = await GetRoomListAsync(resultStartIndex,
+                        resultCount, sortKind, targetFlags, searchName);
+                    return new RequestRoomListCallbackArgs(totalRoomCount, startIndex,
+                        roomInfoList);
                 },
                 () => { },
                 callback);

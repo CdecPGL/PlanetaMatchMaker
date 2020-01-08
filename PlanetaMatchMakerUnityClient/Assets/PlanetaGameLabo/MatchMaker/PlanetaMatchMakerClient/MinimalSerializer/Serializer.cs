@@ -9,14 +9,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 
-#pragma warning disable CA1303
 namespace CdecPGL.MinimalSerializer
 {
     public static class Serializer
@@ -54,6 +55,10 @@ namespace CdecPGL.MinimalSerializer
             return (T)obj;
         }
 
+        /// <summary>
+        /// A set of directory serializable types.
+        /// We don't use thread safe dictionary because this field will be only read.
+        /// </summary>
         private static readonly HashSet<Type> directSerializableTypeSet = new HashSet<Type>()
         {
             typeof(bool),
@@ -69,6 +74,10 @@ namespace CdecPGL.MinimalSerializer
             typeof(ulong)
         };
 
+        /// <summary>
+        /// A directory serializable type to converter map.
+        /// We don't use thread safe dictionary because this field will be only read.
+        /// </summary>
         private static readonly Dictionary<Type, Func<byte[], int, object>> bytesToDirectSerializableTypeConverterDict
             = new Dictionary<Type, Func<byte[], int, object>>()
             {
@@ -85,7 +94,11 @@ namespace CdecPGL.MinimalSerializer
                 {typeof(ulong), (bytes, startIdx) => BitConverter.ToUInt64(bytes, startIdx)},
             };
 
-        private static readonly Dictionary<Type, int> serializedSizeCache = new Dictionary<Type, int>();
+        /// <summary>
+        /// Cache of serialized size for each type.
+        /// We use thread safe dictionary because this field will be written from multi threads.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, int> serializedSizeCache = new ConcurrentDictionary<Type, int>();
 
         private static int GetSerializedSizeImpl(Type type)
         {
@@ -114,7 +127,7 @@ namespace CdecPGL.MinimalSerializer
                 throw new InvalidSerializationException("Logical error of serializable check.");
             }
 
-            serializedSizeCache.Add(type, size);
+            serializedSizeCache.TryAdd(type, size);
             return size;
         }
 
@@ -473,8 +486,7 @@ namespace CdecPGL.MinimalSerializer
 
         private static bool IsComplexSerializableType(Type type)
         {
-            return GetFieldsOfComplexSerializableType(type).Length > 0 && type.IsLayoutSequential &&
-                   type.IsSerializable;
+            return type.IsLayoutSequential && type.IsSerializable && GetFieldsOfComplexSerializableType(type).Length > 0;
         }
 
         private static void ThrowNotSerializableException(Type type)
@@ -485,6 +497,8 @@ namespace CdecPGL.MinimalSerializer
 
         private static FieldInfo[] GetFieldsOfComplexSerializableType(Type type)
         {
+            // If not sequential, Marshal is not available and throws an exception
+            Debug.Assert(type.IsLayoutSequential);
             // GetFields() returns inconsistent order even if LayoutKind.Sequential is true in some case (I cannot find detailed condition...).
             // To avoid this, order by MetadataToken but Marshal.OffsetOf(Type, string) is deduplicate according to the document...
             // https://stackoverflow.com/questions/8067493/if-getfields-doesnt-guarantee-order-how-does-layoutkind-sequential-work
@@ -496,4 +510,3 @@ namespace CdecPGL.MinimalSerializer
         }
     }
 }
-#pragma warning restore CA1303

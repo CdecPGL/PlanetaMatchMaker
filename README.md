@@ -8,7 +8,7 @@ A match making server and client for network game.
 
 - Boost Library 1.70
 - CMake 3.8
-- minimal-serializer v0.1.4 (included in this repogitory)
+- minimal-serializer v0.1.5 (included in this repogitory)
 
 ### Functions
 
@@ -76,7 +76,7 @@ You can locate a setting file `setting.json` to `.pmms` directory in home direct
 
 ### Dependencies
 
-- minimal-serializer v0.1.4 (included in this repogitory)
+- minimal-serializer v0.1.5 (included in this repogitory)
 - [Open.NAT (compile error fixed version of commit 643f04e8227fe873731b884244bcee4cc84c8d49)](https://github.com/lontivero/Open.NAT) (included in this repogitory)
 
 ### Windows
