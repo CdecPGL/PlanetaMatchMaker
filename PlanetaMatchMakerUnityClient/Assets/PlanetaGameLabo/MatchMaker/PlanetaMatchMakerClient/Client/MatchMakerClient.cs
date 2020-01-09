@@ -819,7 +819,7 @@ namespace PlanetaGameLabo.MatchMaker
         private TcpClient CreateTcpClient()
         {
             var newTcpClient =
-                new TcpClient {ReceiveTimeout = timeoutMilliSeconds, SendBufferSize = timeoutMilliSeconds};
+                new TcpClient {ReceiveTimeout = timeoutMilliSeconds, SendTimeout = timeoutMilliSeconds};
             newTcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             return newTcpClient;
         }
