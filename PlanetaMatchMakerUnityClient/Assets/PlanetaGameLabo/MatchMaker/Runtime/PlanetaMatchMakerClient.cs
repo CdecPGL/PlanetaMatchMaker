@@ -476,10 +476,10 @@ namespace PlanetaGameLabo.MatchMaker
         private List<PortRange> _gamePortCandidates;
 
         [SerializeField, Tooltip("Timeout seconds to discover NAT device")]
-        private float _natDiscoverTimeOutSeconds;
+        private float _natDiscoverTimeOutSeconds = 5;
 
         [SerializeField, Tooltip("Timeout seconds to send and receive data between match making server")]
-        private float _serverCommunicationTimeOutSeconds;
+        private float _serverCommunicationTimeOutSeconds = 10;
 
         [SerializeField, Tooltip("Enable debug log")]
         private bool _enableDebugLog;
