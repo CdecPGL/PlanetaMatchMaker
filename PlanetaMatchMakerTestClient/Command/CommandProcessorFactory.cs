@@ -19,7 +19,7 @@ namespace PlanetaGameLabo.MatchMaker
                 new ShowPortMappingsCommandExecutor(outputStream),
                 new ReleasePortMappingsCommandExecutor(outputStream),
                 new CreateRoomWithCreatingPortMappingCommandExecutor(outputStream),
-                new StressTestConnectAndStayCommandExecutor(outputStream),
+                new TestAllCommandExecutor(outputStream), new StressTestConnectAndStayCommandExecutor(outputStream),
                 new StressTestConnectAndDisconnectCommandExecutor(outputStream),
                 new StressTestGetRoomGroupListCommandExecutor(outputStream)
             };
@@ -41,6 +41,7 @@ namespace PlanetaGameLabo.MatchMaker
         ShowPortMappings,
         ReleasePortMappings,
         CreateRoomWithCreatingPortMapping,
+        TestAll,
         StressTestConnectAndStay,
         StressTestConnectAndDisconnect,
         StressTestGetRoomGroupList

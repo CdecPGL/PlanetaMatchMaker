@@ -49,7 +49,12 @@ namespace PlanetaGameLabo.MatchMaker
         public ILogger Logger { get; }
 
         /// <summary>
-        /// コンストラクタ。
+        /// Timeout milli seconds to send and receive server.
+        /// </summary>
+        public int TimeoutMilliSeconds { get; }
+
+        /// <summary>
+        /// Constructor
         /// </summary>
         /// <param name="timeoutMilliSeconds">Timeout milli seconds for send and receive. Timeout of connect is not effected.</param>
         /// <param name="logger"></param>
@@ -60,7 +65,7 @@ namespace PlanetaGameLabo.MatchMaker
                 logger = StreamLogger.CreateStandardOutputLogger();
             }
 
-            this.timeoutMilliSeconds = timeoutMilliSeconds;
+            TimeoutMilliSeconds = timeoutMilliSeconds;
             Logger = logger;
             PortMappingCreator = new NatPortMappingCreator(logger);
         }
@@ -225,7 +230,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// If first connection test is failed, this method try to create port mapping.
         /// The port pair to map is selected from candidates which consists of default port and port candidates from parameter.
         /// The ports which is being used by this computer with indicated protocol is removed from candidates.
-        /// Refer NatPortMappingCreator.CreatePortMappingFromCandidates method if you want to know selection rule of port from candidates.
+        /// Refer NatPortMappingCreator.CreatePortMappingFromCandidatesAsync method if you want to know selection rule of port from candidates.
         /// If second connection test after port mapping is created is failed, this method throws error.
         /// </summary>
         /// <param name="roomGroupIndex"></param>
@@ -273,7 +278,7 @@ namespace PlanetaGameLabo.MatchMaker
                 if (!PortMappingCreator.IsNatDeviceAvailable || !PortMappingCreator.IsDiscoverNatDone)
                 {
                     Logger.Log(LogLevel.Info, "Execute discovering NAT device because it is not done.");
-                    await PortMappingCreator.DiscoverNat(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);
+                    await PortMappingCreator.DiscoverNatAsync(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);
                 }
 
                 if (!PortMappingCreator.IsNatDeviceAvailable)
@@ -319,7 +324,7 @@ namespace PlanetaGameLabo.MatchMaker
 
                     isDefaultPortUsed = false;
                     (usedPrivatePortFromCandidates, usedPublicPortFromCandidates) = await PortMappingCreator
-                        .CreatePortMappingFromCandidates(protocol, privatePortCandidates, publicPortCandidates)
+                        .CreatePortMappingFromCandidatesAsync(protocol, privatePortCandidates, publicPortCandidates)
                         .ConfigureAwait(false);
                     portNumber = usedPublicPortFromCandidates;
                     Logger.Log(LogLevel.Info,
@@ -577,7 +582,6 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private TcpClient tcpClient;
-        private readonly int timeoutMilliSeconds;
         private uint sessionKey;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
@@ -819,7 +823,7 @@ namespace PlanetaGameLabo.MatchMaker
         private TcpClient CreateTcpClient()
         {
             var newTcpClient =
-                new TcpClient {ReceiveTimeout = timeoutMilliSeconds, SendTimeout = timeoutMilliSeconds};
+                new TcpClient {ReceiveTimeout = TimeoutMilliSeconds, SendTimeout = TimeoutMilliSeconds};
             newTcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             return newTcpClient;
         }

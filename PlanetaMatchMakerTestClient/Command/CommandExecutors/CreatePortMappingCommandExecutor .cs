@@ -22,7 +22,7 @@ namespace PlanetaGameLabo.MatchMaker
             if (options.EnableForceToDiscoverNat | !sharedClient.PortMappingCreator.IsDiscoverNatDone)
             {
                 OutputStream.WriteLine(" Execute discovering NAT device.");
-                await sharedClient.PortMappingCreator.DiscoverNat(options.DiscoverNatTimeoutMilliSeconds);
+                await sharedClient.PortMappingCreator.DiscoverNatAsync(options.DiscoverNatTimeoutMilliSeconds);
             }
 
             if (!sharedClient.PortMappingCreator.IsNatDeviceAvailable)
@@ -33,7 +33,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             if (!options.PrivatePortCandidates.Any() && !options.PublicPortCandidates.Any())
             {
-                await sharedClient.PortMappingCreator.CreatePortMapping(options.Protocol, options.PrivatePort,
+                await sharedClient.PortMappingCreator.CreatePortMappingAsync(options.Protocol, options.PrivatePort,
                     options.PublicPort, options.Description);
                 OutputStream.WriteLine("Port mapping is created to discovered NAT.");
             }
@@ -58,7 +58,7 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 var (privatePort, publicPort) =
-                    await sharedClient.PortMappingCreator.CreatePortMappingFromCandidates(options.Protocol,
+                    await sharedClient.PortMappingCreator.CreatePortMappingFromCandidatesAsync(options.Protocol,
                         privatePortCandidates, publicPortCandidates, options.Description);
                 OutputStream.WriteLine(
                     $"Port mapping is created to discovered NAT between private port \"{privatePort}\" and public port \"{publicPort}\".");

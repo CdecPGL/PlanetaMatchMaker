@@ -20,7 +20,7 @@ namespace PlanetaGameLabo.MatchMaker
             if (options.EnableForceToDiscoverNat | !sharedClient.PortMappingCreator.IsDiscoverNatDone)
             {
                 OutputStream.WriteLine(" Execute discovering NAT device.");
-                await sharedClient.PortMappingCreator.DiscoverNat(options.DiscoverNatTimeoutMilliSeconds);
+                await sharedClient.PortMappingCreator.DiscoverNatAsync(options.DiscoverNatTimeoutMilliSeconds);
             }
 
             if (!sharedClient.PortMappingCreator.IsNatDeviceAvailable)
