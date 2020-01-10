@@ -21,50 +21,48 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             var options = ((CommandLine.Parsed<Options>)parsedResult).Value;
-
-
             var commandProcessor = CommandProcessorFactory.Create();
-            var command = options.Command;
-            var commandOptions = options.CommandOptions;
 
             try
             {
-                using (var client = new MatchMakerClient())
-                {
-                    Console.CancelKeyPress += OnKeyBoardInterrupted;
+                using var client = new MatchMakerClient();
+                Console.CancelKeyPress += OnKeyBoardInterrupted;
 
+                if (!string.IsNullOrEmpty(options.CommandAndOptions))
+                {
+                    var items = options.CommandAndOptions.Split(' ');
+                    if (!CommandProcessor.TryParseCommand(items[0], out var command))
+                    {
+                        Console.WriteLine("Command is invalid.");
+                    }
+                    else
+                    {
+                        var commandOptions = items.Skip(1);
+                        ExecuteCommand(commandProcessor, command, client, commandOptions);
+                    }
+                }
+                else
+                {
                     while (!isFinishProgram)
                     {
-                        if (command == null)
+                        Console.WriteLine("Input command.");
+                        commandProcessor.DisplayCommandList();
+                        var input = Console.ReadLine();
+                        if (input == null)
                         {
-                            Console.WriteLine("Input command.");
-                            commandProcessor.DisplayCommandList();
-                            var input = Console.ReadLine();
-                            if (input == null)
-                            {
-                                Console.WriteLine("Command is invalid.");
-                                continue;
-                            }
-
-                            var items = input.Split(' ');
-                            if (!CommandProcessor.TryParseCommand(items[0], out var c))
-                            {
-                                Console.WriteLine("Command is invalid.");
-                                continue;
-                            }
-
-                            command = c;
-                            commandOptions = items.Skip(1);
+                            Console.WriteLine("Command is invalid.");
+                            continue;
                         }
-                        else
+
+                        var items = input.Split(' ');
+                        if (!CommandProcessor.TryParseCommand(items[0], out var command))
                         {
-                            isCommandExecuting = true;
-                            var task = commandProcessor.ProcessCommand(command.Value, client, commandOptions.ToArray(),
-                                cancellationTokenSource.Token);
-                            task.Wait();
-                            isCommandExecuting = false;
-                            command = null;
+                            Console.WriteLine("Command is invalid.");
+                            continue;
                         }
+
+                        var commandOptions = items.Skip(1);
+                        ExecuteCommand(commandProcessor, command, client, commandOptions);
                     }
                 }
             }
@@ -77,6 +75,16 @@ namespace PlanetaGameLabo.MatchMaker
         private static bool isCommandExecuting;
         private static bool isFinishProgram;
         private static readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+        private static void ExecuteCommand(CommandProcessor commandProcessor, Command command, MatchMakerClient client,
+            IEnumerable<string> commandOptions)
+        {
+            isCommandExecuting = true;
+            var task = commandProcessor.ProcessCommand(command, client, commandOptions.ToArray(),
+                cancellationTokenSource.Token);
+            task.Wait();
+            isCommandExecuting = false;
+        }
 
         private static void OnKeyBoardInterrupted(object sender, ConsoleCancelEventArgs eargs)
         {
@@ -94,11 +102,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal sealed class Options
     {
-        [CommandLine.Value(0, MetaName = "Command", Default = null, Required = false, HelpText = "Command.")]
-        public Command? Command { get; set; }
-
-        [CommandLine.Value(1, MetaName = "CommandOptions", Default = null, Required = false,
-            HelpText = "Command options.")]
-        public IEnumerable<string> CommandOptions { get; set; }
+        [CommandLine.Value(0, MetaName = "CommandAndOptions", Default = null, Required = false, HelpText = "Command.")]
+        public string CommandAndOptions { get; set; }
     }
 }
