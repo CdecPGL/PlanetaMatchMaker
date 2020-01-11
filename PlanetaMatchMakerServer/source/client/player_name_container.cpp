@@ -12,8 +12,8 @@ namespace pgl {
 		lock_guard lock(mutex_);
 		auto it = name_map_.find(player_name);
 		if (it == name_map_.end()) {
-			name_map_.emplace(player_name, name_data{1, {0}});
-			return player_full_name{player_name, 0};
+			name_map_.emplace(player_name, name_data{2, {1}});
+			return player_full_name{player_name, 1};
 		}
 
 		if (it->second.used_tags.size() >= numeric_limits<player_tag_t>::max()) {
@@ -22,7 +22,10 @@ namespace pgl {
 		}
 
 		// find not used tag
-		while (it->second.used_tags.find(it->second.next_tag) != it->second.used_tags.end()) { ++it->second.next_tag; }
+		while (it->second.next_tag == player_full_name::not_assigned_tag || it
+		                                                                    ->second.used_tags.find(it->second.next_tag)
+			!= it->second.used_tags.end()
+		) { ++it->second.next_tag; }
 		// use tag and set next tag
 		const auto tag = it->second.next_tag++;
 		it->second.used_tags.insert(tag);

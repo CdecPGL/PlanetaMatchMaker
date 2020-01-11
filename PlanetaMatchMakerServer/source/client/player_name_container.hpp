@@ -12,6 +12,7 @@ namespace pgl {
 	public:
 		// Assign new player and get player name.
 		// Throws player_name_error if player tag reaches limit.
+		// 0 is not used for tag because 0 means "not tag assignment".
 		player_full_name assign_player_name(const player_name_t& player_name);
 
 		// Remove player name.

@@ -83,9 +83,7 @@ namespace pgl {
 	struct list_room_group_request_message final {
 		uint8_t dummy;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += dummy;
-		}
+		void on_serialize(minimal_serializer::serializer& serializer) { serializer += dummy; }
 	};
 
 	// 245 bytes
@@ -93,9 +91,7 @@ namespace pgl {
 		struct room_group_info final {
 			room_group_name_t name;
 
-			void on_serialize(minimal_serializer::serializer& serializer) {
-				serializer += name;
-			}
+			void on_serialize(minimal_serializer::serializer& serializer) { serializer += name; }
 		};
 
 		uint8_t room_group_count;
@@ -109,10 +105,9 @@ namespace pgl {
 		}
 	};
 
-	// 45 bytes
+	// 21 bytes
 	struct create_room_request_message final {
 		room_group_index_t group_index;
-		room_name_t name;
 		bool is_public;
 		room_password_t password;
 		uint8_t max_player_count;
@@ -120,7 +115,6 @@ namespace pgl {
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
-			serializer += name;
 			serializer += is_public;
 			serializer += password;
 			serializer += max_player_count;
@@ -132,19 +126,17 @@ namespace pgl {
 	struct create_room_reply_message final {
 		room_id_t room_id;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += room_id;
-		}
+		void on_serialize(minimal_serializer::serializer& serializer) { serializer += room_id; }
 	};
 
-	// 29 bytes
+	// 31 bytes
 	struct list_room_request_message final {
 		room_group_index_t group_index;
 		uint8_t start_index;
 		uint8_t count;
 		room_data_sort_kind sort_kind;
 		room_search_target_flag search_target_flags;
-		room_name_t search_name;
+		player_full_name search_full_name;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
@@ -152,16 +144,16 @@ namespace pgl {
 			serializer += count;
 			serializer += sort_kind;
 			serializer += search_target_flags;
-			serializer += search_name;
+			serializer += search_full_name;
 		}
 	};
 
-	// 237 bytes
+	// 249 bytes
 	struct list_room_reply_message final {
-		//39 bytes
+		//41 bytes
 		struct room_info final {
 			room_id_t room_id;
-			room_name_t name;
+			player_full_name host_player_full_name;
 			room_setting_flag setting_flags;
 			uint8_t max_player_count;
 			uint8_t current_player_count;
@@ -169,7 +161,7 @@ namespace pgl {
 
 			void on_serialize(minimal_serializer::serializer& serializer) {
 				serializer += room_id;
-				serializer += name;
+				serializer += host_player_full_name;
 				serializer += setting_flags;
 				serializer += max_player_count;
 				serializer += current_player_count;
@@ -207,9 +199,7 @@ namespace pgl {
 	struct join_room_reply_message final {
 		endpoint game_host_endpoint;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += game_host_endpoint;
-		}
+		void on_serialize(minimal_serializer::serializer& serializer) { serializer += game_host_endpoint; }
 	};
 
 	// 8 bytes
@@ -246,11 +236,9 @@ namespace pgl {
 	struct connection_test_reply_message final {
 		bool succeed;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += succeed;
-		}
+		void on_serialize(minimal_serializer::serializer& serializer) { serializer += succeed; }
 	};
-	
+
 	struct random_match_request_message final {
 		void on_serialize(minimal_serializer::serializer& serializer [[maybe_unused]]) { }
 	};

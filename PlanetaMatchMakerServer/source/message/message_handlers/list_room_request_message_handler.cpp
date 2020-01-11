@@ -19,7 +19,7 @@ namespace pgl {
 
 		// Generate room data list to send
 		const auto matched_data_list = room_data_container.get_data(message.sort_kind, message.search_target_flags,
-			message.search_name.to_string());
+			message.search_full_name);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
 			" rooms are matched in ", room_data_container.size(), " rooms.");
 
@@ -48,7 +48,7 @@ namespace pgl {
 					const auto matched_data_index = message.start_index + reply_data_index;
 					reply.room_info_list[j] = list_room_reply_message::room_info{
 						matched_data_list[matched_data_index].room_id,
-						matched_data_list[matched_data_index].name,
+						matched_data_list[matched_data_index].host_player_full_name,
 						matched_data_list[matched_data_index].setting_flags,
 						matched_data_list[matched_data_index].max_player_count,
 						matched_data_list[matched_data_index].current_player_count,

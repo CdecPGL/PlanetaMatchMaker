@@ -26,15 +26,6 @@ namespace pgl {
 			message_error_code::ok
 		};
 
-		// Check room name is not empty
-		if (message.name.length() == 0) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-				"Failed to create new room because the name is empty.");
-			header.error_code = message_error_code::room_name_is_empty;
-			send(param, header, reply);
-			return;
-		}
-
 		try {
 			// Create requested room
 			const auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
@@ -42,7 +33,7 @@ namespace pgl {
 			game_host_endpoint.port_number = message.port_number;
 			room_data room_data{
 				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
-				message.name,
+				param->session_data.client_player_name(),
 				(message.is_public ? room_setting_flag::public_room : room_setting_flag::none) | room_setting_flag::
 				open_room,
 				message.password,
@@ -54,8 +45,9 @@ namespace pgl {
 			};
 
 			reply.room_id = room_data_container.assign_id_and_add_data(room_data);
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New room \"", room_data.name,
-				"\" is created in group ", message.group_index, " with id: ", reply.room_id);
+			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New room for player \"",
+				param->session_data.client_player_name().generate_full_name(), "\" is created in group ",
+				message.group_index, " with id: ", reply.room_id);
 			param->session_data.set_hosting_room_id(message.group_index, reply.room_id);
 
 			// Reply to the client
@@ -65,8 +57,9 @@ namespace pgl {
 			send(param, header, reply);
 		}
 		catch (const unique_variable_duplication_error&) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Failed to create new room \"",
-				message.name, "\" because the name is duplicated");
+			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
+				"Failed to create new room with player\"",
+				param->session_data.client_player_name().generate_full_name(), "\" because the name is duplicated");
 			header.error_code = message_error_code::room_name_duplicated;
 			send(param, header, reply);
 		}

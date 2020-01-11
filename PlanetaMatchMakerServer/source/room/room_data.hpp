@@ -4,6 +4,7 @@
 #include "datetime/datetime.hpp"
 #include "network/endpoint.hpp"
 #include "utilities/enum_utilities.hpp"
+#include "client/player_full_name.hpp"
 
 #include "room_constants.hpp"
 
@@ -21,7 +22,7 @@ namespace pgl {
 
 	struct room_data final {
 		room_id_t room_id;
-		room_name_t name;
+		player_full_name host_player_full_name;
 		room_setting_flag setting_flags;
 		room_password_t password;
 		uint8_t max_player_count;
@@ -58,10 +59,10 @@ namespace pgl {
 
 	// The room whose name matches search name comes top if search name if not empty
 	std::function<bool(const room_data&, const room_data&)> get_room_data_compare_function(
-		room_data_sort_kind sort_kind, const std::string& search_name);
+		room_data_sort_kind sort_kind, const player_full_name& search_full_name);
 
 	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags,
-		const std::string& search_name);
+		const player_full_name& search_full_name);
 
 	std::ostream& operator <<(std::ostream& os, const room_data& room_data);
 	std::ostream& operator <<(std::ostream& os, const room_group_data& room_group_data);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "data/thread_safe_data_container.hpp"
+#include "client/player_full_name.hpp"
 
 #include "room_constants.hpp"
 #include "room_data.hpp"
@@ -9,7 +10,7 @@ namespace pgl {
 	// A thread safe container of room data
 	class room_data_container final {
 	public:
-		using container_type = thread_safe_data_container<room_id_t, room_data, &room_data::name>;
+		using container_type = thread_safe_data_container<room_id_t, room_data, &room_data::host_player_full_name>;
 		using id_param_type = container_type::id_param_type;
 		using data_param_type = container_type::data_param_type;
 
@@ -31,16 +32,17 @@ namespace pgl {
 
 		std::vector<room_data> get_data(const room_data_sort_kind sort_kind,
 			const room_search_target_flag search_target_flags,
-			const std::string& search_string) const {
-			return container_.get_data(get_room_data_compare_function(sort_kind, search_string),
-				get_room_data_filter_function(search_target_flags, search_string));
+			const player_full_name& search_full_name) const {
+			return container_.get_data(get_room_data_compare_function(sort_kind, search_full_name),
+				get_room_data_filter_function(search_target_flags, search_full_name));
 		}
 
 		std::vector<room_data> get_range_data(const int start_idx, const int count,
 			const room_data_sort_kind sort_kind, const room_search_target_flag search_target_flags,
-			const std::string& search_string) const {
-			return container_.get_range_data(start_idx, count, get_room_data_compare_function(sort_kind, search_string),
-				get_room_data_filter_function(search_target_flags, search_string));
+			const player_full_name& search_full_name) const {
+			return container_.get_range_data(start_idx, count,
+				get_room_data_compare_function(sort_kind, search_full_name),
+				get_room_data_filter_function(search_target_flags, search_full_name));
 		}
 
 		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
