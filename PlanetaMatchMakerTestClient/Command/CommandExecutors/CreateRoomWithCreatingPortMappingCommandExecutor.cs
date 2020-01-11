@@ -20,9 +20,9 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomWithCreatingPortMappingCommandOptions options,
             CancellationToken cancellationToken)
         {
-            var result = await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex, options.Name,
-                options.MaxPlayerCount, options.Protocol, options.PortCandidates,
-                options.DefaultPortNumber, options.DiscoverTimeoutMilliSeconds, options.IsPublic, options.Password);
+            var result = await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex,
+                options.MaxPlayerCount, options.Protocol, options.PortCandidates, options.DefaultPortNumber,
+                options.DiscoverTimeoutMilliSeconds, options.IsPublic, options.Password);
 
             OutputStream.WriteLine(result.IsDefaultPortUsed
                 ? "Default port is used."
@@ -38,19 +38,15 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "An index of room group where room is created.")]
         public byte RoomGroupIndex { get; set; }
 
-        [CommandLine.Value(1, MetaName = "room_name", Required = true,
-            HelpText = "A name of room to create.")]
-        public string Name { get; set; }
-
-        [CommandLine.Value(2, MetaName = "max_player_count", Required = true,
+        [CommandLine.Value(1, MetaName = "max_player_count", Required = true,
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
 
-        [CommandLine.Value(3, MetaName = "protocol", Required = true,
+        [CommandLine.Value(2, MetaName = "protocol", Required = true,
             HelpText = "Transport protocol used to host game.")]
         public TransportProtocol Protocol { get; set; }
 
-        [CommandLine.Value(4, MetaName = "default_port_number", Required = true,
+        [CommandLine.Value(3, MetaName = "default_port_number", Required = true,
             HelpText = "A default port number which is used in hosting game.")]
         public ushort DefaultPortNumber { get; set; }
 

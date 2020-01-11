@@ -19,14 +19,15 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var (totalRoomCount, matchedRoomCount, results) = await sharedClient.GetRoomListAsync(
                 options.RoomGroupIndex,
-                options.StartIndex, options.Count, options.SortKind, options.SearchTargetFlag, options.SearchName);
+                options.StartIndex, options.Count, options.SortKind, options.SearchTargetFlag, options.SearchName,
+                options.SearchTag);
 
             OutputStream.WriteLine($"{matchedRoomCount} rooms are matched in {totalRoomCount} rooms.");
             OutputStream.WriteLine($"{results.Length} rooms are replied from index {options.StartIndex}.");
             foreach (var result in results)
             {
                 OutputStream.WriteLine(
-                    $"    Name: {result.Name}, ID: {result.RoomId}, Create: {result.CreateDatetime}, PlayerCount: {result.CurrentPlayerCount}/{result.MaxPlayerCount}, SettingFlags: {result.SettingFlags}");
+                    $"    Name: {result.HostPlayerFullName}, ID: {result.RoomId}, Create: {result.CreateDatetime}, PlayerCount: {result.CurrentPlayerCount}/{result.MaxPlayerCount}, SettingFlags: {result.SettingFlags}");
             }
         }
     }
@@ -49,12 +50,16 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Sort method of result.")]
         public RoomDataSortKind SortKind { get; set; }
 
-        [CommandLine.Option('t', "search_target_flag", Default = RoomSearchTargetFlag.All, Required = false,
+        [CommandLine.Option('f', "search_target_flag", Default = RoomSearchTargetFlag.All, Required = false,
             HelpText = "Flag which indicates condition of search.")]
         public RoomSearchTargetFlag SearchTargetFlag { get; set; }
 
         [CommandLine.Option('n', "search_name", Default = "", Required = false,
             HelpText = "A name to search room. Empty string means search all.")]
         public string SearchName { get; set; }
+
+        [CommandLine.Option('t', "search_tag", Default = "", Required = false,
+            HelpText = "A tag to search room. 0 means search all.")]
+        public ushort SearchTag { get; set; }
     }
 }

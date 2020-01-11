@@ -188,7 +188,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// Create and host new room to the server.
         /// </summary>
         /// <param name="roomGroupIndex"></param>
-        /// <param name="roomName"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <param name="isPublic"></param>
@@ -196,17 +195,12 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte roomGroupIndex, string roomName, byte maxPlayerCount, ushort portNumber,
+        public async Task CreateRoomAsync(byte roomGroupIndex, byte maxPlayerCount, ushort portNumber,
             bool isPublic = true, string password = "")
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (roomName == null)
-                {
-                    throw new ArgumentNullException(nameof(roomName));
-                }
-
                 if (password == null)
                 {
                     throw new ArgumentNullException(nameof(password));
@@ -223,7 +217,7 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                await CreateRoomCoreAsync(portNumber, roomGroupIndex, roomName, maxPlayerCount, isPublic, password)
+                await CreateRoomCoreAsync(portNumber, roomGroupIndex, maxPlayerCount, isPublic, password)
                     .ConfigureAwait(false);
             }
             finally
@@ -242,7 +236,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// If second connection test after port mapping is created is failed, this method throws error.
         /// </summary>
         /// <param name="roomGroupIndex"></param>
-        /// <param name="roomName"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="discoverNatTimeoutMilliSeconds"></param>
         /// <param name="protocol">The protocol which is used for accept TCP connection of game</param>
@@ -254,19 +247,13 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<CreateRoomWithCreatingPortMappingResult> CreateRoomWithCreatingPortMappingAsync(
-            byte roomGroupIndex, string roomName,
-            byte maxPlayerCount, TransportProtocol protocol, IEnumerable<ushort> portNumberCandidates,
-            ushort defaultPortNumber, int discoverNatTimeoutMilliSeconds = 5000, bool isPublic = true,
-            string password = "")
+            byte roomGroupIndex, byte maxPlayerCount, TransportProtocol protocol,
+            IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber,
+            int discoverNatTimeoutMilliSeconds = 5000, bool isPublic = true, string password = "")
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (roomName == null)
-                {
-                    throw new ArgumentNullException(nameof(roomName));
-                }
-
                 if (password == null)
                 {
                     throw new ArgumentNullException(nameof(password));
@@ -349,7 +336,7 @@ namespace PlanetaGameLabo.MatchMaker
                     Logger.Log(LogLevel.Info, "Second connection test is succeeded. Start to create room.");
                 }
 
-                await CreateRoomCoreAsync(portNumber, roomGroupIndex, roomName, maxPlayerCount, isPublic, password)
+                await CreateRoomCoreAsync(portNumber, roomGroupIndex, maxPlayerCount, isPublic, password)
                     .ConfigureAwait(false);
 
                 return new CreateRoomWithCreatingPortMappingResult(isDefaultPortUsed, usedPrivatePortFromCandidates,
@@ -370,12 +357,13 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="sortKind"></param>
         /// <param name="searchTargetFlags"></param>
         /// <param name="searchName"></param>
+        /// <param name="searchTag"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public async Task<(byte totalRoomCount, byte matchedRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
             byte roomGroupIndex, byte startIndex,
             byte count, RoomDataSortKind sortKind, RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
-            string searchName = "")
+            string searchName = "", ushort searchTag = PlayerFullName.NotAssignedTag)
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
@@ -385,13 +373,12 @@ namespace PlanetaGameLabo.MatchMaker
                     throw new ArgumentNullException(nameof(searchName));
                 }
 
-                var searchNameMaxLength = typeof(ListRoomRequestMessage)
-                    .GetField(nameof(ListRoomRequestMessage.SearchName))
-                    .GetCustomAttribute<FixedLengthAttribute>().Length;
-                if (searchName.Length > searchNameMaxLength)
+                var searchFullName = new PlayerFullName() {Name = searchName, Tag = searchTag};
+
+                if (searchName.Length > ClientConstants.PlayerNameLength)
                 {
                     throw new ArgumentNullException(
-                        $"The length of {nameof(searchName)} must be less than {searchNameMaxLength}.");
+                        $"The length of {nameof(searchName)} must be less than {ClientConstants.PlayerNameLength}.");
                 }
 
                 if (!Connected)
@@ -406,11 +393,11 @@ namespace PlanetaGameLabo.MatchMaker
                     Count = count,
                     SortKind = sortKind,
                     SearchTargetFlags = searchTargetFlags,
-                    SearchName = searchName
+                    SearchFullName = searchFullName
                 };
                 await SendRequestAsync(requestBody).ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Send ListRoomRequest. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.StartIndex)}: {requestBody.StartIndex}, {nameof(requestBody.Count)}: {requestBody.Count}, {nameof(requestBody.SortKind)}: {requestBody.SortKind}, {nameof(requestBody.SearchTargetFlags)}: {requestBody.SearchTargetFlags}, {nameof(requestBody.SearchName)}: {requestBody.SearchName})");
+                    $"Send ListRoomRequest. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.StartIndex)}: {requestBody.StartIndex}, {nameof(requestBody.Count)}: {requestBody.Count}, {nameof(requestBody.SortKind)}: {requestBody.SortKind}, {nameof(requestBody.SearchTargetFlags)}: {requestBody.SearchTargetFlags}, {nameof(requestBody.SearchFullName)}: {requestBody.SearchFullName})");
 
                 var replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
@@ -679,20 +666,18 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <param name="roomGroupIndex"></param>
-        /// <param name="roomName"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        private async Task CreateRoomCoreAsync(ushort portNumber, byte roomGroupIndex, string roomName,
-            byte maxPlayerCount, bool isPublic = true, string password = "")
+        private async Task CreateRoomCoreAsync(ushort portNumber, byte roomGroupIndex, byte maxPlayerCount,
+            bool isPublic = true, string password = "")
         {
             var requestBody = new CreateRoomRequestMessage
             {
                 GroupIndex = roomGroupIndex,
-                Name = roomName,
                 Password = password,
                 MaxPlayerCount = maxPlayerCount,
                 IsPublic = isPublic,
@@ -700,7 +685,7 @@ namespace PlanetaGameLabo.MatchMaker
             };
             await SendRequestAsync(requestBody).ConfigureAwait(false);
             Logger.Log(LogLevel.Info,
-                $"Send CreateRoomRequest. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.Name)}: {requestBody.Name}, {nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.IsPublic)}: {requestBody.IsPublic}, {nameof(requestBody.portNumber)}: {requestBody.portNumber})");
+                $"Send CreateRoomRequest. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.IsPublic)}: {requestBody.IsPublic}, {nameof(requestBody.portNumber)}: {requestBody.portNumber})");
 
             var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>().ConfigureAwait(false);
             Logger.Log(LogLevel.Info, $"Receive CreateRoomReply. ({nameof(replyBody.RoomId)}: {replyBody.RoomId})");

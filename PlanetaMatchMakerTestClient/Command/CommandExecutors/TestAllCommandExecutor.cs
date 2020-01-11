@@ -56,9 +56,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void InitializeParameters()
         {
-            roomName = Guid.NewGuid().ToString("N").Substring(0, 10);
             playerName = Guid.NewGuid().ToString("N").Substring(0, 10);
-            OutputStream.WriteLine($"RoomName: {roomName}");
             OutputStream.WriteLine($"playerName: {playerName}");
         }
 
@@ -195,7 +193,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                await sharedClient.CreateRoomAsync(0, roomName, 8, options.GameHostDefaultPort);
+                await sharedClient.CreateRoomAsync(0, 8, options.GameHostDefaultPort);
                 lastHostedRoomId = sharedClient.HostingRoomId;
             }
             catch (ClientErrorException e)
@@ -268,7 +266,7 @@ namespace PlanetaGameLabo.MatchMaker
                     await sharedClient.PortMappingCreator.DiscoverNatAsync();
                 }
 
-                await sharedClient.CreateRoomWithCreatingPortMappingAsync(0, roomName, 8, options.GameHostProtocol,
+                await sharedClient.CreateRoomWithCreatingPortMappingAsync(0, 8, options.GameHostProtocol,
                     options.GameHostPortCandidates, options.GameHostDefaultPort, options.DiscoverTimeoutMilliSeconds);
                 lastHostedRoomId = sharedClient.HostingRoomId;
             }
@@ -331,7 +329,6 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        private string roomName;
         private string playerName;
         private uint lastHostedRoomId;
         private MatchMakerClient secondClient;
