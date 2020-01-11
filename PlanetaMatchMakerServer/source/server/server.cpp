@@ -12,9 +12,9 @@ namespace pgl {
 	server::server(std::unique_ptr<server_setting>&& setting): acceptor_(io_service_),
 		server_setting_(std::move(setting)) {
 		// Setup server data
-		std::vector<room_group_name_type> room_group_name_list(server_setting_->room_group_list.size());
+		std::vector<room_group_name_t> room_group_name_list(server_setting_->room_group_list.size());
 		std::transform(server_setting_->room_group_list.begin(), server_setting_->room_group_list.end(),
-			room_group_name_list.begin(), [](const std::string& str) { return room_group_name_type(str); });
+			room_group_name_list.begin(), [](const std::string& str) { return room_group_name_t(str); });
 		server_data_ = std::make_unique<server_data>(std::move(room_group_name_list));
 
 		// Setup acceptor

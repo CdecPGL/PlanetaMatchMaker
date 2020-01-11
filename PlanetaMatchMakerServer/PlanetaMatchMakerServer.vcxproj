@@ -176,6 +176,8 @@
     <ClInclude Include="library\nameof.hpp" />
     <ClInclude Include="source\async\read_write.hpp" />
     <ClInclude Include="source\async\timer.hpp" />
+    <ClInclude Include="source\client\player_full_name.hpp" />
+    <ClInclude Include="source\client\player_name_container.hpp" />
     <ClInclude Include="source\logger\boost_console_logger.hpp" />
     <ClInclude Include="source\logger\boost_file_logger.hpp" />
     <ClInclude Include="source\logger\boost_logger_common.hpp" />
@@ -231,6 +233,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\async\timer.cpp" />
+    <ClCompile Include="source\client\player_full_name.cpp" />
+    <ClCompile Include="source\client\player_name_container.cpp" />
     <ClCompile Include="source\logger\boost_console_logger.cpp" />
     <ClCompile Include="source\logger\boost_file_logger.cpp" />
     <ClCompile Include="source\logger\boost_logger_common.cpp" />

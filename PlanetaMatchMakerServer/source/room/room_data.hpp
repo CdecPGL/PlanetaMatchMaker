@@ -20,10 +20,10 @@ namespace pgl {
 	}
 
 	struct room_data final {
-		room_id_type room_id;
-		room_name_type name;
+		room_id_t room_id;
+		room_name_t name;
 		room_setting_flag setting_flags;
-		room_password_type password;
+		room_password_t password;
 		uint8_t max_player_count;
 		datetime create_datetime;
 		endpoint host_endpoint;
@@ -46,7 +46,7 @@ namespace pgl {
 
 	// 24 bytes
 	struct room_group_data final {
-		room_group_name_type name;
+		room_group_name_t name;
 	};
 
 	enum class room_data_sort_kind : uint8_t {

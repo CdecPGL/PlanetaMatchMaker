@@ -86,7 +86,7 @@ namespace pgl {
 	// 245 bytes
 	struct list_room_group_reply_message final {
 		struct room_group_info final {
-			room_group_name_type name;
+			room_group_name_t name;
 
 			void on_serialize(minimal_serializer::serializer& serializer) {
 				serializer += name;
@@ -106,10 +106,10 @@ namespace pgl {
 
 	// 45 bytes
 	struct create_room_request_message final {
-		room_group_index_type group_index;
-		room_name_type name;
+		room_group_index_t group_index;
+		room_name_t name;
 		bool is_public;
-		room_password_type password;
+		room_password_t password;
 		uint8_t max_player_count;
 		port_number_type port_number;
 
@@ -125,7 +125,7 @@ namespace pgl {
 
 	// 4 bytes
 	struct create_room_reply_message final {
-		room_id_type room_id;
+		room_id_t room_id;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += room_id;
@@ -134,12 +134,12 @@ namespace pgl {
 
 	// 29 bytes
 	struct list_room_request_message final {
-		room_group_index_type group_index;
+		room_group_index_t group_index;
 		uint8_t start_index;
 		uint8_t count;
 		room_data_sort_kind sort_kind;
 		room_search_target_flag search_target_flags;
-		room_name_type search_name;
+		room_name_t search_name;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
@@ -155,8 +155,8 @@ namespace pgl {
 	struct list_room_reply_message final {
 		//39 bytes
 		struct room_info final {
-			room_id_type room_id;
-			room_name_type name;
+			room_id_t room_id;
+			room_name_t name;
 			room_setting_flag setting_flags;
 			uint8_t max_player_count;
 			uint8_t current_player_count;
@@ -187,9 +187,9 @@ namespace pgl {
 
 	// 21 bytes
 	struct join_room_request_message final {
-		room_group_index_type group_index;
-		room_id_type room_id;
-		room_password_type password;
+		room_group_index_t group_index;
+		room_id_t room_id;
+		room_password_t password;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
@@ -211,8 +211,8 @@ namespace pgl {
 	struct update_room_status_notice_message final {
 		enum class status : uint8_t { open, close, remove };
 
-		room_group_index_type group_index;
-		room_id_type room_id;
+		room_group_index_t group_index;
+		room_id_t room_id;
 		status status;
 		bool is_current_player_count_changed;
 		uint8_t current_player_count;
