@@ -23,7 +23,9 @@ namespace pgl {
 
 		[[nodiscard]] const player_name_container& get_player_name_container() const;
 
-		room_data_container_type& get_room_data_container(room_group_index_t room_group_idx);
+		[[nodiscard]] room_data_container_type& get_room_data_container(room_group_index_t room_group_idx);
+
+		[[nodiscard]] player_name_container& get_player_name_container();
 	private:
 		room_group_data_list_type room_group_data_list_;
 		std::vector<room_data_container_type> room_data_container_list_;

@@ -28,4 +28,6 @@ namespace pgl {
 	get_room_data_container(const room_group_index_t room_group_idx) {
 		return room_data_container_list_.at(room_group_idx);
 	}
+
+	player_name_container& server_data::get_player_name_container() { return player_name_container_; }
 }

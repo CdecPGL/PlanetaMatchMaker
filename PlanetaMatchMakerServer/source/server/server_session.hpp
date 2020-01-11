@@ -31,5 +31,7 @@ namespace pgl {
 
 		void finalize() const;
 		void restart();
+		void remove_hosting_room_if_need()const;
+		void remove_player_full_name_if_need()const;
 	};
 }

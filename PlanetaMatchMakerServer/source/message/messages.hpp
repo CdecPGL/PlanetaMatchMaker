@@ -10,6 +10,7 @@
 #include "data/data_constants.hpp"
 #include "room/room_data.hpp"
 #include "session/session_key.hpp"
+#include "client/client_constants.hpp"
 #include "message_constants.hpp"
 
 namespace pgl {
@@ -54,23 +55,27 @@ namespace pgl {
 
 	// size of message should be less than (256 bytes - header size)
 
-	// 2 bytes
+	// 26 bytes
 	struct authentication_request_message final {
 		version_type version;
+		player_name_t player_name;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += version;
+			serializer += player_name;
 		}
 	};
 
-	// 6 bytes
+	// 8 bytes
 	struct authentication_reply_message final {
 		version_type version;
 		session_key_type session_key;
+		player_tag_t player_tag;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += version;
 			serializer += session_key;
+			serializer += player_tag;
 		}
 	};
 

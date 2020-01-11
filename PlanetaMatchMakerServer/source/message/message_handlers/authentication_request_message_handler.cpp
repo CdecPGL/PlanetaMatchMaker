@@ -44,6 +44,14 @@ namespace pgl {
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "A session key(", reply.session_key,
 			") is generated.");
 
+		// Generate player full name
+		const auto player_full_name = param->server_data.get_player_name_container().assign_player_name(
+			message.player_name);
+		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "A player \"", player_full_name.name,
+			"\" is registered with tag \"", player_full_name.tag, "\"");
+		param->session_data.set_client_player_name(player_full_name);
+		reply.player_tag = player_full_name.tag;
+
 		// Reply to the client
 		reply_message_header header{
 			message_type::authentication_reply,

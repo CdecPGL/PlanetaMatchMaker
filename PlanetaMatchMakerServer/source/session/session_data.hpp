@@ -14,7 +14,7 @@ namespace pgl {
 		void set_hosting_room_id(room_group_index_t room_group_index, room_id_t room_id);
 		void delete_hosting_room_id(room_group_index_t room_group_index, room_id_t room_id);
 		void set_remote_endpoint(const endpoint& remote_endpoint);
-		void set_client_player_name(player_name_t& player_name, player_tag_t player_tag);
+		void set_client_player_name(const player_full_name& player_full_name);
 		[[nodiscard]] room_group_index_t hosting_room_group_index() const;
 		[[nodiscard]] room_id_t hosting_room_id() const;
 		[[nodiscard]] bool is_session_key_generated() const;

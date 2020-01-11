@@ -35,9 +35,8 @@ namespace pgl {
 
 	void session_data::set_remote_endpoint(const endpoint& remote_endpoint) { remote_endpoint_ = remote_endpoint; }
 
-	void session_data::set_client_player_name(player_name_t& player_name, player_tag_t player_tag) {
-		client_player_name_.name = player_name;
-		client_player_name_.tag = player_tag;
+	void session_data::set_client_player_name(const player_full_name& player_full_name) {
+		client_player_name_ = player_full_name;
 	}
 
 	room_group_index_t session_data::hosting_room_group_index() const {
