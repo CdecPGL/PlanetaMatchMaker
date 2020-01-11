@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
@@ -22,7 +23,8 @@ namespace PlanetaGameLabo.MatchMaker
             var getRoomGroupListResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("get_room_group_list", new ConcurrentQueue<(int, double)>());
 
-            await client.ConnectAsync(options.ServerAddress, options.ServerPort);
+            var playerName = Guid.NewGuid().ToString("N").Substring(0, 10);
+            await client.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
             while (true)
             {
                 Stopwatch.Restart();

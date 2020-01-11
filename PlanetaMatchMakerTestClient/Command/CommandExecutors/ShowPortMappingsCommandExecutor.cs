@@ -40,11 +40,11 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class ShowPortMappingsCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Option('t', "discoverTimeout", Default = 5000, Required = false,
+        [CommandLine.Option('t', "discover_timeout", Default = 5000, Required = false,
             HelpText = "A timeout time by milliseconds to discover NAT Device.")]
         public int DiscoverNatTimeoutMilliSeconds { get; set; }
 
-        [CommandLine.Option('f', "forceToDiscover", Default = false, Required = false,
+        [CommandLine.Option('f', "force_to_discover", Default = false, Required = false,
             HelpText = "Force to discover NAT device even if discover NAT device is already done.")]
         public bool EnableForceToDiscoverNat { get; set; }
     }

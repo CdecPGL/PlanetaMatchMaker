@@ -102,7 +102,8 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal sealed class Options
     {
-        [CommandLine.Value(0, MetaName = "CommandAndOptions", Default = null, Required = false, HelpText = "Command.")]
+        [CommandLine.Value(0, MetaName = "command_and_options", Default = null, Required = false,
+            HelpText = "Command.")]
         public string CommandAndOptions { get; set; }
     }
 }

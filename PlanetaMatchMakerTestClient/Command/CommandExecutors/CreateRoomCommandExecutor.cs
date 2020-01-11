@@ -26,23 +26,23 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class CreateRoomCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "RoomGroupIndex", Required = true,
+        [CommandLine.Value(0, MetaName = "room_group_index", Required = true,
             HelpText = "An index of room group where room is created.")]
         public byte RoomGroupIndex { get; set; }
 
-        [CommandLine.Value(1, MetaName = "RoomName", Required = true,
+        [CommandLine.Value(1, MetaName = "room_name", Required = true,
             HelpText = "A name of room to create.")]
         public string Name { get; set; }
 
-        [CommandLine.Value(2, MetaName = "MaxPlayerCount", Required = true,
+        [CommandLine.Value(2, MetaName = "max_player_count", Required = true,
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
 
-        [CommandLine.Value(3, MetaName = "PortNumber", Required = true,
+        [CommandLine.Value(3, MetaName = "port_number", Required = true,
             HelpText = "A port number which is used in hosting game.")]
         public ushort PortNumber { get; set; }
 
-        [CommandLine.Option('u', "isPublic", Default = true, Required = false,
+        [CommandLine.Option('u', "is_public", Default = true, Required = false,
             HelpText = "Create public room if true.")]
         public bool IsPublic { get; set; }
 

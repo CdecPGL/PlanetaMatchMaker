@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
@@ -21,8 +22,9 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var connectionResponseBenchmarkResults =
                 benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
+            var playerName = Guid.NewGuid().ToString("N").Substring(0, 10);
             Stopwatch.Restart();
-            await client.ConnectAsync(options.ServerAddress, options.ServerPort);
+            await client.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
             Stopwatch.Stop();
             connectionResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
         }

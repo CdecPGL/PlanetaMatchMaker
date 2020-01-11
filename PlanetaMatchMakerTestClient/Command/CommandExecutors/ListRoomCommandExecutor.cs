@@ -33,27 +33,27 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class ListRoomCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "RoomGroupIndex", Required = true,
+        [CommandLine.Value(0, MetaName = "room_group_index", Required = true,
             HelpText = "An index of room group where room is created.")]
         public byte RoomGroupIndex { get; set; }
 
-        [CommandLine.Value(1, MetaName = "StartIndex", Required = true,
+        [CommandLine.Value(1, MetaName = "start_index", Required = true,
             HelpText = "An start index of result.")]
         public byte StartIndex { get; set; }
 
-        [CommandLine.Value(2, MetaName = "Count", Required = true,
+        [CommandLine.Value(2, MetaName = "count", Required = true,
             HelpText = "Count of result.")]
         public byte Count { get; set; }
 
-        [CommandLine.Value(3, MetaName = "SortKind", Required = true,
+        [CommandLine.Value(3, MetaName = "sort_kind", Required = true,
             HelpText = "Sort method of result.")]
         public RoomDataSortKind SortKind { get; set; }
 
-        [CommandLine.Option('t', "SearchTargetFlag", Default = RoomSearchTargetFlag.All, Required = false,
+        [CommandLine.Option('t', "search_target_flag", Default = RoomSearchTargetFlag.All, Required = false,
             HelpText = "Flag which indicates condition of search.")]
         public RoomSearchTargetFlag SearchTargetFlag { get; set; }
 
-        [CommandLine.Option('n', "SearchName", Default = "", Required = false,
+        [CommandLine.Option('n', "search_name", Default = "", Required = false,
             HelpText = "A name to search room. Empty string means search all.")]
         public string SearchName { get; set; }
     }

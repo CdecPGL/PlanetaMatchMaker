@@ -57,7 +57,9 @@ namespace PlanetaGameLabo.MatchMaker
         private void InitializeParameters()
         {
             roomName = Guid.NewGuid().ToString("N").Substring(0, 10);
+            playerName = Guid.NewGuid().ToString("N").Substring(0, 10);
             OutputStream.WriteLine($"RoomName: {roomName}");
+            OutputStream.WriteLine($"playerName: {playerName}");
         }
 
         private async Task DiscoverNatDevice(MatchMakerClient sharedClient, TestAllCommandOptions options,
@@ -149,7 +151,13 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort);
+                var playerFullName =
+                    await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
+                if (playerFullName.Name != playerName)
+                {
+                    throw new TestFailedException(false,
+                        $"Returned player name ({playerFullName.Name}) doesn't match passed one ({playerName}).");
+                }
             }
             catch (ClientErrorException e)
             {
@@ -280,7 +288,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 secondClient = new MatchMakerClient(sharedClient.TimeoutMilliSeconds, sharedClient.Logger);
-                await secondClient.ConnectAsync(options.ServerAddress, options.ServerPort);
+                await secondClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
             }
             catch (ClientErrorException e)
             {
@@ -324,6 +332,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private string roomName;
+        private string playerName;
         private uint lastHostedRoomId;
         private MatchMakerClient secondClient;
         private ushort lastCreatedPrivatePort;

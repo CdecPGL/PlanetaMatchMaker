@@ -41,11 +41,11 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class UpdateHostingRoomStatusCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "RoomStatus", Required = true,
+        [CommandLine.Value(0, MetaName = "room_status", Required = true,
             HelpText = "new status.")]
         public RoomStatus Status { get; set; }
 
-        [CommandLine.Option('c', "PlayerCount", Default = null, Required = false,
+        [CommandLine.Option('c', "player_count", Default = null, Required = false,
             HelpText = "New player count.")]
         public byte? PlayerCount { get; set; }
     }

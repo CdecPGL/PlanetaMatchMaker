@@ -69,6 +69,9 @@ namespace PlanetaGameLabo.MatchMaker
     internal struct AuthenticationRequestMessage
     {
         public VersionType Version;
+
+        [FixedLength(ClientConstants.PlayerNameLength)]
+        public string PlayerName;
     }
 
     // 6 bytes
@@ -78,6 +81,7 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public VersionType Version;
         public SessionKeyType SessionKey;
+        public ushort PlayerTag;
     }
 
     // 1 bytes

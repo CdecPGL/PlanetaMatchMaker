@@ -33,11 +33,11 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class ConnectionTestCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "Protocol", Required = true,
+        [CommandLine.Value(0, MetaName = "protocol", Required = true,
             HelpText = "Transport protocol used to host game.")]
         public TransportProtocol Protocol { get; set; }
 
-        [CommandLine.Value(1, MetaName = "Port", Required = true,
+        [CommandLine.Value(1, MetaName = "port", Required = true,
             HelpText = "Port used to host game.")]
         public ushort PortNumber { get; set; }
     }

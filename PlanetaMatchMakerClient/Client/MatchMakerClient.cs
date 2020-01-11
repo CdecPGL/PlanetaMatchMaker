@@ -54,6 +54,11 @@ namespace PlanetaGameLabo.MatchMaker
         public int TimeoutMilliSeconds { get; }
 
         /// <summary>
+        /// A full name of player. This is valid when connecting to the server.
+        /// </summary>
+        public PlayerFullName PlayerFullName { get; private set; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="timeoutMilliSeconds">Timeout milli seconds for send and receive. Timeout of connect is not effected.</param>
@@ -78,7 +83,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task ConnectAsync(string serverAddress, ushort serverPort)
+        public async Task<PlayerFullName> ConnectAsync(string serverAddress, ushort serverPort, string playerName)
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
@@ -110,14 +115,17 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 // Authentication Request
-                var requestBody = new AuthenticationRequestMessage {Version = ClientConstants.ApiVersion};
+                var requestBody =
+                    new AuthenticationRequestMessage {Version = ClientConstants.ApiVersion, PlayerName = playerName};
                 await SendRequestAsync(requestBody).ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion})");
+                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(playerName)}: {playerName})");
                 var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Receive AuthenticationReply. ({nameof(replyBody.SessionKey)}: {replyBody.SessionKey}, {nameof(replyBody.Version)}: {replyBody.Version})");
+                    $"Receive AuthenticationReply. ({nameof(replyBody.SessionKey)}: {replyBody.SessionKey}, {nameof(replyBody.Version)}: {replyBody.Version}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
                 sessionKey = replyBody.SessionKey;
+                PlayerFullName = new PlayerFullName {Name = playerName, Tag = replyBody.PlayerTag};
+                return PlayerFullName;
             }
             finally
             {

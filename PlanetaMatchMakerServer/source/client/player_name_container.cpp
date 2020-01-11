@@ -12,7 +12,7 @@ namespace pgl {
 		lock_guard lock(mutex_);
 		auto it = name_map_.find(player_name);
 		if (it == name_map_.end()) {
-			name_map_.emplace(player_name, name_data{1, {1}});
+			name_map_.emplace(player_name, name_data{1, {0}});
 			return player_full_name{player_name, 0};
 		}
 
@@ -22,7 +22,7 @@ namespace pgl {
 		}
 
 		// find not used tag
-		while (it->second.used_tags.find(it->second.next_tag) == it->second.used_tags.end()) { ++it->second.next_tag; }
+		while (it->second.used_tags.find(it->second.next_tag) != it->second.used_tags.end()) { ++it->second.next_tag; }
 		// use tag and set next tag
 		const auto tag = it->second.next_tag++;
 		it->second.used_tags.insert(tag);
@@ -44,6 +44,7 @@ namespace pgl {
 		}
 
 		name_it->second.used_tags.erase(tag_it);
+		if (name_it->second.used_tags.empty()) { name_map_.erase(name_it); }
 	}
 
 	bool player_name_container::is_player_exist(const player_full_name& player_full_name) const {

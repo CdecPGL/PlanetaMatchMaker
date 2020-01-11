@@ -34,35 +34,35 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class CreateRoomWithCreatingPortMappingCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "RoomGroupIndex", Required = true,
+        [CommandLine.Value(0, MetaName = "room_group_index", Required = true,
             HelpText = "An index of room group where room is created.")]
         public byte RoomGroupIndex { get; set; }
 
-        [CommandLine.Value(1, MetaName = "RoomName", Required = true,
+        [CommandLine.Value(1, MetaName = "room_name", Required = true,
             HelpText = "A name of room to create.")]
         public string Name { get; set; }
 
-        [CommandLine.Value(2, MetaName = "MaxPlayerCount", Required = true,
+        [CommandLine.Value(2, MetaName = "max_player_count", Required = true,
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
 
-        [CommandLine.Value(3, MetaName = "Protocol", Required = true,
+        [CommandLine.Value(3, MetaName = "protocol", Required = true,
             HelpText = "Transport protocol used to host game.")]
         public TransportProtocol Protocol { get; set; }
 
-        [CommandLine.Value(4, MetaName = "DefaultPortNumber", Required = true,
+        [CommandLine.Value(4, MetaName = "default_port_number", Required = true,
             HelpText = "A default port number which is used in hosting game.")]
         public ushort DefaultPortNumber { get; set; }
 
-        [CommandLine.Option('t', "DiscoverTimeoutMilliSeconds", Default = 5000, Required = false,
+        [CommandLine.Option('t', "discover_timeout_milli_seconds", Default = 5000, Required = false,
             HelpText = "Timeout milli seconds to discover NAT.")]
         public int DiscoverTimeoutMilliSeconds { get; set; }
 
-        [CommandLine.Option('c', "PortCandidates", Default = new ushort[] { }, Required = false, Separator = ',',
+        [CommandLine.Option('c', "port_candidates", Default = new ushort[] { }, Required = false, Separator = ',',
             HelpText = "Candidates of port to map.")]
         public IEnumerable<ushort> PortCandidates { get; set; }
 
-        [CommandLine.Option('u', "isPublic", Default = true, Required = false,
+        [CommandLine.Option('u', "is_public", Default = true, Required = false,
             HelpText = "Create public room if true.")]
         public bool IsPublic { get; set; }
 
