@@ -24,5 +24,8 @@ RUN \
   make && \
   make install
 
+# Copy pmms setting
+COPY pmms/setting.json /etc/pmms/
+
 # Start server
 CMD ["pmms"]
