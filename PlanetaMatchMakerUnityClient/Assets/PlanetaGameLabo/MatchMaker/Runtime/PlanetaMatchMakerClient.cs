@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -90,21 +89,11 @@ namespace PlanetaGameLabo.MatchMaker
 
         public byte roomGroupIndex { get; set; }
 
-        public IReadOnlyList<IRoomGroupInfo> roomGroupInfoList => _roomGroupInfoList.AsReadOnly();
+        public IReadOnlyList<RoomGroupInfo> roomGroupInfoList => _roomGroupInfoList.AsReadOnly();
 
-        public IHostingRoomInfo hostingRoomInfo { get; private set; }
+        public HostingRoomInfo hostingRoomInfo { get; private set; }
 
         public PlayerFullName playerFullName => _client.PlayerFullName;
-
-        public struct ConnectCallbackArgs
-        {
-            public ConnectCallbackArgs(PlayerFullName playerFullName)
-            {
-                this.playerFullName = playerFullName;
-            }
-
-            public readonly PlayerFullName playerFullName;
-        }
 
         /// <summary>
         /// Connect to the matching server
@@ -154,21 +143,6 @@ namespace PlanetaGameLabo.MatchMaker
             Reset();
         }
 
-        public struct RequestRoomListCallbackArgs
-        {
-            public RequestRoomListCallbackArgs(byte totalRoomCount, byte startIndex,
-                IReadOnlyList<IRoomInfo> roomInfoList)
-            {
-                this.totalRoomCount = totalRoomCount;
-                this.startIndex = startIndex;
-                this.roomInfoList = roomInfoList;
-            }
-
-            public readonly byte totalRoomCount;
-            public readonly byte startIndex;
-            public readonly IReadOnlyList<IRoomInfo> roomInfoList;
-        }
-
         /// <summary>
         /// Request room list to the server.
         /// </summary>
@@ -205,16 +179,6 @@ namespace PlanetaGameLabo.MatchMaker
                 callback);
         }
 
-        public struct HostRoomCallbackArgs
-        {
-            public HostRoomCallbackArgs(IHostingRoomInfo hostRoomInfo)
-            {
-                this.hostRoomInfo = hostRoomInfo;
-            }
-
-            public readonly IHostingRoomInfo hostRoomInfo;
-        }
-
         /// <summary>
         /// Create and host new room to the server.
         /// </summary>
@@ -240,23 +204,6 @@ namespace PlanetaGameLabo.MatchMaker
                 status = Status.HostingRoom;
                 return new HostRoomCallbackArgs(hostingRoomInfo);
             }, () => status = Status.SearchingRoom, callback);
-        }
-
-        public struct HostRoomWithCreatingPortMappingCallbackArgs
-        {
-            public HostRoomWithCreatingPortMappingCallbackArgs(IHostingRoomInfo hostRoomInfo, bool isDefaultPortUsed,
-                ushort privatePort, ushort publicPort)
-            {
-                this.hostRoomInfo = hostRoomInfo;
-                this.isDefaultPortUsed = isDefaultPortUsed;
-                this.privatePort = privatePort;
-                this.publicPort = publicPort;
-            }
-
-            public readonly IHostingRoomInfo hostRoomInfo;
-            public readonly bool isDefaultPortUsed;
-            public readonly ushort privatePort;
-            public readonly ushort publicPort;
         }
 
         /// <summary>
@@ -382,16 +329,6 @@ namespace PlanetaGameLabo.MatchMaker
             }, () => status = Status.HostingRoom, callback);
         }
 
-        public struct JoinRoomCallbackArgs
-        {
-            public JoinRoomCallbackArgs(IPEndPoint roomGameHostEndPoint)
-            {
-                this.roomGameHostEndPoint = roomGameHostEndPoint;
-            }
-
-            public readonly IPEndPoint roomGameHostEndPoint;
-        }
-
         /// <summary>
         /// Join to a room on the server.
         /// </summary>
@@ -422,54 +359,6 @@ namespace PlanetaGameLabo.MatchMaker
         {
             _client.Dispose();
             Reset();
-        }
-
-        private sealed class RoomGroupInfo : IRoomGroupInfo
-        {
-            public RoomGroupInfo(RoomGroupResult roomGroupResult)
-            {
-                name = roomGroupResult.Name;
-            }
-
-            public string name { get; }
-        }
-
-        private sealed class RoomInfo : IRoomInfo
-        {
-            public RoomInfo(byte roomGroupIndex, RoomResult roomResult)
-            {
-                this.roomGroupIndex = roomGroupIndex;
-                roomId = roomResult.RoomId;
-                hostPlayerFullName = roomResult.HostPlayerFullName;
-                settingFlags = roomResult.SettingFlags;
-                maxPlayerCount = roomResult.MaxPlayerCount;
-                currentPlayerCount = roomResult.CurrentPlayerCount;
-                createDatetime = roomResult.CreateDatetime;
-            }
-
-            public byte roomGroupIndex { get; }
-            public uint roomId { get; }
-            public PlayerFullName hostPlayerFullName { get; }
-            public RoomSettingFlag settingFlags { get; }
-            public byte maxPlayerCount { get; }
-            public byte currentPlayerCount { get; }
-            public Datetime createDatetime { get; }
-        }
-
-        private sealed class HostingRoomInfo : IHostingRoomInfo
-        {
-            public HostingRoomInfo(byte roomGroupIndex, bool isPublic, uint roomId, byte maxPlayerCount)
-            {
-                this.roomGroupIndex = roomGroupIndex;
-                this.roomId = roomId;
-                this.maxPlayerCount = maxPlayerCount;
-                this.isPublic = isPublic;
-            }
-
-            public byte roomGroupIndex { get; }
-            public uint roomId { get; }
-            public byte maxPlayerCount { get; }
-            public bool isPublic { get; }
         }
 
         [SerializeField, Tooltip("IP Address of Match Making Server")]
@@ -627,7 +516,7 @@ namespace PlanetaGameLabo.MatchMaker
             await _client.RemoveHostingRoomAsync();
         }
 
-        private async Task<(byte totalRoomCount, byte matchedRoomCount, byte startIndex, IReadOnlyList<IRoomInfo>
+        private async Task<(byte totalRoomCount, byte matchedRoomCount, byte startIndex, IReadOnlyList<RoomInfo>
                 roomInfoList)>
             GetRoomListAsync(byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
                 RoomSearchTargetFlag targetFlags, string searchName)

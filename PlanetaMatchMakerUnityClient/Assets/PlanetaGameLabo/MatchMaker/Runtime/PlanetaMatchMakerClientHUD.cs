@@ -15,7 +15,7 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField] private float _roomListUpdateIntervalSeconds = 3;
 
         private PlanetaMatchMakerClient _client;
-        private IRoomInfo[] _roomList = { };
+        private RoomInfo[] _roomList = { };
         private bool _isErrorOccured;
         private string _errorMessage;
         private bool _isJoinedRoom;
@@ -100,7 +100,9 @@ namespace PlanetaGameLabo.MatchMaker
                         GUILayout.Label($"Push button to join.");
                         foreach (var room in _roomList)
                         {
-                            if (GUILayout.Button($"${room.hostPlayerFullName}: {room.roomId}({room.currentPlayerCount}/{room.maxPlayerCount}) [{room.settingFlags}] @{room.createDatetime}"))
+                            if (GUILayout.Button(
+                                $"${room.hostPlayerFullName}: {room.roomId}({room.currentPlayerCount}/{room.maxPlayerCount}) [{room.settingFlags}] @{room.createDatetime}")
+                            )
                             {
                                 JoinRoom(room.roomId);
                             }
@@ -202,7 +204,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             _isErrorOccured = false;
             _isJoinedRoom = false;
-            _roomList = new IRoomInfo[] { };
+            _roomList = new RoomInfo[] { };
         }
 
         private void RequestRoomList()
