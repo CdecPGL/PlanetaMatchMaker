@@ -39,6 +39,7 @@ namespace PlanetaGameLabo.MatchMaker
         ConnectionClosed,
         CreatingPortMappingFailed,
         NotReachable,
+        InvalidOperation,
         SystemError, // Not continuable system error
         UnknownError,
     };
@@ -73,6 +74,8 @@ namespace PlanetaGameLabo.MatchMaker
                     return "This machine is not reachable from machines via internet.";
                 case ClientErrorCode.SystemError:
                     return "System or network internal error. Not continuable.";
+                case ClientErrorCode.InvalidOperation:
+                    return "Requested operation is invalid.";
                 default:
                     return "";
             }
@@ -90,6 +93,7 @@ namespace PlanetaGameLabo.MatchMaker
                 case ClientErrorCode.ConnectionClosed:
                 case ClientErrorCode.CreatingPortMappingFailed:
                 case ClientErrorCode.NotReachable:
+                case ClientErrorCode.InvalidOperation:
                     return true;
                 case ClientErrorCode.FailedToConnect:
                 case ClientErrorCode.NotConnected:

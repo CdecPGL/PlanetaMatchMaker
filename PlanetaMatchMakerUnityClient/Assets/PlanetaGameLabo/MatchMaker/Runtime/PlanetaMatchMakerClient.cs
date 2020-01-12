@@ -11,6 +11,8 @@ namespace PlanetaGameLabo.MatchMaker
     [AddComponentMenu("PlanetaGameLabo/MatchMaker/PlanetaMatchMakerClient"), DisallowMultipleComponent]
     public sealed class PlanetaMatchMakerClient : MonoBehaviour, IDisposable
     {
+        #region PublicTypes
+
         public enum Status
         {
             Disconnected, Connecting, SearchingRoom, StartingHostingRoom, HostingRoom, FinishingHostingRoom,
@@ -50,6 +52,10 @@ namespace PlanetaGameLabo.MatchMaker
             public static bool operator false(ErrorInfo e) { return e.errorCode != ClientErrorCode.Ok; }
             public static implicit operator bool(ErrorInfo e) { return e.errorCode == ClientErrorCode.Ok; }
         }
+
+        #endregion
+
+        #region Properties
 
         /// <summary>
         /// A status of client.
@@ -95,6 +101,10 @@ namespace PlanetaGameLabo.MatchMaker
 
         public PlayerFullName playerFullName => _client.PlayerFullName;
 
+        #endregion
+
+        #region Operations
+
         /// <summary>
         /// Connect to the matching server
         /// </summary>
@@ -102,18 +112,27 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="callback"></param>
         public void Connect(string playerName, Action<ErrorInfo, ConnectCallbackArgs> callback = null)
         {
+            RunTask(async () => await ConnectAsync(playerName), callback);
+        }
+
+        /// <summary>
+        /// Connect to the matching server
+        /// </summary>
+        /// <param name="playerName"></param>
+        public async Task<(ErrorInfo errorInfo, ConnectCallbackArgs result)> ConnectAsync(string playerName)
+        {
             if (status != Status.Disconnected)
             {
                 Debug.LogError("Client is already started.");
-                return;
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
-            RunTaskWithErrorHandling(async () =>
+            return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.Connecting;
-                var returnedPlayerFullName = await ConnectAsync(playerName);
+                var returnedPlayerFullName = await ConnectImplAsync(playerName);
                 status = Status.SearchingRoom;
-                await GetRoomGroupListAsync();
+                await GetRoomGroupListImplAsync();
                 return new ConnectCallbackArgs(returnedPlayerFullName);
             }, () =>
             {
@@ -121,7 +140,7 @@ namespace PlanetaGameLabo.MatchMaker
                 {
                     status = Status.Disconnected;
                 }
-            }, callback);
+            });
         }
 
         /// <summary>
@@ -156,27 +175,43 @@ namespace PlanetaGameLabo.MatchMaker
             RoomSearchTargetFlag targetFlags, string searchName = "",
             Action<ErrorInfo, RequestRoomListCallbackArgs> callback = null)
         {
+            RunTask(
+                async () => await RequestRoomListAsync(resultStartIndex, resultCount, sortKind, targetFlags,
+                    searchName), callback);
+        }
+
+        /// <summary>
+        /// Request room list to the server.
+        /// </summary>
+        /// <param name="resultStartIndex"></param>
+        /// <param name="resultCount"></param>
+        /// <param name="sortKind"></param>
+        /// <param name="targetFlags"></param>
+        /// <param name="searchName"></param>
+        public async Task<(ErrorInfo errorInfo, RequestRoomListCallbackArgs result)> RequestRoomListAsync(
+            byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
+            RoomSearchTargetFlag targetFlags, string searchName = "")
+        {
             if (status != Status.SearchingRoom)
             {
                 Debug.LogError("The operation is valid when searching room.");
-                return;
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
             if (_roomGroupInfoList.Count == 0)
             {
                 Debug.LogError("There are no room group.");
-                return;
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
-            RunTaskWithErrorHandling(async () =>
+            return await RunTaskWithErrorHandlingAsync(async () =>
                 {
                     var (totalRoomCount, _, startIndex, roomInfoList) = await GetRoomListAsync(resultStartIndex,
                         resultCount, sortKind, targetFlags, searchName);
                     return new RequestRoomListCallbackArgs(totalRoomCount, startIndex,
                         roomInfoList);
                 },
-                () => { },
-                callback);
+                () => { });
         }
 
         /// <summary>
@@ -186,24 +221,36 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
-        /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public void HostRoom(byte maxPlayerCount, bool isPublic = true, string password = "",
             Action<ErrorInfo, HostRoomCallbackArgs> callback = null)
         {
+            RunTask(async () => await HostRoomAsync(maxPlayerCount, isPublic, password), callback);
+        }
+
+        /// <summary>
+        /// Create and host new room to the server.
+        /// </summary>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="isPublic"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public async Task<(ErrorInfo errorInfo, HostRoomCallbackArgs result)> HostRoomAsync(byte maxPlayerCount,
+            bool isPublic = true, string password = "")
+        {
             if (status != Status.SearchingRoom)
             {
                 Debug.LogError("The operation is valid when searching room.");
-                return;
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
-            RunTaskWithErrorHandling(async () =>
+            return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.StartingHostingRoom;
-                await CreateRoomAsync(maxPlayerCount, isPublic, password);
+                await CreateRoomImplAsync(maxPlayerCount, isPublic, password);
                 status = Status.HostingRoom;
                 return new HostRoomCallbackArgs(hostingRoomInfo);
-            }, () => status = Status.SearchingRoom, callback);
+            }, () => status = Status.SearchingRoom);
         }
 
         /// <summary>
@@ -213,40 +260,71 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
-        /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public void HostRoomWithCreatingPortMapping(byte maxPlayerCount, bool isPublic = true, string password = "",
             Action<ErrorInfo, HostRoomWithCreatingPortMappingCallbackArgs> callback = null)
         {
+            RunTask(async () => await HostRoomWithCreatingPortMappingAsync(maxPlayerCount, isPublic, password),
+                callback);
+        }
+
+        /// <summary>
+        /// Create and host new room to the server with trying to create port mapping.
+        /// </summary>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="isPublic"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public async Task<(ErrorInfo errorInfo, HostRoomWithCreatingPortMappingCallbackArgs result)>
+            HostRoomWithCreatingPortMappingAsync(byte maxPlayerCount, bool isPublic = true, string password = "")
+        {
             if (status != Status.SearchingRoom)
             {
                 Debug.LogError("The operation is valid when searching room.");
-                return;
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
-            RunTaskWithErrorHandling(async () =>
+            return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.StartingHostingRoom;
                 var (isDefaultPortUsed, privatePort, publicPort) =
-                    await CreateRoomWithCreatingPortMappingAsync(maxPlayerCount, isPublic, password);
+                    await CreateRoomWithCreatingPortMappingImplAsync(maxPlayerCount, isPublic, password);
                 status = Status.HostingRoom;
                 return new HostRoomWithCreatingPortMappingCallbackArgs(hostingRoomInfo, isDefaultPortUsed, privatePort,
                     publicPort);
-            }, () => status = Status.SearchingRoom, callback);
+            }, () => status = Status.SearchingRoom);
         }
 
+        /// <summary>
+        /// Close hosting room.
+        /// </summary>
+        /// <param name="callback"></param>
         public void CloseHostingRoom(Action<ErrorInfo> callback = null)
+        {
+            RunTask(async () => await CloseHostingRoomAsync(), callback);
+        }
+
+        /// <summary>
+        /// Close hosting room.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ErrorInfo> CloseHostingRoomAsync()
         {
             if (status != Status.HostingRoom)
             {
                 Debug.LogError("Not hosting room.");
-                return;
+                return new ErrorInfo(ClientErrorCode.InvalidOperation);
             }
 
-            RunTaskWithErrorHandling(async () => await UpdateHostingRoomStatusAsync(RoomStatus.Close), () => { },
-                callback);
+            return await RunTaskWithErrorHandlingAsync(
+                async () => await UpdateHostingRoomStatusImplAsync(RoomStatus.Close), () => { });
         }
 
+        /// <summary>
+        /// Close hosting room with updating current player count.
+        /// </summary>
+        /// <param name="currentPlayerCount"></param>
+        /// <param name="callback"></param>
         public void CloseHostingRoom(byte currentPlayerCount, Action<ErrorInfo> callback = null)
         {
             if (status != Status.HostingRoom)
@@ -255,78 +333,163 @@ namespace PlanetaGameLabo.MatchMaker
                 return;
             }
 
-            RunTaskWithErrorHandling(
-                async () => await UpdateHostingRoomStatusAsync(RoomStatus.Close, true, currentPlayerCount), () => { },
-                callback);
+            RunTask(async () => await CloseHostingRoomAsync(currentPlayerCount), callback);
         }
 
+
+        /// <summary>
+        /// Close hosting room with updating current player count.
+        /// </summary>
+        /// <param name="currentPlayerCount"></param>
+        public async Task<ErrorInfo> CloseHostingRoomAsync(byte currentPlayerCount)
+        {
+            if (status != Status.HostingRoom)
+            {
+                Debug.LogError("Not hosting room.");
+                return new ErrorInfo(ClientErrorCode.InvalidOperation);
+            }
+
+            return await RunTaskWithErrorHandlingAsync(
+                async () => await UpdateHostingRoomStatusImplAsync(RoomStatus.Close, true, currentPlayerCount),
+                () => { });
+        }
+
+        /// <summary>
+        /// Open hosting room.
+        /// </summary>
+        /// <param name="callback"></param>
         public void OpenHostingRoom(Action<ErrorInfo> callback = null)
         {
+            RunTask(async () => await OpenHostingRoomAsync(), callback);
+        }
+
+        /// <summary>
+        /// Open hosting room.
+        /// </summary>
+        public async Task<ErrorInfo> OpenHostingRoomAsync()
+        {
             if (status != Status.HostingRoom)
             {
                 Debug.LogError("Not hosting room.");
-                return;
+                return new ErrorInfo(ClientErrorCode.InvalidOperation);
             }
 
-            RunTaskWithErrorHandling(async () => await UpdateHostingRoomStatusAsync(RoomStatus.Open), () => { },
-                callback);
+            return await RunTaskWithErrorHandlingAsync(
+                async () => await UpdateHostingRoomStatusImplAsync(RoomStatus.Open), () => { });
         }
 
+        /// <summary>
+        /// Open hosting room with updating current player count.
+        /// </summary>
+        /// <param name="currentPlayerCount"></param>
+        /// <param name="callback"></param>
         public void OpenHostingRoom(byte currentPlayerCount, Action<ErrorInfo> callback = null)
         {
-            if (status != Status.HostingRoom)
-            {
-                Debug.LogError("Not hosting room.");
-                return;
-            }
-
-            RunTaskWithErrorHandling(
-                async () => await UpdateHostingRoomStatusAsync(RoomStatus.Open, true, currentPlayerCount), () => { },
-                callback);
+            RunTask(async () => await OpenHostingRoomAsync(currentPlayerCount), callback);
         }
 
-        public void ChangeOpenOrCloseHostingRoom(bool isOpen, Action<ErrorInfo> callback = null)
+        /// <summary>
+        /// Open hosting room with updating current player count.
+        /// </summary>
+        /// <param name="currentPlayerCount"></param>
+        public async Task<ErrorInfo> OpenHostingRoomAsync(byte currentPlayerCount)
         {
             if (status != Status.HostingRoom)
             {
                 Debug.LogError("Not hosting room.");
-                return;
+                return new ErrorInfo(ClientErrorCode.InvalidOperation);
             }
 
-            RunTaskWithErrorHandling(
-                async () => await UpdateHostingRoomStatusAsync(isOpen ? RoomStatus.Open : RoomStatus.Close), () => { },
-                callback);
+            return await RunTaskWithErrorHandlingAsync(
+                async () => await UpdateHostingRoomStatusImplAsync(RoomStatus.Open, true, currentPlayerCount),
+                () => { });
         }
 
+        /// <summary>
+        /// Change open status of hosting room.
+        /// </summary>
+        /// <param name="isOpen"></param>
+        /// <param name="callback"></param>
+        public void ChangeOpenOrCloseHostingRoom(bool isOpen, Action<ErrorInfo> callback = null)
+        {
+            RunTask(async () => await ChangeOpenOrCloseHostingRoomAsync(isOpen), callback);
+        }
+
+        /// <summary>
+        /// Change open status of hosting room.
+        /// </summary>
+        /// <param name="isOpen"></param>
+        public async Task<ErrorInfo> ChangeOpenOrCloseHostingRoomAsync(bool isOpen)
+        {
+            if (status != Status.HostingRoom)
+            {
+                Debug.LogError("Not hosting room.");
+                return new ErrorInfo(ClientErrorCode.InvalidOperation);
+            }
+
+            return await RunTaskWithErrorHandlingAsync(
+                async () => await UpdateHostingRoomStatusImplAsync(isOpen ? RoomStatus.Open : RoomStatus.Close),
+                () => { });
+        }
+
+        /// <summary>
+        /// Change open status of hosting room with updating current player count.
+        /// </summary>
+        /// <param name="isOpen"></param>
+        /// <param name="currentPlayerCount"></param>
+        /// <param name="callback"></param>
         public void ChangeOpenOrCloseHostingRoom(bool isOpen, byte currentPlayerCount,
             Action<ErrorInfo> callback = null)
         {
-            if (status != Status.HostingRoom)
-            {
-                Debug.LogError("Not hosting room.");
-                return;
-            }
-
-            RunTaskWithErrorHandling(
-                async () => await UpdateHostingRoomStatusAsync(isOpen ? RoomStatus.Open : RoomStatus.Close, true,
-                    currentPlayerCount), () => { }, callback);
+            RunTask(
+                async () => await ChangeOpenOrCloseHostingRoomAsync(isOpen, currentPlayerCount), callback);
         }
 
-        public void RemoveHostingRoom(Action<ErrorInfo> callback = null)
+        /// <summary>
+        /// Change open status of hosting room with updating current player count.
+        /// </summary>
+        /// <param name="isOpen"></param>
+        /// <param name="currentPlayerCount"></param>
+        public async Task<ErrorInfo> ChangeOpenOrCloseHostingRoomAsync(bool isOpen, byte currentPlayerCount)
         {
             if (status != Status.HostingRoom)
             {
                 Debug.LogError("Not hosting room.");
-                return;
+                return new ErrorInfo(ClientErrorCode.InvalidOperation);
             }
 
-            RunTaskWithErrorHandling(async () =>
+            return await RunTaskWithErrorHandlingAsync(
+                async () => await UpdateHostingRoomStatusImplAsync(isOpen ? RoomStatus.Open : RoomStatus.Close, true,
+                    currentPlayerCount), () => { });
+        }
+
+        /// <summary>
+        /// Remove hosting room.
+        /// </summary>
+        /// <param name="callback"></param>
+        public void RemoveHostingRoom(Action<ErrorInfo> callback = null)
+        {
+            RunTask(async () => await RemoveHostingRoomAsync(), callback);
+        }
+
+        /// <summary>
+        /// Remove hosting room.
+        /// </summary>
+        public async Task<ErrorInfo> RemoveHostingRoomAsync()
+        {
+            if (status != Status.HostingRoom)
+            {
+                Debug.LogError("Not hosting room.");
+                return new ErrorInfo(ClientErrorCode.InvalidOperation);
+            }
+
+            return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.FinishingHostingRoom;
-                await RemoveHostingRoomAsync();
+                await RemoveHostingRoomImplAsync();
                 status = Status.SearchingRoom;
                 hostingRoomInfo = null;
-            }, () => status = Status.HostingRoom, callback);
+            }, () => status = Status.HostingRoom);
         }
 
         /// <summary>
@@ -335,31 +498,50 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomId"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
-        /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
         public void JoinRoom(uint roomId, string password = "",
             Action<ErrorInfo, JoinRoomCallbackArgs> callback = null)
         {
+            RunTask(async () => await JoinRoomAsync(roomId, password), callback);
+        }
+
+        /// <summary>
+        /// Join to a room on the server.
+        /// </summary>
+        /// <param name="roomId"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public async Task<(ErrorInfo errorInfo, JoinRoomCallbackArgs result)> JoinRoomAsync(uint roomId,
+            string password = "")
+        {
             if (status != Status.SearchingRoom)
             {
                 Debug.LogError("The operation is valid when searching room.");
-                return;
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
-            RunTaskWithErrorHandling(async () =>
+            return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.StartingJoiningRoom;
-                var roomHostClientAddress = await JoinRoomAsync(roomId, password);
+                var roomHostClientAddress = await JoinRoomImplAsync(roomId, password);
                 Disconnect();
                 return new JoinRoomCallbackArgs(roomHostClientAddress);
-            }, () => status = Status.SearchingRoom, callback);
+            }, () => status = Status.SearchingRoom);
         }
+
+        #endregion
+
+        #region OtherPublicMethods
 
         public void Dispose()
         {
             _client.Dispose();
             Reset();
         }
+
+        #endregion
+
+        #region PrivateFields
 
         [SerializeField, Tooltip("IP Address of Match Making Server")]
         private string _serverAddress = "127.0.0.1";
@@ -387,6 +569,10 @@ namespace PlanetaGameLabo.MatchMaker
         private List<RoomGroupInfo> _roomGroupInfoList = new List<RoomGroupInfo>();
         private Task _task;
 
+        #endregion
+
+        #region UnityEvents
+
         private void Awake()
         {
             _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000), new UnityLogger());
@@ -398,86 +584,101 @@ namespace PlanetaGameLabo.MatchMaker
             _client.Dispose();
         }
 
-        private void RunTaskWithErrorHandling(Func<Task> task, Action errorHandler,
-            Action<ErrorInfo> callback)
+        #endregion
+
+        #region OperationHelpers
+
+        private async Task<ErrorInfo> RunTaskWithErrorHandlingAsync(Func<Task> task, Action errorHandler)
+        {
+            try
+            {
+                await task();
+                return new ErrorInfo(ClientErrorCode.Ok);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                errorHandler?.Invoke();
+                switch (e)
+                {
+                    case ClientErrorException ce:
+                        if (ce.ClientErrorCode == ClientErrorCode.ConnectionClosed)
+                        {
+                            Disconnect();
+                        }
+
+                        return new ErrorInfo(e);
+                    default:
+                        return new ErrorInfo(e);
+                }
+            }
+        }
+
+        private async Task<(ErrorInfo errorInfo, T result)> RunTaskWithErrorHandlingAsync<T>(Func<Task<T>> task,
+            Action errorHandler, T defaultResult = default)
+        {
+            try
+            {
+                var result = await task();
+                return (new ErrorInfo(ClientErrorCode.Ok), result);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                errorHandler?.Invoke();
+                switch (e)
+                {
+                    case ClientErrorException ce:
+                        if (!ce.ClientErrorCode.IsContinuable())
+                        {
+                            Disconnect();
+                        }
+
+                        return (new ErrorInfo(e), defaultResult);
+                    default:
+                        return (new ErrorInfo(e), defaultResult);
+                }
+            }
+        }
+
+        private void RunTask(Func<Task<ErrorInfo>> task, Action<ErrorInfo> callback)
         {
             async Task Wrapper()
             {
-                try
-                {
-                    await task();
-                    callback?.Invoke(new ErrorInfo(ClientErrorCode.Ok));
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                    errorHandler?.Invoke();
-                    switch (e)
-                    {
-                        case ClientErrorException ce:
-                            callback?.Invoke(new ErrorInfo(e));
-                            if (ce.ClientErrorCode == ClientErrorCode.ConnectionClosed)
-                            {
-                                Disconnect();
-                            }
-
-                            break;
-                        default:
-                            callback?.Invoke(new ErrorInfo(e));
-                            break;
-                    }
-                }
+                var errorInfo = await task();
+                callback?.Invoke(errorInfo);
             }
 
             _task = Task.Run(Wrapper);
         }
 
-        private void RunTaskWithErrorHandling<T>(Func<Task<T>> task, Action errorHandler,
-            Action<ErrorInfo, T> callback, T defaultResult = default)
+        private void RunTask<T>(Func<Task<(ErrorInfo, T)>> task, Action<ErrorInfo, T> callback)
         {
             async Task Wrapper()
             {
-                try
-                {
-                    var result = await task();
-                    callback?.Invoke(new ErrorInfo(ClientErrorCode.Ok), result);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                    errorHandler?.Invoke();
-                    switch (e)
-                    {
-                        case ClientErrorException ce:
-                            callback?.Invoke(new ErrorInfo(e), defaultResult);
-                            if (!ce.ClientErrorCode.IsContinuable())
-                            {
-                                Disconnect();
-                            }
-
-                            break;
-                        default:
-                            callback?.Invoke(new ErrorInfo(e), defaultResult);
-                            break;
-                    }
-                }
+                var (errorInfo, result) = await task();
+                callback?.Invoke(errorInfo, result);
             }
 
             _task = Task.Run(Wrapper);
         }
 
-        private async Task<PlayerFullName> ConnectAsync(string playerName)
+        #endregion
+
+        #region OperationImplementations
+
+        private async Task<PlayerFullName> ConnectImplAsync(string playerName)
         {
             return await _client.ConnectAsync(_serverAddress, _serverPort, playerName);
         }
 
-        private async Task GetRoomGroupListAsync()
+        private async Task GetRoomGroupListImplAsync()
         {
             _roomGroupInfoList = (await _client.GetRoomGroupListAsync()).Select(result => new RoomGroupInfo(result))
                 .ToList();
         }
 
-        private async Task CreateRoomAsync(byte maxPlayerCount, bool isPublic = true,
+        private async Task CreateRoomImplAsync(byte maxPlayerCount, bool isPublic = true,
             string password = "")
         {
             await _client.CreateRoomAsync(roomGroupIndex, maxPlayerCount, _gameDefaultPort, isPublic,
@@ -487,7 +688,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private async Task<(bool isDefaultPortUsed, ushort privatePort, ushort publicPort)>
-            CreateRoomWithCreatingPortMappingAsync(byte maxPlayerCount, bool isPublic = true, string password = "")
+            CreateRoomWithCreatingPortMappingImplAsync(byte maxPlayerCount, bool isPublic = true, string password = "")
         {
             var result = await _client.CreateRoomWithCreatingPortMappingAsync(roomGroupIndex, maxPlayerCount,
                 TransportProtocol.Tcp, GenerateGamePortCandidateList(), _gameDefaultPort,
@@ -499,19 +700,20 @@ namespace PlanetaGameLabo.MatchMaker
                 : (false, result.UsedPrivatePortFromCandidates, result.UsedPublicPortFromCandidates);
         }
 
-        private async Task<IPEndPoint> JoinRoomAsync(uint roomId, string password = "")
+        private async Task<IPEndPoint> JoinRoomImplAsync(uint roomId, string password = "")
         {
             var roomGameHostEndPoint = await _client.JoinRoomAsync(roomGroupIndex, roomId, password);
             return roomGameHostEndPoint;
         }
 
-        private async Task UpdateHostingRoomStatusAsync(RoomStatus roomStatus, bool updateCurrentPlayerCount = false,
+        private async Task UpdateHostingRoomStatusImplAsync(RoomStatus roomStatus,
+            bool updateCurrentPlayerCount = false,
             byte currentPlayerCount = 0)
         {
             await _client.UpdateHostingRoomStatusAsync(roomStatus, updateCurrentPlayerCount, currentPlayerCount);
         }
 
-        private async Task RemoveHostingRoomAsync()
+        private async Task RemoveHostingRoomImplAsync()
         {
             await _client.RemoveHostingRoomAsync();
         }
@@ -527,6 +729,10 @@ namespace PlanetaGameLabo.MatchMaker
             return (totalRoomCount, resultStartIndex, matchedRoomCount,
                 roomInfoList.Select(result => new RoomInfo(hostRoomGroupIndex, result)).ToList().AsReadOnly());
         }
+
+        #endregion
+
+        #region OtherPrivateMethods
 
         private List<ushort> GenerateGamePortCandidateList()
         {
@@ -547,5 +753,7 @@ namespace PlanetaGameLabo.MatchMaker
             hostingRoomInfo = null;
             _roomGroupInfoList.Clear();
         }
+
+        #endregion
     }
 }
