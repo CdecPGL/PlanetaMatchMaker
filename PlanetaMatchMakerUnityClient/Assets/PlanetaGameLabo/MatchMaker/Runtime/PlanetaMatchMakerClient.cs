@@ -110,7 +110,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="playerName"></param>
         /// <param name="callback"></param>
-        public void Connect(string playerName, Action<ErrorInfo, ConnectCallbackArgs> callback = null)
+        public void Connect(string playerName, Action<ErrorInfo, ConnectResult> callback = null)
         {
             RunTask(async () => await ConnectAsync(playerName), callback);
         }
@@ -119,7 +119,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// Connect to the matching server
         /// </summary>
         /// <param name="playerName"></param>
-        public async Task<(ErrorInfo errorInfo, ConnectCallbackArgs result)> ConnectAsync(string playerName)
+        public async Task<(ErrorInfo errorInfo, ConnectResult result)> ConnectAsync(string playerName)
         {
             if (status != Status.Disconnected)
             {
@@ -133,7 +133,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var returnedPlayerFullName = await ConnectImplAsync(playerName);
                 status = Status.SearchingRoom;
                 await GetRoomGroupListImplAsync();
-                return new ConnectCallbackArgs(returnedPlayerFullName);
+                return new ConnectResult(returnedPlayerFullName);
             }, () =>
             {
                 if (status == Status.Connecting)
@@ -173,7 +173,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="callback"></param>
         public void RequestRoomList(byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
             RoomSearchTargetFlag targetFlags, string searchName = "",
-            Action<ErrorInfo, RequestRoomListCallbackArgs> callback = null)
+            Action<ErrorInfo, RequestRoomListResult> callback = null)
         {
             RunTask(
                 async () => await RequestRoomListAsync(resultStartIndex, resultCount, sortKind, targetFlags,
@@ -188,7 +188,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="sortKind"></param>
         /// <param name="targetFlags"></param>
         /// <param name="searchName"></param>
-        public async Task<(ErrorInfo errorInfo, RequestRoomListCallbackArgs result)> RequestRoomListAsync(
+        public async Task<(ErrorInfo errorInfo, RequestRoomListResult result)> RequestRoomListAsync(
             byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
             RoomSearchTargetFlag targetFlags, string searchName = "")
         {
@@ -208,7 +208,7 @@ namespace PlanetaGameLabo.MatchMaker
                 {
                     var (totalRoomCount, _, startIndex, roomInfoList) = await GetRoomListAsync(resultStartIndex,
                         resultCount, sortKind, targetFlags, searchName);
-                    return new RequestRoomListCallbackArgs(totalRoomCount, startIndex,
+                    return new RequestRoomListResult(totalRoomCount, startIndex,
                         roomInfoList);
                 },
                 () => { });
@@ -223,7 +223,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="callback"></param>
         /// <returns></returns>
         public void HostRoom(byte maxPlayerCount, bool isPublic = true, string password = "",
-            Action<ErrorInfo, HostRoomCallbackArgs> callback = null)
+            Action<ErrorInfo, HostRoomResult> callback = null)
         {
             RunTask(async () => await HostRoomAsync(maxPlayerCount, isPublic, password), callback);
         }
@@ -235,7 +235,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public async Task<(ErrorInfo errorInfo, HostRoomCallbackArgs result)> HostRoomAsync(byte maxPlayerCount,
+        public async Task<(ErrorInfo errorInfo, HostRoomResult result)> HostRoomAsync(byte maxPlayerCount,
             bool isPublic = true, string password = "")
         {
             if (status != Status.SearchingRoom)
@@ -249,7 +249,7 @@ namespace PlanetaGameLabo.MatchMaker
                 status = Status.StartingHostingRoom;
                 await CreateRoomImplAsync(maxPlayerCount, isPublic, password);
                 status = Status.HostingRoom;
-                return new HostRoomCallbackArgs(hostingRoomInfo);
+                return new HostRoomResult(hostingRoomInfo);
             }, () => status = Status.SearchingRoom);
         }
 
@@ -262,7 +262,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="callback"></param>
         /// <returns></returns>
         public void HostRoomWithCreatingPortMapping(byte maxPlayerCount, bool isPublic = true, string password = "",
-            Action<ErrorInfo, HostRoomWithCreatingPortMappingCallbackArgs> callback = null)
+            Action<ErrorInfo, HostRoomWithCreatingPortMappingResult> callback = null)
         {
             RunTask(async () => await HostRoomWithCreatingPortMappingAsync(maxPlayerCount, isPublic, password),
                 callback);
@@ -275,7 +275,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public async Task<(ErrorInfo errorInfo, HostRoomWithCreatingPortMappingCallbackArgs result)>
+        public async Task<(ErrorInfo errorInfo, HostRoomWithCreatingPortMappingResult result)>
             HostRoomWithCreatingPortMappingAsync(byte maxPlayerCount, bool isPublic = true, string password = "")
         {
             if (status != Status.SearchingRoom)
@@ -290,7 +290,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var (isDefaultPortUsed, privatePort, publicPort) =
                     await CreateRoomWithCreatingPortMappingImplAsync(maxPlayerCount, isPublic, password);
                 status = Status.HostingRoom;
-                return new HostRoomWithCreatingPortMappingCallbackArgs(hostingRoomInfo, isDefaultPortUsed, privatePort,
+                return new HostRoomWithCreatingPortMappingResult(hostingRoomInfo, isDefaultPortUsed, privatePort,
                     publicPort);
             }, () => status = Status.SearchingRoom);
         }
@@ -500,7 +500,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="callback"></param>
         /// <returns></returns>
         public void JoinRoom(uint roomId, string password = "",
-            Action<ErrorInfo, JoinRoomCallbackArgs> callback = null)
+            Action<ErrorInfo, JoinRoomResult> callback = null)
         {
             RunTask(async () => await JoinRoomAsync(roomId, password), callback);
         }
@@ -511,7 +511,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomId"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public async Task<(ErrorInfo errorInfo, JoinRoomCallbackArgs result)> JoinRoomAsync(uint roomId,
+        public async Task<(ErrorInfo errorInfo, JoinRoomResult result)> JoinRoomAsync(uint roomId,
             string password = "")
         {
             if (status != Status.SearchingRoom)
@@ -525,7 +525,7 @@ namespace PlanetaGameLabo.MatchMaker
                 status = Status.StartingJoiningRoom;
                 var roomHostClientAddress = await JoinRoomImplAsync(roomId, password);
                 Disconnect();
-                return new JoinRoomCallbackArgs(roomHostClientAddress);
+                return new JoinRoomResult(roomHostClientAddress);
             }, () => status = Status.SearchingRoom);
         }
 

@@ -3,9 +3,9 @@ using System.Net;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    public struct ConnectCallbackArgs
+    public struct ConnectResult
     {
-        public ConnectCallbackArgs(PlayerFullName playerFullName)
+        public ConnectResult(PlayerFullName playerFullName)
         {
             this.playerFullName = playerFullName;
         }
@@ -13,9 +13,9 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly PlayerFullName playerFullName;
     }
 
-    public struct RequestRoomListCallbackArgs
+    public struct RequestRoomListResult
     {
-        public RequestRoomListCallbackArgs(byte totalRoomCount, byte startIndex,
+        public RequestRoomListResult(byte totalRoomCount, byte startIndex,
             IReadOnlyList<RoomInfo> roomInfoList)
         {
             this.totalRoomCount = totalRoomCount;
@@ -28,9 +28,9 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly IReadOnlyList<RoomInfo> roomInfoList;
     }
 
-    public struct HostRoomCallbackArgs
+    public struct HostRoomResult
     {
-        public HostRoomCallbackArgs(HostingRoomInfo hostRoomInfo)
+        public HostRoomResult(HostingRoomInfo hostRoomInfo)
         {
             this.hostRoomInfo = hostRoomInfo;
         }
@@ -38,9 +38,9 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly HostingRoomInfo hostRoomInfo;
     }
 
-    public struct HostRoomWithCreatingPortMappingCallbackArgs
+    public struct HostRoomWithCreatingPortMappingResult
     {
-        public HostRoomWithCreatingPortMappingCallbackArgs(HostingRoomInfo hostRoomInfo, bool isDefaultPortUsed,
+        public HostRoomWithCreatingPortMappingResult(HostingRoomInfo hostRoomInfo, bool isDefaultPortUsed,
             ushort privatePort, ushort publicPort)
         {
             this.hostRoomInfo = hostRoomInfo;
@@ -55,9 +55,9 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly ushort publicPort;
     }
 
-    public struct JoinRoomCallbackArgs
+    public struct JoinRoomResult
     {
-        public JoinRoomCallbackArgs(IPEndPoint roomGameHostEndPoint)
+        public JoinRoomResult(IPEndPoint roomGameHostEndPoint)
         {
             this.roomGameHostEndPoint = roomGameHostEndPoint;
         }
