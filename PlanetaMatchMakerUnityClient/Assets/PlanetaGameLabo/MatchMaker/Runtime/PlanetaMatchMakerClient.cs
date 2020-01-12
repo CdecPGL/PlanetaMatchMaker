@@ -94,11 +94,24 @@ namespace PlanetaGameLabo.MatchMaker
 
         public IHostingRoomInfo hostingRoomInfo { get; private set; }
 
+        public PlayerFullName playerFullName => _client.PlayerFullName;
+
+        public struct ConnectCallbackArgs
+        {
+            public ConnectCallbackArgs(PlayerFullName playerFullName)
+            {
+                this.playerFullName = playerFullName;
+            }
+
+            public readonly PlayerFullName playerFullName;
+        }
+
         /// <summary>
         /// Connect to the matching server
         /// </summary>
+        /// <param name="playerName"></param>
         /// <param name="callback"></param>
-        public void Connect(Action<ErrorInfo> callback = null)
+        public void Connect(string playerName, Action<ErrorInfo, ConnectCallbackArgs> callback = null)
         {
             if (status != Status.Disconnected)
             {
@@ -109,9 +122,10 @@ namespace PlanetaGameLabo.MatchMaker
             RunTaskWithErrorHandling(async () =>
             {
                 status = Status.Connecting;
-                await ConnectAsync();
+                var returnedPlayerFullName = await ConnectAsync(playerName);
                 status = Status.SearchingRoom;
                 await GetRoomGroupListAsync();
+                return new ConnectCallbackArgs(returnedPlayerFullName);
             }, () =>
             {
                 if (status == Status.Connecting)
@@ -204,14 +218,13 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Create and host new room to the server.
         /// </summary>
-        /// <param name="roomName"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public void HostRoom(string roomName, byte maxPlayerCount, bool isPublic = true, string password = "",
+        public void HostRoom(byte maxPlayerCount, bool isPublic = true, string password = "",
             Action<ErrorInfo, HostRoomCallbackArgs> callback = null)
         {
             if (status != Status.SearchingRoom)
@@ -223,7 +236,7 @@ namespace PlanetaGameLabo.MatchMaker
             RunTaskWithErrorHandling(async () =>
             {
                 status = Status.StartingHostingRoom;
-                await CreateRoomAsync(roomName, maxPlayerCount, isPublic, password);
+                await CreateRoomAsync(maxPlayerCount, isPublic, password);
                 status = Status.HostingRoom;
                 return new HostRoomCallbackArgs(hostingRoomInfo);
             }, () => status = Status.SearchingRoom, callback);
@@ -249,15 +262,13 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Create and host new room to the server with trying to create port mapping.
         /// </summary>
-        /// <param name="roomName"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public void HostRoomWithCreatingPortMapping(string roomName, byte maxPlayerCount, bool isPublic = true,
-            string password = "",
+        public void HostRoomWithCreatingPortMapping(byte maxPlayerCount, bool isPublic = true, string password = "",
             Action<ErrorInfo, HostRoomWithCreatingPortMappingCallbackArgs> callback = null)
         {
             if (status != Status.SearchingRoom)
@@ -270,7 +281,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 status = Status.StartingHostingRoom;
                 var (isDefaultPortUsed, privatePort, publicPort) =
-                    await CreateRoomWithCreatingPortMappingAsync(roomName, maxPlayerCount, isPublic, password);
+                    await CreateRoomWithCreatingPortMappingAsync(maxPlayerCount, isPublic, password);
                 status = Status.HostingRoom;
                 return new HostRoomWithCreatingPortMappingCallbackArgs(hostingRoomInfo, isDefaultPortUsed, privatePort,
                     publicPort);
@@ -429,7 +440,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 this.roomGroupIndex = roomGroupIndex;
                 roomId = roomResult.RoomId;
-                name = roomResult.Name;
+                hostPlayerFullName = roomResult.HostPlayerFullName;
                 settingFlags = roomResult.SettingFlags;
                 maxPlayerCount = roomResult.MaxPlayerCount;
                 currentPlayerCount = roomResult.CurrentPlayerCount;
@@ -438,7 +449,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             public byte roomGroupIndex { get; }
             public uint roomId { get; }
-            public string name { get; }
+            public PlayerFullName hostPlayerFullName { get; }
             public RoomSettingFlag settingFlags { get; }
             public byte maxPlayerCount { get; }
             public byte currentPlayerCount { get; }
@@ -447,18 +458,16 @@ namespace PlanetaGameLabo.MatchMaker
 
         private sealed class HostingRoomInfo : IHostingRoomInfo
         {
-            public HostingRoomInfo(byte roomGroupIndex, bool isPublic, uint roomId, string name, byte maxPlayerCount)
+            public HostingRoomInfo(byte roomGroupIndex, bool isPublic, uint roomId, byte maxPlayerCount)
             {
                 this.roomGroupIndex = roomGroupIndex;
                 this.roomId = roomId;
-                this.name = name;
                 this.maxPlayerCount = maxPlayerCount;
                 this.isPublic = isPublic;
             }
 
             public byte roomGroupIndex { get; }
             public uint roomId { get; }
-            public string name { get; }
             public byte maxPlayerCount { get; }
             public bool isPublic { get; }
         }
@@ -568,9 +577,9 @@ namespace PlanetaGameLabo.MatchMaker
             _task = Task.Run(Wrapper);
         }
 
-        private async Task ConnectAsync()
+        private async Task<PlayerFullName> ConnectAsync(string playerName)
         {
-            await _client.ConnectAsync(_serverAddress, _serverPort);
+            return await _client.ConnectAsync(_serverAddress, _serverPort, playerName);
         }
 
         private async Task GetRoomGroupListAsync()
@@ -579,24 +588,23 @@ namespace PlanetaGameLabo.MatchMaker
                 .ToList();
         }
 
-        private async Task CreateRoomAsync(string roomName, byte maxPlayerCount, bool isPublic = true,
+        private async Task CreateRoomAsync(byte maxPlayerCount, bool isPublic = true,
             string password = "")
         {
-            await _client.CreateRoomAsync(roomGroupIndex, roomName, maxPlayerCount, _gameDefaultPort, isPublic,
+            await _client.CreateRoomAsync(roomGroupIndex, maxPlayerCount, _gameDefaultPort, isPublic,
                 password);
             hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, isPublic, _client.HostingRoomId,
-                roomName, maxPlayerCount);
+                maxPlayerCount);
         }
 
         private async Task<(bool isDefaultPortUsed, ushort privatePort, ushort publicPort)>
-            CreateRoomWithCreatingPortMappingAsync(string roomName, byte maxPlayerCount,
-                bool isPublic = true, string password = "")
+            CreateRoomWithCreatingPortMappingAsync(byte maxPlayerCount, bool isPublic = true, string password = "")
         {
-            var result = await _client.CreateRoomWithCreatingPortMappingAsync(roomGroupIndex, roomName, maxPlayerCount,
+            var result = await _client.CreateRoomWithCreatingPortMappingAsync(roomGroupIndex, maxPlayerCount,
                 TransportProtocol.Tcp, GenerateGamePortCandidateList(), _gameDefaultPort,
                 (int)(_natDiscoverTimeOutSeconds * 1000), isPublic, password);
             hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, isPublic, _client.HostingRoomId,
-                roomName, maxPlayerCount);
+                maxPlayerCount);
             return result.IsDefaultPortUsed
                 ? (true, _gameDefaultPort, _gameDefaultPort)
                 : (false, result.UsedPrivatePortFromCandidates, result.UsedPublicPortFromCandidates);

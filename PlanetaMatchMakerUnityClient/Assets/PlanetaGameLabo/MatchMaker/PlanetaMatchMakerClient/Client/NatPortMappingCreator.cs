@@ -45,7 +45,7 @@ namespace PlanetaGameLabo.MatchMaker
         public bool IsNatDeviceAvailable { get; private set; }
 
         /// <summary>
-        /// true if DiscoverNat is executed at least once.
+        /// true if DiscoverNatAsync is executed at least once.
         /// </summary>
         public bool IsDiscoverNatDone { get; private set; }
 
@@ -59,14 +59,14 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Get all port mappings.
         /// </summary>
-        /// <exception cref="InvalidOperationException">DiscoverNat is not executed or NAT device is not available</exception>
+        /// <exception cref="InvalidOperationException">DiscoverNatAsync is not executed or NAT device is not available</exception>
         /// <exception cref="ClientErrorException">Failed to get port mappings</exception>
         /// <returns></returns>
         public async Task<PortMapping[]> GetAllPortMappingsAsync()
         {
             if (!IsDiscoverNatDone)
             {
-                throw new InvalidOperationException("DiscoverNat should be executed before this method.");
+                throw new InvalidOperationException("DiscoverNatAsync should be executed before this method.");
             }
 
             if (!IsNatDeviceAvailable)
@@ -94,15 +94,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="privatePort"></param>
         /// <param name="publicPort"></param>
         /// <param name="description"></param>
-        /// <exception cref="InvalidOperationException">DiscoverNat is not executed or NAT device is not available</exception>
+        /// <exception cref="InvalidOperationException">DiscoverNatAsync is not executed or NAT device is not available</exception>
         /// <exception cref="ClientErrorException">Failed to create port mapping</exception>
         /// <returns></returns>
-        public async Task CreatePortMapping(TransportProtocol protocol, ushort privatePort, ushort publicPort,
+        public async Task CreatePortMappingAsync(TransportProtocol protocol, ushort privatePort, ushort publicPort,
             string description = "PlanetaMatchMakerClient")
         {
             if (!IsDiscoverNatDone)
             {
-                throw new InvalidOperationException("DiscoverNat should be executed before this method.");
+                throw new InvalidOperationException("DiscoverNatAsync should be executed before this method.");
             }
 
             if (!IsNatDeviceAvailable)
@@ -135,17 +135,17 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="privatePortCandidates"></param>
         /// <param name="publicPortCandidates"></param>
         /// <param name="description"></param>
-        /// <exception cref="InvalidOperationException">DiscoverNat is not executed or NAT device is not available</exception>
+        /// <exception cref="InvalidOperationException">DiscoverNatAsync is not executed or NAT device is not available</exception>
         /// <exception cref="ClientErrorException">Failed to create port mapping. There may be not available port pair in the candidates</exception>
         /// <returns></returns>
-        public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidates(
+        public async Task<(ushort privatePort, ushort publicPort)> CreatePortMappingFromCandidatesAsync(
             TransportProtocol protocol,
             ICollection<ushort> privatePortCandidates,
             ICollection<ushort> publicPortCandidates, string description = "PlanetaMatchMakerClient")
         {
             if (!IsDiscoverNatDone)
             {
-                throw new InvalidOperationException("DiscoverNat should be executed before this method.");
+                throw new InvalidOperationException("DiscoverNatAsync should be executed before this method.");
             }
 
             if (!IsNatDeviceAvailable)
@@ -215,7 +215,7 @@ namespace PlanetaGameLabo.MatchMaker
 
                 Logger.Log(LogLevel.Info, $"{publicPort} to {privatePort} mapping will be created.");
 
-                await CreatePortMapping(protocol, privatePort, publicPort, description).ConfigureAwait(false);
+                await CreatePortMappingAsync(protocol, privatePort, publicPort, description).ConfigureAwait(false);
             }
 
             return (privatePort, publicPort);
@@ -226,7 +226,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="timeoutMilliSeconds">Time to consider available NAT device doesn't exist in one method. Discover time is up to timeoutMilliSeconds*2 milli seconds by two methods.</param>
         /// <returns>true if NAT device is found</returns>
-        public async Task<bool> DiscoverNat(int timeoutMilliSeconds = 5000)
+        public async Task<bool> DiscoverNatAsync(int timeoutMilliSeconds = 5000)
         {
             var discoverer = new NatDiscoverer();
 

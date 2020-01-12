@@ -15,7 +15,7 @@ namespace PlanetaGameLabo.MatchMaker
         internal RoomResult(ListRoomReplyMessage.RoomInfo info)
         {
             RoomId = info.RoomId;
-            Name = info.Name;
+            HostPlayerFullName = info.HostPlayerFullName;
             SettingFlags = info.SettingFlags;
             MaxPlayerCount = info.MaxPlayerCount;
             CurrentPlayerCount = info.CurrentPlayerCount;
@@ -23,7 +23,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         public readonly uint RoomId;
-        public readonly string Name;
+        public readonly PlayerFullName HostPlayerFullName;
         public readonly RoomSettingFlag SettingFlags;
         public readonly byte MaxPlayerCount;
         public readonly byte CurrentPlayerCount;

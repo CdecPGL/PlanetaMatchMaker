@@ -4,7 +4,7 @@ namespace PlanetaGameLabo.MatchMaker
     {
         byte roomGroupIndex { get; }
         uint roomId { get; }
-        string name { get; }
+        PlayerFullName hostPlayerFullName { get; }
         RoomSettingFlag settingFlags { get; }
         byte maxPlayerCount { get; }
         byte currentPlayerCount { get; }
@@ -15,7 +15,6 @@ namespace PlanetaGameLabo.MatchMaker
     {
         byte roomGroupIndex { get; }
         uint roomId { get; }
-        string name { get; }
         byte maxPlayerCount { get; }
         bool isPublic { get; }
     }

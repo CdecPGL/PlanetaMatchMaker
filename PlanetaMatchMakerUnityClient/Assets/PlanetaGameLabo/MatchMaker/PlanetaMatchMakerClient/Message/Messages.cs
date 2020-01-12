@@ -69,6 +69,9 @@ namespace PlanetaGameLabo.MatchMaker
     internal struct AuthenticationRequestMessage
     {
         public VersionType Version;
+
+        [FixedLength(ClientConstants.PlayerNameLength)]
+        public string PlayerName;
     }
 
     // 6 bytes
@@ -78,6 +81,7 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public VersionType Version;
         public SessionKeyType SessionKey;
+        public ushort PlayerTag;
     }
 
     // 1 bytes
@@ -107,15 +111,12 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomGroupInfo[] RoomGroupInfoList;
     }
 
-    // 45 bytes
+    // 21 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     internal struct CreateRoomRequestMessage
     {
         public RoomGroupIndexType GroupIndex;
-
-        [FixedLength(RoomConstants.RoomNameLength)]
-        public string Name;
 
         public bool IsPublic;
 
@@ -135,7 +136,7 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomIdType RoomId;
     }
 
-    // 29 bytes
+    // 31 bytes
     [Serializable]
     [Message(MessageType.ListRoomRequest)]
     internal struct ListRoomRequestMessage
@@ -145,12 +146,10 @@ namespace PlanetaGameLabo.MatchMaker
         public byte Count;
         public RoomDataSortKind SortKind;
         public RoomSearchTargetFlag SearchTargetFlags;
-
-        [FixedLength(RoomConstants.RoomNameLength)]
-        public string SearchName;
+        public PlayerFullName SearchFullName;
     }
 
-    // 237 bytes
+    // 249 bytes
     [Serializable]
     [Message(MessageType.ListRoomReply)]
     internal struct ListRoomReplyMessage
@@ -160,10 +159,7 @@ namespace PlanetaGameLabo.MatchMaker
         public struct RoomInfo
         {
             public RoomIdType RoomId;
-
-            [FixedLength(RoomConstants.RoomNameLength)]
-            public string Name;
-
+            public PlayerFullName HostPlayerFullName;
             public RoomSettingFlag SettingFlags;
             public byte MaxPlayerCount;
             public byte CurrentPlayerCount;

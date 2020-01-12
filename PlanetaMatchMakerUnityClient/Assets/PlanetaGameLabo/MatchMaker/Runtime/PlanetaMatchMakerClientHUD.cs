@@ -21,12 +21,13 @@ namespace PlanetaGameLabo.MatchMaker
         private bool _isJoinedRoom;
         private IPEndPoint _joinedRoomHost;
 
-        private string _roomName = "";
+        private string _playerName = "test";
         private string _roomPassword = "";
-        private byte _roomMaxPlayerCount;
+        private byte _roomMaxPlayerCount = 8;
         private bool _createPublicRoom = true;
 
-        private string _searchRoomName = "";
+        private string _roomSearchName = "";
+        private ushort _roomSearchTag = PlayerFullName.NotAssignedTag;
         private bool _searchPublicRoom = true;
         private bool _searchPrivateRoom = true;
         private bool _searchOpenRoom = true;
@@ -50,9 +51,11 @@ namespace PlanetaGameLabo.MatchMaker
                 switch (_client.status)
                 {
                     case PlanetaMatchMakerClient.Status.Disconnected:
+                        GUILayout.Label("Player Name");
+                        _playerName = GUILayout.TextField(_playerName);
                         if (GUILayout.Button("Connect"))
                         {
-                            _client.Connect();
+                            _client.Connect(_playerName);
                         }
 
                         if (_isJoinedRoom)
@@ -66,6 +69,7 @@ namespace PlanetaGameLabo.MatchMaker
                         break;
                     case PlanetaMatchMakerClient.Status.SearchingRoom:
                         // Display room group list
+                        GUILayout.Label($"Player Full Name: {_client.playerFullName.GenerateFullName()}");
                         GUILayout.Label("===Room Group List===");
                         for (var i = 0; i < _client.roomGroupInfoList.Count; ++i)
                         {
@@ -88,17 +92,21 @@ namespace PlanetaGameLabo.MatchMaker
                         _searchOpenRoom = GUILayout.Toggle(_searchOpenRoom, "Search Open");
                         _searchClosedRoom = GUILayout.Toggle(_searchClosedRoom, "Search Closed");
                         GUILayout.Label("Search Name");
-                        _searchRoomName = GUILayout.TextField(_searchRoomName);
+                        _roomSearchName = GUILayout.TextField(_roomSearchName);
+                        GUILayout.Label("Search Tag");
+                        ushort.TryParse(GUILayout.TextField(_roomSearchTag.ToString()),
+                            out _roomSearchTag);
                         GUILayout.Label($"===Room List in Group {_client.roomGroupIndex}===");
+                        GUILayout.Label($"Push button to join.");
                         foreach (var room in _roomList)
                         {
-                            GUILayout.Label(
-                                $"{room.roomId}: {room.name} ({room.currentPlayerCount}/{room.maxPlayerCount}) [{room.settingFlags}] @{room.createDatetime}");
+                            if (GUILayout.Button($"${room.hostPlayerFullName}: {room.roomId}({room.currentPlayerCount}/{room.maxPlayerCount}) [{room.settingFlags}] @{room.createDatetime}"))
+                            {
+                                JoinRoom(room.roomId);
+                            }
                         }
 
                         GUILayout.Label($"===Selected or Create Room Info===");
-                        GUILayout.Label("Room Name");
-                        _roomName = GUILayout.TextField(_roomName);
                         GUILayout.Label("Room Password");
                         _roomPassword = GUILayout.TextField(_roomPassword);
                         GUILayout.Label("Max Player Count");
@@ -117,11 +125,6 @@ namespace PlanetaGameLabo.MatchMaker
                             HostRoomWithCreatingPortMapping();
                         }
 
-                        if (GUILayout.Button("Join"))
-                        {
-                            JoinRoom();
-                        }
-
                         if (GUILayout.Button("Disconnect"))
                         {
                             Close();
@@ -132,7 +135,7 @@ namespace PlanetaGameLabo.MatchMaker
                         GUILayout.Label($"Creating hosting room...");
                         break;
                     case PlanetaMatchMakerClient.Status.HostingRoom:
-                        GUILayout.Label($"Room Name: {_client.hostingRoomInfo.name}");
+                        GUILayout.Label($"Player Full Name: {_client.playerFullName.GenerateFullName()}");
                         GUILayout.Label("Current Player Count");
                         byte.TryParse(GUILayout.TextField(_roomCurrentPlayerCount.ToString()),
                             out _roomCurrentPlayerCount);
@@ -227,7 +230,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             _client.RequestRoomList(0, 100,
-                RoomDataSortKind.NameAscending, searchTargetFlags, _searchRoomName, (errorInfo, args) =>
+                RoomDataSortKind.NameAscending, searchTargetFlags, _roomSearchName, (errorInfo, args) =>
                 {
                     if (errorInfo)
                     {
@@ -243,7 +246,7 @@ namespace PlanetaGameLabo.MatchMaker
         private void HostRoom()
         {
             _isErrorOccured = false;
-            _client.HostRoom(_roomName, _roomMaxPlayerCount, _createPublicRoom, _roomPassword, (errorInfo, args) =>
+            _client.HostRoom(_roomMaxPlayerCount, _createPublicRoom, _roomPassword, (errorInfo, args) =>
             {
                 if (errorInfo)
                 {
@@ -258,7 +261,7 @@ namespace PlanetaGameLabo.MatchMaker
         private void HostRoomWithCreatingPortMapping()
         {
             _isErrorOccured = false;
-            _client.HostRoomWithCreatingPortMapping(_roomName, _roomMaxPlayerCount, _createPublicRoom, _roomPassword,
+            _client.HostRoomWithCreatingPortMapping(_roomMaxPlayerCount, _createPublicRoom, _roomPassword,
                 (errorInfo, args) =>
                 {
                     if (errorInfo)
@@ -271,12 +274,11 @@ namespace PlanetaGameLabo.MatchMaker
                 });
         }
 
-        private void JoinRoom()
+        private void JoinRoom(uint roomId)
         {
             try
             {
                 _isErrorOccured = false;
-                var roomId = _roomList.First(r => r.name == _roomName).roomId;
                 _client.JoinRoom(roomId, _roomPassword, (errorInfo, args) =>
                 {
                     if (errorInfo)
