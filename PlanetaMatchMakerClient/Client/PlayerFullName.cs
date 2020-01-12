@@ -22,5 +22,33 @@ namespace PlanetaGameLabo.MatchMaker
         {
             return GenerateFullName();
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                var other = (PlayerFullName)obj;
+                return Name == other.Name && Tag == other.Tag;
+            }
+            catch (InvalidCastException)
+            {
+                return false;
+            }
+        }
+
+        public static bool operator ==(PlayerFullName left, PlayerFullName right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PlayerFullName left, PlayerFullName right)
+        {
+            return !(left == right);
+        }
     }
 }

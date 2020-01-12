@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using CommandLine.Text;
@@ -10,6 +11,10 @@ namespace PlanetaGameLabo.MatchMaker
     {
         private static void Main(string[] args)
         {
+            var versionInfo =
+                FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            Console.WriteLine($"{versionInfo.ProductName} v{versionInfo.ProductVersion}");
+
             var parsedResult = CommandLine.Parser.Default.ParseArguments<Options>(args);
 
             if (parsedResult.Tag != CommandLine.ParserResultType.Parsed)

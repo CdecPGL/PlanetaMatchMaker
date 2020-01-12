@@ -213,7 +213,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var (_, _, roomInfoList) =
                     await sharedClient.GetRoomListAsync(0, 0, 100, RoomDataSortKind.NameAscending);
-                if (roomInfoList.All(r => r.RoomId != lastHostedRoomId))
+                if (roomInfoList.All(r => r.RoomId != lastHostedRoomId && r.HostPlayerFullName == sharedClient.PlayerFullName))
                 {
                     throw new TestFailedException(true, "Created room is not listed in ListRoomRequest.");
                 }
