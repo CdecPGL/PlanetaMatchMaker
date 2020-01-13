@@ -543,6 +543,9 @@ namespace PlanetaGameLabo.MatchMaker
 
         #region PrivateFields
 
+        [SerializeField, Tooltip("Don't destroy the game object which is attached this component on load if true")]
+        private bool _dontDestroyOnLoad = true;
+
         [SerializeField, Tooltip("IP Address of Match Making Server")]
         private string _serverAddress = "127.0.0.1";
 
@@ -577,6 +580,10 @@ namespace PlanetaGameLabo.MatchMaker
         {
             _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000), new UnityLogger());
             _client.Logger.Enabled = _enableDebugLog;
+            if (_dontDestroyOnLoad)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
         }
 
         private void OnDestroy()
