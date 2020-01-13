@@ -58,6 +58,11 @@ namespace PlanetaGameLabo.MatchMaker
         #region Properties
 
         /// <summary>
+        /// Singleton instance. This is valid when isSingleton is true.
+        /// </summary>
+        public static PlanetaMatchMakerClient singleton { get; private set; }
+
+        /// <summary>
         /// A status of client.
         /// </summary>
         public Status status { get; private set; } = Status.Disconnected;
@@ -544,7 +549,10 @@ namespace PlanetaGameLabo.MatchMaker
         #region PrivateFields
 
         [SerializeField, Tooltip("Don't destroy the game object which is attached this component on load if true")]
-        private bool _dontDestroyOnLoad = true;
+        private bool _dontDestroyOnLoad;
+
+        [SerializeField, Tooltip("the game object which is attached this component become singleton if true.")]
+        private bool _isSingleton;
 
         [SerializeField, Tooltip("IP Address of Match Making Server")]
         private string _serverAddress = "127.0.0.1";
@@ -584,11 +592,35 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 DontDestroyOnLoad(gameObject);
             }
+
+            if (!_isSingleton)
+            {
+                return;
+            }
+
+            if (singleton)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                singleton = this;
+            }
         }
 
         private void OnDestroy()
         {
             _client.Dispose();
+
+            if (!_isSingleton)
+            {
+                return;
+            }
+
+            if (singleton == this)
+            {
+                singleton = null;
+            }
         }
 
         #endregion
