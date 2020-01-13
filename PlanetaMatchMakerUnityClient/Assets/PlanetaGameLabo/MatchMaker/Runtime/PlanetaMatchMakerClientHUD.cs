@@ -24,7 +24,6 @@ namespace PlanetaGameLabo.MatchMaker
         private string _playerName = "test";
         private string _roomPassword = "";
         private byte _roomMaxPlayerCount = 8;
-        private bool _createPublicRoom = true;
 
         private string _roomSearchName = "";
         private ushort _roomSearchTag = PlayerFullName.NotAssignedTag;
@@ -114,7 +113,6 @@ namespace PlanetaGameLabo.MatchMaker
                         GUILayout.Label("Max Player Count");
                         byte.TryParse(GUILayout.TextField(_roomMaxPlayerCount.ToString()),
                             out _roomMaxPlayerCount);
-                        _createPublicRoom = GUILayout.Toggle(_createPublicRoom, "Create Public Room");
 
                         GUILayout.Label($"===Operations===");
                         if (GUILayout.Button("Create"))
@@ -248,7 +246,7 @@ namespace PlanetaGameLabo.MatchMaker
         private void HostRoom()
         {
             _isErrorOccured = false;
-            _client.HostRoom(_roomMaxPlayerCount, _createPublicRoom, _roomPassword, (errorInfo, args) =>
+            _client.HostRoom(_roomMaxPlayerCount, _roomPassword, (errorInfo, args) =>
             {
                 if (errorInfo)
                 {
@@ -263,7 +261,7 @@ namespace PlanetaGameLabo.MatchMaker
         private void HostRoomWithCreatingPortMapping()
         {
             _isErrorOccured = false;
-            _client.HostRoomWithCreatingPortMapping(_roomMaxPlayerCount, _createPublicRoom, _roomPassword,
+            _client.HostRoomWithCreatingPortMapping(_roomMaxPlayerCount, _roomPassword,
                 (errorInfo, args) =>
                 {
                     if (errorInfo)

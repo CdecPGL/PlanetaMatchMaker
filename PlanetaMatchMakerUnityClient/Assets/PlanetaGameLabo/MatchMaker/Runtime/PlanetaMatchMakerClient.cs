@@ -223,25 +223,23 @@ namespace PlanetaGameLabo.MatchMaker
         /// Create and host new room to the server.
         /// </summary>
         /// <param name="maxPlayerCount"></param>
-        /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public void HostRoom(byte maxPlayerCount, bool isPublic = true, string password = "",
+        public void HostRoom(byte maxPlayerCount, string password = "",
             Action<ErrorInfo, HostRoomResult> callback = null)
         {
-            RunTask(async () => await HostRoomAsync(maxPlayerCount, isPublic, password), callback);
+            RunTask(async () => await HostRoomAsync(maxPlayerCount, password), callback);
         }
 
         /// <summary>
         /// Create and host new room to the server.
         /// </summary>
         /// <param name="maxPlayerCount"></param>
-        /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <returns></returns>
         public async Task<(ErrorInfo errorInfo, HostRoomResult result)> HostRoomAsync(byte maxPlayerCount,
-            bool isPublic = true, string password = "")
+            string password = "")
         {
             if (status != Status.SearchingRoom)
             {
@@ -252,7 +250,7 @@ namespace PlanetaGameLabo.MatchMaker
             return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.StartingHostingRoom;
-                await CreateRoomImplAsync(maxPlayerCount, isPublic, password);
+                await CreateRoomImplAsync(maxPlayerCount, password);
                 status = Status.HostingRoom;
                 return new HostRoomResult(hostingRoomInfo);
             }, () => status = Status.SearchingRoom);
@@ -262,26 +260,23 @@ namespace PlanetaGameLabo.MatchMaker
         /// Create and host new room to the server with trying to create port mapping.
         /// </summary>
         /// <param name="maxPlayerCount"></param>
-        /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public void HostRoomWithCreatingPortMapping(byte maxPlayerCount, bool isPublic = true, string password = "",
+        public void HostRoomWithCreatingPortMapping(byte maxPlayerCount, string password = "",
             Action<ErrorInfo, HostRoomWithCreatingPortMappingResult> callback = null)
         {
-            RunTask(async () => await HostRoomWithCreatingPortMappingAsync(maxPlayerCount, isPublic, password),
-                callback);
+            RunTask(async () => await HostRoomWithCreatingPortMappingAsync(maxPlayerCount, password), callback);
         }
 
         /// <summary>
         /// Create and host new room to the server with trying to create port mapping.
         /// </summary>
         /// <param name="maxPlayerCount"></param>
-        /// <param name="isPublic"></param>
         /// <param name="password"></param>
         /// <returns></returns>
         public async Task<(ErrorInfo errorInfo, HostRoomWithCreatingPortMappingResult result)>
-            HostRoomWithCreatingPortMappingAsync(byte maxPlayerCount, bool isPublic = true, string password = "")
+            HostRoomWithCreatingPortMappingAsync(byte maxPlayerCount, string password = "")
         {
             if (status != Status.SearchingRoom)
             {
@@ -293,7 +288,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 status = Status.StartingHostingRoom;
                 var (isDefaultPortUsed, privatePort, publicPort) =
-                    await CreateRoomWithCreatingPortMappingImplAsync(maxPlayerCount, isPublic, password);
+                    await CreateRoomWithCreatingPortMappingImplAsync(maxPlayerCount, password);
                 status = Status.HostingRoom;
                 return new HostRoomWithCreatingPortMappingResult(hostingRoomInfo, isDefaultPortUsed, privatePort,
                     publicPort);
@@ -717,23 +712,21 @@ namespace PlanetaGameLabo.MatchMaker
                 .ToList();
         }
 
-        private async Task CreateRoomImplAsync(byte maxPlayerCount, bool isPublic = true,
-            string password = "")
+        private async Task CreateRoomImplAsync(byte maxPlayerCount, string password = "")
         {
-            await _client.CreateRoomAsync(roomGroupIndex, maxPlayerCount, _gameDefaultPort, isPublic,
-                password);
-            hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, isPublic, _client.HostingRoomId,
-                maxPlayerCount);
+            await _client.CreateRoomAsync(roomGroupIndex, maxPlayerCount, _gameDefaultPort, password);
+            hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, _client.HostingRoomId,
+                maxPlayerCount, password);
         }
 
         private async Task<(bool isDefaultPortUsed, ushort privatePort, ushort publicPort)>
-            CreateRoomWithCreatingPortMappingImplAsync(byte maxPlayerCount, bool isPublic = true, string password = "")
+            CreateRoomWithCreatingPortMappingImplAsync(byte maxPlayerCount, string password = "")
         {
             var result = await _client.CreateRoomWithCreatingPortMappingAsync(roomGroupIndex, maxPlayerCount,
                 TransportProtocol.Tcp, GenerateGamePortCandidateList(), _gameDefaultPort,
-                (int)(_natDiscoverTimeOutSeconds * 1000), isPublic, password);
-            hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, isPublic, _client.HostingRoomId,
-                maxPlayerCount);
+                (int)(_natDiscoverTimeOutSeconds * 1000), password);
+            hostingRoomInfo = new HostingRoomInfo(_client.HostingRoomGroupIndex, _client.HostingRoomId,
+                maxPlayerCount, password);
             return result.IsDefaultPortUsed
                 ? (true, _gameDefaultPort, _gameDefaultPort)
                 : (false, result.UsedPrivatePortFromCandidates, result.UsedPublicPortFromCandidates);

@@ -22,7 +22,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var result = await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex,
                 options.MaxPlayerCount, options.Protocol, options.PortCandidates, options.DefaultPortNumber,
-                options.DiscoverTimeoutMilliSeconds, options.IsPublic, options.Password);
+                options.DiscoverTimeoutMilliSeconds, options.Password);
 
             OutputStream.WriteLine(result.IsDefaultPortUsed
                 ? "Default port is used."
@@ -57,10 +57,6 @@ namespace PlanetaGameLabo.MatchMaker
         [CommandLine.Option('c', "port_candidates", Default = new ushort[] { }, Required = false, Separator = ',',
             HelpText = "Candidates of port to map.")]
         public IEnumerable<ushort> PortCandidates { get; set; }
-
-        [CommandLine.Option('u', "is_public", Default = true, Required = false,
-            HelpText = "Create public room if true.")]
-        public bool IsPublic { get; set; }
 
         [CommandLine.Option('p', "password", Default = "", Required = false,
             HelpText = "A password for private room.")]

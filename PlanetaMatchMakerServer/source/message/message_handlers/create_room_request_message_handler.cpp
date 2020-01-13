@@ -34,8 +34,8 @@ namespace pgl {
 			room_data room_data{
 				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
 				param->session_data.client_player_name(),
-				(message.is_public ? room_setting_flag::public_room : room_setting_flag::none) | room_setting_flag::
-				open_room,
+				(message.password.length() == 0 ? room_setting_flag::public_room : room_setting_flag::none) |
+				room_setting_flag::open_room,
 				message.password,
 				message.max_player_count,
 				datetime::now(),

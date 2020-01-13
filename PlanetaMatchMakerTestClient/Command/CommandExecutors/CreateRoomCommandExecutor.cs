@@ -18,7 +18,7 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             await sharedClient.CreateRoomAsync(options.RoomGroupIndex, options.MaxPlayerCount, options.PortNumber,
-                options.IsPublic, options.Password);
+                options.Password);
             OutputStream.WriteLine(
                 $"Room created with id \"{sharedClient.HostingRoomId}\" in room group {sharedClient.HostingRoomGroupIndex}.");
         }
@@ -37,10 +37,6 @@ namespace PlanetaGameLabo.MatchMaker
         [CommandLine.Value(2, MetaName = "port_number", Required = true,
             HelpText = "A port number which is used in hosting game.")]
         public ushort PortNumber { get; set; }
-
-        [CommandLine.Option('u', "is_public", Default = true, Required = false,
-            HelpText = "Create public room if true.")]
-        public bool IsPublic { get; set; }
 
         [CommandLine.Option('p', "password", Default = "", Required = false,
             HelpText = "A password for private room.")]

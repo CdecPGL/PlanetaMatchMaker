@@ -105,17 +105,15 @@ namespace pgl {
 		}
 	};
 
-	// 21 bytes
+	// 20 bytes
 	struct create_room_request_message final {
 		room_group_index_t group_index;
-		bool is_public;
 		room_password_t password;
 		uint8_t max_player_count;
 		port_number_type port_number;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
 			serializer += group_index;
-			serializer += is_public;
 			serializer += password;
 			serializer += max_player_count;
 			serializer += port_number;

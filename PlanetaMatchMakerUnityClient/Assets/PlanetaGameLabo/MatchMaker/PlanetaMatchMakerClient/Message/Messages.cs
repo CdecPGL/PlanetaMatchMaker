@@ -111,14 +111,12 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomGroupInfo[] RoomGroupInfoList;
     }
 
-    // 21 bytes
+    // 20 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     internal struct CreateRoomRequestMessage
     {
         public RoomGroupIndexType GroupIndex;
-
-        public bool IsPublic;
 
         [FixedLength(RoomConstants.RoomPasswordLength)]
         public string Password;

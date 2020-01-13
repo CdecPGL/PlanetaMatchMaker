@@ -34,17 +34,18 @@ namespace PlanetaGameLabo.MatchMaker
 
     public sealed class HostingRoomInfo
     {
-        public HostingRoomInfo(byte roomGroupIndex, bool isPublic, uint roomId, byte maxPlayerCount)
+        public HostingRoomInfo(byte roomGroupIndex, uint roomId, byte maxPlayerCount, string password)
         {
             this.roomGroupIndex = roomGroupIndex;
             this.roomId = roomId;
             this.maxPlayerCount = maxPlayerCount;
-            this.isPublic = isPublic;
+            this.password = password;
         }
 
         public byte roomGroupIndex { get; }
         public uint roomId { get; }
         public byte maxPlayerCount { get; }
-        public bool isPublic { get; }
+        public bool isPublic => string.IsNullOrEmpty(password);
+        public string password { get; }
     }
 }
