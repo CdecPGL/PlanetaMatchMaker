@@ -175,14 +175,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="sortKind"></param>
         /// <param name="targetFlags"></param>
         /// <param name="searchName"></param>
+        /// <param name="searchTag"></param>
         /// <param name="callback"></param>
         public void RequestRoomList(byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
-            RoomSearchTargetFlag targetFlags, string searchName = "",
+            RoomSearchTargetFlag targetFlags, string searchName = "", ushort searchTag = 0,
             Action<ErrorInfo, RequestRoomListResult> callback = null)
         {
             RunTask(
                 async () => await RequestRoomListAsync(resultStartIndex, resultCount, sortKind, targetFlags,
-                    searchName), callback);
+                    searchName, searchTag), callback);
         }
 
         /// <summary>
@@ -193,9 +194,10 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="sortKind"></param>
         /// <param name="targetFlags"></param>
         /// <param name="searchName"></param>
+        /// <param name="searchTag"></param>
         public async Task<(ErrorInfo errorInfo, RequestRoomListResult result)> RequestRoomListAsync(
             byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
-            RoomSearchTargetFlag targetFlags, string searchName = "")
+            RoomSearchTargetFlag targetFlags, string searchName = "", ushort searchTag = 0)
         {
             if (status != Status.SearchingRoom)
             {
@@ -212,7 +214,7 @@ namespace PlanetaGameLabo.MatchMaker
             return await RunTaskWithErrorHandlingAsync(async () =>
                 {
                     var (totalRoomCount, _, startIndex, roomInfoList) = await GetRoomListAsync(resultStartIndex,
-                        resultCount, sortKind, targetFlags, searchName);
+                        resultCount, sortKind, targetFlags, searchName, searchTag);
                     return new RequestRoomListResult(totalRoomCount, startIndex,
                         roomInfoList);
                 },
@@ -753,11 +755,11 @@ namespace PlanetaGameLabo.MatchMaker
         private async Task<(byte totalRoomCount, byte matchedRoomCount, byte startIndex, IReadOnlyList<RoomInfo>
                 roomInfoList)>
             GetRoomListAsync(byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
-                RoomSearchTargetFlag targetFlags, string searchName)
+                RoomSearchTargetFlag targetFlags, string searchName, ushort searchTag)
         {
             var hostRoomGroupIndex = roomGroupIndex;
             var (totalRoomCount, matchedRoomCount, roomInfoList) = await _client.GetRoomListAsync(hostRoomGroupIndex,
-                resultStartIndex, resultCount, sortKind, targetFlags, searchName);
+                resultStartIndex, resultCount, sortKind, targetFlags, searchName, searchTag);
             return (totalRoomCount, resultStartIndex, matchedRoomCount,
                 roomInfoList.Select(result => new RoomInfo(hostRoomGroupIndex, result)).ToList().AsReadOnly());
         }

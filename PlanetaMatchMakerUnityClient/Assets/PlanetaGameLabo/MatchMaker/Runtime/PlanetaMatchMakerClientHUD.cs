@@ -100,7 +100,7 @@ namespace PlanetaGameLabo.MatchMaker
                         foreach (var room in _roomList)
                         {
                             if (GUILayout.Button(
-                                $"${room.hostPlayerFullName}: {room.roomId}({room.currentPlayerCount}/{room.maxPlayerCount}) [{room.settingFlags}] @{room.createDatetime}")
+                                $"{room.hostPlayerFullName}: {room.roomId}({room.currentPlayerCount}/{room.maxPlayerCount})\n[{room.settingFlags}]\n@{room.createDatetime}")
                             )
                             {
                                 JoinRoom(room.roomId);
@@ -230,7 +230,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             _client.RequestRoomList(0, 100,
-                RoomDataSortKind.NameAscending, searchTargetFlags, _roomSearchName, (errorInfo, args) =>
+                RoomDataSortKind.NameAscending, searchTargetFlags, _roomSearchName, _roomSearchTag, (errorInfo, args) =>
                 {
                     if (errorInfo)
                     {
