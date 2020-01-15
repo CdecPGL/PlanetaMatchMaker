@@ -27,6 +27,18 @@ namespace pgl {
 		};
 
 		try {
+			// Client which is already hosting room cannot create room newly.
+			if (param->session_data.is_hosting_room()) {
+				log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
+					"Failed to create new room with player\"",
+					param->session_data.client_player_name().generate_full_name(),
+					"\" because this client is already hosting room with id ", param->session_data.hosting_room_id(),
+					".");
+				header.error_code = message_error_code::already_hosting_room;
+				send(param, header, reply);
+				return;
+			}
+
 			// Create requested room
 			const auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
 			auto game_host_endpoint = host_endpoint;

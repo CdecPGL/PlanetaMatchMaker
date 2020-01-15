@@ -27,6 +27,7 @@ namespace PlanetaGameLabo.MatchMaker
         JoinRejected,
         PlayerCountReachesLimit,
         RoomGroupIndexOutOfRange,
+        AlreadyHostingRoom
     };
 
     internal enum MessageType : byte

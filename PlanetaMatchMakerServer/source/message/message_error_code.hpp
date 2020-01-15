@@ -22,5 +22,6 @@ namespace pgl {
 		join_rejected,
 		player_count_reaches_limit,
 		room_group_index_out_of_range,
+		already_hosting_room
 	};
 }

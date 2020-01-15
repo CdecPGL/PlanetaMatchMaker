@@ -1,5 +1,7 @@
 # Server Code Structure
 
+make server simple, make client complex.
+
 ## Server
 
 Server has below things.
