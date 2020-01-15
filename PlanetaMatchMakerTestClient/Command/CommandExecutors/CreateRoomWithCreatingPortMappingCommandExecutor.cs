@@ -22,7 +22,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var result = await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.RoomGroupIndex,
                 options.MaxPlayerCount, options.Protocol, options.PortCandidates, options.DefaultPortNumber,
-                options.DiscoverTimeoutMilliSeconds, options.Password);
+                options.DiscoverTimeoutMilliSeconds, options.Password, options.forceToDiscoverNatDevice);
 
             OutputStream.WriteLine(result.IsDefaultPortUsed
                 ? "Default port is used."
@@ -61,5 +61,9 @@ namespace PlanetaGameLabo.MatchMaker
         [CommandLine.Option('p', "password", Default = "", Required = false,
             HelpText = "A password for private room.")]
         public string Password { get; set; }
+
+        [CommandLine.Option('f', "force_to_discover_nat_device", Default = "", Required = false,
+            HelpText = "Force to discover NAT device if true.")]
+        public bool forceToDiscoverNatDevice { get; set; }
     }
 }

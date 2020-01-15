@@ -239,13 +239,14 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="portNumberCandidates">The candidates of port number which is used for accept TCP connection of game</param>
         /// <param name="defaultPortNumber">The port number which is tried to use for accept TCP connection of game first</param>
         /// <param name="password"></param>
+        /// <param name="forceToDiscoverNatDevice">force to discover NAT device even if NAT is already discovered if true</param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<CreateRoomWithCreatingPortMappingResult> CreateRoomWithCreatingPortMappingAsync(
             byte roomGroupIndex, byte maxPlayerCount, TransportProtocol protocol,
             IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber,
-            int discoverNatTimeoutMilliSeconds = 5000, string password = "")
+            int discoverNatTimeoutMilliSeconds = 5000, string password = "", bool forceToDiscoverNatDevice = false)
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
@@ -266,7 +267,8 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                if (!PortMappingCreator.IsNatDeviceAvailable || !PortMappingCreator.IsDiscoverNatDone)
+                if (forceToDiscoverNatDevice || !PortMappingCreator.IsNatDeviceAvailable ||
+                    !PortMappingCreator.IsDiscoverNatDone)
                 {
                     Logger.Log(LogLevel.Info, "Execute discovering NAT device because it is not done.");
                     await PortMappingCreator.DiscoverNatAsync(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);

@@ -213,7 +213,8 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var (_, _, roomInfoList) =
                     await sharedClient.GetRoomListAsync(0, 0, 100, RoomDataSortKind.NameAscending);
-                if (roomInfoList.All(r => r.RoomId != lastHostedRoomId && r.HostPlayerFullName == sharedClient.PlayerFullName))
+                if (roomInfoList.All(r =>
+                    r.RoomId != lastHostedRoomId && r.HostPlayerFullName == sharedClient.PlayerFullName))
                 {
                     throw new TestFailedException(true, "Created room is not listed in ListRoomRequest.");
                 }
@@ -260,12 +261,6 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                if (!sharedClient.PortMappingCreator.IsDiscoverNatDone)
-                {
-                    OutputStream.WriteLine("Execute NAT discovering because it is not done.");
-                    await sharedClient.PortMappingCreator.DiscoverNatAsync();
-                }
-
                 await sharedClient.CreateRoomWithCreatingPortMappingAsync(0, 8, options.GameHostProtocol,
                     options.GameHostPortCandidates, options.GameHostDefaultPort, options.DiscoverTimeoutMilliSeconds);
                 lastHostedRoomId = sharedClient.HostingRoomId;
