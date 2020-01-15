@@ -31,10 +31,11 @@ namespace pgl {
 			const auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
 			auto game_host_endpoint = host_endpoint;
 			game_host_endpoint.port_number = message.port_number;
+			const auto is_public = message.password.length() == 0;
 			room_data room_data{
 				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
 				param->session_data.client_player_name(),
-				(message.password.length() == 0 ? room_setting_flag::public_room : room_setting_flag::none) |
+				(is_public ? room_setting_flag::public_room : room_setting_flag::none) |
 				room_setting_flag::open_room,
 				message.password,
 				message.max_player_count,
@@ -45,7 +46,8 @@ namespace pgl {
 			};
 
 			reply.room_id = room_data_container.assign_id_and_add_data(room_data);
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New room for player \"",
+			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New ",
+				is_public ? "public" : "private", " room for player \"",
 				param->session_data.client_player_name().generate_full_name(), "\" is created in group ",
 				message.group_index, " with id: ", reply.room_id);
 			param->session_data.set_hosting_room_id(message.group_index, reply.room_id);

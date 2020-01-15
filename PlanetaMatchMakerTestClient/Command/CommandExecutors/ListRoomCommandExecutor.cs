@@ -58,7 +58,7 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "A name to search room. Empty string means search all.")]
         public string SearchName { get; set; }
 
-        [CommandLine.Option('t', "search_tag", Default = "", Required = false,
+        [CommandLine.Option('t', "search_tag", Default = (ushort)0, Required = false,
             HelpText = "A tag to search room. 0 means search all.")]
         public ushort SearchTag { get; set; }
     }

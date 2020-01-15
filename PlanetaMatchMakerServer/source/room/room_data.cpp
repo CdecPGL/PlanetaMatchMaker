@@ -47,14 +47,14 @@ namespace pgl {
 	std::function<bool(const room_data&)> get_room_data_filter_function(room_search_target_flag search_target_flags,
 		const player_full_name& search_full_name) {
 		std::function<bool(const room_data&)> setting_filter = [search_target_flags](const room_data& data) {
-			auto search_source_flags = room_search_target_flag::none;
-			search_source_flags |= (data.setting_flags & room_setting_flag::public_room) != room_setting_flag::none
-				                       ? room_search_target_flag::public_room
-				                       : room_search_target_flag::private_room;
-			search_source_flags |= (data.setting_flags & room_setting_flag::open_room) != room_setting_flag::none
-				                       ? room_search_target_flag::open_room
-				                       : room_search_target_flag::closed_room;
-			return (search_source_flags & search_target_flags) != room_search_target_flag::none;
+			const auto public_flags = (data.setting_flags & room_setting_flag::public_room) != room_setting_flag::none
+				                          ? room_search_target_flag::public_room
+				                          : room_search_target_flag::private_room;
+			const auto open_flags = (data.setting_flags & room_setting_flag::open_room) != room_setting_flag::none
+				                        ? room_search_target_flag::open_room
+				                        : room_search_target_flag::closed_room;
+			return (public_flags & search_target_flags) != room_search_target_flag::none
+				&& (open_flags & search_target_flags) != room_search_target_flag::none;
 		};
 
 		if (search_full_name.is_name_assigned()) {
