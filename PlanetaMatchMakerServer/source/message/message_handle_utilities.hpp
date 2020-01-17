@@ -2,14 +2,14 @@
 
 #include "async/timer.hpp"
 #include "async/read_write.hpp"
-#include "server/server_error.hpp"
+#include "server/server_session_error.hpp"
 #include "server/server_data.hpp"
 #include "logger/log.hpp"
 #include "messages.hpp"
 #include "message_handle_parameter.hpp"
 
 namespace pgl {
-	// Send data to remote endpoint. server_error will be thrown when send error occured.
+	// Send data to remote endpoint. server_session_error will be thrown when send error occured.
 	template <typename FirstData, typename... RestData>
 	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&& ... rest_data) {
 		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
@@ -29,16 +29,17 @@ namespace pgl {
 				" to the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
-				throw server_error(false, server_error_code::message_send_timeout, extra_message);
+				throw server_session_error(server_session_error_code::not_continuable_error,
+					extra_message + "(Failed to send message due to timeout)");
 			}
 			if (e.code() == boost::asio::error::eof) {
-				throw server_error(false, server_error_code::disconnected_by_client, extra_message);
+				throw server_session_error(server_session_error_code::unexpected_disconnection, extra_message);
 			}
-			throw server_error(false, server_error_code::message_send_error, extra_message);
+			throw server_session_error(server_session_error_code::not_continuable_error, extra_message);
 		}
 	}
 
-	// Receive data. server_error will be thrown when reception error occured.
+	// Receive data. server_session_error will be thrown when reception error occured.
 	// todo: use shared_ptr to avoid invalid reference access in lambda function
 	template <typename FirstData, typename... RestData>
 	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData& ... rest_data) {
@@ -60,12 +61,13 @@ namespace pgl {
 				" from the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
-				throw server_error(false, server_error_code::message_reception_timeout, extra_message);
+				throw server_session_error(server_session_error_code::not_continuable_error,
+					extra_message + "(Failed to receive message due to timeout)");
 			}
 			if (e.code() == boost::asio::error::eof) {
-				throw server_error(false, server_error_code::disconnected_by_client, extra_message);
+				throw server_session_error(server_session_error_code::unexpected_disconnection, extra_message);
 			}
-			throw server_error(false, server_error_code::message_reception_error, extra_message);
+			throw server_session_error(server_session_error_code::not_continuable_error, extra_message);
 		}
 	}
 
@@ -82,10 +84,12 @@ namespace pgl {
 
 		const reply_message_header header{
 			ReplyMessageType,
-			message_error_code::room_group_index_out_of_range
+			message_error_code::room_group_not_found
 		};
 		send(param, header, reply_message);
-		throw server_error(true, server_error_code::room_group_index_out_of_range);
+		const auto error_message = minimal_serializer::generate_string("The room group with index \"", room_group_index,
+			"\" does not exist.");
+		throw server_session_error(server_session_error_code::continuable_error, error_message);
 	}
 
 	// Check a room group index is valid. If it is not valid, throw server error.
@@ -107,10 +111,12 @@ namespace pgl {
 		// Send room doesn't exist error to the client
 		const reply_message_header header{
 			ReplyMessageType,
-			message_error_code::room_does_not_exist
+			message_error_code::room_not_found
 		};
 		send(param, header, reply_message);
-		throw server_error(true, server_error_code::room_does_not_exist);
+		const auto error_message = minimal_serializer::generate_string("The room with id \"", room_id,
+			"\" does not exist.");
+		throw server_session_error(server_session_error_code::continuable_error, error_message);
 	}
 
 	// Check a room id exists. If it doesn't exist, throw server error.

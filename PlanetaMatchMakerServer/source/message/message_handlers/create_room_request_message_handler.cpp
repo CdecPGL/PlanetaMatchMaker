@@ -34,7 +34,7 @@ namespace pgl {
 					param->session_data.client_player_name().generate_full_name(),
 					"\" because this client is already hosting room with id ", param->session_data.hosting_room_id(),
 					".");
-				header.error_code = message_error_code::already_hosting_room;
+				header.error_code = message_error_code::client_already_hosting_room;
 				send(param, header, reply);
 				return;
 			}
@@ -73,8 +73,9 @@ namespace pgl {
 		catch (const unique_variable_duplication_error&) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
 				"Failed to create new room with player\"",
-				param->session_data.client_player_name().generate_full_name(), "\" because the name is duplicated");
-			header.error_code = message_error_code::room_name_duplicated;
+				param->session_data.client_player_name().generate_full_name(),
+				"\" because the name is duplicated. This is not expected behavior.");
+			header.error_code = message_error_code::server_error;
 			send(param, header, reply);
 		}
 	}

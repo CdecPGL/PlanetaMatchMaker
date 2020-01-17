@@ -211,8 +211,8 @@
     <ClInclude Include="source\message\message_handlers\list_room_request_message_handler.hpp" />
     <ClInclude Include="source\message\message_handler_invoker.hpp" />
     <ClInclude Include="source\message\message_handler_invoker_factory.hpp" />
-    <ClInclude Include="source\server\server_error.hpp" />
-    <ClInclude Include="source\server\server_error_code.hpp" />
+    <ClInclude Include="source\server\server_session_error.hpp" />
+    <ClInclude Include="source\server\server_session_error_code.hpp" />
     <ClInclude Include="source\message\message_handle_parameter.hpp" />
     <ClInclude Include="source\network\network_layer.hpp" />
     <ClInclude Include="source\network\transport_layer.hpp" />
@@ -262,8 +262,8 @@
     <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />
     <ClCompile Include="source\server\server.cpp" />
     <ClCompile Include="source\server\server_data.cpp" />
-    <ClCompile Include="source\server\server_error.cpp" />
-    <ClCompile Include="source\server\server_error_code.cpp" />
+    <ClCompile Include="source\server\server_session_error.cpp" />
+    <ClCompile Include="source\server\server_session_error_code.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />
     <ClCompile Include="source\server\server_setting.cpp" />
     <ClCompile Include="source\server\server_thread.cpp" />

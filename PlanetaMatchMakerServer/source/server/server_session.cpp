@@ -6,7 +6,7 @@
 #include "server/server_data.hpp"
 #include "room/room_data_container.hpp"
 #include "logger/log.hpp"
-#include "server_error.hpp"
+#include "server_session_error.hpp"
 #include "utilities/checked_static_cast.hpp"
 #include "server/server_setting.hpp"
 
@@ -39,9 +39,9 @@ namespace pgl {
 							shared_this->socket_.remote_endpoint()));
 				}
 				catch (system::system_error& e) {
-					const auto extra_message = minimal_serializer::generate_string(e, " @",
+					const auto extra_message = minimal_serializer::generate_string("acception failed: ", e, " @",
 						shared_this->socket_.remote_endpoint());
-					throw server_error(false, server_error_code::acception_failed, extra_message);
+					throw server_session_error(server_session_error_code::not_continuable_error, extra_message);
 				}
 
 				log_with_endpoint(log_level::info, shared_this->socket_.remote_endpoint(),
@@ -65,8 +65,8 @@ namespace pgl {
 						shared_this->message_handler_invoker_.handle_message(message_handler_param,
 							shared_this->server_setting_.enable_session_key_check);
 					}
-					catch (const server_error& e) {
-						if (e.is_continuable()) {
+					catch (const server_session_error& e) {
+						if (e.error_code() == server_session_error_code::continuable_error) {
 							log_with_endpoint(log_level::info,
 								shared_this->session_data_->remote_endpoint().to_boost_endpoint(), e);
 						}
@@ -79,20 +79,32 @@ namespace pgl {
 					"Unhandled error: ", e);
 				shared_this->restart();
 			}
-			catch (const server_error& e) {
-				if (e.is_continuable()) {
-					log_with_endpoint(log_level::warning,
-						shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-						"Continuable error is not handled.");
-				}
-				if (e.error_code() == server_error_code::disconnected_expectedly) {
-					log_with_endpoint(log_level::info,
-						shared_this->session_data_->remote_endpoint().to_boost_endpoint(), e);
-				}
-				else {
-					log_with_endpoint(log_level::error,
-						shared_this->session_data_->remote_endpoint().to_boost_endpoint(), "Message handling error: ",
-						e);
+			catch (const server_session_error& e) {
+				switch (e.error_code()) {
+					case server_session_error_code::expected_disconnection:
+						log_with_endpoint(log_level::info,
+							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+							"Disconnected expectedly: ", e);
+						break;
+					case server_session_error_code::unexpected_disconnection:
+						log_with_endpoint(log_level::warning,
+							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+							"Disconnected unexpectedly: ", e);
+						break;
+					case server_session_error_code::continuable_error:
+						log_with_endpoint(log_level::warning,
+							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+							"Continuable error is not handled: ", e);
+						break;
+					case server_session_error_code::not_continuable_error:
+						log_with_endpoint(log_level::error,
+							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+							"Not continuable error: ", e);
+						break;
+					default:
+						log_with_endpoint(log_level::error,
+							shared_this->session_data_->remote_endpoint().to_boost_endpoint(), "Unexpected error: ", e);
+						break;
 				}
 
 				shared_this->restart();

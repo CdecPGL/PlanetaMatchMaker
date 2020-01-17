@@ -17,9 +17,9 @@ namespace pgl {
 
 		// Check if the client is host of requested room
 		if (room_data.host_endpoint != endpoint::make_from_boost_endpoint(param->socket.remote_endpoint())) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "The client is not host of requested ",
+			const auto error_message = minimal_serializer::generate_string("The client is not host of requested ",
 				room_data, ". Room host endpoint is ", room_data.host_endpoint.to_boost_endpoint(), ".");
-			throw server_error(true, server_error_code::room_permission_error);
+			throw server_session_error(server_session_error_code::continuable_error, error_message);
 		}
 
 		// Change status of requested room

@@ -3,7 +3,7 @@
 #include <boost/asio.hpp>
 
 #include "logger/log.hpp"
-#include "server/server_error.hpp"
+#include "server/server_session_error.hpp"
 #include "session/session_data.hpp"
 #include "message_handle_utilities.hpp"
 
@@ -18,9 +18,7 @@ namespace pgl {
 
 	auto message_handler_invoker::handle_specific_message(const message_type specified_message_type,
 		std::shared_ptr<message_handle_parameter> param, const bool check_session_key) const ->
-	void {
-		handle_message_impl(true, specified_message_type, std::move(param), check_session_key);
-	}
+	void { handle_message_impl(true, specified_message_type, std::move(param), check_session_key); }
 
 	void message_handler_invoker::handle_message_impl(const bool enable_message_specification,
 		message_type specified_message_type, std::shared_ptr<message_handle_parameter> param,
@@ -33,22 +31,23 @@ namespace pgl {
 		// Check if a session is valid if need
 		if (check_session_key) {
 			if (!param->session_data.is_session_key_generated()) {
-				throw server_error(false, server_error_code::invalid_session, "A session key is not generated.");
+				throw server_session_error(server_session_error_code::not_continuable_error, "A session key is not generated.");
 			}
 			if (!param->session_data.check_session_key(header.session_key)) {
-				throw server_error(false, server_error_code::invalid_session,
+				throw server_session_error(server_session_error_code::not_continuable_error,
 					minimal_serializer::generate_string("A session key(", header.session_key, ") is not valid."));
 			}
 		}
 
 		if (!is_handler_exist(header.message_type)) {
-			throw server_error(false, server_error_code::invalid_message_type,
-				minimal_serializer::generate_string(static_cast<int>(header.message_type)));
+			throw server_session_error(server_session_error_code::not_continuable_error,
+				minimal_serializer::generate_string("Invalid message type: ", static_cast<int>(header.message_type)));
 		}
 
 		if (enable_message_specification && header.message_type != specified_message_type) {
-			throw server_error(false, server_error_code::message_type_mismatch,
-				minimal_serializer::generate_string("expected: ", specified_message_type, ", actual: ", header.message_type));
+			throw server_session_error(server_session_error_code::not_continuable_error,
+				minimal_serializer::generate_string("expected: ", specified_message_type, ", actual: ",
+					header.message_type));
 		}
 
 		const auto message_handler = make_message_handler(header.message_type);

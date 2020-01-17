@@ -5,23 +5,23 @@
 namespace pgl {
 	enum class message_error_code : uint8_t {
 		ok,
-		unknown_error,
-		// server api version and client api version are not same
+		// Server internal error.
+		server_error,
+		// Server api version and client api version are not same.
 		api_version_mismatch,
-		authentication_error,
-		// when in black list
-		access_denied,
-		room_name_duplicated,
-		room_count_reaches_limit,
-		room_does_not_exist,
-		room_is_not_opened,
-		room_password_is_wrong,
-		room_name_is_empty,
-		// not authenticated or not host of room
-		permission_denied,
-		join_rejected,
-		player_count_reaches_limit,
-		room_group_index_out_of_range,
-		already_hosting_room
+		// Wrong parameters which must be rejected in the client is passed for request.
+		request_parameter_wrong,
+		// Indicated room is not found.
+		room_not_found,
+		// Indicated password of room is not correct.
+		room_password_wrong,
+		// The number of player reaches limit.
+		room_full,
+		// Request is rejected because indicated room is the room which you are not host of or closed.
+		room_permission_denied,
+		// Indicated room group is not found.
+		room_group_not_found,
+		// Request is failed because the client is already hosting room.
+		client_already_hosting_room,
 	};
 }

@@ -21,7 +21,7 @@ namespace pgl {
 				"\" in room group \"", message.group_index, "\" is not opened.");
 			const reply_message_header header{
 				message_type::join_room_reply,
-				message_error_code::room_is_not_opened
+				message_error_code::room_permission_denied
 			};
 			send(param, header, reply);
 			return;
@@ -30,11 +30,12 @@ namespace pgl {
 		// Check password if private room
 		if ((room_data.setting_flags & room_setting_flag::public_room) != room_setting_flag::public_room && room_data.
 			password != message.password) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "The password is wrong for requested room \"", message.room_id,
+			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
+				"The password is wrong for requested room \"", message.room_id,
 				"\" in room group \"", message.group_index, ".");
 			const reply_message_header header{
 				message_type::join_room_reply,
-				message_error_code::room_password_is_wrong
+				message_error_code::room_password_wrong
 			};
 			send(param, header, reply);
 			return;
@@ -42,15 +43,15 @@ namespace pgl {
 
 		// Check player acceptable
 		if (room_data.current_player_count >= room_data.max_player_count) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
-				"\" in room group \"", message.group_index, "\" is full of players (", room_data.current_player_count,
-				").");
 			const reply_message_header header{
 				message_type::join_room_reply,
-				message_error_code::player_count_reaches_limit
+				message_error_code::room_full
 			};
 			send(param, header, reply);
-			throw server_error(true, server_error_code::room_player_is_full);
+			const auto error_message = minimal_serializer::generate_string("Requested room \"", message.room_id,
+				"\" in room group \"", message.group_index, "\" is full of players (", room_data.current_player_count,
+				").");
+			throw server_session_error(server_session_error_code::continuable_error, error_message);
 		}
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
 			"\" in room group \"", message.group_index, "\" accepted new player. (", room_data.current_player_count,
@@ -67,6 +68,6 @@ namespace pgl {
 		send(param, header, reply);
 
 		// Disconnect
-		throw server_error(false, server_error_code::disconnected_expectedly);
+		throw server_session_error(server_session_error_code::expected_disconnection);
 	}
 }
