@@ -66,7 +66,7 @@ The size is 8 bytes.
 |ok|The request is processed succesfully.|yes|
 |api_version_mismatch|An API version of server is different from what the client required.|no|
 |request_parameter_wrong|A player name is empty.|no|
-|DISCONNECT|Already authenticated.|no|
+|DISCONNECT|Authentication request is duplicate.|no|
 
 ### List Room Group Request
 
@@ -110,7 +110,7 @@ The size is 20 bytes.
 |:---|:---|---:|:---|
 |group_index|8bit unsigned integer|1|An index of group where you want to create room.|
 |password|16 byte length UTF-8 string|16|A password of room you create. If this is empty, the room is created as a public room.|
-|max_player_count|8bit unsigned integer|1|A limit of player count in the room.|
+|max_player_count|8bit unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
 |port_number|16bit unsigned integer|2|A port number which is used for game host. 49513 to 65535 is available.|
 
 ### Reply
@@ -216,6 +216,44 @@ separation = floor((reply.reply_room_count + 5) / 6);
 |ok|The request is processed succesfully.|yes|
 |room_group_not_found|Indicated room group doesn't exist.|yes|
 |request_parameter_wrong|sort_kind is invalid.|yes|
+
+## Join Room Request
+
+### Parameters
+
+The size is 21 bytes.
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|group_index|8bit unsigned integer|1|An index of group where the room you want to join exists.|
+|room_id|32bit unsigned integer|4|An id of the room you want to join.|
+|password|16 byte length UTF-8 string|16|A password of the room you want to join. This is only refered when indicated room is private.|
+
+### Reply
+
+The size is 18 bytes.
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|game_host_endpoint|endpoint|18|An endpoint of game host which is hosting the room you want to join.|
+
+`game_host_endpoint` is 18 bytes data as below:
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|ip_address|A 16 elements array of 8bit unsigned integer|16|A IP address by big endian. In IPv4, IPv4-Mapped IPv6 is used. (example, `::ffff:192.0.0.1`)|
+|port_number|16 bits unsigned integer|2|A port number.|
+
+### Error Codes
+
+|Name|Condition|Continuable|
+|:---|:---|:---|
+|ok|The request is processed succesfully.|yes|
+|room_group_not_found|Indicated room group doesn't exist.|yes|
+|room_not_found|Indicated room doesn't exist.|yes|
+|room_permission_denied|Indicated room is closed.|yes|
+|room_password_wrong|Indicated password is wrong.|yes|
+|room_full|The number of player reaches limit.|yes|
 
 ## Force Disconnect Conditions
 
