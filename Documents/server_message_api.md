@@ -255,6 +255,39 @@ The size is 18 bytes.
 |room_password_wrong|Indicated password is wrong.|yes|
 |room_full|The number of player reaches limit.|yes|
 
+## Update Room Status Notice
+
+### Parameters
+
+The size is 8 bytes.
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|group_index|8bit unsigned integer|1|An index of group where the room you want to join exists.|
+|room_id|32bit unsigned integer|4|An id of the room you want to join.|
+|status|8bit unsigned integer|1|A new status of the room.|
+|is_current_player_count_changed|boolean|1|A flag which indicates if playr count is updated.|
+|current_player_count|8bit unsigned integer|1|A new player count.|
+
+Options of `status` are as below:
+
+|Name|Value|
+|:---|---:|
+|open|1|
+|close|2|
+|remove|3|
+
+## Error Conditions
+
+Notice message is ignoreed if there are some errors in processing message.
+
+|Condition|Continuable|
+|:---|:---|
+|Indicated room group doesn't exist.|yes|
+|Indicated room doesn't exist.|yes|
+|The host of indicated room is not you.|yes|
+|The number of new player count is invalid.|yes|
+
 ## Force Disconnect Conditions
 
 The server forces to close connection immediately without any reply if wrong operation about authentication is occured.

@@ -24,8 +24,19 @@ namespace pgl {
 			throw server_session_error(server_session_error_code::continuable_error, error_message);
 		}
 
+		// Update current player count if need
+		if (message.is_current_player_count_changed) {
+			if (message.current_player_count > room_data.max_player_count) {
+				const auto error_message = minimal_serializer::generate_string("New player count \"",
+					message.current_player_count, "\" exceeds max player count \"", room_data.max_player_count,
+					"\" for ", room_data, ".");
+				throw server_session_error(server_session_error_code::continuable_error, error_message);
+			}
+
+			room_data.current_player_count = message.current_player_count;
+		}
+
 		// Change status of requested room
-		if (message.is_current_player_count_changed) { room_data.current_player_count = message.current_player_count; }
 		switch (message.status) {
 			case update_room_status_notice_message::status::open:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Open ", room_data, ".");
