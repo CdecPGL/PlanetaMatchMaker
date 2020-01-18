@@ -11,4 +11,8 @@ namespace pgl {
 				throw std::runtime_error("Invalid IP version.");
 		}
 	}
+
+	bool is_port_number_valid(const port_number_type port_number) {
+		return 49513 <= port_number && port_number <= 65535;
+	}
 }

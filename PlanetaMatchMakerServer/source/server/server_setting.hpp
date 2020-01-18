@@ -21,6 +21,7 @@ namespace pgl {
 		uint32_t thread = 1;
 		uint8_t max_room_per_room_group = 100;
 		std::vector<std::string> room_group_list = {"default"};
+		uint8_t max_player_per_room = 16;
 
 		bool enable_console_log = true;
 		log_level console_log_level = log_level::info;

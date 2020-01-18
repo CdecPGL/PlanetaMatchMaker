@@ -74,52 +74,7 @@ namespace pgl {
 	// Return true if a room group index is valid.
 	bool does_room_group_exist(std::shared_ptr<message_handle_parameter> param, room_group_index_t room_group_index);
 
-	// Check a room group index is valid. If it is not valid, reply error message to client and throw server error.
-	template <message_type ReplyMessageType, class ReplyMessage>
-	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param,
-		const room_group_index_t room_group_index,
-		const ReplyMessage& reply_message) {
-		// Check if the id is valid
-		if (does_room_group_exist(param, room_group_index)) { return; }
-
-		const reply_message_header header{
-			ReplyMessageType,
-			message_error_code::room_group_not_found
-		};
-		send(param, header, reply_message);
-		const auto error_message = minimal_serializer::generate_string("The room group with index \"", room_group_index,
-			"\" does not exist.");
-		throw server_session_error(server_session_error_code::continuable_error, error_message);
-	}
-
-	// Check a room group index is valid. If it is not valid, throw server error.
-	void check_room_group_existence(std::shared_ptr<message_handle_parameter> param,
-		room_group_index_t room_group_index);
-
 	// Return if a room id exists.
 	bool does_room_exist(std::shared_ptr<message_handle_parameter> param,
-		const room_data_container& room_data_container, room_id_t room_id);
-
-	// Check a room id exists. If it doesn't exist, reply error message to client and throw server error.
-	template <message_type ReplyMessageType, class ReplyMessage>
-	void check_room_existence(std::shared_ptr<message_handle_parameter> param,
-		const room_data_container& room_data_container, const room_id_t room_id,
-		const ReplyMessage& reply_message) {
-		// Check room existence
-		if (does_room_exist(param, room_data_container, room_id)) { return; }
-
-		// Send room doesn't exist error to the client
-		const reply_message_header header{
-			ReplyMessageType,
-			message_error_code::room_not_found
-		};
-		send(param, header, reply_message);
-		const auto error_message = minimal_serializer::generate_string("The room with id \"", room_id,
-			"\" does not exist.");
-		throw server_session_error(server_session_error_code::continuable_error, error_message);
-	}
-
-	// Check a room id exists. If it doesn't exist, throw server error.
-	void check_room_existence(std::shared_ptr<message_handle_parameter> param,
 		const room_data_container& room_data_container, room_id_t room_id);
 }

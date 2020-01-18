@@ -186,6 +186,7 @@
     <ClInclude Include="source\logger\logger.hpp" />
     <ClInclude Include="source\logger\logger_common.hpp" />
     <ClInclude Include="source\main\log_initializer.hpp" />
+    <ClInclude Include="source\message\message_parameter_validator.hpp" />
     <ClInclude Include="source\network\endpoint.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
@@ -242,6 +243,7 @@
     <ClCompile Include="source\logger\file_logger.cpp" />
     <ClCompile Include="source\logger\logger_common.cpp" />
     <ClCompile Include="source\main\log_initializer.cpp" />
+    <ClCompile Include="source\message\message_parameter_validator.cpp" />
     <ClCompile Include="source\network\endpoint.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main\main.cpp" />

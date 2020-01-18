@@ -2,7 +2,7 @@
 
 #include "server/server_data.hpp"
 #include "utilities/checked_static_cast.hpp"
-#include "../message_handle_utilities.hpp"
+#include "../message_parameter_validator.hpp"
 
 using namespace std;
 using namespace boost;
@@ -11,11 +11,14 @@ namespace pgl {
 	void list_room_request_message_handler::handle_message(const list_room_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
 
-		list_room_reply_message reply{};
+		const message_parameter_validator_with_reply<message_type::list_room_reply, list_room_reply_message>
+			parameter_validator(param);
 
 		// Check room group existence
-		check_room_group_existence<message_type::list_room_reply>(param, message.group_index, reply);
+		parameter_validator.validate_room_group_existence(message.group_index);
 		const auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
+
+		list_room_reply_message reply{};
 
 		// Generate room data list to send
 		const auto matched_data_list = room_data_container.get_data(message.sort_kind, message.search_target_flags,

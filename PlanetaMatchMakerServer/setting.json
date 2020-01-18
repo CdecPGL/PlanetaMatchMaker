@@ -10,6 +10,7 @@
     "room_group_list": [
         "default_group"
     ],
+    "max_player_per_room": 16,
     "enable_console_log": false,
     "console_log_level": "info",
     "enable_file_log": true,

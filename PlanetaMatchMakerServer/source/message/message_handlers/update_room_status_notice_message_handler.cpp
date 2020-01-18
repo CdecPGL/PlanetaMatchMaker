@@ -1,18 +1,20 @@
 #include "update_room_status_notice_message_handler.hpp"
 #include "session/session_data.hpp"
-#include "../message_handle_utilities.hpp"
+#include "../message_parameter_validator.hpp"
 
 namespace pgl {
 
 	void update_room_status_notice_message_handler::handle_message(const update_room_status_notice_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
 
+		const message_parameter_validator parameter_validator(param);
+
 		// Check room group existence
-		check_room_group_existence(param, message.group_index);
+		parameter_validator.validate_room_group_existence(message.group_index);
 		auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
 
 		// Check room existence
-		check_room_existence(param, room_data_container, message.room_id);
+		parameter_validator.validate_room_existence(room_data_container, message.room_id);
 		auto room_data = room_data_container.get_data(message.room_id);
 
 		// Check if the client is host of requested room

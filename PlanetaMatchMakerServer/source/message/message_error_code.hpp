@@ -21,6 +21,8 @@ namespace pgl {
 		room_permission_denied,
 		// Indicated room group is not found.
 		room_group_not_found,
+		// The number of room reaches limit.
+		room_group_full,
 		// Request is failed because the client is already hosting room.
 		client_already_hosting_room,
 	};

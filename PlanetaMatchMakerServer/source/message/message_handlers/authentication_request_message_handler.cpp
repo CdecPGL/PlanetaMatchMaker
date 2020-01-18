@@ -5,8 +5,8 @@
 #include "server/server_session_error.hpp"
 #include "session/session_data.hpp"
 #include "logger/log.hpp"
-#include "../message_handle_utilities.hpp"
 #include "authentication_request_message_handler.hpp"
+#include "../message_parameter_validator.hpp"
 
 using namespace boost;
 

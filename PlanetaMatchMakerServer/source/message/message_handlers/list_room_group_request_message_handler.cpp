@@ -6,7 +6,7 @@
 #include "logger/log.hpp"
 #include "utilities/checked_static_cast.hpp"
 #include "list_room_group_request_message_handler.hpp"
-#include "../message_handle_utilities.hpp"
+#include "../message_parameter_validator.hpp"
 
 using namespace std;
 using namespace boost;

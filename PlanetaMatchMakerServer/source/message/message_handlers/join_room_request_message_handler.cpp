@@ -1,19 +1,22 @@
 #include "join_room_request_message_handler.hpp"
-#include "../message_handle_utilities.hpp"
+#include "../message_parameter_validator.hpp"
 
 namespace pgl {
 	void join_room_request_message_handler::handle_message(const join_room_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
 
-		join_room_reply_message reply{};
+		const message_parameter_validator_with_reply<message_type::join_room_reply, join_room_reply_message>
+			parameter_validator(param);
 
 		// Check room group existence
-		check_room_group_existence<message_type::join_room_reply>(param, message.group_index, reply);
+		parameter_validator.validate_room_group_existence(message.group_index);
 		const auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
 
 		// Check room existence
-		check_room_existence<message_type::join_room_reply>(param, room_data_container, message.room_id, reply);
+		parameter_validator.validate_room_existence(room_data_container, message.room_id);
 		const auto room_data = room_data_container.get_data(message.room_id);
+
+		join_room_reply_message reply{};
 
 		// Check if the room is open
 		if ((room_data.setting_flags & room_setting_flag::open_room) != room_setting_flag::open_room) {

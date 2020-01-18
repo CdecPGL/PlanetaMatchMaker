@@ -39,6 +39,8 @@ namespace pgl {
 			}
 		}
 
+		max_player_per_room = ptree.get("max_player_per_room", max_player_per_room);
+
 		enable_console_log = ptree.get("enable_console_log", enable_console_log);
 		const auto console_log_level_str = ptree.get("console_log_level",
 			std::string(nameof::nameof_enum(console_log_level)));
@@ -69,6 +71,7 @@ namespace pgl {
 		log(log_level::info, NAMEOF(max_room_per_room_group), ": ", max_room_per_room_group);
 		log(log_level::info, NAMEOF(room_group_list), ": ", room_group_list.size(), "(", join(room_group_list, ","),
 			")");
+		log(log_level::info, NAMEOF(max_player_per_room), ": ", max_player_per_room);
 		log(log_level::info, NAMEOF(enable_console_log), ": ", enable_console_log);
 		log(log_level::info, NAMEOF(console_log_level), ": ", console_log_level);
 		log(log_level::info, NAMEOF(enable_file_log), ": ", enable_file_log);

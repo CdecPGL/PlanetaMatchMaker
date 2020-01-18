@@ -38,6 +38,9 @@ namespace PlanetaGameLabo.MatchMaker
         // Indicated room group is not found.
         RoomGroupNotFound,
 
+        // The number of room reaches limit.
+        RoomGroupFull,
+
         // Request is failed because the client is already hosting room.
         ClientAlreadyHostingRoom,
     };
