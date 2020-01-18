@@ -12,11 +12,11 @@ namespace pgl {
 	struct server_setting final {
 		server_setting() = default;
 
-		bool enable_session_key_check = false;
+		bool enable_session_key_check = true;
 		uint32_t time_out_seconds = 300;
 		uint32_t connection_check_time_out_seconds = 10;
 		ip_version ip_version = ip_version::v4;
-		uint16_t port = 7777;
+		uint16_t port = 57000;
 		uint32_t max_connection_per_thread = 1000;
 		uint32_t thread = 1;
 		uint8_t max_room_per_room_group = 100;

@@ -1,108 +1,89 @@
-# PlanetaMatchMaker
+# Planeta Match Maker
 
-A match making server and client for network game.
+A very simple and light match making system for P2P online game.
+Server binary for linux and windows, and client library for C# including Unity are provided.
 
-## Server
+## Features
 
-### Dependencies
+- Creating room and joining room
+- Searching room by owners name
+- Port mapping auto creation by UPnP which allows NAT traversal
+- (Not implemented now) Random Matching
 
-- Boost Library 1.70
-- CMake 3.8
-- minimal-serializer v0.1.5 (included in this repogitory)
+## Platforms
 
-### Functions
+### Server
 
-- Create rooms and join rooms
-- Random match making (not implemented)
+A binary which is executable in below platforms.
 
-### Supported Platforms
+- Windows
+- Linux
 
-- Windowds 7 or higher
-- Linux(Ubuntu)
-- Docker
+### Client
 
-### Build
+A library by below languages and platforms.
 
-#### Windows
+- C# (.Net Framework or .Net Core which is campatible with .Net Standard 2.1)
+- Unity (.Net 4.0)
 
-1. Install a compiler (VC++15.7, g++7 or clang5) which is compatible with C++17
-1. Install vcpkg
-1. Install Boost Library 1.70 or higher by vcpkg
-1. Execute (1) or (2) process
-1. (1)Open PlanetaMatchMaker.sln and build PlanetaMatchMakerServer project
-1. (2)Install cmake
-1. (2)mkdir build
-1. (2)cmake ..
-1. (2)make install
+## Usage
 
-#### Linux(Ubuntu)
+You can easily install and use server and client.
 
-Install by refering to Docker/pmms/Dockerfile .
+### Server (Use Docker)
 
-Ubuntu18.0.4 is supported.
+You can very easily install server by using docker by following steps.
 
-#### Docker
+1. Pull docker image with tag `cdec/plaenta-match-maker:server-alpine`
+2. Run a container with the image
 
-1. Install Git
-1. Install Docker and Docker-Compose
-1. Clone https://github.com/CdecPGL/PlanetaMatchMaker.git
-1. Move to Docker directory in the cloned repository
-1. Execute docker-compose up
+Following commands are example to run a server with port 57000 by using docker.
 
-### Run
+```bash
+docker pull cdec/plaenta-match-maker:server-alpine
+docker run -p 57000:57000 cdec/plaenta-match-maker:server-alpine
+```
 
-#### Windows
+You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.
 
-1. Change `~/.pmms/setting.json` if need
-1. Open CommandPrompt or PowerShell
-1. Execute `pmms` command
+You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
-#### Linux(Ubuntu)
+### Server (Mannually Install)
 
-1. Change `~/.pmms/setting.json` if need
-1. Open bash
-1. Execute `pmms` command
+In linux and windows, you can install server by manually by following steps.
 
-#### Docker
+1. Download a binary from release page
+1. Put the binary to any place you like
+1. Put the setting file to `/etc/pmms/setting.json`
+1. Execute the binary
 
-1. Move to `[PlanetaMatchMaker Root]/Docker` directory
-1. Execute `docker-compose up` command
+You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.
 
-### Setting File
+You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
-You can locate a setting file `setting.json` to `.pmms` directory in home directory.
+### C# Client
 
-## Client
+1. Download source codes from release page or clone this repogitory
+1. Put source codes in `PlanetaMatchMakerClient/Source` directory to your project
 
-### Dependencies
+### Unity Client
 
-- minimal-serializer v0.1.5 (included in this repogitory)
-- [Open.NAT (compile error fixed version of commit 643f04e8227fe873731b884244bcee4cc84c8d49)](https://github.com/lontivero/Open.NAT) (included in this repogitory)
+1. Download unity package from release page
+1. Import the unity package to your project
 
-### Windows
+## Documents
 
-1. Install Visual Studio 2019 or higher
-1. Open the solution
-1. Build the project
+- [Server Settings](Documents/ServerSettings.md)
+- [Build Manual](Documents/BuildManual.md)
+- [Server Message API Reference](Documents/ServerMessageAPIReference.md)
 
-### Linux
+## License
 
-1. Unknown
+The codes in this repository are lisenced unfer the [MIT License](https://github.com/CdecPGL/PlanetaMatchMaker/blob/master/LICENSE).
 
-## TestClient
+This repogitory includes following libraries from other repogitories.
+The licenses of these codes follows each repogitories.
 
-### Dependencies
-
-- Command Line Parser v2.6.0 (from NuGet)
-
-## UnityClient
-
-## Coding Rule
-
-### C++ Project
-
-### Standard C# Project
-
-- Naming Rule: https://qiita.com/Ted-HM/items/67eddbe36b88bf2d441d
-
-### Unity C# Project
+- [namepf C++](https://github.com/Neargye/nameof) ([MIT License](https://github.com/Neargye/nameof/blob/master/LICENSE))
+- [minimal-serializer](https://github.com/CdecPGL/minimal-serializer) ([MIT License](https://github.com/CdecPGL/minimal-serializer/blob/master/LICENSE))
+- [Open.NAT](https://github.com/lontivero/Open.NAT) ([MIT License](https://github.com/lontivero/Open.NAT/blob/master/LICENSE))
