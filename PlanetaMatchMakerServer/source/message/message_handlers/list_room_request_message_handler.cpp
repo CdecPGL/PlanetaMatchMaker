@@ -21,10 +21,24 @@ namespace pgl {
 		list_room_reply_message reply{};
 
 		// Generate room data list to send
-		const auto matched_data_list = room_data_container.get_data(message.sort_kind, message.search_target_flags,
-			message.search_full_name);
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
-			" rooms are matched in ", room_data_container.size(), " rooms.");
+		std::vector<room_data> matched_data_list;
+		try {
+			matched_data_list = room_data_container.get_data(message.sort_kind, message.search_target_flags,
+				message.search_full_name);
+			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
+				" rooms are matched in ", room_data_container.size(), " rooms.");
+		}
+		catch (out_of_range) {
+			reply_message_header header{
+				message_type::list_room_reply,
+				message_error_code::request_parameter_wrong
+			};
+
+			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Indicated sort_kind \"",
+				static_cast<underlying_type_t<room_data_sort_kind>>(message.sort_kind), "\" is invalid.");
+			send(param, header, reply);
+			return;
+		}
 
 		// Prepare reply header
 		reply_message_header header{

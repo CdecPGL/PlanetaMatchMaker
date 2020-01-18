@@ -30,7 +30,7 @@ namespace pgl {
 				};
 				break;
 			default:
-				throw std::runtime_error("Invalid room_data_sort_kind.");
+				throw std::out_of_range("Invalid room_data_sort_kind.");
 		}
 
 		if (!search_full_name.is_name_assigned()) { return default_comparer; }

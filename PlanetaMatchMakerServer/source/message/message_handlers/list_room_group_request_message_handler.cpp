@@ -1,5 +1,3 @@
-#include "nameof.hpp"
-
 #include "server/server_data.hpp"
 #include "server/server_setting.hpp"
 #include "async/timer.hpp"
@@ -20,9 +18,7 @@ namespace pgl {
 		// Generate room group data list to send
 		const auto& room_group_data_list = param->server_data.get_room_data_group_list();
 		std::transform(room_group_data_list.begin(), room_group_data_list.end(), reply.room_group_info_list.begin(),
-			[](const room_group_data& data) {
-				return list_room_group_reply_message::room_group_info{data.name};
-			});
+			[](const room_group_data& data) { return list_room_group_reply_message::room_group_info{data.name}; });
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), room_group_data_list.size(), "are listed.");
 
 		// Reply to the client

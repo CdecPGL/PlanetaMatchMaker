@@ -30,6 +30,7 @@ namespace pgl {
 			});
 		}
 
+		// Throws std::out_of_range if room_data_sort_kind is invalid.
 		std::vector<room_data> get_data(const room_data_sort_kind sort_kind,
 			const room_search_target_flag search_target_flags,
 			const player_full_name& search_full_name) const {
@@ -37,6 +38,7 @@ namespace pgl {
 				get_room_data_filter_function(search_target_flags, search_full_name));
 		}
 
+		// Throws std::out_of_range if room_data_sort_kind is invalid.
 		std::vector<room_data> get_range_data(const int start_idx, const int count,
 			const room_data_sort_kind sort_kind, const room_search_target_flag search_target_flags,
 			const player_full_name& search_full_name) const {
