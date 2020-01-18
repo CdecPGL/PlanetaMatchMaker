@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 
 namespace pgl {

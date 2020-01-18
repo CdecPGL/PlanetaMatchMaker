@@ -20,6 +20,12 @@ namespace pgl {
 			{}
 		};
 
+		const message_parameter_validator_with_reply<message_type::authentication_reply, authentication_reply_message>
+			parameter_validator(param);
+
+		// Check if player name is valid
+		parameter_validator.validate_player_name(message.player_name, reply, false);
+
 		// Check if the client version matches the server version. If not, send an error to the client
 		if (message.version != api_version) {
 			reply_message_header header{
@@ -33,17 +39,6 @@ namespace pgl {
 			throw server_session_error(server_session_error_code::not_continuable_error, error_message);
 		}
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Authentication succeeded.");
-
-		// Check if player name is valid (not empty)
-		if (message.player_name.length() == 0) {
-			reply_message_header header{
-				message_type::authentication_reply,
-				message_error_code::request_parameter_wrong,
-			};
-			send(param, header, reply);
-			throw server_session_error(server_session_error_code::not_continuable_error,
-				"Authentication failed. The player name is empty.");
-		}
 
 		// Generate session key
 		if (param->session_data.is_session_key_generated()) {
