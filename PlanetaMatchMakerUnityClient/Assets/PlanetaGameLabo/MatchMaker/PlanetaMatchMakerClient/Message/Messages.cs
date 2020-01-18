@@ -13,20 +13,36 @@ namespace PlanetaGameLabo.MatchMaker
     internal enum MessageErrorCode : byte
     {
         Ok,
-        UnknownError,
+
+        // Server internal error.
+        ServerError,
+
+        // Server api version and client api version are not same.
         ApiVersionMismatch,
-        AuthenticationError,
-        AccessDenied,
-        RoomNameDuplicated,
-        RoomCountReachesLimit,
-        RoomDoesNotExist,
-        RoomIsNotOpened,
-        RoomPasswordIsWrong,
-        RoomNameIsEmpty,
-        PermissionDenied,
-        JoinRejected,
-        PlayerCountReachesLimit,
-        RoomGroupIndexOutOfRange,
+
+        // Wrong parameters which must be rejected in the client is passed for request.
+        RequestParameterWrong,
+
+        // Indicated room is not found.
+        RoomNotFound,
+
+        // Indicated password of room is not correct.
+        RoomPasswordWrong,
+
+        // The number of player reaches limit.
+        RoomFull,
+
+        // Request is rejected because indicated room is the room which you are not host of or closed.
+        RoomPermissionDenied,
+
+        // Indicated room group is not found.
+        RoomGroupNotFound,
+
+        // The number of room reaches limit.
+        RoomGroupFull,
+
+        // Request is failed because the client is already hosting room.
+        ClientAlreadyHostingRoom,
     };
 
     internal enum MessageType : byte
