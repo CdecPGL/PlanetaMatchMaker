@@ -22,6 +22,9 @@ namespace pgl {
 		// Check a player name is valid. If it is not valid, throw server error.
 		void validate_player_name(const player_name_t& player_name, bool is_continuable = true) const;
 
+		// Check a max player count is valid. If it is not valid, throw server error.
+		void validate_max_player_count(uint8_t max_player_count, bool is_continuable = true) const;
+
 		const std::shared_ptr<message_handle_parameter>& get_message_handle_parameter() const;
 	private:
 		std::shared_ptr<message_handle_parameter> param_;
@@ -38,11 +41,7 @@ namespace pgl {
 			const TReplyMessage& reply_message = {}, const bool is_continuable = true) const {
 			try { message_parameter_validator_.validate_room_group_existence(room_group_index, is_continuable); }
 			catch (server_session_error&) {
-				const reply_message_header header{
-					ReplyMessageType,
-					message_error_code::room_group_not_found
-				};
-				send(message_parameter_validator_.get_message_handle_parameter(), header, reply_message);
+				send_reply(message_error_code::room_group_not_found, reply_message);
 				throw;
 			}
 		}
@@ -52,12 +51,7 @@ namespace pgl {
 			const TReplyMessage& reply_message = {}, const bool is_continuable = true) const {
 			try { message_parameter_validator_.validate_room_existence(room_data_container, room_id, is_continuable); }
 			catch (server_session_error&) {
-				// Send room doesn't exist error to the client
-				const reply_message_header header{
-					ReplyMessageType,
-					message_error_code::room_not_found
-				};
-				send(message_parameter_validator_.get_message_handle_parameter(), header, reply_message);
+				send_reply(message_error_code::room_not_found, reply_message);
 				throw;
 			}
 		}
@@ -67,11 +61,7 @@ namespace pgl {
 			const bool is_continuable = true) const {
 			try { message_parameter_validator_.validate_port_number(port_number, is_continuable); }
 			catch (server_session_error&) {
-				const reply_message_header header{
-					ReplyMessageType,
-					message_error_code::request_parameter_wrong
-				};
-				send(message_parameter_validator_.get_message_handle_parameter(), header, reply_message);
+				send_reply(message_error_code::request_parameter_wrong, reply_message);
 				throw;
 			}
 		}
@@ -81,16 +71,30 @@ namespace pgl {
 			const bool is_continuable = true) const {
 			try { message_parameter_validator_.validate_player_name(player_name, is_continuable); }
 			catch (server_session_error&) {
-				const reply_message_header header{
-					ReplyMessageType,
-					message_error_code::request_parameter_wrong
-				};
-				send(message_parameter_validator_.get_message_handle_parameter(), header, reply_message);
+				send_reply(message_error_code::request_parameter_wrong, reply_message);
+				throw;
+			}
+		}
+
+		// Check a max player count is valid. If it is not valid, reply error message to client and throw server error.
+		void validate_max_player_count(const uint8_t max_player_count, const TReplyMessage& reply_message = {},
+			const bool is_continuable = true) const {
+			try { message_parameter_validator_.validate_max_player_count(max_player_count, is_continuable); }
+			catch (server_session_error&) {
+				send_reply(message_error_code::request_parameter_wrong, reply_message);
 				throw;
 			}
 		}
 
 	private:
 		message_parameter_validator message_parameter_validator_;
+
+		void send_reply(const message_error_code error_code, const TReplyMessage& reply_message) const {
+			const reply_message_header header{
+				ReplyMessageType,
+				error_code
+			};
+			send(message_parameter_validator_.get_message_handle_parameter(), header, reply_message);
+		}
 	};
 }

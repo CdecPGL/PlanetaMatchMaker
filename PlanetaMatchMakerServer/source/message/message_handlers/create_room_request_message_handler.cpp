@@ -25,6 +25,9 @@ namespace pgl {
 		// Check port number is valid
 		parameter_validator.validate_port_number(message.port_number);
 
+		// Check max player count is valid.
+		parameter_validator.validate_max_player_count(message.max_player_count);
+
 		reply_message_header header{
 			message_type::create_room_reply,
 			message_error_code::ok
@@ -51,18 +54,6 @@ namespace pgl {
 				param->session_data.client_player_name().generate_full_name(),
 				"\" because room group with index \"", message.group_index, "\" is full.");
 			header.error_code = message_error_code::room_group_full;
-			send(param, header, reply);
-			return;
-		}
-
-		// Check max player count does not exceed limit.
-		if (message.max_player_count > param->server_setting.max_player_per_room) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-				"Failed to create new room with player\"",
-				param->session_data.client_player_name().generate_full_name(),
-				"\" because max player count(", message.max_player_count, ") exceeds limit(",
-				param->server_setting.max_player_per_room, ").");
-			header.error_code = message_error_code::request_parameter_wrong;
 			send(param, header, reply);
 			return;
 		}
