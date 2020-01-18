@@ -1,5 +1,9 @@
 # Server Message API
 
+This is reference about the message API of the server.
+
+## Message
+
 Message is fixed size binary data to communicate between server and client.
 
 There are three types of message.
@@ -27,6 +31,27 @@ The size is 5 bytes.
 |message_type|8 bits unsigned integer|1|A type of message.|
 |session_key|32 bits unsigned integer|4|A session key which is generated when authentication.|
 
+Options of `message_type` are below.
+
+|Name|Value|
+|:---|---:|
+|authentication_request|0|
+|authentication_reply|1|
+|list_room_group_request|2|
+|list_room_group_reply|3|
+|create_room_request|4|
+|create_room_reply|5|
+|list_room_request|6|
+|list_room_reply|7|
+|join_room_request|8|
+|join_room_reply|9|
+|update_room_status_notice|10|
+|connection_test_request|11|
+|connection_test_reply|12|
+|random_match_request|13|
+
+There are reply message types in the table, but these are not available as a message to the server.
+
 ### Reply Header
 
 The size is 2 bytes.
@@ -36,9 +61,44 @@ The size is 2 bytes.
 |message_type|8 bits unsigned integer|1|A type of message.|
 |error_code|8 bits unsigned integer|1|An error code.|
 
+Options of `message_type` are same as one used in request header.
+
+Options of `error_code` are as below.
+
+|Name|Value|Explanation|
+|:---|---:|:---|
+|ok|0|Request is processed successfully.|
+|server_error|1|Server internal error.|
+|api_version_mismatch|2|Server api version doesn't match to the version the client required.|
+|room_not_found|3|Indicated room is not found.|
+|request_parameter_wrong|4|Wrong parameters which must be rejected in the client is passed for request.|
+|room_password_wrong|5|Indicated password of room is not correct.|
+|room_full|6|The number of player reaches limit.|
+|room_permission_denied|7|Request is rejected because indicated room is the room which you are not host of or closed.|
+|room_group_not_found|8|Indicated room group is not found.|
+|room_group_full|9|The number of room reaches limit.|
+|client_already_hosting_room|10|Request is failed because the client is already hosting room.|
+
+## Communication Flow
+
+To communicate with the server, you should follow below flow.
+
+1. Connect to the server by TCP
+1. Send authentication request and get a session key
+1. Send requests you need with the session key
+
+In below situation, the server forces to close the connection immediately without any reply.
+
+- Send not authentication request at first time after connection
+- Send ahtnentication request more than twice
+- Send wrong session key
+- Send invalid message type
+
 ## Messages
 
 ### Authentication Request
+
+A request to authenticate and get a session key.
 
 #### Parameters
 
@@ -70,6 +130,8 @@ The size is 8 bytes.
 
 ### List Room Group Request
 
+A request to get all room group information.
+
 #### Parameters
 
 The size is 1 bytes.
@@ -88,7 +150,7 @@ The size is 245 bytes.
 |max_room_count_per_room_group|32 bits unsigned integer|4|A limit of room count per one room group.|
 |room_group_info_list|A 10 elements array of room_group_info|240|A list of room group information.|
 
-`room_group_info` is 24 bytes data as below:
+`room_group_info` is 24 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -101,6 +163,8 @@ The size is 245 bytes.
 |ok|The request is processed succesfully.|yes|
 
 ### Create Room Request
+
+A request to create room.
 
 #### Parameters
 
@@ -133,6 +197,8 @@ The size is 4 bytes.
 
 ### List Room Request
 
+A request to get room informations which matches to requested parameters.
+
 #### Parameters
 
 The size is 31 bytes.
@@ -146,7 +212,7 @@ The size is 31 bytes.
 |search_target_flags|8 bits unsigned integer|1|A flags to indicate search target.|
 |search_full_name|player_full_name|26|A query to search room by the room's host player name.|
 
-Options of `sort_kind` are as below:
+Options of `sort_kind` are as below.
 
 |Name|Value|
 |:---|---:|
@@ -156,7 +222,7 @@ Options of `sort_kind` are as below:
 |create_datetime_descending|3|
 
 `search_target_flags` are treated as bit flags.
-Options are as below:
+Options are as below.
 
 |Name|Value|
 |:---|---:|
@@ -165,7 +231,7 @@ Options are as below:
 |open_room|4|
 |closed_room|8|
 
-`player_full_name` is 26 bytes data as below:
+`player_full_name` is 26 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -183,7 +249,7 @@ The size is 249 bytes.
 |reply_room_count|8 bits unsigned integer|1|The number of rooms which is included in reply messages.|
 |room_info_list|A 6 elements array of room_info|246|A result room info list.|
 
-`room_info` is 41 bytes data as below:
+`room_info` is 41 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -195,7 +261,7 @@ The size is 249 bytes.
 |create_datetime|64 bits unsigned integer which indicates unix time|8|A datetime the room created.|
 
 `setting_flags` are treated as bit flags.
-Options are as below:
+Options are as below.
 
 |Name|Value|
 |:---|---:|
@@ -219,6 +285,8 @@ separation = floor((reply.reply_room_count + 5) / 6);
 
 ### Join Room Request
 
+A request to get the information to join the room.
+
 #### Parameters
 
 The size is 21 bytes.
@@ -237,7 +305,7 @@ The size is 18 bytes.
 |:---|:---|---:|:---|
 |game_host_endpoint|endpoint|18|An endpoint of game host which is hosting the room you want to join.|
 
-`game_host_endpoint` is 18 bytes data as below:
+`game_host_endpoint` is 18 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -257,6 +325,8 @@ The size is 18 bytes.
 
 ### Update Room Status Notice
 
+A notice to inform new status of the room the client hosts.
+
 #### Parameters
 
 The size is 8 bytes.
@@ -269,7 +339,7 @@ The size is 8 bytes.
 |is_current_player_count_changed|boolean|1|A flag which indicates if playr count is updated.|
 |current_player_count|8 bits unsigned integer|1|A new player count.|
 
-Options of `status` are as below:
+Options of `status` are as below.
 
 |Name|Value|
 |:---|---:|
@@ -290,6 +360,8 @@ Notice message is ignoreed if there are some errors in processing message.
 
 ### Connection Test Request
 
+A request to check the client is reachable from the internet.
+
 #### Parameters
 
 The size is 3 bytes.
@@ -299,7 +371,7 @@ The size is 3 bytes.
 |protocol|8 bits unsigned integer|1|A transport prptocol to use for connection test.|
 |port_number|16 bits unsigned integer|2|A port number to use for connection test. 49513 to 65535 is available.|
 
-Options of `prptocol` are as below:
+Options of `prptocol` are as below.
 
 |Name|Value|
 |:---|---:|
@@ -321,10 +393,6 @@ The size is 1 byte.
 |ok|The request is processed succesfully.|yes|
 |request_parameter_wrong|Indicated protocol or port number is invalid.|yes|
 
-## Force Disconnect Conditions
+### Random Match Request
 
-The server forces to close connection immediately without any reply if wrong operation about authentication is occured.
-
-- Send not authentication request at first time after connection
-- Send wrong session key
-- Send ahtnentication request more than twice
+Not implemented now.

@@ -7,7 +7,7 @@ namespace pgl {
 		ok,
 		// Server internal error.
 		server_error,
-		// Server api version and client api version are not same.
+		// Server api version doesn't match to the version the client required.
 		api_version_mismatch,
 		// Wrong parameters which must be rejected in the client is passed for request.
 		request_parameter_wrong,
