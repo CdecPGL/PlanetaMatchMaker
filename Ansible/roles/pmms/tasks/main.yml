@@ -1,5 +1,0 @@
----
-- name: Build and Start PMMS Docker container
-  docker-compose:
-    project_name: pmms
-    project_src: ../../../Docker
