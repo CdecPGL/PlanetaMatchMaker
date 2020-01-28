@@ -401,7 +401,7 @@ namespace PlanetaGameLabo.MatchMaker
             byte count, RoomDataSortKind sortKind, RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
             string searchName = "", ushort searchTag = PlayerFullName.NotAssignedTag)
         {
-            if (!Validator.ValidatePlayerName(searchName))
+            if (!Validator.ValidateSearchName(searchName))
             {
                 throw new ArgumentException(
                     $"null string or string whose length is more than {ClientConstants.PlayerNameLength} is not available.",

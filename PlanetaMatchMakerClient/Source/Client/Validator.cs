@@ -47,7 +47,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         /// <summary>
         /// Validate player name.
-        /// Not null string whose length is not more than limit is valid.
+        /// Not null or space string whose length is not more than limit is valid.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -77,6 +77,17 @@ namespace PlanetaGameLabo.MatchMaker
         public static bool ValidateRoomPassword(string password)
         {
             return password != null && Encoding.UTF8.GetByteCount(password) <= RoomConstants.RoomPasswordLength;
+        }
+
+        /// <summary>
+        /// Validate a search name.
+        /// Not null string whose length is not more than limit is valid.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static bool ValidateSearchName(string name)
+        {
+            return name != null && Encoding.UTF8.GetByteCount(name) <= ClientConstants.PlayerNameLength;
         }
 
         private const string ipv4Regex =

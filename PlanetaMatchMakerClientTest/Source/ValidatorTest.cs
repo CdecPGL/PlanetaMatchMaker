@@ -117,5 +117,27 @@ namespace PlanetaGameLabo.MatchMaker.Test
         {
             Assert.IsFalse(Validator.ValidateRoomPassword(password));
         }
+
+        [DataTestMethod]
+        [DataRow("")]
+        [DataRow("p")]
+        [DataRow("123456789012345678901234")]
+        [DataRow("ああああああああ")]
+        [DataRow("あああああああaaa")]
+        public void ValidSearchNameValidationTest(string searchName)
+        {
+            Assert.IsTrue(Validator.ValidateSearchName(searchName));
+        }
+
+        [DataTestMethod]
+        [DataRow(null)]
+        [DataRow("1234567890123456789012345")]
+        [DataRow("あああああああああ")]
+        [DataRow("ああああああああaaa")]
+        [DataRow("あああああああaaaa")]
+        public void InvalidSearchNameValidationTest(string searchName)
+        {
+            Assert.IsFalse(Validator.ValidateSearchName(searchName));
+        }
     }
 }
