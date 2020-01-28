@@ -9,9 +9,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlanetaMatchMakerServerTest
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetaMatchMakerClient", "PlanetaMatchMakerClient\PlanetaMatchMakerClient.csproj", "{A574E9BA-5C01-43E7-A665-9C49DC55B439}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlanetaMatchMakerTestClient", "PlanetaMatchMakerTestClient\PlanetaMatchMakerTestClient.csproj", "{8BBD0DE4-F85E-49DE-BF78-F3F76D7A4E59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetaMatchMakerTestClient", "PlanetaMatchMakerTestClient\PlanetaMatchMakerTestClient.csproj", "{8BBD0DE4-F85E-49DE-BF78-F3F76D7A4E59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlanetaMatchMakerClientTest", "PlanetaMatchMakerClientTest\PlanetaMatchMakerClientTest.csproj", "{35CF36EA-D5DA-46C2-9406-2D3D9FD9C6CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlanetaMatchMakerClientTest", "PlanetaMatchMakerClientTest\PlanetaMatchMakerClientTest.csproj", "{35CF36EA-D5DA-46C2-9406-2D3D9FD9C6CA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BA6D4F5B-B8DE-4775-9E2B-C02D6F714BA8}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

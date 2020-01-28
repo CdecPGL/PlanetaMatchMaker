@@ -78,19 +78,32 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="serverAddress"></param>
         /// <param name="serverPort"></param>
+        /// <param name="playerName"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<PlayerFullName> ConnectAsync(string serverAddress, ushort serverPort, string playerName)
         {
+            if (!Validator.ValidateServerAddress(serverAddress))
+            {
+                throw new ArgumentException("IPv4, IPv6 or URL is available.", nameof(serverAddress));
+            }
+
+            if (!Validator.ValidateServerPort(serverPort))
+            {
+                throw new ArgumentException("0 is not available.", nameof(serverAddress));
+            }
+
+            if (!Validator.ValidatePlayerName(playerName))
+            {
+                throw new ArgumentException(
+                    $"null string or string whose length is more than {ClientConstants.PlayerNameLength} is not available.",
+                    nameof(serverAddress));
+            }
+
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (string.IsNullOrWhiteSpace(serverAddress))
-                {
-                    throw new ArgumentException("Value cannot be null or whitespace.", nameof(serverAddress));
-                }
-
                 if (Connected)
                 {
                     throw new ClientErrorException(ClientErrorCode.AlreadyConnected);
@@ -195,14 +208,21 @@ namespace PlanetaGameLabo.MatchMaker
         public async Task CreateRoomAsync(byte roomGroupIndex, byte maxPlayerCount, ushort portNumber,
             string password = "")
         {
+            if (!Validator.ValidateGameHostPort(portNumber))
+            {
+                throw new ArgumentException("Dynamic/private port is available.", nameof(portNumber));
+            }
+
+            if (!Validator.ValidateRoomPassword(password))
+            {
+                throw new ArgumentException(
+                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
+                    nameof(password));
+            }
+
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (password == null)
-                {
-                    throw new ArgumentNullException(nameof(password));
-                }
-
                 if (!Connected)
                 {
                     throw new ClientErrorException(ClientErrorCode.NotConnected);
@@ -248,14 +268,31 @@ namespace PlanetaGameLabo.MatchMaker
             IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber,
             int discoverNatTimeoutMilliSeconds = 5000, string password = "", bool forceToDiscoverNatDevice = false)
         {
+            if (portNumberCandidates.Any(portNumberCandidate => !Validator.ValidateGameHostPort(portNumberCandidate)))
+            {
+                throw new ArgumentException("Dynamic/private port is available.", nameof(portNumberCandidates));
+            }
+
+            if (!Validator.ValidateGameHostPort(defaultPortNumber))
+            {
+                throw new ArgumentException("Dynamic/private port is available.", nameof(defaultPortNumber));
+            }
+
+            if (!Validator.ValidateGameHostPort(defaultPortNumber))
+            {
+                throw new ArgumentException("Dynamic/private port is available.", nameof(defaultPortNumber));
+            }
+
+            if (!Validator.ValidateRoomPassword(password))
+            {
+                throw new ArgumentException(
+                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
+                    nameof(password));
+            }
+
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (password == null)
-                {
-                    throw new ArgumentNullException(nameof(password));
-                }
-
                 if (!Connected)
                 {
                     throw new ClientErrorException(ClientErrorCode.NotConnected);
@@ -357,20 +394,23 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="searchName"></param>
         /// <param name="searchTag"></param>
         /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<(byte totalRoomCount, byte matchedRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
             byte roomGroupIndex, byte startIndex,
             byte count, RoomDataSortKind sortKind, RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
             string searchName = "", ushort searchTag = PlayerFullName.NotAssignedTag)
         {
+            if (!Validator.ValidatePlayerName(searchName))
+            {
+                throw new ArgumentException(
+                    $"null string or string whose length is more than {ClientConstants.PlayerNameLength} is not available.",
+                    nameof(searchName));
+            }
+
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (searchName == null)
-                {
-                    throw new ArgumentNullException(nameof(searchName));
-                }
-
                 var searchFullName = new PlayerFullName() {Name = searchName, Tag = searchTag};
 
                 if (searchName.Length > ClientConstants.PlayerNameLength)
@@ -444,9 +484,17 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="roomId"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         /// <returns>Game host endpoint</returns>
         public async Task<IPEndPoint> JoinRoomAsync(byte roomGroupIndex, uint roomId, string password = "")
         {
+            if (!Validator.ValidateRoomPassword(password))
+            {
+                throw new ArgumentException(
+                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
+                    nameof(password));
+            }
+
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
@@ -548,9 +596,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="InvalidOperationException">The port is already used by other connection which is not TCP server</exception>
+        /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<bool> ConnectionTestAsync(TransportProtocol protocol, ushort portNumber)
         {
+            if (!Validator.ValidateGameHostPort(portNumber))
+            {
+                throw new ArgumentException("Dynamic/private port is available.", nameof(portNumber));
+            }
+
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {

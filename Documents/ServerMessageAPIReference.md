@@ -175,7 +175,7 @@ The size is 20 bytes.
 |group_index|8 bits unsigned integer|1|An index of group where you want to create room.|
 |password|16 byte length UTF-8 string|16|A password of room you create. If this is empty, the room is created as a public room.|
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
-|port_number|16 bits unsigned integer|2|A port number which is used for game host. 49513 to 65535 is available.|
+|port_number|16 bits unsigned integer|2|A port number which is used for game host. 49152 to 65535 is available.|
 
 #### Reply
 
@@ -369,7 +369,7 @@ The size is 3 bytes.
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |protocol|8 bits unsigned integer|1|A transport prptocol to use for connection test.|
-|port_number|16 bits unsigned integer|2|A port number to use for connection test. 49513 to 65535 is available.|
+|port_number|16 bits unsigned integer|2|A port number to use for connection test. 49152 to 65535 is available.|
 
 Options of `prptocol` are as below.
 
