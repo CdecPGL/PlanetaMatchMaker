@@ -65,7 +65,19 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// A status of client.
         /// </summary>
-        public Status status { get; private set; } = Status.Disconnected;
+        public Status status
+        {
+            get
+            {
+                if (_status != Status.Disconnected && !_client.Connected)
+                {
+                    Reset();
+                }
+
+                return _status;
+            }
+            private set => _status = value;
+        }
 
         /// <summary>
         /// true if connected to the server.
@@ -153,12 +165,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         public void Disconnect()
         {
-            if (status == Status.Disconnected)
-            {
-                Debug.LogError("Client is already stopped.");
-                return;
-            }
-
             if (_client.Connected)
             {
                 _client.Close();
@@ -579,6 +585,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private List<RoomGroupInfo> _roomGroupInfoList = new List<RoomGroupInfo>();
         private Task _task;
+        private Status _status = Status.Disconnected;
 
         #endregion
 
