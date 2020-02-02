@@ -569,6 +569,9 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("Timeout seconds to send and receive data between match making server")]
         private float _serverCommunicationTimeOutSeconds = 10;
 
+        [SerializeField, Tooltip("The interval time to send alive notice to the server to avoid timeout.")]
+        private int _keepAliveNoticeIntervalSeconds = 30;
+
         [SerializeField, Tooltip("Enable debug log")]
         private bool _enableDebugLog;
 
@@ -583,7 +586,8 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void Awake()
         {
-            _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000), new UnityLogger());
+            _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000),
+                _keepAliveNoticeIntervalSeconds, new UnityLogger());
             _client.Logger.Enabled = _enableDebugLog;
             if (_dontDestroyOnLoad)
             {

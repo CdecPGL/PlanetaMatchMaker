@@ -49,6 +49,7 @@ Options of `message_type` are below.
 |connection_test_request|11|
 |connection_test_reply|12|
 |random_match_request|13|
+|keep_alive_notice|14|
 
 There are reply message types in the table, but these are not available as a message to the server.
 
@@ -175,7 +176,7 @@ The size is 20 bytes.
 |group_index|8 bits unsigned integer|1|An index of group where you want to create room.|
 |password|16 byte length UTF-8 string|16|A password of room you create. If this is empty, the room is created as a public room.|
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
-|port_number|16 bits unsigned integer|2|A port number which is used for game host. 49152 to 65535 is available.|
+|port_number|16 bits unsigned integer|2|A port number which is used for game host.  to 65535 is available.|
 
 #### Reply
 
@@ -369,7 +370,7 @@ The size is 3 bytes.
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |protocol|8 bits unsigned integer|1|A transport prptocol to use for connection test.|
-|port_number|16 bits unsigned integer|2|A port number to use for connection test. 49152 to 65535 is available.|
+|port_number|16 bits unsigned integer|2|A port number to use for connection test.  to 65535 is available.|
 
 Options of `prptocol` are as below.
 
@@ -396,3 +397,19 @@ The size is 1 byte.
 ### Random Match Request
 
 Not implemented now.
+
+### Keep Alive Notice
+
+A notice to notice alival of the client.
+
+#### Parameters
+
+The size is 1 byte.
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|dummy|8 bits unsigned integer|1|Dummy data.|
+
+#### Error Conditions
+
+The server does nothing for this notice so there are no errors.

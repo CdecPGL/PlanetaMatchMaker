@@ -280,7 +280,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                secondClient = new MatchMakerClient(sharedClient.TimeoutMilliSeconds, sharedClient.Logger);
+                secondClient = new MatchMakerClient(sharedClient.TimeoutMilliSeconds, logger: sharedClient.Logger);
                 await secondClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
             }
             catch (ClientErrorException e)

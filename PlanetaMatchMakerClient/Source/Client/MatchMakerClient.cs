@@ -60,8 +60,10 @@ namespace PlanetaGameLabo.MatchMaker
         /// Constructor
         /// </summary>
         /// <param name="timeoutMilliSeconds">Timeout milli seconds for send and receive. Timeout of connect is not effected.</param>
+        /// <param name="keepAliveNoticeIntervalSeconds"></param>
         /// <param name="logger"></param>
-        public MatchMakerClient(int timeoutMilliSeconds = 10000, ILogger logger = null)
+        public MatchMakerClient(int timeoutMilliSeconds = 10000, int keepAliveNoticeIntervalSeconds = 30,
+            ILogger logger = null)
         {
             if (logger == null)
             {
@@ -71,6 +73,7 @@ namespace PlanetaGameLabo.MatchMaker
             TimeoutMilliSeconds = timeoutMilliSeconds;
             Logger = logger;
             PortMappingCreator = new NatPortMappingCreator(logger);
+            keepAliveSenderNotificator = new KeepAliveSenderNotificator(this, keepAliveNoticeIntervalSeconds);
         }
 
         /// <summary>
@@ -125,6 +128,8 @@ namespace PlanetaGameLabo.MatchMaker
                     throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
                 }
 
+                keepAliveSenderNotificator.UpdateLastRequestTime();
+
                 // Authentication Request
                 var requestBody =
                     new AuthenticationRequestMessage {Version = ClientConstants.ApiVersion, PlayerName = playerName};
@@ -136,6 +141,8 @@ namespace PlanetaGameLabo.MatchMaker
                     $"Receive AuthenticationReply. ({nameof(replyBody.SessionKey)}: {replyBody.SessionKey}, {nameof(replyBody.Version)}: {replyBody.Version}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
                 sessionKey = replyBody.SessionKey;
                 PlayerFullName = new PlayerFullName {Name = playerName, Tag = replyBody.PlayerTag};
+
+                keepAliveSenderNotificator.StartKeepAliveProc();
                 return PlayerFullName;
             }
             finally
@@ -155,6 +162,7 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ClientErrorException(ClientErrorCode.NotConnected);
             }
 
+            keepAliveSenderNotificator.StopKeepAliveProc();
             tcpClient.GetStream().Close();
             tcpClient.Close();
             tcpClient.Dispose();
@@ -631,6 +639,7 @@ namespace PlanetaGameLabo.MatchMaker
         private TcpClient tcpClient;
         private uint sessionKey;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        private readonly KeepAliveSenderNotificator keepAliveSenderNotificator;
 
         /// <summary>
         /// Send a request or notice message to the server.
@@ -643,6 +652,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
+                keepAliveSenderNotificator.UpdateLastRequestTime();
                 await tcpClient.SendRequestMessage(messageBody, sessionKey).ConfigureAwait(false);
             }
             catch (MessageErrorException e)
@@ -863,6 +873,26 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
+        private async Task NoticeAliveToTheServer()
+        {
+            await semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (!Connected)
+                {
+                    throw new ClientErrorException(ClientErrorCode.NotConnected);
+                }
+
+                var requestBody = new KeepAliveNoticeMessage();
+                await SendRequestAsync(requestBody).ConfigureAwait(false);
+                Logger.Log(LogLevel.Info, "Send KeepAliveNotice.");
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
         private TcpClient CreateTcpClient()
         {
             var newTcpClient =
@@ -874,6 +904,75 @@ namespace PlanetaGameLabo.MatchMaker
         private void OnConnectionClosed()
         {
             IsHostingRoom = false;
+        }
+
+        private sealed class KeepAliveSenderNotificator : IDisposable
+        {
+            public KeepAliveSenderNotificator(MatchMakerClient client, int keepAliveNoticeIntervalSeconds)
+            {
+                this.client = client;
+                this.keepAliveNoticeIntervalSeconds = keepAliveNoticeIntervalSeconds;
+            }
+
+            public void StartKeepAliveProc()
+            {
+                cancellationTokenSource = new CancellationTokenSource();
+                task = KeepAliveProcAsync(cancellationTokenSource.Token);
+            }
+
+            public void StopKeepAliveProc()
+            {
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
+            }
+
+            public void UpdateLastRequestTime()
+            {
+                Interlocked.Exchange(ref lastRequestUnixTime, GetCurrentUnixTime());
+            }
+
+            private readonly MatchMakerClient client;
+            private long lastRequestUnixTime;
+            private CancellationTokenSource cancellationTokenSource;
+            private Task task;
+            private readonly int keepAliveNoticeIntervalSeconds;
+
+            private static long GetCurrentUnixTime()
+            {
+                return new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
+            }
+
+            private async Task KeepAliveProcAsync(CancellationToken cancellationToken)
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var currentUnixTime = GetCurrentUnixTime();
+                    var lastRequestUnixTimeRef = Interlocked.Read(ref lastRequestUnixTime);
+                    try
+                    {
+                        await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+
+                    if (currentUnixTime - lastRequestUnixTimeRef < keepAliveNoticeIntervalSeconds)
+                    {
+                        continue;
+                    }
+
+                    UpdateLastRequestTime();
+                    await client.NoticeAliveToTheServer().ConfigureAwait(false);
+                }
+            }
+
+            public void Dispose()
+            {
+                cancellationTokenSource?.Dispose();
+                task?.Dispose();
+            }
         }
     }
 }

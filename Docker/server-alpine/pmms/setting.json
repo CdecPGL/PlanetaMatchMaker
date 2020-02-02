@@ -1,6 +1,6 @@
 {
     "enable_session_key_check": true,
-    "time_out_seconds": 300,
+    "time_out_seconds": 60,
     "connection_check_time_out_seconds": 5,
     "ip_version": "v4",
     "port": 57000,

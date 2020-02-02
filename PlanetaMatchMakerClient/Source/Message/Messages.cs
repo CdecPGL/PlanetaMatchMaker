@@ -60,7 +60,8 @@ namespace PlanetaGameLabo.MatchMaker
         UpdateRoomStatusNotice,
         ConnectionTestRequest,
         ConnectionTestReply,
-        RandomMatchRequest
+        RandomMatchRequest,
+        KeepAliveNotice
     }
 
     // 5 bytes. Use for notice message too
@@ -235,6 +236,14 @@ namespace PlanetaGameLabo.MatchMaker
     internal struct ConnectionTestReplyMessage
     {
         public bool Succeed;
+    }
+
+    // 1 byte
+    [Serializable]
+    [Message(MessageType.KeepAliveNotice)]
+    internal struct KeepAliveNoticeMessage
+    {
+        public byte Dummy;
     }
 
 #pragma warning restore 0649

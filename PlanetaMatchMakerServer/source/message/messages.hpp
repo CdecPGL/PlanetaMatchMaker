@@ -29,6 +29,7 @@ namespace pgl {
 		connection_test_request,
 		connection_test_reply,
 		random_match_request,
+		keep_alive_notice
 	};
 
 	// 5 bytes. Use for notice message too
@@ -239,5 +240,12 @@ namespace pgl {
 
 	struct random_match_request_message final {
 		void on_serialize(minimal_serializer::serializer& serializer [[maybe_unused]]) { }
+	};
+
+	// 1 byte
+	struct keep_alive_notice_message final {
+		uint8_t dummy;
+
+		void on_serialize(minimal_serializer::serializer& serializer) { serializer += dummy; }
 	};
 }
