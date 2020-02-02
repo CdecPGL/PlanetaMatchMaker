@@ -630,6 +630,31 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
+        /// <summary>
+        /// Notify alive of this client to the server.
+        /// </summary>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <returns></returns>
+        public async Task NoticeAliveToTheServerAsync()
+        {
+            await semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (!Connected)
+                {
+                    throw new ClientErrorException(ClientErrorCode.NotConnected);
+                }
+
+                var requestBody = new KeepAliveNoticeMessage();
+                await SendRequestAsync(requestBody).ConfigureAwait(false);
+                Logger.Log(LogLevel.Info, "Send KeepAliveNotice.");
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
         public void Dispose()
         {
             tcpClient?.Dispose();
@@ -873,26 +898,6 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        private async Task NoticeAliveToTheServer()
-        {
-            await semaphore.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                if (!Connected)
-                {
-                    throw new ClientErrorException(ClientErrorCode.NotConnected);
-                }
-
-                var requestBody = new KeepAliveNoticeMessage();
-                await SendRequestAsync(requestBody).ConfigureAwait(false);
-                Logger.Log(LogLevel.Info, "Send KeepAliveNotice.");
-            }
-            finally
-            {
-                semaphore.Release();
-            }
-        }
-
         private TcpClient CreateTcpClient()
         {
             var newTcpClient =
@@ -964,7 +969,7 @@ namespace PlanetaGameLabo.MatchMaker
                     }
 
                     UpdateLastRequestTime();
-                    await client.NoticeAliveToTheServer().ConfigureAwait(false);
+                    await client.NoticeAliveToTheServerAsync().ConfigureAwait(false);
                 }
             }
 

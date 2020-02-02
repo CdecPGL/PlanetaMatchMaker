@@ -537,6 +537,39 @@ namespace PlanetaGameLabo.MatchMaker
             }, () => status = Status.SearchingRoom);
         }
 
+        /// <summary>
+        /// Check if the client is connected to client and update status.
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckConnectionAndUpdateStatus()
+        {
+            var task = CheckConnectionAndUpdateStatusAsync();
+            task.Wait();
+            return task.Result;
+        }
+
+        /// <summary>
+        /// Check if the client is connected to client and update status.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> CheckConnectionAndUpdateStatusAsync()
+        {
+            if (!_client.Connected)
+            {
+                return false;
+            }
+
+            try
+            {
+                await _client.NoticeAliveToTheServerAsync();
+                return true;
+            }
+            catch (ClientErrorException e)
+            {
+                return e.ClientErrorCode.IsContinuable();
+            }
+        }
+
         #endregion
 
         #region OtherPublicMethods
