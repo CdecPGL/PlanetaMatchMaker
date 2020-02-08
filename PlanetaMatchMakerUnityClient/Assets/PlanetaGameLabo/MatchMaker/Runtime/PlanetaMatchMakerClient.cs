@@ -118,6 +118,8 @@ namespace PlanetaGameLabo.MatchMaker
 
         public PlayerFullName playerFullName => _client.PlayerFullName;
 
+        public bool isHostingRoom => _client.IsHostingRoom;
+
         #endregion
 
         #region Operations
