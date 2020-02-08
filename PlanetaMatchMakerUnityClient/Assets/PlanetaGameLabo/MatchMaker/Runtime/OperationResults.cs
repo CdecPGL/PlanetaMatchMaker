@@ -30,12 +30,12 @@ namespace PlanetaGameLabo.MatchMaker
 
     public struct HostRoomResult
     {
-        public HostRoomResult(HostingRoomInfo hostRoomInfo)
+        public HostRoomResult(IReadOnlyHostingRoomInfo hostRoomInfo)
         {
             this.hostRoomInfo = hostRoomInfo;
         }
 
-        public readonly HostingRoomInfo hostRoomInfo;
+        public readonly IReadOnlyHostingRoomInfo hostRoomInfo;
     }
 
     public struct HostRoomWithCreatingPortMappingResult

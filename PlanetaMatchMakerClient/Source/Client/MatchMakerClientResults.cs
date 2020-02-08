@@ -1,8 +1,8 @@
 namespace PlanetaGameLabo.MatchMaker
 {
-    public struct RoomGroupResult
+    public struct ListRoomGroupResultItem
     {
-        internal RoomGroupResult(ListRoomGroupReplyMessage.RoomGroupInfo info)
+        internal ListRoomGroupResultItem(ListRoomGroupReplyMessage.RoomGroupInfo info)
         {
             Name = info.Name;
         }
@@ -10,9 +10,9 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly string Name;
     }
 
-    public struct RoomResult
+    public struct ListRoomResultItem
     {
-        internal RoomResult(ListRoomReplyMessage.RoomInfo info)
+        internal ListRoomResultItem(ListRoomReplyMessage.RoomInfo info)
         {
             RoomId = info.RoomId;
             HostPlayerFullName = info.HostPlayerFullName;
@@ -30,18 +30,37 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly Datetime CreateDatetime;
     }
 
+    public struct CreateRoomResult
+    {
+        internal CreateRoomResult(uint roomId, RoomSettingFlag settingFlags, byte maxPlayerCount,
+            byte currentPlayerCount)
+        {
+            RoomId = roomId;
+            SettingFlags = settingFlags;
+            MaxPlayerCount = maxPlayerCount;
+            CurrentPlayerCount = currentPlayerCount;
+        }
+
+        public readonly uint RoomId;
+        public readonly RoomSettingFlag SettingFlags;
+        public readonly byte MaxPlayerCount;
+        public readonly byte CurrentPlayerCount;
+    }
+
     public struct CreateRoomWithCreatingPortMappingResult
     {
-        public readonly bool IsDefaultPortUsed;
-        public readonly ushort UsedPrivatePortFromCandidates;
-        public readonly ushort UsedPublicPortFromCandidates;
-
         public CreateRoomWithCreatingPortMappingResult(bool isDefaultPortUsed, ushort usedPrivatePortFromCandidates,
-            ushort usedPublicPortFromCandidates)
+            ushort usedPublicPortFromCandidates, CreateRoomResult creteRoomResult)
         {
             IsDefaultPortUsed = isDefaultPortUsed;
             UsedPrivatePortFromCandidates = usedPrivatePortFromCandidates;
             UsedPublicPortFromCandidates = usedPublicPortFromCandidates;
+            CreteRoomResult = creteRoomResult;
         }
+
+        public readonly bool IsDefaultPortUsed;
+        public readonly ushort UsedPrivatePortFromCandidates;
+        public readonly ushort UsedPublicPortFromCandidates;
+        public readonly CreateRoomResult CreteRoomResult;
     }
 }

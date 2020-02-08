@@ -32,6 +32,12 @@ namespace PlanetaGameLabo.MatchMaker
         public uint HostingRoomId { get; private set; }
 
         /// <summary>
+        /// Hosting room status. This is valid when hosting room.
+        /// </summary>
+
+        public RoomSettingFlag HostingRoomSettingFlags { get; private set; } = RoomSettingFlag.None;
+
+        /// <summary>
         /// Hosting room id. This is valid when hosting room.
         /// </summary>
         public byte HostingRoomGroupIndex { get; private set; }
@@ -176,7 +182,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        public async Task<RoomGroupResult[]> GetRoomGroupListAsync()
+        public async Task<ListRoomGroupResultItem[]> GetRoomGroupListAsync()
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
@@ -194,7 +200,7 @@ namespace PlanetaGameLabo.MatchMaker
                 Logger.Log(LogLevel.Info,
                     $"Receive ListRoomGroupReply. ({nameof(replyBody.RoomGroupCount)}: {replyBody.RoomGroupCount})");
                 return replyBody.RoomGroupInfoList.Take(replyBody.RoomGroupCount)
-                    .Select(info => new RoomGroupResult(info))
+                    .Select(info => new ListRoomGroupResultItem(info))
                     .ToArray();
             }
             finally
@@ -213,7 +219,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task CreateRoomAsync(byte roomGroupIndex, byte maxPlayerCount, ushort portNumber,
+        public async Task<CreateRoomResult> CreateRoomAsync(byte roomGroupIndex, byte maxPlayerCount, ushort portNumber,
             string password = "")
         {
             if (!Validator.ValidateGameHostPort(portNumber))
@@ -242,7 +248,7 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                await CreateRoomCoreAsync(portNumber, roomGroupIndex, maxPlayerCount, password)
+                return await CreateRoomCoreAsync(portNumber, roomGroupIndex, maxPlayerCount, password)
                     .ConfigureAwait(false);
             }
             finally
@@ -379,11 +385,11 @@ namespace PlanetaGameLabo.MatchMaker
                     Logger.Log(LogLevel.Info, "Second connection test is succeeded. Start to create room.");
                 }
 
-                await CreateRoomCoreAsync(portNumber, roomGroupIndex, maxPlayerCount, password)
+                var createRoomResult = await CreateRoomCoreAsync(portNumber, roomGroupIndex, maxPlayerCount, password)
                     .ConfigureAwait(false);
 
                 return new CreateRoomWithCreatingPortMappingResult(isDefaultPortUsed, usedPrivatePortFromCandidates,
-                    usedPublicPortFromCandidates);
+                    usedPublicPortFromCandidates, createRoomResult);
             }
             finally
             {
@@ -404,10 +410,12 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task<(byte totalRoomCount, byte matchedRoomCount, RoomResult[] roomInfoList)> GetRoomListAsync(
-            byte roomGroupIndex, byte startIndex,
-            byte count, RoomDataSortKind sortKind, RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
-            string searchName = "", ushort searchTag = PlayerFullName.NotAssignedTag)
+        public async Task<(byte totalRoomCount, byte matchedRoomCount, ListRoomResultItem[] roomInfoList)>
+            GetRoomListAsync(
+                byte roomGroupIndex, byte startIndex,
+                byte count, RoomDataSortKind sortKind,
+                RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
+                string searchName = "", ushort searchTag = PlayerFullName.NotAssignedTag)
         {
             if (!Validator.ValidateSearchName(searchName))
             {
@@ -448,7 +456,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var replyBody = await ReceiveReplyAsync<ListRoomReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
                     $"Receive ListRoomReply. ({nameof(replyBody.TotalRoomCount)}: {replyBody.TotalRoomCount}, {nameof(replyBody.MatchedRoomCount)}: {replyBody.MatchedRoomCount}, {nameof(replyBody.ReplyRoomCount)}: {replyBody.ReplyRoomCount})");
-                var result = new RoomResult[replyBody.ReplyRoomCount];
+                var result = new ListRoomResultItem[replyBody.ReplyRoomCount];
 
                 // Set results of reply to result list
                 var currentIndex = requestBody.StartIndex;
@@ -462,7 +470,7 @@ namespace PlanetaGameLabo.MatchMaker
                             return;
                         }
 
-                        result[currentIndex++] = new RoomResult(reply.RoomInfoList[i]);
+                        result[currentIndex++] = new ListRoomResultItem(reply.RoomInfoList[i]);
                     }
                 }
 
@@ -575,9 +583,21 @@ namespace PlanetaGameLabo.MatchMaker
                 Logger.Log(LogLevel.Info,
                     $"Send UpdateRoomStatusNotice. ({nameof(requestBody.GroupIndex)}: {requestBody.GroupIndex}, {nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.Status)}: {requestBody.Status}, {nameof(requestBody.IsCurrentPlayerCountChanged)}: {requestBody.IsCurrentPlayerCountChanged}, {nameof(requestBody.CurrentPlayerCount)}: {requestBody.CurrentPlayerCount})");
 
-                if (roomStatus == RoomStatus.Remove)
+                switch (roomStatus)
                 {
-                    IsHostingRoom = false;
+                    case RoomStatus.Remove:
+                        IsHostingRoom = false;
+                        HostingRoomId = 0;
+                        HostingRoomSettingFlags = RoomSettingFlag.None;
+                        break;
+                    case RoomStatus.Open:
+                        HostingRoomSettingFlags |= RoomSettingFlag.OpenRoom;
+                        break;
+                    case RoomStatus.Close:
+                        HostingRoomSettingFlags &= ~RoomSettingFlag.OpenRoom;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(roomStatus), roomStatus, null);
                 }
             }
             finally
@@ -594,6 +614,18 @@ namespace PlanetaGameLabo.MatchMaker
         public async Task RemoveHostingRoomAsync()
         {
             await UpdateHostingRoomStatusAsync(RoomStatus.Remove).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Update current player count of hosting room.
+        /// </summary>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <returns></returns>
+        public async Task UpdateHostingRoomCurrentPlayerCountAsync(byte currentPlayerCount = 0)
+        {
+            var isOpen = (HostingRoomSettingFlags | RoomSettingFlag.OpenRoom) == RoomSettingFlag.OpenRoom;
+            await UpdateHostingRoomStatusAsync(isOpen ? RoomStatus.Open : RoomStatus.Close, true, currentPlayerCount)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -758,7 +790,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        private async Task CreateRoomCoreAsync(ushort portNumber, byte roomGroupIndex, byte maxPlayerCount,
+        private async Task<CreateRoomResult> CreateRoomCoreAsync(ushort portNumber, byte roomGroupIndex,
+            byte maxPlayerCount,
             string password = "")
         {
             var requestBody = new CreateRoomRequestMessage
@@ -774,9 +807,14 @@ namespace PlanetaGameLabo.MatchMaker
 
             var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>().ConfigureAwait(false);
             Logger.Log(LogLevel.Info, $"Receive CreateRoomReply. ({nameof(replyBody.RoomId)}: {replyBody.RoomId})");
+            // In server, the room  is created as open room and which has 1 player.
             IsHostingRoom = true;
             HostingRoomGroupIndex = roomGroupIndex;
             HostingRoomId = replyBody.RoomId;
+            HostingRoomSettingFlags =
+                (string.IsNullOrEmpty(password) ? RoomSettingFlag.PublicRoom : RoomSettingFlag.None) &
+                RoomSettingFlag.OpenRoom;
+            return new CreateRoomResult(HostingRoomId, HostingRoomSettingFlags, maxPlayerCount, 1);
         }
 
         /// <summary>
@@ -909,6 +947,8 @@ namespace PlanetaGameLabo.MatchMaker
         private void OnConnectionClosed()
         {
             IsHostingRoom = false;
+            HostingRoomId = 0;
+            HostingRoomSettingFlags = RoomSettingFlag.None;
         }
 
         private sealed class KeepAliveSenderNotificator : IDisposable
