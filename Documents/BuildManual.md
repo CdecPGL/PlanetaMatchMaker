@@ -35,8 +35,8 @@ docker run -it planeta-match-maker:dev-alpine /bin/ash
 # In the docker container
 mkdir build
 cd build
-cmake .. CMAKE_CXX_COMPILER=clang++
-make build -j4
+cmake .. -DCMAKE_CXX_COMPILER=clang++
+make -j4
 ```
 
 Currently, the server project is compatible with gcc so specify clang++ to cmake.
@@ -54,8 +54,8 @@ Following commands are example.
 ```bash
 mkdir build
 cd build
-cmake .. CMAKE_CXX_COMPILER=clang++
-make build -j4
+cmake .. -DCMAKE_CXX_COMPILER=clang++
+make -j4
 ```
 
 Currently, the server project is compatible with gcc so specify clang++ to cmake.
