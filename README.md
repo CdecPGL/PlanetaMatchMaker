@@ -1,3 +1,6 @@
+[![Release](https://img.shields.io/github/v/release/CdecPGL/PlanetaMatchMaker?include_prereleases&sort=semver)](https://github.com/CdecPGL/PlanetaMatchMaker/releases)
+[![License](https://img.shields.io/github/license/CdecPGL/PlanetaMatchMaker)](https://github.com/CdecPGL/PlanetaMatchMaker/blob/master/LICENSE)
+
 # Planeta Match Maker
 
 A very simple and light match making system for P2P online game.
@@ -66,10 +69,15 @@ You can change settings by editing [the setting file](Documents/ServerSettings.m
 1. Download source codes from release page or clone this repogitory
 1. Put source codes in `PlanetaMatchMakerClient/Source` directory to your project
 
-### Unity Client
+### Unity Client (from Unity Package)
 
 1. Download unity package from release page
 1. Import the unity package to your project
+
+### Unity Client (Mannually Install)
+
+1. Download source codes from release page or clone this repogitory
+1. Copy all files in `PlanetaMatchMakerUnityClient/Assets` to `Assets` directory of your unity project
 
 ## Documents
 
