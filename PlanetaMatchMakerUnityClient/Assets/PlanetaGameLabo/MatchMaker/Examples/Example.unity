@@ -94,8 +94,9 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -228,8 +229,9 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 352762524}
   m_Enabled: 1
-  serializedVersion: 9
+  serializedVersion: 10
   m_Type: 1
+  m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
@@ -304,7 +306,12 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient2
+      value: MatchMakerClient2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
+        type: 3}
+      propertyPath: _position.x
+      value: 240
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
@@ -361,11 +368,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
-        type: 3}
-      propertyPath: _position.x
-      value: 240
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9735121371ece2041a598adce60310c8, type: 3}
 --- !u!1001 &929750026
@@ -378,7 +380,12 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient4
+      value: MatchMakerClient4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
+        type: 3}
+      propertyPath: _position.x
+      value: 720
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
@@ -435,11 +442,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
-        type: 3}
-      propertyPath: _position.x
-      value: 720
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9735121371ece2041a598adce60310c8, type: 3}
 --- !u!1001 &1710602111
@@ -452,7 +454,12 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient3
+      value: MatchMakerClient3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
+        type: 3}
+      propertyPath: _position.x
+      value: 480
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
@@ -509,11 +516,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
-        type: 3}
-      propertyPath: _position.x
-      value: 480
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9735121371ece2041a598adce60310c8, type: 3}
 --- !u!1001 &1714078369
@@ -526,7 +528,12 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient6
+      value: MatchMakerClient6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
+        type: 3}
+      propertyPath: _position.x
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
@@ -583,11 +590,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
-        type: 3}
-      propertyPath: _position.x
-      value: 1200
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9735121371ece2041a598adce60310c8, type: 3}
 --- !u!1001 &1913100045
@@ -600,7 +602,12 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient8
+      value: MatchMakerClient8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
+        type: 3}
+      propertyPath: _position.x
+      value: 1680
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
@@ -657,11 +664,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
-        type: 3}
-      propertyPath: _position.x
-      value: 1680
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9735121371ece2041a598adce60310c8, type: 3}
 --- !u!1001 &1945145852
@@ -674,7 +676,12 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient5
+      value: MatchMakerClient5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
+        type: 3}
+      propertyPath: _position.x
+      value: 960
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
@@ -731,11 +738,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
-        type: 3}
-      propertyPath: _position.x
-      value: 960
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9735121371ece2041a598adce60310c8, type: 3}
 --- !u!1001 &1985878080
@@ -748,7 +750,12 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient7
+      value: MatchMakerClient7
+      objectReference: {fileID: 0}
+    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
+        type: 3}
+      propertyPath: _position.x
+      value: 1440
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
@@ -805,11 +812,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4546133711901321005, guid: 9735121371ece2041a598adce60310c8,
-        type: 3}
-      propertyPath: _position.x
-      value: 1440
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9735121371ece2041a598adce60310c8, type: 3}
 --- !u!1001 &4546133711150436715
@@ -822,7 +824,7 @@ PrefabInstance:
     - target: {fileID: 4546133711901321000, guid: 9735121371ece2041a598adce60310c8,
         type: 3}
       propertyPath: m_Name
-      value: MaychMakerClient1
+      value: MatchMakerClient1
       objectReference: {fileID: 0}
     - target: {fileID: 4546133711901321006, guid: 9735121371ece2041a598adce60310c8,
         type: 3}

@@ -54,6 +54,7 @@ MonoBehaviour:
     _endPort: 56000
   _natDiscoverTimeOutSeconds: 5
   _serverCommunicationTimeOutSeconds: 10
+  _keepAliveNoticeIntervalSeconds: 30
   _enableDebugLog: 1
 --- !u!114 &4546133711901321005
 MonoBehaviour:
