@@ -1,5 +1,8 @@
 # Build Manual
 
+This is a manual to build server and client from source code.
+In example code of this manual, default current directory is the directory this repogitory is placed.
+
 ## Server
 
 ### Environment
@@ -20,7 +23,7 @@ g++ is not supported now.
 - minimal-serializer v0.1.5 (included in this repogitory)
 - nameof C++ 0.97 (included in this repogitory)
 
-### Build by CMake with Docker
+### Build by CMake with Docker (Linux)
 
 1. Install docker
 1. Build a docker image
@@ -28,6 +31,7 @@ g++ is not supported now.
 1. Create build directory and move created directory
 1. Generate makefile with cmake command
 1. Build with make command
+1. Run test with ctest command if need
 
 ```bash
 docker build -t planeta-match-maker:dev-alpine PlanetaMatchMaker/Docker/dev-alpine
@@ -37,17 +41,20 @@ mkdir build
 cd build
 cmake .. -DCMAKE_CXX_COMPILER=clang++
 make -j4
+# Run test if need
+ctest
 ```
 
 Currently, the server project is compatible with gcc so specify clang++ to cmake.
 
-### Bulild by CMake Manually
+### Bulild by CMake Manually (Linux)
 
 1. Install cmake 3.8 or higher
 1. Install clang++ 3.8 or higher
 1. Create build directory and move created directory
 1. Generate makefile with cmake command
 1. Build with make command
+1. Run test with ctest command if need
 
 Following commands are example.
 
@@ -56,6 +63,8 @@ mkdir build
 cd build
 cmake .. -DCMAKE_CXX_COMPILER=clang++
 make -j4
+# Run test if need
+ctest
 ```
 
 Currently, the server project is compatible with gcc so specify clang++ to cmake.
@@ -67,12 +76,13 @@ Currently, the server project is compatible with gcc so specify clang++ to cmake
 1. Install Boost Library 1.70 or higher by vcpkg
 1. Open `PlanetaMatchMaker.sln`
 1. Build `PlanetaMatchMakerServer` project
+1. Build and run `PlanetaMatchMakerServerTest` project if need
 
 ## Client
 
 ### Environment
 
-To build client project, you need a C# compiler which is compatible with .Net Standard 2.1.
+- C# Compiler using .Net Core 3.1 or higher as a backend (the backend which is compatible with .Net Standard 2.1 is also OK but not tested)
 
 ### Dependencies
 
@@ -84,16 +94,25 @@ To build client project, you need a C# compiler which is compatible with .Net St
 1. Install Visual Studio 2019 or higher
 1. Open the solution
 1. Build `PlanetaMatchMakerClient` project
+1. Build and run `PlanetaMatchMakerClientTest` project
 
-### Linux
+### Build by .Net Core SDK (Windows or Linux)
 
-Not checked.
+1. Install .Net Core SDK 3.1 or higher
+1. Build `PlanetaMatchMakerClient` project
+1. Build and run `PlanetaMatchMakerClientTest` project if need
+
+```bash
+dotnet build PlanetaMatchMakerClient -c Release
+# Build and run test if need
+dotnet test PlanetaMatchMakerClientTest -c Release
+```
 
 ## TestClient
 
 ### Environment
 
-To build client project, you need a C# compiler which is compatible with .Net Standard 2.1.
+- C# Compiler using .Net Core 3.1 or higher as a backend (the backend which is compatible with .Net Standard 2.1 is also OK but not tested)
 
 ### Dependencies
 
@@ -107,25 +126,57 @@ To build client project, you need a C# compiler which is compatible with .Net St
 1. Open the solution
 1. Build `PlanetaMatchMakerTestClient` project
 
-### Linux
+### Build by .Net Core SDK (Windows or Linux)
 
-Not checked.
+1. Install .Net Core SDK 3.1 or higher
+1. Build `PlanetaMatchMakerTestClient` project
+
+```bash
+dotnet build PlanetaMatchMakerTestClient -c Release
+```
+
+if you want to build self-contained and single file binary, run below command.
+
+```bash
+dotnet publish PlanetaMatchMakerTestClient -c Release --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -r ${RIDs}
+```
+
+RIDs is a identifier to indicate build target platform. Typical RIDs is as below.
+
+- Windows: win-x64
+- Linux: linux-x64
+- Max OS X: osx-x64
+
+If you want to know about RIDs, see [Microsoft's document](https://docs.microsoft.com/ja-jp/dotnet/core/rid-catalog).
 
 ## UnityClient
 
 ### Environment
 
-You can use client in Unity with .Net 4.0.
+You can use client in Unity with .Net 4.0. as a backend.
 
 Following versions are tested.
 
 - Unity 2019.2.12f1 (Windows)
+- Unity 2019.3.13f1 (Windows)
 
 ### Dependencies
 
 Same as C# client.
 
-### Build by Unity
+### Export unity package by Unity GUI (Windows, Linux or Mac OS X)
 
-1. Import unity package to your project
-1. Build
+1. Open `PlanetaMatchMakerUnityClient` directory with Unity
+1. Export `PlanetaMatchMakerUnityClient` directory as an unity package
+
+### Export unity package by Unity commandline (Windows, Linux or Mac OS X)
+
+1. Find a path your Unity is installed
+1. Run unity from commandline with options to export PlanetaMatchMakerUnityClient.unitypackage
+
+Below code is an example to export unity package to `PlanetaMatchMakerUnityClient/PlanetaMatchMakerUnityClient.unitypackage` in Linux.
+
+```bash
+UNITY_EXECUTABLE='A path of Unity executable'
+. UNITY_EXECUTABLE -exportPackage Assets/PlanetaGameLabo PlanetaMatchMakerUnityClient.unitypackage -ProjectPath PlanetaMatchMakerUnityClient -batchmode -nographics -logfile unity_build.log -quit
+```
