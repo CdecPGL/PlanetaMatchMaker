@@ -1,5 +1,6 @@
 [![Release](https://img.shields.io/github/v/release/CdecPGL/PlanetaMatchMaker?include_prereleases&sort=semver)](https://github.com/CdecPGL/PlanetaMatchMaker/releases)
 [![License](https://img.shields.io/github/license/CdecPGL/PlanetaMatchMaker)](https://github.com/CdecPGL/PlanetaMatchMaker/blob/master/LICENSE)
+[![CircleCI Buld and Test Status](https://circleci.com/gh/CdecPGL/PlanetaMatchMaker/tree/master.svg?style=shield)](https://circleci.com/gh/CdecPGL/PlanetaMatchMaker/tree/master)
 
 # Planeta Match Maker
 

@@ -96,7 +96,7 @@ Currently, the server project is compatible with gcc so specify clang++ to cmake
 1. Build `PlanetaMatchMakerClient` project
 1. Build and run `PlanetaMatchMakerClientTest` project
 
-### Build by .Net Core SDK (Windows or Linux)
+### Build by .Net Core CLI (Windows or Linux)
 
 1. Install .Net Core SDK 3.1 or higher
 1. Build `PlanetaMatchMakerClient` project
@@ -126,7 +126,7 @@ dotnet test PlanetaMatchMakerClientTest -c Release
 1. Open the solution
 1. Build `PlanetaMatchMakerTestClient` project
 
-### Build by .Net Core SDK (Windows or Linux)
+### Build by .Net Core CLI (Windows or Linux)
 
 1. Install .Net Core SDK 3.1 or higher
 1. Build `PlanetaMatchMakerTestClient` project
@@ -169,7 +169,7 @@ Same as C# client.
 1. Open `PlanetaMatchMakerUnityClient` directory with Unity
 1. Export `PlanetaMatchMakerUnityClient` directory as an unity package
 
-### Export unity package by Unity commandline (Windows, Linux or Mac OS X)
+### Export unity package by Unity CLI (Windows, Linux or Mac OS X)
 
 1. Find a path your Unity is installed
 1. Run unity from commandline with options to export PlanetaMatchMakerUnityClient.unitypackage
