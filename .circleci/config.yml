@@ -1,0 +1,450 @@
+version: 2.1
+
+executors:
+  cpp_alpine:
+    working_directory: ~/workspace
+    docker:
+      - image: cdec/planeta-match-maker:dev-alpine
+  csharp:
+    working_directory: ~/workspace
+    docker:
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1
+  unity:
+    working_directory: ~/workspace
+    docker:
+      - image: gableroux/unity3d:2019.3.13f1
+  go:
+    working_directory: ~/workspace
+    docker:
+      - image: circleci/golang
+
+commands:
+  build_server_linux:
+    parameters:
+      build_id:
+        type: string
+      artifact_name:
+        type: string
+      compiler:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: Make build directory
+          command: mkdir build_<< parameters.build_id >>
+      - run:
+          name: Create build files
+          working_directory: build_<< parameters.build_id >>
+          command: cmake .. -DCMAKE_CXX_COMPILER=<< parameters.compiler >>
+      - run:
+          name: Build binaries
+          working_directory: build_<< parameters.build_id >>
+          command: "make -j$(grep cpu.cores /proc/cpuinfo | sort -u | sed 's/[^0-9]//g')"
+      - run:
+          name: Copy artifact
+          command: |
+            mkdir -p temp/<< parameters.artifact_name >>
+            cp build_<< parameters.build_id >>/PlanetaMatchMakerServer/PlanetaMatchMakerServer temp/<< parameters.artifact_name >>
+      - run:
+          name: Create artifact
+          working_directory: temp
+          command: |
+            mkdir -p ../artifacts
+            tar -zcvf ../artifacts/<< parameters.artifact_name >>.tar.gz << parameters.artifact_name >>
+      - store_artifacts:
+          path: artifacts/<< parameters.artifact_name >>.tar.gz
+      - persist_to_workspace:
+          root: "."
+          paths:
+            - build_<< parameters.build_id >>
+            - artifacts/<< parameters.artifact_name >>.tar.gz
+
+  test_server_linux:
+    parameters:
+      build_id:
+        type: string
+    steps:
+      - attach_workspace:
+          at: "."
+      - run:
+          name: Execute unit tests
+          working_directory: build_<< parameters.build_id >>
+          command: BOOST_TEST_LOGGER="JUNIT,,<< parameters.build_id >>_test_log.xml" ctest
+      - run:
+          name: Copy test log
+          command: |
+            mkdir -p ~/test-results/junit/
+            cp build_<< parameters.build_id >>/PlanetaMatchMakerServerTest/<< parameters.build_id >>_test_log.xml ~/test-results/junit/
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+
+  build_client:
+    parameters:
+      build_id:
+        type: string
+      rids:
+        type: string
+      enable_create_artifact:
+        type: boolean
+        default: true
+      artifact_name:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: dotnet build PlanetaMatchMakerClient -c Release --runtime << parameters.rids >> -o build_<< parameters.build_id >>
+      - when:
+          condition: << parameters.enable_create_artifact >>
+          steps:
+            - run:
+                name: Copy source codes
+                command: |
+                  apt update && apt install -y rsync
+                  mkdir -p temp/<< parameters.artifact_name >>
+                  rsync -ahv --include='*.cs' PlanetaMatchMakerClient/Source/ temp/<< parameters.artifact_name >>
+            # Include only source codes to artifact
+            - run:
+                name: Create artifact
+                working_directory: temp
+                command: |
+                  mkdir -p ../artifacts
+                  tar -zcvf ../artifacts/<< parameters.artifact_name >>.tar.gz << parameters.artifact_name >>
+            - store_artifacts:
+                path: artifacts/<< parameters.artifact_name >>.tar.gz
+      - persist_to_workspace:
+          root: "."
+          paths:
+            - build_<< parameters.build_id >>
+            - artifacts/<< parameters.artifact_name >>.tar.gz
+
+  test_client:
+    parameters:
+      build_id:
+        type: string
+      rids:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: Build and run unit tests
+          command: dotnet test PlanetaMatchMakerClientTest -c Release --runtime << parameters.rids >> -l junit 
+      - run:
+          name: Copy test log
+          command: |
+            mkdir -p ~/test-results/junit/
+            cp PlanetaMatchMakerClientTest/TestResults/TestResults.xml ~/test-results/junit/<< parameters.build_id >>_test_log.xml
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+
+  build_test_client:
+    parameters:
+      build_id:
+        type: string
+      rids:
+        type: string
+      artifact_name:
+        type: string
+      is_windows:
+        type: boolean
+        default: false
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: dotnet publish PlanetaMatchMakerTestClient -c Release --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true --runtime << parameters.rids >> -o build_<< parameters.build_id >>
+      - unless:
+          condition: << parameters.is_windows >>
+          steps:
+            - run:
+                name: Copy artifact
+                command: |
+                  mkdir -p temp/<< parameters.artifact_name >>
+                  cp build_<< parameters.build_id >>/PlanetaMatchMakerTestClient temp/<< parameters.artifact_name >>
+            - run:
+                name: Create artifact
+                working_directory: temp
+                command: |
+                  mkdir -p ../artifacts
+                  tar -zcvf ../artifacts/<< parameters.artifact_name >>.tar.gz << parameters.artifact_name >>
+            - store_artifacts:
+                path: artifacts/<< parameters.artifact_name >>.tar.gz
+            - persist_to_workspace:
+                root: "."
+                paths:
+                  - artifacts/<< parameters.artifact_name >>.tar.gz
+      - when:
+          condition: << parameters.is_windows >>
+          steps:
+            - run:
+                name: Copy artifact
+                command: |
+                  mkdir -p temp/<< parameters.artifact_name >>
+                  cp build_<< parameters.build_id >>/PlanetaMatchMakerTestClient.exe temp/<< parameters.artifact_name >>
+            - run:
+                name: Create artifact
+                working_directory: temp
+                command: |
+                  apt update && apt install -y zip
+                  mkdir -p ../artifacts
+                  zip -r ../artifacts/<< parameters.artifact_name >>.zip << parameters.artifact_name >>
+            - store_artifacts:
+                path: artifacts/<< parameters.artifact_name >>.zip
+            - persist_to_workspace:
+                root: "."
+                paths:
+                  - artifacts/<< parameters.artifact_name >>.zip
+      - persist_to_workspace:
+          root: "."
+          paths:
+            - build_<< parameters.build_id >>
+
+  build_unity_client:
+    parameters:
+      build_id:
+        type: string
+      artifact_name:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: Prepare license file
+          command: |
+            mkdir -p /root/.cache/unity3d /root/.local/share/unity3d/Unity/
+            openssl aes-256-cbc -d -pbkdf2 -in AuthenticationFiles/Unity_v2019.x.ulf-cipher -out Unity_v2019.x.ulf -k $UNITY_LICENSE_FILE_ENCRYPT_KEY
+            cp Unity_v2019.x.ulf /root/.local/share/unity3d/Unity/Unity_lic.ulf
+      - run:
+          name: Build unitypackage
+          command: |
+            /opt/Unity/Editor/Unity \
+              -exportPackage Assets/PlanetaGameLabo << parameters.artifact_name >>.unitypackage \
+              -ProjectPath PlanetaMatchMakerUnityClient \
+              -batchmode -nographics -logfile unity_build.log -quit
+            mkdir build_<< parameters.build_id >>
+            mv PlanetaMatchMakerUnityClient/<< parameters.artifact_name >>.unitypackage build_<< parameters.build_id >>
+      - run:
+          name: Create artifact
+          command: |
+            mkdir -p artifacts
+            cp build_<< parameters.build_id >>/<< parameters.artifact_name >>.unitypackage artifacts
+      - store_artifacts:
+          path: artifacts/<< parameters.artifact_name >>.unitypackage
+      - persist_to_workspace:
+          root: "."
+          paths:
+            - build_<< parameters.build_id >>
+            - artifacts/<< parameters.artifact_name >>.unitypackage
+
+  release_artifacts:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: "."
+      - run:
+          name: Install github-release
+          command: |
+            go get github.com/tcnksm/ghr
+            export PATH="${PATH};/go/bin"
+      - run:
+          name: Create release and upload artifacts
+          command: |
+            if [ `git describe | grep -c "^v\0\..*"` -eq 0 ]; then ADDITIONAL_OPTIONS="" ; else ADDITIONAL_OPTIONS="-prerelease"; fi
+            ghr -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -n ${CIRCLE_TAG} ${ADDITIONAL_OPTIONS} ${CIRCLE_TAG} artifacts/
+
+jobs:
+  build_server_alpine_clang:
+    executor: cpp_alpine
+    steps:
+      - build_server_linux:
+          build_id: PlanetaMatchMakerServer_alpine_clang
+          artifact_name: PlanetaMatchMakerServer_alpine_x86_64.tar.gz
+          compiler: clang++
+
+  test_server_alpine_clang:
+    executor: cpp_alpine
+    steps:
+      - test_server_linux:
+          build_id: PlanetaMatchMakerServer_alpine_clang
+
+  # build_server_windows_clang:
+  #   executor: windows_cpp
+  #   steps:
+  #     - build_server_windows:
+  #         build_id: PlanetaMatchMakerServer_windows_clang
+  #         artifact_name: PlanetaMatchMakerServer_win_x86_64.zip
+  #         compiler: clang++
+
+  # test_server_windows_clang:
+  #   executor: windows_cpp
+  #   steps:
+  #     - test_server_linux:
+  #         build_id: PlanetaMatchMakerServer_windows_clang
+
+  build_client_linux:
+    executor: csharp
+    steps:
+      - build_client:
+          build_id: PlanetaMatchMakerClient_linux
+          rids: linux-x64
+          artifact_name: PlanetaMatchMakerClient_source_code
+
+  test_client_linux:
+    executor: csharp
+    steps:
+      - test_client:
+          build_id: PlanetaMatchMakerClient_linux
+          rids: linux-x64
+
+  build_client_windows:
+    executor: csharp
+    steps:
+      - build_client:
+          build_id: PlanetaMatchMakerClient_windows
+          rids: win-x64
+          enable_create_artifact: false
+          artifact_name: "NULL"
+
+  test_client_windows:
+    executor: csharp
+    steps:
+      - test_client:
+          build_id: PlanetaMatchMakerClient_windows
+          rids: win-x64
+
+  build_test_client_linux:
+    executor: csharp
+    steps:
+      - build_test_client:
+          build_id: PlanetaMatchMakerTestClient_linux
+          rids: linux-x64
+          artifact_name: PlanetaMatchMakerTestClient_linux_x86_64
+
+  build_test_client_windows:
+    executor: csharp
+    steps:
+      - build_test_client:
+          build_id: PlanetaMatchMakerTestClient_windows
+          rids: win-x64
+          artifact_name: PlanetaMatchMakerTestClient_win_x86_64
+          is_windows: true
+
+  build_unity_client:
+    executor: unity
+    steps:
+      - build_unity_client:
+          build_id: PlanetaMatchMakerUnityClient
+          artifact_name: PlanetaMatchMakerUnityClient
+
+  release_artifacts:
+    executor: go
+    steps:
+      - release_artifacts
+
+workflows:
+  build_test_and_release:
+    jobs:
+      - build_server_alpine_clang:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - test_server_alpine_clang:
+          requires:
+            - build_server_alpine_clang
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      # - build_server_windows_clang:
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #       branches:
+      #         only: master
+
+      # - test_server_windows_clang:
+      #     requires:
+      #       - build_server_windows_clang
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #       branches:
+      #         only: master
+
+      - build_client_linux:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - test_client_linux:
+          requires:
+            - build_client_linux
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - build_client_windows:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - test_client_windows:
+          requires:
+            - build_client_linux
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - build_test_client_linux:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - build_test_client_windows:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - build_unity_client:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
+
+      - release_artifacts:
+          requires:
+            - test_server_alpine_clang
+            # - test_server_windows_clang
+            - test_client_linux
+            - test_client_windows
+            - build_test_client_linux
+            - build_test_client_windows
+            - build_unity_client
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
