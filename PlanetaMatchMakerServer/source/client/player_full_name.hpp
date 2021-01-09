@@ -5,21 +5,50 @@
 #include "client_constants.hpp"
 
 namespace pgl {
-	// 26 bytes
+	/**
+	 * A player full name. 26 bytes.
+	 *
+	 * There are four patterns for player name.
+	 * - Full Name (Bill#123): Name and tag are not empty.
+	 * - Name ("Bill"): Bill: Name is not empty and tag is empty.
+	 * - Tag ("#123"): Name is empty and tag is not empty.
+	 * - Empty (""): Name and tag are empty.
+	 */
 	struct player_full_name final {
 		const static player_tag_t not_assigned_tag = 0;
 		
-		// A name of player. Empty name means name is not assigned.
+		/**
+		 * A name of player. Empty name means name is not assigned.
+		 */
 		player_name_t name;
 
-		// A tag of player to identify same name player. 0 means tag is not assigned.
+		/**
+		 * A tag of player to identify same name player. 0 means tag is not assigned.
+		 */
 		player_tag_t tag;
 
 		bool operator==(const player_full_name& other) const;
 		bool operator!=(const player_full_name& other) const;
 
+		/**
+		 * Generate player full name string.
+		 *
+		 * @return A string of player full name.
+		 */
 		[[nodiscard]] std::string generate_full_name() const;
+
+		/**
+		 * Check if a tag is assigned.
+		 *
+		 * @return Whether a tag is assigned.
+		 */
 		[[nodiscard]] bool is_tag_assigned() const;
+
+		/**
+		 * Check if a name is assigned.
+		 *
+		 * @return Whether a name is assigned.
+		 */
 		[[nodiscard]] bool is_name_assigned() const;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {

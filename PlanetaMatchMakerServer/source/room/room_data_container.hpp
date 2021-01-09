@@ -96,6 +96,7 @@ namespace pgl {
 
 		/**
 		 * Update room data with the ID of passed room data.
+		 *
 		 * @param data A room data to update.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
 		 */
