@@ -11,33 +11,57 @@
 #include <boost/noncopyable.hpp>
 #include <boost/call_traits.hpp>
 
+#include "utilities/class_traits.hpp"
+
 #include "random_id_generator.hpp"
 
 namespace pgl {
-	template <typename S, typename T>
-	auto member_variable_pointer_t_impl(T S::* p) -> T;
-
-	template <typename T>
-	using member_variable_pointer_variable_t = decltype(member_variable_pointer_t_impl(std::declval<T>()));
-
-	template <typename IdType, typename S, auto S::* UniqueVariable>
+	/**
+	 * A container to hold data and manage them with checking value of unique member duplication.
+	 *
+	 * @tparam IdType A type of ID value.
+	 * @tparam S A type of data to hold.
+	 * @tparam UniqueMemberVariable A member variable pointer of the member variable in Data which should be unique in this container.
+	 */
+	template <typename IdType, typename S, auto UniqueMemberVariable>
 	class unique_variables_container_impl {
-		using member_t = member_variable_pointer_variable_t<decltype(UniqueVariable)>;
+		static_assert(std::is_same_v<S, member_variable_pointer_class_t<UniqueMemberVariable>>, "The member variable which is indicated by UniqueMemberVariable should be a member of S.");
+		
+		using member_t = member_variable_pointer_variable_t<UniqueMemberVariable>;
 		using s_param_t = typename boost::call_traits<S>::param_type;
 		using id_param_t = typename boost::call_traits<IdType>::param_type;
 	protected:
+		/**
+		 * Add or update data with ID.
+		 *
+		 * @param id An ID of data to add or update.
+		 * @param data A data to add or update.
+		 */
 		void add_or_update_variable(id_param_t id, s_param_t data) {
 			auto unique_value = get_unique_value(data);
 			used_variable_.insert(unique_value);
 			id_to_variable_map_.emplace(id, unique_value);
 		}
 
+		/**
+		 * Remove data with ID.
+		 *
+		 * @param id An ID of data to remove.
+		 * @param data A data to remove.
+		 */
 		void remove_variable(id_param_t id, s_param_t data) {
 			used_variable_.erase(get_unique_value(data));
 			id_to_variable_map_.erase(id);
 		}
 
-		// If variable is same with variable of id, consider the variable as unique even if the variable is in used_variables.
+		/**
+		 * Check if indicated data is unique for all unique member variables with it's ID.
+		 *
+		 * @param id An ID of data to check.
+		 * @param data A data to check.
+		 * @return Whether indicated data is unique.
+		 * @note If variable is same with variable of id, consider the variable as unique even if the variable is in used_variables.
+		 */
 		bool is_unique(id_param_t id, s_param_t data) const {
 			auto unique_value = get_unique_value(data);
 			auto it = id_to_variable_map_.find(id);
@@ -46,6 +70,12 @@ namespace pgl {
 			return it->second == unique_value;
 		}
 
+		/**
+		 * Check if indicated data is unique for all unique member variables.
+		 *
+		 * @param data A data to check.
+		 * @return Whether indicated data is unique.
+		 */
 		bool is_unique(s_param_t data) const {
 			auto unique_value = get_unique_value(data);
 			return used_variable_.find(unique_value) == used_variable_.end();
@@ -55,59 +85,123 @@ namespace pgl {
 		std::unordered_map<IdType, member_t> id_to_variable_map_;
 		std::unordered_set<member_t> used_variable_;
 
-		static member_t get_unique_value(s_param_t data) { return data.*UniqueVariable; }
+		static member_t get_unique_value(s_param_t data) { return data.*UniqueMemberVariable; }
 	};
 
-	// A container which holds unique member variables.
-	template <typename IdType, typename S, auto S::* ... UniqueVariables>
+
+	/**
+	 * A container to hold data and manage them with checking values of multiple unique members duplication.
+	 *
+	 * @tparam IdType A type of ID value.
+	 * @tparam S A type of data to hold.
+	 * @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
+	 */
+	template <typename IdType, typename S, auto... UniqueMemberVariables>
 	class unique_variables_container
-		final : boost::noncopyable, unique_variables_container_impl<IdType, S, UniqueVariables>... {
+		final : boost::noncopyable, unique_variables_container_impl<IdType, S, UniqueMemberVariables>... {
 		using s_param_t = typename boost::call_traits<S>::param_type;
 		using id_param_t = typename boost::call_traits<IdType>::param_type;
 	public:
+		/**
+		 * Add or update data with ID.
+		 *
+		 * @param id An ID of data to add or update.
+		 * @param data A data to add or update.
+		 */
 		void add_or_update_variables(id_param_t id, s_param_t data) {
-			(unique_variables_container_impl<IdType, S, UniqueVariables>::add_or_update_variable(id, data), ...);
+			(unique_variables_container_impl<IdType, S, UniqueMemberVariables>::add_or_update_variable(id, data), ...);
 		}
 
+		/**
+		 * Remove data with ID.
+		 *
+		 * @param id An ID of data to remove.
+		 * @param data A data to remove.
+		 */
 		void remove_variables(id_param_t id, s_param_t data) {
-			(unique_variables_container_impl<IdType, S, UniqueVariables>::remove_variable(id, data), ...);
+			(unique_variables_container_impl<IdType, S, UniqueMemberVariables>::remove_variable(id, data), ...);
 		}
 
+		/**
+		 * Check if indicated data is unique for all unique member variables with it's ID.
+		 *
+		 * @param id An ID of data to check.
+		 * @param data A data to check.
+		 * @return Whether indicated data is unique.
+		 */
 		bool is_unique(id_param_t id, s_param_t data) const {
-			return (unique_variables_container_impl<IdType, S, UniqueVariables>::is_unique(id, data) && ... && true);
+			return (unique_variables_container_impl<IdType, S, UniqueMemberVariables>::is_unique(id, data) && ... && true);
 		}
 
+		/**
+		 * Check if indicated data is unique for all unique member variables.
+		 *
+		 * @param data A data to check.
+		 * @return Whether indicated data is unique.
+		 */
 		bool is_unique(s_param_t data) const {
-			return (unique_variables_container_impl<IdType, S, UniqueVariables>::is_unique(data) && ... && true);
+			return (unique_variables_container_impl<IdType, S, UniqueMemberVariables>::is_unique(data) && ... && true);
 		}
 	};
 
+	/**
+	 * An exception class indicating value of unique member variable duplication error.
+	 */
 	class unique_variable_duplication_error final : public std::runtime_error {
 	public:
 		unique_variable_duplication_error() : runtime_error("A unique member variable is duplicated.") {};
 		using runtime_error::runtime_error;
 	};
 
-	// A thread safe container of data
-	template <typename Id, typename Data, auto Data::* ... UniqueVariables>
+	/**
+	 * A container to hold data and manage them with id thread safely.
+	 * 
+	 * @tparam Id A type of ID value.
+	 * @tparam Data A type of data to hold.
+	 * @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
+	 */
+	template <typename Id, typename Data, auto... UniqueMemberVariables>
 	class thread_safe_data_container final : boost::noncopyable {
 	public:
 		using id_param_type = typename boost::call_traits<Id>::param_type;
 		using data_param_type = typename boost::call_traits<Data>::param_type;
 
+		/**
+		 * Check data existence for specific ID.
+		 * 
+		 * @param id ID to check.
+		 * @return Whether data exists for the ID.
+		 */
 		[[nodiscard]] bool is_data_exist(id_param_type id) const {
 			std::shared_lock lock(mutex_);
 			return data_map_.find(id) != data_map_.end();
 		}
 
+		/**
+		 * Get data by ID.
+		 * 
+		 * @param id ID to get data.
+		 * @return Data which has passed ID.
+		 */
 		[[nodiscard]] Data get_data(id_param_type id) const {
 			std::shared_lock lock(mutex_);
 			return data_map_.at(id).load();
 		}
 
+		/**
+		 * Get the number of data.
+		 *
+		 * @return The number of data.
+		 */
 		size_t size() const { return data_map_.size(); }
 
-		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
+		/**
+		 * Add new data with indicated ID.
+		 *
+		 * @param id An ID for new data.
+		 * @param data Data to add.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 */
 		void add_data(id_param_type id, data_param_type data) {
 			std::lock_guard lock(mutex_);
 
@@ -117,7 +211,15 @@ namespace pgl {
 			unique_variables_.add_or_update_variables(id, data);
 		}
 
-		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
+		/**
+		 * Add new data with automatically assigned ID.
+		 *
+		 * @param data Data to add.
+		 * @param id_setter (optional) A function to set assigned ID to the data. In default, assigned ID is not set to the data.
+		 * @param random_id_generator (optional) A functions to generate new ID. In default, built-in random value generator will be used.
+		 * @return An ID assigned to new data.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 */
 		Id assign_id_and_add_data(Data& data,
 			std::function<void(Data&, id_param_type)>&& id_setter = [](Data&, id_param_type) {},
 			std::function<Id()>&& random_id_generator = generate_random_id<Id>) {
@@ -134,6 +236,13 @@ namespace pgl {
 			return id;
 		}
 
+		/**
+		 * Get sorted and filtered data.
+		 *
+		 * @param compare_function A function used to sorting.
+		 * @param filter_function A function used to filtering.
+		 * @return A list of data.
+		 */
 		std::vector<Data> get_data(std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
 			std::vector<Data> data;
@@ -149,6 +258,15 @@ namespace pgl {
 			return data;
 		}
 
+		/**
+		 * Get sorted and filtered data with indicating range.
+		 *
+		 * @param start_idx A start index of range.
+		 * @param count The number of data in range.
+		 * @param compare_function A function used to sorting.
+		 * @param filter_function A function used to filtering.
+		 * @return A list of data.
+		 */
 		std::vector<Data> get_range_data(const size_t start_idx, size_t count,
 			std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
@@ -160,7 +278,13 @@ namespace pgl {
 			return result;
 		}
 
-		// unique_variable_duplication_error will be thrown if unique member variable is duplicated.
+		/**
+		 * Update data of indicated ID.
+		 *
+		 * @param id An ID data you want to update.
+		 * @param data New data.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 */
 		void update_data(id_param_type id, data_param_type data) {
 			std::shared_lock lock(mutex_);
 
@@ -170,6 +294,11 @@ namespace pgl {
 			data_map_.at(id) = data;
 		}
 
+		/**
+		 * Remove data of indicated ID.
+		 *
+		 * @param id An ID data you want to remove.
+		 */
 		void remove_data(id_param_type id) {
 			std::lock_guard lock(mutex_);
 			auto it = data_map_.find(id);
@@ -179,7 +308,7 @@ namespace pgl {
 
 	private:
 		std::unordered_map<Id, std::atomic<Data>> data_map_;
-		unique_variables_container<Id, Data, UniqueVariables...> unique_variables_;
+		unique_variables_container<Id, Data, UniqueMemberVariables...> unique_variables_;
 		mutable std::shared_mutex mutex_;
 	};
 }
