@@ -11,30 +11,23 @@
 #include <boost/noncopyable.hpp>
 #include <boost/call_traits.hpp>
 
+#include "utilities/class_traits.hpp"
+
 #include "random_id_generator.hpp"
 
 namespace pgl {
-	template <typename S, typename T>
-	auto member_variable_pointer_t_impl(T S::* p) -> T;
-
-	/**
-	 * A type of member variable from a member variable pointer.
-	 *
-	 * @tparam T A member variable pointer of a member variable.
-	 */
-	template <typename T>
-	using member_variable_pointer_variable_t = decltype(member_variable_pointer_t_impl(std::declval<T>()));
-
 	/**
 	 * A container to hold data and manage them with checking value of unique member duplication.
 	 *
 	 * @tparam IdType A type of ID value.
 	 * @tparam S A type of data to hold.
-	 * @tparam UniqueVariable A member variable pointer of the member variable in Data which should be unique in this container.
+	 * @tparam UniqueMemberVariable A member variable pointer of the member variable in Data which should be unique in this container.
 	 */
-	template <typename IdType, typename S, auto S::* UniqueVariable>
+	template <typename IdType, typename S, auto UniqueMemberVariable>
 	class unique_variables_container_impl {
-		using member_t = member_variable_pointer_variable_t<decltype(UniqueVariable)>;
+		static_assert(std::is_same_v<S, member_variable_pointer_class_t<UniqueMemberVariable>>, "The member variable which is indicated by UniqueMemberVariable should be a member of S.");
+		
+		using member_t = member_variable_pointer_variable_t<UniqueMemberVariable>;
 		using s_param_t = typename boost::call_traits<S>::param_type;
 		using id_param_t = typename boost::call_traits<IdType>::param_type;
 	protected:
@@ -92,7 +85,7 @@ namespace pgl {
 		std::unordered_map<IdType, member_t> id_to_variable_map_;
 		std::unordered_set<member_t> used_variable_;
 
-		static member_t get_unique_value(s_param_t data) { return data.*UniqueVariable; }
+		static member_t get_unique_value(s_param_t data) { return data.*UniqueMemberVariable; }
 	};
 
 
@@ -101,11 +94,11 @@ namespace pgl {
 	 *
 	 * @tparam IdType A type of ID value.
 	 * @tparam S A type of data to hold.
-	 * @tparam UniqueVariables Member variable pointers of the member variables in Data which should be unique in this container.
+	 * @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
 	 */
-	template <typename IdType, typename S, auto S::* ... UniqueVariables>
+	template <typename IdType, typename S, auto... UniqueMemberVariables>
 	class unique_variables_container
-		final : boost::noncopyable, unique_variables_container_impl<IdType, S, UniqueVariables>... {
+		final : boost::noncopyable, unique_variables_container_impl<IdType, S, UniqueMemberVariables>... {
 		using s_param_t = typename boost::call_traits<S>::param_type;
 		using id_param_t = typename boost::call_traits<IdType>::param_type;
 	public:
@@ -116,7 +109,7 @@ namespace pgl {
 		 * @param data A data to add or update.
 		 */
 		void add_or_update_variables(id_param_t id, s_param_t data) {
-			(unique_variables_container_impl<IdType, S, UniqueVariables>::add_or_update_variable(id, data), ...);
+			(unique_variables_container_impl<IdType, S, UniqueMemberVariables>::add_or_update_variable(id, data), ...);
 		}
 
 		/**
@@ -126,7 +119,7 @@ namespace pgl {
 		 * @param data A data to remove.
 		 */
 		void remove_variables(id_param_t id, s_param_t data) {
-			(unique_variables_container_impl<IdType, S, UniqueVariables>::remove_variable(id, data), ...);
+			(unique_variables_container_impl<IdType, S, UniqueMemberVariables>::remove_variable(id, data), ...);
 		}
 
 		/**
@@ -137,7 +130,7 @@ namespace pgl {
 		 * @return Whether indicated data is unique.
 		 */
 		bool is_unique(id_param_t id, s_param_t data) const {
-			return (unique_variables_container_impl<IdType, S, UniqueVariables>::is_unique(id, data) && ... && true);
+			return (unique_variables_container_impl<IdType, S, UniqueMemberVariables>::is_unique(id, data) && ... && true);
 		}
 
 		/**
@@ -147,7 +140,7 @@ namespace pgl {
 		 * @return Whether indicated data is unique.
 		 */
 		bool is_unique(s_param_t data) const {
-			return (unique_variables_container_impl<IdType, S, UniqueVariables>::is_unique(data) && ... && true);
+			return (unique_variables_container_impl<IdType, S, UniqueMemberVariables>::is_unique(data) && ... && true);
 		}
 	};
 
@@ -165,9 +158,9 @@ namespace pgl {
 	 * 
 	 * @tparam Id A type of ID value.
 	 * @tparam Data A type of data to hold.
-	 * @tparam UniqueVariables Member variable pointers of the member variables in Data which should be unique in this container.
+	 * @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
 	 */
-	template <typename Id, typename Data, auto Data::* ... UniqueVariables>
+	template <typename Id, typename Data, auto... UniqueMemberVariables>
 	class thread_safe_data_container final : boost::noncopyable {
 	public:
 		using id_param_type = typename boost::call_traits<Id>::param_type;
@@ -315,7 +308,7 @@ namespace pgl {
 
 	private:
 		std::unordered_map<Id, std::atomic<Data>> data_map_;
-		unique_variables_container<Id, Data, UniqueVariables...> unique_variables_;
+		unique_variables_container<Id, Data, UniqueMemberVariables...> unique_variables_;
 		mutable std::shared_mutex mutex_;
 	};
 }
