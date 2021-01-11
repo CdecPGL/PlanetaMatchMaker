@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4546133711901321007}
   - component: {fileID: 4546133711901321005}
   m_Layer: 0
-  m_Name: MaychMakerClient
+  m_Name: MatchMakerClient
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -48,6 +48,7 @@ MonoBehaviour:
   _isSingleton: 0
   _serverAddress: 127.0.0.1
   _serverPort: 57000
+  _gameTransportProtocol: 0
   _gameDefaultPort: 52000
   _gamePortCandidates:
   - _startPort: 50000

@@ -109,6 +109,11 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
+        /// A transport protocol your game is using.
+        /// </summary>
+        public TransportProtocol gameTransportProtocol => _gameTransportProtocol;
+
+        /// <summary>
         /// A port to host game which we try to use first.
         /// </summary>
         public ushort gameDefaultPort => _gameDefaultPort;
@@ -363,7 +368,7 @@ namespace PlanetaGameLabo.MatchMaker
                 async () => await UpdateHostingRoomStatusImplAsync(isOpen ? RoomStatus.Open : RoomStatus.Close),
                 () => { });
         }
-        
+
         /// <summary>
         /// Change open status of hosting room with updating current player count.
         /// </summary>
@@ -547,6 +552,9 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("Port of Match Making Server")]
         private ushort _serverPort = 57000;
 
+        [SerializeField, Tooltip("A transport protocol used for game")]
+        private TransportProtocol _gameTransportProtocol;
+
         [SerializeField, Tooltip("Port of Game Host")]
         private ushort _gameDefaultPort = 52000;
 
@@ -728,7 +736,7 @@ namespace PlanetaGameLabo.MatchMaker
             var roomGroupIndexSnapshot = roomGroupIndex;
             var gameDefaultPortSnapshot = _gameDefaultPort;
             var result = await _client.CreateRoomWithCreatingPortMappingAsync(roomGroupIndexSnapshot, maxPlayerCount,
-                TransportProtocol.Tcp, GenerateGamePortCandidateList(), gameDefaultPortSnapshot,
+                _gameTransportProtocol, GenerateGamePortCandidateList(), gameDefaultPortSnapshot,
                 (int)(_natDiscoverTimeOutSeconds * 1000), password);
             _hostingRoomInfo = new HostingRoomInfo(result.CreteRoomResult, roomGroupIndexSnapshot, password);
             return new HostRoomWithCreatingPortMappingResult(_hostingRoomInfo, result.IsDefaultPortUsed,

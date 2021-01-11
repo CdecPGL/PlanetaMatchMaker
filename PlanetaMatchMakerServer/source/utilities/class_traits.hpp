@@ -32,7 +32,7 @@ namespace pgl {
 	 * An function template to implement member_function_pointer_*_t.
 	 * @tparam C A class type.
 	 * @tparam R A return value type.
-	 * @tparam Ps A parameter types by std::tuple.
+	 * @tparam Ps Parameter types by std::tuple.
 	 * @param p A member function pointer.
 	 * @return std::tuple contains the class type, the return value type and the parameter types of passed member function pointer.
 	 */
