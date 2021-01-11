@@ -111,12 +111,20 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// A transport protocol your game is using.
         /// </summary>
-        public TransportProtocol gameTransportProtocol => _gameTransportProtocol;
+        public TransportProtocol gameTransportProtocol
+        {
+            get => _gameTransportProtocol;
+            set => _gameTransportProtocol = value;
+        }
 
         /// <summary>
         /// A port to host game which we try to use first.
         /// </summary>
-        public ushort gameDefaultPort => _gameDefaultPort;
+        public ushort gameDefaultPort
+        {
+            get => _gameDefaultPort;
+            set => _gameDefaultPort = value;
+        }
 
         /// <summary>
         /// A range of port.
@@ -124,8 +132,17 @@ namespace PlanetaGameLabo.MatchMaker
         [Serializable]
         public struct PortRange
         {
-            public ushort startPort => _startPort;
-            public ushort endPort => _endPort;
+            public ushort startPort
+            {
+                get => _startPort;
+                set => _startPort = value;
+            }
+
+            public ushort endPort
+            {
+                get => _endPort;
+                set => _endPort = value;
+            }
 
             [SerializeField] private ushort _startPort;
             [SerializeField] private ushort _endPort;
@@ -134,7 +151,11 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// A port to host game which we try to select a port to use from when default game port is not available.
         /// </summary>
-        public IReadOnlyList<PortRange> gamePortCandidates => _gamePortCandidates.AsReadOnly();
+        public List<PortRange> gamePortCandidates
+        {
+            get => _gamePortCandidates;
+            set => _gamePortCandidates = value;
+        }
 
         /// <summary>
         /// An index of room group currently referencing.
