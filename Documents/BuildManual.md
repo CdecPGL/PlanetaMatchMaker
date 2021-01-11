@@ -11,7 +11,7 @@ To build server project, you need a compiler which is compatible with C++17.
 
 Following compilers and platforms are tested.
 
-- MSVC 14.6.2 (Windows)
+- MSVC 14.28 (Windows)
 - clang 8.0.0 (Ubuntu 18.04 and Alpine)
 
 g++ is not supported now.
