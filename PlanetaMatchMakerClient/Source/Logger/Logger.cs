@@ -40,7 +40,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private static string FormatLog(LogLevel level, string message)
         {
-            return $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss:ffffff} UTF] {level}: {message}";
+            return $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss:ffffff} UTC] {level}: {message}";
         }
     }
 
