@@ -282,14 +282,10 @@ namespace PlanetaGameLabo.MatchMaker
             IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber,
             int discoverNatTimeoutMilliSeconds = 5000, string password = "", bool forceToDiscoverNatDevice = false)
         {
-            if (portNumberCandidates.Any(portNumberCandidate => !Validator.ValidateGameHostPort(portNumberCandidate)))
+            var portNumberCandidateArray = portNumberCandidates.ToList();
+            if (portNumberCandidateArray.Any(portNumberCandidate => !Validator.ValidateGameHostPort(portNumberCandidate)))
             {
                 throw new ArgumentException("Dynamic/private port is available.", nameof(portNumberCandidates));
-            }
-
-            if (!Validator.ValidateGameHostPort(defaultPortNumber))
-            {
-                throw new ArgumentException("Dynamic/private port is available.", nameof(defaultPortNumber));
             }
 
             if (!Validator.ValidateGameHostPort(defaultPortNumber))
@@ -318,23 +314,6 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                if (forceToDiscoverNatDevice || !PortMappingCreator.IsNatDeviceAvailable ||
-                    !PortMappingCreator.IsDiscoverNatDone)
-                {
-                    Logger.Log(LogLevel.Info, "Execute discovering NAT device because it is not done.");
-                    await PortMappingCreator.DiscoverNatAsync(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);
-                }
-
-                if (!PortMappingCreator.IsNatDeviceAvailable)
-                {
-                    throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
-                        "Failed to discover NAT device.");
-                }
-
-                var isDefaultPortUsed = true;
-                ushort usedPrivatePortFromCandidates = 0;
-                ushort usedPublicPortFromCandidates = 0;
-
                 Logger.Log(LogLevel.Info, $"Execute first connection test (Default port: {defaultPortNumber}).");
                 var connectionTestSucceed = false;
                 try
@@ -343,16 +322,34 @@ namespace PlanetaGameLabo.MatchMaker
                         await ConnectionTestCoreAsync(protocol, defaultPortNumber).ConfigureAwait(false);
                 }
                 // Consider port already used error as connection test failure
-                catch (InvalidOperationException)
+                catch (InvalidOperationException e)
                 {
+                    Logger.Log(LogLevel.Info, $"Failed to listen the port {defaultPortNumber}. ({e.Message})");
                 }
 
+                var isDefaultPortUsed = true;
+                ushort usedPrivatePortFromCandidates = 0;
+                ushort usedPublicPortFromCandidates = 0;
                 var portNumber = defaultPortNumber;
+
                 if (!connectionTestSucceed)
                 {
+                    // Discover NAT device if need
+                    if (forceToDiscoverNatDevice || !PortMappingCreator.IsNatDeviceAvailable ||
+                        !PortMappingCreator.IsDiscoverNatDone)
+                    {
+                        Logger.Log(LogLevel.Info, "Execute discovering NAT device because it is not done.");
+                        await PortMappingCreator.DiscoverNatAsync(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);
+                    }
+
+                    if (!PortMappingCreator.IsNatDeviceAvailable)
+                    {
+                        throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
+                            "Failed to discover NAT device.");
+                    }
+
                     Logger.Log(LogLevel.Info, "Try to create port mapping because connection test is failed.");
                     // Create port candidates
-                    var portNumberCandidateArray = portNumberCandidates.ToList();
                     Logger.Log(LogLevel.Debug, $"Port candidates: [{string.Join(",", portNumberCandidateArray)}]");
                     if (!portNumberCandidateArray.Contains(defaultPortNumber))
                     {

@@ -42,7 +42,10 @@ namespace Open.Nat
 	/// </summary>
 	public abstract class NatDevice
 	{
-		private readonly HashSet<Mapping> _openedMapping = new HashSet<Mapping>();
+        /// <remarks>Added by Cdec</remarks>
+        public abstract IPAddress LocalAddress { get; }
+
+        private readonly HashSet<Mapping> _openedMapping = new HashSet<Mapping>();
 		protected DateTime LastSeen { get; private set; }
 
 		internal void Touch()
@@ -50,7 +53,7 @@ namespace Open.Nat
 			LastSeen = DateTime.Now;
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Creates the port map asynchronous.
 		/// </summary>
 		/// <param name="mapping">The <see cref="Mapping">Mapping</see> entry.</param>

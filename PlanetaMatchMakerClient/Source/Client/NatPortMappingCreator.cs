@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Open.Nat;
@@ -164,12 +166,58 @@ namespace PlanetaGameLabo.MatchMaker
 
             var proto = protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp;
             var hostname = Dns.GetHostName();
-            var myAddresses = await Dns.GetHostAddressesAsync(hostname).ConfigureAwait(false);
-            var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
-            Logger.Log(LogLevel.Info, $"My addresses are [{string.Join<IPAddress>(",", myAddresses)}].");
 
+            // Select IP address of this computer whose network is same as it of NAT device
+            var myAddressesWithPrefixLength = GetAllIpAddressesWithMask();
+            var natDeviceAddress = natDevice.LocalAddress;
+            var hostAddresses = myAddressesWithPrefixLength.Where(ap =>
+            {
+                if (ap.IpAddress.AddressFamily != natDeviceAddress.AddressFamily)
+                {
+                    return false;
+                }
+
+                // Search this host IP address which is in the network the NAT device in by comparing prefix of IP address.
+                // PrefixLength is available in both IPv4 and IPv6, so below code is capable of both IPv4 and IPv6.
+                var natDeviceAddressBytes = natDeviceAddress.GetAddressBytes();
+                var maskBytes = Enumerable.Repeat<byte>(0, natDeviceAddressBytes.Length).ToArray();
+                for (var i = 0; i < ap.PrefixLength / 8; ++i)
+                {
+                    if (i == ap.PrefixLength / 8 - 1)
+                    {
+                        var rest = ap.PrefixLength % 8;
+                        maskBytes[i] = (byte)~(2 ^ (8 - rest) - 1);
+                    }
+                    else
+                    {
+                        maskBytes[i] = 0b11111111;
+                    }
+                }
+
+                var hostAddressBytes = ap.IpAddress.GetAddressBytes();
+                return maskBytes
+                    .Select((mb, i) => (hostAddressBytes[i] & mb) == (natDeviceAddressBytes[i] & mb))
+                    .All(f => f);
+            }).Select(ap => ap.IpAddress).ToList();
+
+            if (!hostAddresses.Any())
+            {
+                throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
+                    $"This host does not have IP address whose network is same as the network of the NAT device ({natDeviceAddress}).");
+            }
+
+            if (hostAddresses.Count > 1)
+            {
+                throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
+                    $"This host has multiple IP addresses ([{string.Join(", ", hostAddresses)}]) whose network is same as the network of the NAT device ({natDeviceAddress}).");
+            }
+
+            var hostAddress = hostAddresses.First();
+            Logger.Log(LogLevel.Info, $"The host address whose network is same as the NAT device is {hostAddress}.");
+
+            var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
             var alreadyAvailableMappings = mappings.Where(m =>
-                m.Protocol == proto && myAddresses.Contains(m.PrivateIP) &&
+                m.Protocol == proto && hostAddress.Equals(m.PrivateIP) &&
                 privatePortCandidates.Contains((ushort)m.PrivatePort) &&
                 publicPortCandidates.Contains((ushort)m.PublicPort)).ToArray();
 
@@ -199,9 +247,9 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 var usedPrivatePortSet = new HashSet<ushort>(mappings
-                    .Where(m => m.Protocol == proto && myAddresses.Contains(m.PrivateIP))
+                    .Where(m => m.Protocol == proto && hostAddress.Equals(m.PrivateIP))
                     .Select(m => (ushort)m.PrivatePort));
-                Logger.Log(LogLevel.Info, $"Used private ports are [{string.Join(",", usedPublicPortSet)}].");
+                Logger.Log(LogLevel.Info, $"Used private ports are [{string.Join(",", usedPrivatePortSet)}].");
                 var availablePrivatePorts = privatePortCandidates.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
                 Logger.Log(LogLevel.Info, $"Available private ports are [{string.Join(",", availablePrivatePorts)}].");
                 if (!availablePrivatePorts.Any())
@@ -213,7 +261,7 @@ namespace PlanetaGameLabo.MatchMaker
                 publicPort = availablePublicPorts.First();
                 privatePort = availablePrivatePorts.First();
 
-                Logger.Log(LogLevel.Info, $"{publicPort} to {privatePort} mapping will be created.");
+                Logger.Log(LogLevel.Info, $"{publicPort} to {privatePort} mapping for {hostAddress} will be created.");
 
                 await CreatePortMappingAsync(protocol, privatePort, publicPort, description).ConfigureAwait(false);
             }
@@ -275,7 +323,40 @@ namespace PlanetaGameLabo.MatchMaker
             NatDiscoverer.ReleaseSessionMappings();
         }
 
+        private readonly struct IPAddressWithPrefixLength
+        {
+            public IPAddressWithPrefixLength(IPAddress ipAddress, int prefixLength)
+            {
+                IpAddress = ipAddress;
+                PrefixLength = prefixLength;
+            }
+
+            public IPAddress IpAddress { get; }
+            public int PrefixLength { get; }
+        }
+
         private NatDevice natDevice;
+
+        private IReadOnlyList<IPAddressWithPrefixLength> GetAllIpAddressesWithMask()
+        {
+            var ipAddressWithMaskListList = NetworkInterface.GetAllNetworkInterfaces()
+                // NetworkInterface.GetIsNetworkAvailable()の内容に基づく
+                .Where(c =>
+                    c.OperationalStatus == OperationalStatus.Up &&
+                    c.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                    c.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                .Select(c =>
+                    c.GetIPProperties().UnicastAddresses
+                        .Select(u => new IPAddressWithPrefixLength(u.Address, u.PrefixLength)));
+
+            var results = new List<IPAddressWithPrefixLength>();
+            foreach (var ipAddressWithSubNetList in ipAddressWithMaskListList)
+            {
+                results.AddRange(ipAddressWithSubNetList);
+            }
+
+            return results;
+        }
     }
 }
 #pragma warning restore CA1303
