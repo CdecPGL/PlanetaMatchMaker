@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -55,6 +56,30 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             return ports.Where(p => !usedPorts.Contains(p));
+        }
+
+        /// <summary>
+        /// Compare two IP addresses. This method considers an IPv4MappedToIPv6 address and a normal IPv4 address for same IP source are same.
+        /// Default Equals() method does not so.
+        /// Basically, there are no problem to use this method because the situation that an IPv4MappedToIPv6 address and a normal IPv4 address for same IP source indicates different endpoint is rare.
+        /// However, if you want to strictly identify IP version in addition to the endpoint which IP address indicates, use Equals().
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static bool EqualsIpAddressSource(this IPAddress left, IPAddress right)
+        {
+            if (left == null || right == null)
+            {
+                return false;
+            }
+
+            if (left.IsIPv4MappedToIPv6 == right.IsIPv4MappedToIPv6)
+            {
+                return left.Equals(right);
+            }
+
+            return left.IsIPv4MappedToIPv6 ? left.MapToIPv4().Equals(right) : right.MapToIPv4().Equals(left);
         }
     }
 }

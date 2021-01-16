@@ -30,7 +30,8 @@ namespace PlanetaGameLabo.MatchMaker
 
             try
             {
-                using var client = new MatchMakerClient();
+                var logger = StreamLogger.CreateStandardOutputLogger(LogLevel.Debug);
+                using var client = new MatchMakerClient(logger: logger);
                 Console.CancelKeyPress += OnKeyBoardInterrupted;
 
                 if (!string.IsNullOrEmpty(options.CommandAndOptions))

@@ -217,7 +217,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
             var alreadyAvailableMappings = mappings.Where(m =>
-                m.Protocol == proto && hostAddress.Equals(m.PrivateIP) &&
+                m.Protocol == proto && hostAddress.EqualsIpAddressSource(m.PrivateIP) &&
                 privatePortCandidates.Contains((ushort)m.PrivatePort) &&
                 publicPortCandidates.Contains((ushort)m.PublicPort)).ToArray();
 
@@ -247,7 +247,7 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 var usedPrivatePortSet = new HashSet<ushort>(mappings
-                    .Where(m => m.Protocol == proto && hostAddress.Equals(m.PrivateIP))
+                    .Where(m => m.Protocol == proto && hostAddress.EqualsIpAddressSource(m.PrivateIP))
                     .Select(m => (ushort)m.PrivatePort));
                 Logger.Log(LogLevel.Info, $"Used private ports are [{string.Join(",", usedPrivatePortSet)}].");
                 var availablePrivatePorts = privatePortCandidates.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
