@@ -42,7 +42,8 @@ namespace Open.Nat
 	/// </summary>
 	public abstract class NatDevice
 	{
-		private readonly HashSet<Mapping> _openedMapping = new HashSet<Mapping>();
+
+        private readonly HashSet<Mapping> _openedMapping = new HashSet<Mapping>();
 		protected DateTime LastSeen { get; private set; }
 
 		internal void Touch()
@@ -50,7 +51,17 @@ namespace Open.Nat
 			LastSeen = DateTime.Now;
 		}
 
-		/// <summary>
+        /// <summary>
+        /// An endpoint information of NAT device.
+        /// </summary>
+        public abstract IPEndPoint HostEndPoint { get; }
+
+        /// <summary>
+        /// An IP address of the client.
+        /// </summary>
+        public abstract IPAddress LocalAddress { get; }
+
+        /// <summary>
 		/// Creates the port map asynchronous.
 		/// </summary>
 		/// <param name="mapping">The <see cref="Mapping">Mapping</see> entry.</param>
