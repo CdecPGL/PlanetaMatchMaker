@@ -10,6 +10,7 @@ Setting is written by JSON format.
 |enable_session_key_check|boolean|true|Wheather session key check is enabled.|
 |time_out_seconds|integer|300|Timeout seconds to send or receive message.|
 |connection_check_time_out_seconds|integer|10|Timeout seconds in connection test request.|
+|connection_check_udp_try_count|integer|3|Connection test try count in UDP.|
 |ip_version|string|"v4"|IP version to use. ("v4" or "v6")|
 |port|integer|57000|Port number to accept.|
 |max_connection_per_thread|integer|1000|A limit of connection count in each thread.|

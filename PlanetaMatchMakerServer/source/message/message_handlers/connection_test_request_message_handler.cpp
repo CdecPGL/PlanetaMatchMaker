@@ -135,14 +135,13 @@ namespace pgl {
 			true
 		};
 
-		const auto time_out_seconds = std::chrono::seconds(param->server_setting.connection_check_time_out_seconds);
 		const auto target_endpoint = asio::ip::tcp::endpoint(
 			param->session_data.remote_endpoint().to_boost_endpoint().address(), message.port_number);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Start ", message.protocol,
 			" connectable test to ", target_endpoint, " with setting timeout ",
 			param->server_setting.connection_check_time_out_seconds, " seconds.");
 		try {
-			std::string test_text = u8"Hello. This is PMMS.";
+			const std::string test_text = u8"Hello. This is PMMS.";
 			switch (message.protocol) {
 				case transport_protocol::tcp:
 					reply.succeed = test_connection_tcp(*param, target_endpoint, test_text);
