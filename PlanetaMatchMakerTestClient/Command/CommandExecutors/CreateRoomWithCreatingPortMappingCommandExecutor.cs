@@ -62,7 +62,7 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "A password for private room.")]
         public string Password { get; set; }
 
-        [CommandLine.Option('f', "force_to_discover_nat_device", Default = "", Required = false,
+        [CommandLine.Option('f', "force_to_discover_nat_device", Default = false, Required = false,
             HelpText = "Force to discover NAT device if true.")]
         public bool forceToDiscoverNatDevice { get; set; }
     }
