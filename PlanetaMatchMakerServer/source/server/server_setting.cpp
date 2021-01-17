@@ -22,6 +22,8 @@ namespace pgl {
 		time_out_seconds = ptree.get("time_out_seconds", time_out_seconds);
 		connection_check_time_out_seconds = ptree.get("connection_check_time_out_seconds",
 			connection_check_time_out_seconds);
+		connection_check_udp_try_count = ptree.get("connection_check_udp_try_count",
+			connection_check_udp_try_count);
 		const auto ip_version_str = ptree.get("ip_version", std::string(nameof::nameof_enum(ip_version)));
 		try { ip_version = string_to_ip_version(ip_version_str); }
 		catch (const std::out_of_range&) { std::cerr << ip_version_str << " is invalid for ip_version." << std::endl; }
@@ -64,6 +66,7 @@ namespace pgl {
 		log(log_level::info, NAMEOF(enable_session_key_check), ": ", enable_session_key_check);
 		log(log_level::info, NAMEOF(time_out_seconds), ": ", time_out_seconds);
 		log(log_level::info, NAMEOF(connection_check_time_out_seconds), ": ", connection_check_time_out_seconds);
+		log(log_level::info, NAMEOF(connection_check_udp_try_count), ": ", connection_check_udp_try_count);
 		log(log_level::info, NAMEOF(ip_version), ": ", ip_version);
 		log(log_level::info, NAMEOF(port), ": ", port);
 		log(log_level::info, NAMEOF(max_connection_per_thread), ": ", max_connection_per_thread);

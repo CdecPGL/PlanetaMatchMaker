@@ -4,6 +4,8 @@
 
 # Planeta Match Maker
 
+[README (日本語)](README_jp.md)
+
 A very simple and light match making system for P2P online game.
 Server binary for linux and windows, and client library for C# including Unity are provided.
 
@@ -34,7 +36,7 @@ A library by below languages and platforms.
 
 You can easily install and use server and client.
 
-### Server (Use Docker)
+### Server (Docker)
 
 You can very easily install server by using docker by following steps.
 
@@ -52,7 +54,7 @@ You may need to set firewall to acceppt recieve connection of TCP port which is 
 
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
-### Server (Mannually Install)
+### Server (Mannual)
 
 In linux and windows, you can install server by manually by following steps.
 
@@ -70,12 +72,12 @@ You can change settings by editing [the setting file](Documents/ServerSettings.m
 1. Download source codes from release page or clone this repogitory
 1. Put source codes in `PlanetaMatchMakerClient/Source` directory to your project
 
-### Unity Client (from Unity Package)
+### Unity Client (Unity Package)
 
 1. Download unity package from release page
 1. Import the unity package to your project
 
-### Unity Client (Mannually Install)
+### Unity Client (Mannual)
 
 1. Download source codes from release page or clone this repogitory
 1. Copy all files in `PlanetaMatchMakerUnityClient/Assets` to `Assets` directory of your unity project
@@ -85,10 +87,11 @@ You can change settings by editing [the setting file](Documents/ServerSettings.m
 - [Server Settings](Documents/ServerSettings.md)
 - [Build Manual](Documents/BuildManual.md)
 - [Server Message API Reference](Documents/ServerMessageAPIReference.md)
+- [NAT Traversal with UPnP](Documents/NatTraversal.md)
 
 ## License
 
-The codes in this repository are lisenced unfer the [MIT License](https://github.com/CdecPGL/PlanetaMatchMaker/blob/master/LICENSE).
+The codes in this repository except codes from other repositories are lisenced unfer the [MIT License](https://github.com/CdecPGL/PlanetaMatchMaker/blob/master/LICENSE).
 
 This repogitory includes following libraries from other repogitories.
 The licenses of these codes follows each repogitories.

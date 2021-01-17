@@ -12,7 +12,7 @@ To build server project, you need a compiler which is compatible with C++17.
 Following compilers and platforms are tested.
 
 - MSVC 14.28 (Windows)
-- clang 8.0.0 (Ubuntu 18.04 and Alpine)
+- clang 9.0.0 (Alpine)
 
 g++ is not supported now.
 
@@ -180,3 +180,16 @@ Below code is an example to export unity package to `PlanetaMatchMakerUnityClien
 UNITY_EXECUTABLE='A path of Unity executable'
 . UNITY_EXECUTABLE -exportPackage Assets/PlanetaGameLabo PlanetaMatchMakerUnityClient.unitypackage -ProjectPath PlanetaMatchMakerUnityClient -batchmode -nographics -logfile unity_build.log -quit
 ```
+
+## Supplement
+
+### Compile Error
+
+#### MSVC: `error C2039: 'value': is not a member of 'boost::proto'`
+
+- Target: Server
+- Library: Boost Library 1.70.0-1.71.0
+- Platform: MSVC
+- Reference: https://github.com/boostorg/proto/issues/20
+
+Replace `#if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1700))` to `#if BOOST_WORKAROUND(BOOST_MSVC, < 1800)` around line 230 of `boost/proto/generate.hpp`.

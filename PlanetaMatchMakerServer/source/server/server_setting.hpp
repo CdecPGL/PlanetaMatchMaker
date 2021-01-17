@@ -15,6 +15,7 @@ namespace pgl {
 		bool enable_session_key_check = true;
 		uint32_t time_out_seconds = 300;
 		uint32_t connection_check_time_out_seconds = 10;
+		uint8_t connection_check_udp_try_count = 3;
 		ip_version ip_version = ip_version::v4;
 		uint16_t port = 57000;
 		uint32_t max_connection_per_thread = 1000;

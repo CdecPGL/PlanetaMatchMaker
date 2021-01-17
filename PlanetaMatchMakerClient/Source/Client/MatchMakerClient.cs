@@ -282,14 +282,11 @@ namespace PlanetaGameLabo.MatchMaker
             IEnumerable<ushort> portNumberCandidates, ushort defaultPortNumber,
             int discoverNatTimeoutMilliSeconds = 5000, string password = "", bool forceToDiscoverNatDevice = false)
         {
-            if (portNumberCandidates.Any(portNumberCandidate => !Validator.ValidateGameHostPort(portNumberCandidate)))
+            var portNumberCandidateArray = portNumberCandidates.ToList();
+            if (portNumberCandidateArray.Any(
+                portNumberCandidate => !Validator.ValidateGameHostPort(portNumberCandidate)))
             {
                 throw new ArgumentException("Dynamic/private port is available.", nameof(portNumberCandidates));
-            }
-
-            if (!Validator.ValidateGameHostPort(defaultPortNumber))
-            {
-                throw new ArgumentException("Dynamic/private port is available.", nameof(defaultPortNumber));
             }
 
             if (!Validator.ValidateGameHostPort(defaultPortNumber))
@@ -318,23 +315,6 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                if (forceToDiscoverNatDevice || !PortMappingCreator.IsNatDeviceAvailable ||
-                    !PortMappingCreator.IsDiscoverNatDone)
-                {
-                    Logger.Log(LogLevel.Info, "Execute discovering NAT device because it is not done.");
-                    await PortMappingCreator.DiscoverNatAsync(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);
-                }
-
-                if (!PortMappingCreator.IsNatDeviceAvailable)
-                {
-                    throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
-                        "Failed to discover NAT device.");
-                }
-
-                var isDefaultPortUsed = true;
-                ushort usedPrivatePortFromCandidates = 0;
-                ushort usedPublicPortFromCandidates = 0;
-
                 Logger.Log(LogLevel.Info, $"Execute first connection test (Default port: {defaultPortNumber}).");
                 var connectionTestSucceed = false;
                 try
@@ -343,16 +323,34 @@ namespace PlanetaGameLabo.MatchMaker
                         await ConnectionTestCoreAsync(protocol, defaultPortNumber).ConfigureAwait(false);
                 }
                 // Consider port already used error as connection test failure
-                catch (InvalidOperationException)
+                catch (InvalidOperationException e)
                 {
+                    Logger.Log(LogLevel.Info, $"Failed to listen the port {defaultPortNumber}. ({e.Message})");
                 }
 
+                var isDefaultPortUsed = true;
+                ushort usedPrivatePortFromCandidates = 0;
+                ushort usedPublicPortFromCandidates = 0;
                 var portNumber = defaultPortNumber;
+
                 if (!connectionTestSucceed)
                 {
+                    // Discover NAT device if need
+                    if (forceToDiscoverNatDevice || !PortMappingCreator.IsNatDeviceAvailable ||
+                        !PortMappingCreator.IsDiscoverNatDone)
+                    {
+                        Logger.Log(LogLevel.Info, "Execute discovering NAT device because it is not done.");
+                        await PortMappingCreator.DiscoverNatAsync(discoverNatTimeoutMilliSeconds).ConfigureAwait(false);
+                    }
+
+                    if (!PortMappingCreator.IsNatDeviceAvailable)
+                    {
+                        throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
+                            "Failed to discover NAT device.");
+                    }
+
                     Logger.Log(LogLevel.Info, "Try to create port mapping because connection test is failed.");
                     // Create port candidates
-                    var portNumberCandidateArray = portNumberCandidates.ToList();
                     Logger.Log(LogLevel.Debug, $"Port candidates: [{string.Join(",", portNumberCandidateArray)}]");
                     if (!portNumberCandidateArray.Contains(defaultPortNumber))
                     {
@@ -844,6 +842,9 @@ namespace PlanetaGameLabo.MatchMaker
                         $"The port \"{portNumber}\" is already used by other {portNumber} connection or listener.");
                 }
 
+                Logger.Log(LogLevel.Info,
+                    $"Start {protocol} connectable test to my port {portNumber} from the server.");
+
                 // Accept both IPv4 and IPv6
                 if (protocol == TransportProtocol.Tcp)
                 {
@@ -853,22 +854,40 @@ namespace PlanetaGameLabo.MatchMaker
                         SocketOptionName.IPv6Only,
                         0);
                     tcpListener.Start();
+                    Logger.Log(LogLevel.Debug, "TCP listener for connectable test is started.");
 
                     async Task Func(CancellationToken cancellationToken)
                     {
                         try
                         {
-                            while (!cancellationToken.IsCancellationRequested)
+                            using (var socket = await Task.Run(tcpListener.AcceptSocketAsync, cancellationToken)
+                                .ConfigureAwait(false))
                             {
-                                using (await Task.Run(tcpListener.AcceptSocketAsync, cancellationToken)
-                                    .ConfigureAwait(false))
+                                // Echo received message
+                                var buffer = new ArraySegment<byte>(new byte[64]);
+                                var size = await Task
+                                    .Run(
+                                        async () => await socket.ReceiveAsync(buffer, SocketFlags.None)
+                                            .ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+                                Logger.Log(LogLevel.Debug,
+                                    $"A test message from the server is received: \"{System.Text.Encoding.ASCII.GetString(buffer.ToArray())}\"");
+
+                                var replyData = new ArraySegment<byte>(buffer.ToArray(), 0, size);
+                                await Task.Run(async () =>
                                 {
-                                }
+                                    await socket.SendAsync(replyData, SocketFlags.None).ConfigureAwait(false);
+                                }, cancellationToken).ConfigureAwait(false);
+                                Logger.Log(LogLevel.Debug, "The received message is sent to the server.");
+
+                                socket.Shutdown(SocketShutdown.Both);
+                                socket.Disconnect(false);
+                                Logger.Log(LogLevel.Debug, "TCP listener for connectable test is shut-downed.");
                             }
                         }
                         // ObjectDisposedException is thrown when we cancel accepting after we started accepting.
                         catch (ObjectDisposedException)
                         {
+                            Logger.Log(LogLevel.Debug, "TCP listener for connectable test is disposed.");
                         }
                     }
 
@@ -877,6 +896,7 @@ namespace PlanetaGameLabo.MatchMaker
                 else
                 {
                     udpClient = new UdpClient(portNumber);
+                    Logger.Log(LogLevel.Debug, "TCP client for connectable test is created.");
 
                     async Task Func(UdpClient pUdpClient, CancellationToken cancellationToken)
                     {
@@ -887,25 +907,35 @@ namespace PlanetaGameLabo.MatchMaker
                             {
                                 var receiveResult = await Task.Run(pUdpClient.ReceiveAsync, cancellationToken)
                                     .ConfigureAwait(false);
+                                Logger.Log(LogLevel.Debug,
+                                    $"A message is received: \"{System.Text.Encoding.ASCII.GetString(receiveResult.Buffer)}\"");
                                 if (cancellationToken.IsCancellationRequested)
                                 {
                                     return;
                                 }
 
                                 // reply only if the message is from the server
-                                if (Equals(receiveResult.RemoteEndPoint.Address, serverAddress))
+                                if (receiveResult.RemoteEndPoint.Address.EqualsIpAddressSource(serverAddress))
                                 {
+                                    // Echo received message
                                     await Task.Run(async () =>
                                     {
                                         await pUdpClient.SendAsync(receiveResult.Buffer, receiveResult.Buffer.Length,
                                             receiveResult.RemoteEndPoint).ConfigureAwait(false);
                                     }, cancellationToken).ConfigureAwait(false);
+                                    Logger.Log(LogLevel.Debug, "The received message is sent to the server.");
+                                }
+                                else
+                                {
+                                    Logger.Log(LogLevel.Debug,
+                                        $"The sender ({receiveResult.RemoteEndPoint.Address}) of the message is not the server ({serverAddress}), so this message is ignored.");
                                 }
                             }
                         }
                         // ObjectDisposedException is thrown when we cancel accepting after we started accepting.
                         catch (ObjectDisposedException)
                         {
+                            Logger.Log(LogLevel.Debug, "UDP client for connectable test is disposed.");
                         }
                     }
 
