@@ -42,8 +42,6 @@ namespace Open.Nat
 	/// </summary>
 	public abstract class NatDevice
 	{
-        /// <remarks>Added by Cdec</remarks>
-        public abstract IPAddress LocalAddress { get; }
 
         private readonly HashSet<Mapping> _openedMapping = new HashSet<Mapping>();
 		protected DateTime LastSeen { get; private set; }
@@ -52,6 +50,16 @@ namespace Open.Nat
 		{
 			LastSeen = DateTime.Now;
 		}
+
+        /// <summary>
+        /// An endpoint information of NAT device.
+        /// </summary>
+        public abstract IPEndPoint HostEndPoint { get; }
+
+        /// <summary>
+        /// An IP address of the client.
+        /// </summary>
+        public abstract IPAddress LocalAddress { get; }
 
         /// <summary>
 		/// Creates the port map asynchronous.

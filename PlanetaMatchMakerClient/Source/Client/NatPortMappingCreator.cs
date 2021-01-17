@@ -165,55 +165,17 @@ namespace PlanetaGameLabo.MatchMaker
             Logger.Log(LogLevel.Info, $"Public port candidates are [{string.Join(",", publicPortCandidates)}].");
 
             var proto = protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp;
-            var hostname = Dns.GetHostName();
 
-            // Select IP address of this computer whose network is same as it of NAT device
+            // Get and check this host IP address used to connect to the NAT device
+            var hostAddress = natDevice.LocalAddress;
+            Logger.Log(LogLevel.Info, $"The host address used to connect to the NAT device is {hostAddress}.");
+
             var myAddressesWithPrefixLength = GetAllIpAddressesWithMask();
-            var natDeviceAddress = natDevice.LocalAddress;
-            var hostAddresses = myAddressesWithPrefixLength.Where(ap =>
-            {
-                if (ap.IpAddress.AddressFamily != natDeviceAddress.AddressFamily)
-                {
-                    return false;
-                }
-
-                // Search this host IP address which is in the network the NAT device in by comparing prefix of IP address.
-                // PrefixLength is available in both IPv4 and IPv6, so below code is capable of both IPv4 and IPv6.
-                var natDeviceAddressBytes = natDeviceAddress.GetAddressBytes();
-                var maskBytes = Enumerable.Repeat<byte>(0, natDeviceAddressBytes.Length).ToArray();
-                for (var i = 0; i < ap.PrefixLength / 8; ++i)
-                {
-                    if (i == ap.PrefixLength / 8 - 1)
-                    {
-                        var rest = ap.PrefixLength % 8;
-                        maskBytes[i] = (byte)~(2 ^ (8 - rest) - 1);
-                    }
-                    else
-                    {
-                        maskBytes[i] = 0b11111111;
-                    }
-                }
-
-                var hostAddressBytes = ap.IpAddress.GetAddressBytes();
-                return maskBytes
-                    .Select((mb, i) => (hostAddressBytes[i] & mb) == (natDeviceAddressBytes[i] & mb))
-                    .All(f => f);
-            }).Select(ap => ap.IpAddress).ToList();
-
-            if (!hostAddresses.Any())
+            if (!myAddressesWithPrefixLength.Any(ap => ap.IpAddress.EqualsIpAddressSource(hostAddress)))
             {
                 throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
-                    $"This host does not have IP address whose network is same as the network of the NAT device ({natDeviceAddress}).");
+                    $"The host address (${hostAddress}) used to connect to the NAT device is not address of this host. ([{string.Join(", ", myAddressesWithPrefixLength)}])");
             }
-
-            if (hostAddresses.Count > 1)
-            {
-                throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
-                    $"This host has multiple IP addresses ([{string.Join(", ", hostAddresses)}]) whose network is same as the network of the NAT device ({natDeviceAddress}).");
-            }
-
-            var hostAddress = hostAddresses.First();
-            Logger.Log(LogLevel.Info, $"The host address whose network is same as the NAT device is {hostAddress}.");
 
             var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
             var alreadyAvailableMappings = mappings.Where(m =>
@@ -333,6 +295,11 @@ namespace PlanetaGameLabo.MatchMaker
 
             public IPAddress IpAddress { get; }
             public int PrefixLength { get; }
+
+            public override string ToString()
+            {
+                return $"{IpAddress}/{PrefixLength}";
+            }
         }
 
         private NatDevice natDevice;

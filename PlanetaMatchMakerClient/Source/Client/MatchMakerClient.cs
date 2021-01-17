@@ -370,7 +370,7 @@ namespace PlanetaGameLabo.MatchMaker
                         .ConfigureAwait(false);
                     portNumber = usedPublicPortFromCandidates;
                     Logger.Log(LogLevel.Info,
-                        $"Port mapping is created in NAT. (privatePortNumber: {usedPrivatePortFromCandidates}, publicPortNumber: {usedPublicPortFromCandidates})");
+                        $"Port mapping is created or reused in NAT. (privatePortNumber: {usedPrivatePortFromCandidates}, publicPortNumber: {usedPublicPortFromCandidates})");
 
                     Logger.Log(LogLevel.Info, "Execute second connection test.");
 
