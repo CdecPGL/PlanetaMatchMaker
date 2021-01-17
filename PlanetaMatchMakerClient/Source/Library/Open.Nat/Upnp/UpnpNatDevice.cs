@@ -39,6 +39,9 @@ namespace Open.Nat
 	internal sealed class UpnpNatDevice : NatDevice
     {
         /// <remarks>Added by Cdec</remarks>
+        public override IPEndPoint HostEndPoint => DeviceInfo.HostEndPoint;
+
+        /// <remarks>Added by Cdec</remarks>
         public override IPAddress LocalAddress => DeviceInfo.LocalAddress;
 
 
