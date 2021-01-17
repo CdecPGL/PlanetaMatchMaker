@@ -4,6 +4,8 @@
 
 # Planeta Match Maker
 
+[README (日本語)](README_jp.md)
+
 A very simple and light match making system for P2P online game.
 Server binary for linux and windows, and client library for C# including Unity are provided.
 
@@ -89,7 +91,7 @@ You can change settings by editing [the setting file](Documents/ServerSettings.m
 
 ## License
 
-The codes in this repository are lisenced unfer the [MIT License](https://github.com/CdecPGL/PlanetaMatchMaker/blob/master/LICENSE).
+The codes in this repository except codes from other repositories are lisenced unfer the [MIT License](https://github.com/CdecPGL/PlanetaMatchMaker/blob/master/LICENSE).
 
 This repogitory includes following libraries from other repogitories.
 The licenses of these codes follows each repogitories.
