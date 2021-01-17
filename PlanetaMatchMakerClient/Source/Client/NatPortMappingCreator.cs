@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Open.Nat;
@@ -170,11 +169,11 @@ namespace PlanetaGameLabo.MatchMaker
             var hostAddress = natDevice.LocalAddress;
             Logger.Log(LogLevel.Info, $"The host address used to connect to the NAT device is {hostAddress}.");
 
-            var myAddressesWithPrefixLength = GetAllIpAddressesWithMask();
-            if (!myAddressesWithPrefixLength.Any(ap => ap.IpAddress.EqualsIpAddressSource(hostAddress)))
+            var hostAddressesFromNic = GetAllIpAddresses();
+            if (!hostAddressesFromNic.Any(a => a.EqualsIpAddressSource(hostAddress)))
             {
                 throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
-                    $"The host address (${hostAddress}) used to connect to the NAT device is not address of this host. ([{string.Join(", ", myAddressesWithPrefixLength)}])");
+                    $"The host address (${hostAddress}) used to connect to the NAT device is not address of this host. ([{string.Join(", ", hostAddressesFromNic)}])");
             }
 
             var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
@@ -285,26 +284,9 @@ namespace PlanetaGameLabo.MatchMaker
             NatDiscoverer.ReleaseSessionMappings();
         }
 
-        private readonly struct IPAddressWithPrefixLength
-        {
-            public IPAddressWithPrefixLength(IPAddress ipAddress, int prefixLength)
-            {
-                IpAddress = ipAddress;
-                PrefixLength = prefixLength;
-            }
-
-            public IPAddress IpAddress { get; }
-            public int PrefixLength { get; }
-
-            public override string ToString()
-            {
-                return $"{IpAddress}/{PrefixLength}";
-            }
-        }
-
         private NatDevice natDevice;
 
-        private IReadOnlyList<IPAddressWithPrefixLength> GetAllIpAddressesWithMask()
+        private static IReadOnlyList<IPAddress> GetAllIpAddresses()
         {
             var ipAddressWithMaskListList = NetworkInterface.GetAllNetworkInterfaces()
                 // NetworkInterface.GetIsNetworkAvailable()の内容に基づく
@@ -313,10 +295,9 @@ namespace PlanetaGameLabo.MatchMaker
                     c.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
                     c.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
                 .Select(c =>
-                    c.GetIPProperties().UnicastAddresses
-                        .Select(u => new IPAddressWithPrefixLength(u.Address, u.PrefixLength)));
+                    c.GetIPProperties().UnicastAddresses.Select(u => u.Address));
 
-            var results = new List<IPAddressWithPrefixLength>();
+            var results = new List<IPAddress>();
             foreach (var ipAddressWithSubNetList in ipAddressWithMaskListList)
             {
                 results.AddRange(ipAddressWithSubNetList);

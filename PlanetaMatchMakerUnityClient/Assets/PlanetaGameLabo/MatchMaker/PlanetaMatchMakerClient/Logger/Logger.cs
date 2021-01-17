@@ -36,17 +36,23 @@ namespace PlanetaGameLabo.MatchMaker
             LogImpl(level, FormatLog(level, message));
         }
 
+        protected LoggerBase(LogLevel logLevel = LogLevel.Info)
+        {
+            LogLevel = logLevel;
+        }
+
         protected abstract void LogImpl(LogLevel level, string formattedMessage);
 
         private static string FormatLog(LogLevel level, string message)
         {
-            return $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss:ffffff} UTF] {level}: {message}";
+            return $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss:ffffff} UTC] {level}: {message}";
         }
     }
 
     public sealed class StreamLogger : LoggerBase
     {
-        public StreamLogger(StreamWriter standardStreamWriter, StreamWriter errorStreamWriter)
+        public StreamLogger(StreamWriter standardStreamWriter, StreamWriter errorStreamWriter,
+            LogLevel logLevel = LogLevel.Info) : base(logLevel)
         {
             Debug.Assert(standardStreamWriter != null, nameof(this.standardStreamWriter) + " != null");
             standardStreamWriter.AutoFlush = true;
@@ -71,10 +77,10 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        public static ILogger CreateStandardOutputLogger()
+        public static ILogger CreateStandardOutputLogger(LogLevel logLevel = LogLevel.Info)
         {
             return new StreamLogger(new StreamWriter(Console.OpenStandardOutput(), Console.OutputEncoding),
-                new StreamWriter(Console.OpenStandardError(), Console.OutputEncoding));
+                new StreamWriter(Console.OpenStandardError(), Console.OutputEncoding), logLevel);
         }
 
         public static ILogger CreateNullLogger()

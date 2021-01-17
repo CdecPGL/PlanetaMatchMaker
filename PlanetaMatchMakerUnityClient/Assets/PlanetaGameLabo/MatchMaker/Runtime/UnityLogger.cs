@@ -5,6 +5,8 @@ namespace PlanetaGameLabo.MatchMaker
 {
     public sealed class UnityLogger : LoggerBase
     {
+        public UnityLogger(LogLevel logLevel = LogLevel.Info) : base(logLevel) { }
+
         protected override void LogImpl(LogLevel level, string message)
         {
             switch (level)

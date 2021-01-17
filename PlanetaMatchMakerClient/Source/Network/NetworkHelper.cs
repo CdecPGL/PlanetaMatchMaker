@@ -87,6 +87,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// Get byte array to mask network part fo IP address by prefix length.
         /// PrefixLength is available for both IPv4 and IPv6 in IPAddress class, so this method is available for both IPv4 and IPv6.
         /// </summary>
+        /// <remarks>IPAddress.PrefixLength throws NotImplementedError in Unity 2020.1 and is not available by some reason...</remarks>
         /// <param name="ipAddressLength"></param>
         /// <param name="prefixLength"></param>
         /// <returns></returns>

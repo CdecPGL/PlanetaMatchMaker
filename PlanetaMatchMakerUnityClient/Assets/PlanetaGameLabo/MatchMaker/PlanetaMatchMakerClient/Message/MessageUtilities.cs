@@ -54,7 +54,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="client"></param>
         /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
         /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
-        /// <exception cref="SocketException">Is is possible to reach timeout</exception>
+        /// <exception cref="SocketException">It is possible to reach timeout</exception>
         /// <returns></returns>
         internal static async Task<(MessageErrorCode, T)> ReceiveReplyMessage<T>(this TcpClient client)
         {

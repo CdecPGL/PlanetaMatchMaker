@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
 using Open.Nat;
@@ -163,13 +164,21 @@ namespace PlanetaGameLabo.MatchMaker
             Logger.Log(LogLevel.Info, $"Public port candidates are [{string.Join(",", publicPortCandidates)}].");
 
             var proto = protocol == TransportProtocol.Tcp ? Protocol.Tcp : Protocol.Udp;
-            var hostname = Dns.GetHostName();
-            var myAddresses = await Dns.GetHostAddressesAsync(hostname).ConfigureAwait(false);
-            var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
-            Logger.Log(LogLevel.Info, $"My addresses are [{string.Join<IPAddress>(",", myAddresses)}].");
 
+            // Get and check this host IP address used to connect to the NAT device
+            var hostAddress = natDevice.LocalAddress;
+            Logger.Log(LogLevel.Info, $"The host address used to connect to the NAT device is {hostAddress}.");
+
+            var hostAddressesFromNic = GetAllIpAddresses();
+            if (!hostAddressesFromNic.Any(a => a.EqualsIpAddressSource(hostAddress)))
+            {
+                throw new ClientErrorException(ClientErrorCode.CreatingPortMappingFailed,
+                    $"The host address (${hostAddress}) used to connect to the NAT device is not address of this host. ([{string.Join(", ", hostAddressesFromNic)}])");
+            }
+
+            var mappings = (await natDevice.GetAllMappingsAsync().ConfigureAwait(false)).ToArray();
             var alreadyAvailableMappings = mappings.Where(m =>
-                m.Protocol == proto && myAddresses.Contains(m.PrivateIP) &&
+                m.Protocol == proto && hostAddress.EqualsIpAddressSource(m.PrivateIP) &&
                 privatePortCandidates.Contains((ushort)m.PrivatePort) &&
                 publicPortCandidates.Contains((ushort)m.PublicPort)).ToArray();
 
@@ -199,9 +208,9 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 var usedPrivatePortSet = new HashSet<ushort>(mappings
-                    .Where(m => m.Protocol == proto && myAddresses.Contains(m.PrivateIP))
+                    .Where(m => m.Protocol == proto && hostAddress.EqualsIpAddressSource(m.PrivateIP))
                     .Select(m => (ushort)m.PrivatePort));
-                Logger.Log(LogLevel.Info, $"Used private ports are [{string.Join(",", usedPublicPortSet)}].");
+                Logger.Log(LogLevel.Info, $"Used private ports are [{string.Join(",", usedPrivatePortSet)}].");
                 var availablePrivatePorts = privatePortCandidates.Where(p => !usedPrivatePortSet.Contains(p)).ToArray();
                 Logger.Log(LogLevel.Info, $"Available private ports are [{string.Join(",", availablePrivatePorts)}].");
                 if (!availablePrivatePorts.Any())
@@ -213,7 +222,7 @@ namespace PlanetaGameLabo.MatchMaker
                 publicPort = availablePublicPorts.First();
                 privatePort = availablePrivatePorts.First();
 
-                Logger.Log(LogLevel.Info, $"{publicPort} to {privatePort} mapping will be created.");
+                Logger.Log(LogLevel.Info, $"{publicPort} to {privatePort} mapping for {hostAddress} will be created.");
 
                 await CreatePortMappingAsync(protocol, privatePort, publicPort, description).ConfigureAwait(false);
             }
@@ -276,6 +285,26 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private NatDevice natDevice;
+
+        private static IReadOnlyList<IPAddress> GetAllIpAddresses()
+        {
+            var ipAddressWithMaskListList = NetworkInterface.GetAllNetworkInterfaces()
+                // NetworkInterface.GetIsNetworkAvailable()の内容に基づく
+                .Where(c =>
+                    c.OperationalStatus == OperationalStatus.Up &&
+                    c.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                    c.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                .Select(c =>
+                    c.GetIPProperties().UnicastAddresses.Select(u => u.Address));
+
+            var results = new List<IPAddress>();
+            foreach (var ipAddressWithSubNetList in ipAddressWithMaskListList)
+            {
+                results.AddRange(ipAddressWithSubNetList);
+            }
+
+            return results;
+        }
     }
 }
 #pragma warning restore CA1303
