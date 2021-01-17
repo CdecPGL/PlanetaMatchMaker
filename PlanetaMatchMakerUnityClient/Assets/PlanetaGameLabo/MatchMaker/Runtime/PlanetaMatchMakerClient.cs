@@ -593,6 +593,9 @@ namespace PlanetaGameLabo.MatchMaker
 
         [SerializeField, Tooltip("Enable debug log")]
         private bool _enableDebugLog;
+        
+        [SerializeField, Tooltip("Threshold of log level to output when debug log is enabled")]
+        private LogLevel _debugLogLevel = LogLevel.Info;
 
         private MatchMakerClient _client;
 
@@ -608,7 +611,7 @@ namespace PlanetaGameLabo.MatchMaker
         private void Awake()
         {
             _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000),
-                _keepAliveNoticeIntervalSeconds, new UnityLogger());
+                _keepAliveNoticeIntervalSeconds, new UnityLogger(_debugLogLevel));
             _client.Logger.Enabled = _enableDebugLog;
             if (_dontDestroyOnLoad)
             {
