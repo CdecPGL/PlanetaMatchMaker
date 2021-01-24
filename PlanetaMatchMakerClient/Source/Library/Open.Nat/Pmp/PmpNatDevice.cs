@@ -36,22 +36,27 @@ using System.Threading.Tasks;
 namespace Open.Nat
 {
 	internal sealed class PmpNatDevice : NatDevice
-    {
-        private readonly IPAddress _publicAddress;
-
-		internal PmpNatDevice(IPAddress hostEndPointAddress, IPAddress localAddress, IPAddress publicAddress)
-        {
-            HostEndPoint = new IPEndPoint(hostEndPointAddress, PmpConstants.ServerPort);
-
-            LocalAddress = localAddress;
-			_publicAddress = publicAddress;
+	{
+		public override IPEndPoint HostEndPoint
+		{
+			get { return _hostEndPoint; }
 		}
 
-        /// <remarks>Added by Cdec.</remarks>
-        public override IPEndPoint HostEndPoint { get; }
+		public override IPAddress LocalAddress
+		{
+			get { return _localAddress; }
+		}
 
-        /// <remarks>Added by Cdec.</remarks>
-        public override IPAddress LocalAddress { get; }
+		private readonly IPEndPoint _hostEndPoint;
+		private readonly IPAddress _localAddress;
+		private readonly IPAddress _publicAddress;
+
+		internal PmpNatDevice(IPAddress hostEndPointAddress, IPAddress localAddress, IPAddress publicAddress)
+		{
+			_hostEndPoint = new IPEndPoint(hostEndPointAddress, PmpConstants.ServerPort);
+			_localAddress = localAddress;
+			_publicAddress = publicAddress;
+		}
 
 #if NET35
 		public override Task CreatePortMapAsync(Mapping mapping)
@@ -61,7 +66,7 @@ namespace Open.Nat
 				.ContinueWith(t => RegisterMapping(mapping));
 		}
 #else
-        public override async Task CreatePortMapAsync(Mapping mapping)
+		public override async Task CreatePortMapAsync(Mapping mapping)
 		{
 			await InternalCreatePortMapAsync(mapping, true)
 				.TimeoutAfter(TimeSpan.FromSeconds(4));

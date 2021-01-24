@@ -37,15 +37,18 @@ using System.Threading.Tasks;
 namespace Open.Nat
 {
 	internal sealed class UpnpNatDevice : NatDevice
-    {
-        /// <remarks>Added by Cdec</remarks>
-        public override IPEndPoint HostEndPoint => DeviceInfo.HostEndPoint;
+	{
+		public override IPEndPoint HostEndPoint
+		{
+			get { return DeviceInfo.HostEndPoint; }
+		}
 
-        /// <remarks>Added by Cdec</remarks>
-        public override IPAddress LocalAddress => DeviceInfo.LocalAddress;
+		public override IPAddress LocalAddress
+		{
+			get { return DeviceInfo.LocalAddress; }
+		}
 
-
-        internal readonly UpnpNatDeviceInfo DeviceInfo;
+		internal readonly UpnpNatDeviceInfo DeviceInfo;
 		private readonly SoapClient _soapClient;
 
 		internal UpnpNatDevice(UpnpNatDeviceInfo deviceInfo)
