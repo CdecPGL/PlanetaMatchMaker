@@ -327,6 +327,11 @@ namespace PlanetaGameLabo.MatchMaker
                 {
                     Logger.Log(LogLevel.Info, $"Failed to listen the port {defaultPortNumber}. ({e.Message})");
                 }
+                // Consider socket error as connection test failure
+                catch (SocketException e)
+                {
+                    Logger.Log(LogLevel.Info, $"Failed to listen the port {defaultPortNumber}. ({e.Message})");
+                }
 
                 var isDefaultPortUsed = true;
                 ushort usedPrivatePortFromCandidates = 0;
@@ -374,7 +379,22 @@ namespace PlanetaGameLabo.MatchMaker
 
                     Logger.Log(LogLevel.Info, "Execute second connection test.");
 
-                    connectionTestSucceed = await ConnectionTestCoreAsync(protocol, portNumber).ConfigureAwait(false);
+                    try
+                    {
+                        connectionTestSucceed =
+                            await ConnectionTestCoreAsync(protocol, portNumber).ConfigureAwait(false);
+                    }
+                    // Consider port already used error as connection test failure
+                    catch (InvalidOperationException e)
+                    {
+                        Logger.Log(LogLevel.Info, $"Failed to listen the port {defaultPortNumber}. ({e.Message})");
+                    }
+                    // Consider socket error as connection test failure
+                    catch (SocketException e)
+                    {
+                        Logger.Log(LogLevel.Info, $"Failed to listen the port {defaultPortNumber}. ({e.Message})");
+                    }
+
                     if (!connectionTestSucceed)
                     {
                         throw new ClientErrorException(ClientErrorCode.NotReachable);
@@ -634,6 +654,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="InvalidOperationException">The port is already used by other connection which is not TCP server</exception>
+        /// <exception cref="SocketException">Failed to create a socket with the port.</exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<bool> ConnectionTestAsync(TransportProtocol protocol, ushort portNumber)
@@ -822,6 +843,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="InvalidOperationException">The port is already used by other connection or listener</exception>
+        /// <exception cref="SocketException">Failed to create a socket with the port.</exception>
         /// <returns></returns>
         private async Task<bool> ConnectionTestCoreAsync(TransportProtocol protocol, ushort portNumber)
         {
