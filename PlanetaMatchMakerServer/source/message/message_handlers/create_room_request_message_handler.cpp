@@ -18,9 +18,7 @@ namespace pgl {
 		const message_parameter_validator_with_reply<message_type::create_room_reply, create_room_reply_message>
 			parameter_validator(param);
 
-		// Check room group existence
-		parameter_validator.validate_room_group_existence(message.group_index);
-		auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
+		auto& room_data_container = param->server_data.get_room_data_container();
 
 		// Check port number is valid
 		parameter_validator.validate_port_number(message.port_number);
@@ -48,11 +46,11 @@ namespace pgl {
 		}
 
 		// Check if room count reached limit in room group
-		if (room_data_container.size() == param->server_setting.common.max_room_per_room_group) {
+		if (room_data_container.size() == param->server_setting.common.max_room_count) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
 				"Failed to create new room with player\"",
 				param->session_data.client_player_name().generate_full_name(),
-				"\" because room group with index \"", message.group_index, "\" is full.");
+				"\" because room count reaches max.");
 			header.error_code = message_error_code::room_group_full;
 			send(param, header, reply);
 			return;
@@ -80,9 +78,9 @@ namespace pgl {
 			reply.room_id = room_data_container.assign_id_and_add_data(room_data);
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New ",
 				is_public ? "public" : "private", " room for player \"",
-				param->session_data.client_player_name().generate_full_name(), "\" is created in group ",
-				message.group_index, " with id: ", reply.room_id);
-			param->session_data.set_hosting_room_id(message.group_index, reply.room_id);
+				param->session_data.client_player_name().generate_full_name(), "\" is created with id: ",
+				reply.room_id);
+			param->session_data.set_hosting_room_id(reply.room_id);
 
 			// Reply to the client
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",

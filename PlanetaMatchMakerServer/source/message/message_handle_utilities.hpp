@@ -71,9 +71,6 @@ namespace pgl {
 		}
 	}
 
-	// Return true if a room group index is valid.
-	bool does_room_group_exist(std::shared_ptr<message_handle_parameter> param, room_group_index_t room_group_index);
-
 	// Return if a room id exists.
 	bool does_room_exist(std::shared_ptr<message_handle_parameter> param,
 		const room_data_container& room_data_container, room_id_t room_id);

@@ -9,9 +9,6 @@ namespace pgl {
 	public:
 		explicit message_parameter_validator(std::shared_ptr<message_handle_parameter> param);
 
-		// Check a room group index is valid. If it is not valid, throw server error.
-		void validate_room_group_existence(room_group_index_t room_group_index, bool is_continuable = true) const;
-
 		// Check a room id exists. If it doesn't exist, throw server error.
 		void validate_room_existence(const room_data_container& room_data_container, room_id_t room_id,
 			bool is_continuable = true) const;
@@ -35,16 +32,6 @@ namespace pgl {
 	public:
 		explicit message_parameter_validator_with_reply(std::shared_ptr<message_handle_parameter> param) :
 			message_parameter_validator_(param) {}
-
-		// Check a room group index is valid. If it is not valid, reply error message to client and throw server error.
-		void validate_room_group_existence(const room_group_index_t room_group_index,
-			const TReplyMessage& reply_message = {}, const bool is_continuable = true) const {
-			try { message_parameter_validator_.validate_room_group_existence(room_group_index, is_continuable); }
-			catch (server_session_error&) {
-				send_reply(message_error_code::room_group_not_found, reply_message);
-				throw;
-			}
-		}
 
 		// Check a room id exists. If it doesn't exist, reply error message to client and throw server error.
 		void validate_room_existence(const room_data_container& room_data_container, const room_id_t room_id,

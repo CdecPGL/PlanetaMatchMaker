@@ -15,8 +15,7 @@ namespace pgl {
 			parameter_validator(param);
 
 		// Check room group existence
-		parameter_validator.validate_room_group_existence(message.group_index);
-		const auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
+		const auto& room_data_container = param->server_data.get_room_data_container();
 
 		list_room_reply_message reply{};
 
@@ -28,7 +27,7 @@ namespace pgl {
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
 				" rooms are matched in ", room_data_container.size(), " rooms.");
 		}
-		catch (out_of_range) {
+		catch (out_of_range&) {
 			reply_message_header header{
 				message_type::list_room_reply,
 				message_error_code::request_parameter_wrong
@@ -45,9 +44,9 @@ namespace pgl {
 			message_type::list_room_reply,
 			message_error_code::ok
 		};
-		reply.total_room_count = range_checked_static_cast<uint8_t>(room_data_container.size());
-		reply.matched_room_count = range_checked_static_cast<uint8_t>(matched_data_list.size());
-		reply.reply_room_count = std::min(range_checked_static_cast<uint8_t>(
+		reply.total_room_count = range_checked_static_cast<uint16_t>(room_data_container.size());
+		reply.matched_room_count = range_checked_static_cast<uint16_t>(matched_data_list.size());
+		reply.reply_room_count = std::min(range_checked_static_cast<uint16_t>(
 				reply.matched_room_count <= message.start_index ? 0 : reply.matched_room_count - message.start_index),
 			message.count);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),

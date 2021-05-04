@@ -15,8 +15,7 @@ Setting is written by JSON format.
 |port|integer (0-)|57000|Port number to accept.|
 |max_connection_per_thread|integer|1000|A limit of connection count in each thread.|
 |thread|int|1|A number of thread to run.|
-|max_room_per_room_group|integer|100|A limit of room count in each room group.|
-|room_group_list|list of string|["default"]|A name list of room group.|
+|max_room_count|integer|1000|A limit of room count in each room group.|
 |max_player_per_room|integer|16|A limit of player count in each room|
 
 ### `log` Section

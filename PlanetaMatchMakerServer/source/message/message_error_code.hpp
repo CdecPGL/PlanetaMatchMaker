@@ -19,8 +19,6 @@ namespace pgl {
 		room_full,
 		// Request is rejected because indicated room is the room which you are not host of or closed.
 		room_permission_denied,
-		// Indicated room group is not found.
-		room_group_not_found,
 		// The number of room reaches limit.
 		room_group_full,
 		// Request is failed because the client is already hosting room.

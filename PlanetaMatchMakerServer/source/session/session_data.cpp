@@ -10,21 +10,15 @@ namespace pgl {
 		return session_key_;
 	}
 
-	void session_data::set_hosting_room_id(const room_group_index_t room_group_index, const room_id_t room_id) {
+	void session_data::set_hosting_room_id(const room_id_t room_id) {
 		if (is_hosting_room_) { throw std::runtime_error("A hosting room is already set."); }
 
-		hosting_room_group_index_ = room_group_index;
 		hosting_room_id_ = room_id;
 		is_hosting_room_ = true;
 	}
 
-	void session_data::delete_hosting_room_id(const room_group_index_t room_group_index,
-		const room_id_t room_id) {
+	void session_data::delete_hosting_room_id(const room_id_t room_id) {
 		if (!is_hosting_room_) { throw std::runtime_error("A hosting room is not set."); }
-		if (hosting_room_group_index_ != room_group_index) {
-			throw std::runtime_error(minimal_serializer::generate_string("A passed room group index(", room_group_index,
-				") is different from hosting room group index(", hosting_room_group_index_, ")."));
-		}
 		if (hosting_room_id_ != room_id) {
 			throw std::runtime_error(minimal_serializer::generate_string("A passed room id(", room_id,
 				") is different from hosting room id(", hosting_room_id_, ")."));
@@ -37,12 +31,6 @@ namespace pgl {
 
 	void session_data::set_client_player_name(const player_full_name& player_full_name) {
 		client_player_name_ = player_full_name;
-	}
-
-	room_group_index_t session_data::hosting_room_group_index() const {
-		if (!is_hosting_room_) { throw std::runtime_error("A hosting room is not set."); }
-
-		return hosting_room_group_index_;
 	}
 
 	room_id_t session_data::hosting_room_id() const {

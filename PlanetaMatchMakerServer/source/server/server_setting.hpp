@@ -15,8 +15,7 @@ namespace pgl {
 		uint16_t port = 57000;
 		uint32_t max_connection_per_thread = 1000;
 		uint32_t thread = 1;
-		uint8_t max_room_per_room_group = 100;
-		std::vector<std::string> room_group_list = { "default" };
+		uint16_t max_room_count = 1000;
 		uint8_t max_player_per_room = 16;
 	};
 

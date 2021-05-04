@@ -2,15 +2,12 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/algorithm/string/join.hpp>
 
 #include "server/server_setting.hpp"
 
 using namespace boost;
 
 namespace pgl {
-	void validate_setting(server_setting& setting) { }
-
 	void load_common_setting(const property_tree::ptree& section, server_common_setting& setting) {
 		setting.enable_session_key_check = section.get("enable_session_key_check", setting.enable_session_key_check);
 		setting.time_out_seconds = section.get("time_out_seconds", setting.time_out_seconds);
@@ -22,19 +19,11 @@ namespace pgl {
 		setting.port = section.get("port", setting.port);
 		setting.max_connection_per_thread = section.get("max_connection_per_thread", setting.max_connection_per_thread);
 		setting.thread = section.get("thread", setting.thread);
-		setting.max_room_per_room_group = section.get("max_room_per_room_group", setting.max_room_per_room_group);
-
-		const auto room_group_list_ptree = section.get_child_optional("room_group_list");
-		if (room_group_list_ptree) {
-			setting.room_group_list.clear();
-			setting.room_group_list.reserve(room_group_list_ptree->size());
-			for (auto&& child : *room_group_list_ptree) {
-				setting.room_group_list.push_back(child.second.get_value<std::string>());
-			}
-		}
-
+		setting.max_room_count = section.get("max_room_per_room_group", setting.max_room_count);
 		setting.max_player_per_room = section.get("max_player_per_room", setting.max_player_per_room);
 	}
+
+	void validate_common_setting(server_common_setting& setting) { }
 
 	void output_common_setting_to_log(const server_common_setting& setting) {
 		log(log_level::info, "--------Common--------");
@@ -44,10 +33,7 @@ namespace pgl {
 		log(log_level::info, NAMEOF(setting.port), ": ", setting.port);
 		log(log_level::info, NAMEOF(setting.max_connection_per_thread), ": ", setting.max_connection_per_thread);
 		log(log_level::info, NAMEOF(setting.thread), ": ", setting.thread);
-		log(log_level::info, NAMEOF(setting.max_room_per_room_group), ": ", setting.max_room_per_room_group);
-		log(log_level::info, NAMEOF(setting.room_group_list), ": ", setting.room_group_list.size(), "(",
-			join(setting.room_group_list, ","),
-			")");
+		log(log_level::info, NAMEOF(setting.max_room_count), ": ", setting.max_room_count);
 		log(log_level::info, NAMEOF(setting.max_player_per_room), ": ", setting.max_player_per_room);
 	}
 
@@ -109,7 +95,6 @@ namespace pgl {
 		const auto& connection_test_section = ptree.get_child("common", {});
 		load_connection_test_setting(connection_test_section, connection_test);
 
-		validate_setting(*this);
 		return true;
 	}
 
