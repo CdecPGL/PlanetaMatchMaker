@@ -62,7 +62,7 @@ namespace pgl {
 		 * @return Whether indicated data is unique.
 		 * @note If variable is same with variable of id, consider the variable as unique even if the variable is in used_variables.
 		 */
-		bool is_unique(id_param_t id, s_param_t data) const {
+		[[nodiscard]] bool is_unique(id_param_t id, s_param_t data) const {
 			auto unique_value = get_unique_value(data);
 			auto it = id_to_variable_map_.find(id);
 			if (it == id_to_variable_map_.end()) { return used_variable_.find(unique_value) == used_variable_.end(); }
@@ -76,7 +76,7 @@ namespace pgl {
 		 * @param data A data to check.
 		 * @return Whether indicated data is unique.
 		 */
-		bool is_unique(s_param_t data) const {
+		[[nodiscard]] bool is_unique(s_param_t data) const {
 			auto unique_value = get_unique_value(data);
 			return used_variable_.find(unique_value) == used_variable_.end();
 		}
@@ -129,7 +129,7 @@ namespace pgl {
 		 * @param data A data to check.
 		 * @return Whether indicated data is unique.
 		 */
-		bool is_unique(id_param_t id, s_param_t data) const {
+		[[nodiscard]] bool is_unique(id_param_t id, s_param_t data) const {
 			return (unique_variables_container_impl<IdType, S, UniqueMemberVariables>::is_unique(id, data) && ... && true);
 		}
 
@@ -139,7 +139,7 @@ namespace pgl {
 		 * @param data A data to check.
 		 * @return Whether indicated data is unique.
 		 */
-		bool is_unique(s_param_t data) const {
+		[[nodiscard]] bool is_unique(s_param_t data) const {
 			return (unique_variables_container_impl<IdType, S, UniqueMemberVariables>::is_unique(data) && ... && true);
 		}
 	};
@@ -193,7 +193,7 @@ namespace pgl {
 		 *
 		 * @return The number of data.
 		 */
-		size_t size() const { return data_map_.size(); }
+		[[nodiscard]] size_t size() const { return data_map_.size(); }
 
 		/**
 		 * Add new data with indicated ID.
@@ -243,7 +243,7 @@ namespace pgl {
 		 * @param filter_function A function used to filtering.
 		 * @return A list of data.
 		 */
-		std::vector<Data> get_data(std::function<bool(data_param_type, data_param_type)>&& compare_function,
+		[[nodiscard]] std::vector<Data> get_data(std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
 			std::vector<Data> data;
 			{
@@ -267,7 +267,7 @@ namespace pgl {
 		 * @param filter_function A function used to filtering.
 		 * @return A list of data.
 		 */
-		std::vector<Data> get_range_data(const size_t start_idx, size_t count,
+		[[nodiscard]] std::vector<Data> get_range_data(const size_t start_idx, size_t count,
 			std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
 			std::vector<Data> data = get_data(std::move(compare_function), std::move(filter_function));

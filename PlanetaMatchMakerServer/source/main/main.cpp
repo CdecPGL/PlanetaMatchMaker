@@ -21,8 +21,12 @@ int main(const int argc, char* argv[]) {
 		setting->load_from_setting_file(setting_file_path);
 
 		// Setup log
-		if (setting->enable_console_log) { enable_console_log(setting->console_log_level, false); }
-		if (setting->enable_file_log) { enable_file_log(setting->file_log_level, setting->file_log_path, false); }
+		if (setting->log.enable_console_log) {
+			enable_console_log(setting->log.console_log_level, false);
+		}
+		if (setting->log.enable_file_log) {
+			enable_file_log(setting->log.file_log_level, setting->log.file_log_path, false);
+		}
 
 		// Output setting
 		log(log_level::info, "Server setting is loaded.");

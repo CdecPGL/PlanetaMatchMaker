@@ -14,7 +14,8 @@ using namespace boost;
 namespace pgl {
 	bool test_connection_tcp(message_handle_parameter& param, const asio::ip::tcp::endpoint& target_endpoint,
 		const std::string& test_text) {
-		const auto time_out_seconds = std::chrono::seconds(param.server_setting.connection_check_time_out_seconds);
+		const auto time_out_seconds = std::chrono::seconds(
+			param.server_setting.connection_test.connection_check_tcp_time_out_seconds);
 
 		// Try to establish TCP connection
 		asio::ip::tcp::socket socket(param.socket.get_executor());
@@ -50,8 +51,9 @@ namespace pgl {
 
 	bool test_connection_udp(message_handle_parameter& param, const asio::ip::tcp::endpoint& target_endpoint,
 		const std::string& test_text) {
-		const auto time_out_seconds = std::chrono::seconds(param.server_setting.connection_check_time_out_seconds);
-		const auto try_count = param.server_setting.connection_check_udp_try_count;
+		const auto time_out_seconds = std::chrono::seconds(
+			param.server_setting.connection_test.connection_check_udp_time_out_seconds);
+		const auto try_count = param.server_setting.connection_test.connection_check_udp_try_count;
 
 		// Try to send data by UDP and check if the reply is returned
 		asio::ip::udp::socket socket(param.socket.get_executor());
@@ -139,7 +141,9 @@ namespace pgl {
 			param->session_data.remote_endpoint().to_boost_endpoint().address(), message.port_number);
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Start ", message.protocol,
 			" connectable test to ", target_endpoint, " with setting timeout ",
-			param->server_setting.connection_check_time_out_seconds, " seconds.");
+			message.protocol == transport_protocol::tcp
+				? param->server_setting.connection_test.connection_check_tcp_time_out_seconds
+				: param->server_setting.connection_test.connection_check_udp_time_out_seconds, " seconds.");
 		try {
 			const std::string test_text = u8"Hello. This is PMMS.";
 			switch (message.protocol) {

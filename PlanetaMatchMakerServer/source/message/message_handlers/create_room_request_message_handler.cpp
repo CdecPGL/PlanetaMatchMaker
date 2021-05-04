@@ -48,7 +48,7 @@ namespace pgl {
 		}
 
 		// Check if room count reached limit in room group
-		if (room_data_container.size() == param->server_setting.max_room_per_room_group) {
+		if (room_data_container.size() == param->server_setting.common.max_room_per_room_group) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
 				"Failed to create new room with player\"",
 				param->session_data.client_player_name().generate_full_name(),

@@ -1,18 +1,27 @@
 {
-    "enable_session_key_check": true,
-    "time_out_seconds": 60,
-    "connection_check_time_out_seconds": 5,
-    "ip_version": "v4",
-    "port": 57000,
-    "max_connection_per_thread": 1000,
-    "thread": 1,
-    "max_room_per_room_group": 100,
-    "room_group_list": [
-        "default_group"
-    ],
-    "enable_console_log": true,
-    "console_log_level": "info",
-    "enable_file_log": false,
-    "file_log_level": "info",
-    "file_log_path": ""
+    "common":{
+        "enable_session_key_check": true,
+        "time_out_seconds": 60,
+        "ip_version": "v4",
+        "port": 57000,
+        "max_connection_per_thread": 1000,
+        "thread": 1,
+        "max_room_per_room_group": 100,
+        "room_group_list": [
+            "default_group"
+        ],
+        "max_player_per_room": 8
+    },
+    "log":{
+        "enable_console_log": true,
+        "console_log_level": "info",
+        "enable_file_log": false,
+        "file_log_level": "info",
+        "file_log_path": ""
+    },
+    "connection_test":{
+        "connection_check_tcp_time_out_seconds": 5,
+        "connection_check_udp_time_out_seconds": 3,
+        "connection_check_udp_try_count": 3
+    }
 }
