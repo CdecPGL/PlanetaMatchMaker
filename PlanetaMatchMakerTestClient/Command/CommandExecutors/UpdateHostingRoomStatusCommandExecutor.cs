@@ -28,11 +28,11 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             OutputStream.WriteLine(
-                $"Status of hosting room (ID: {sharedClient.HostingRoomId}, Group: {sharedClient.HostingRoomGroupIndex}) is changed to \"{options.Status}\".");
+                $"Status of hosting room (ID: {sharedClient.HostingRoomId}) is changed to \"{options.Status}\".");
             if (options.PlayerCount != null)
             {
                 OutputStream.WriteLine(
-                    $"Player count of hosting room (ID: {sharedClient.HostingRoomId}, Group: {sharedClient.HostingRoomGroupIndex}) is changed to \"{options.PlayerCount}\".");
+                    $"Player count of hosting room (ID: {sharedClient.HostingRoomId}) is changed to \"{options.PlayerCount}\".");
             }
 
             OutputStream.WriteLine("Error in the server is not noticed because this API doesn't return reply.");

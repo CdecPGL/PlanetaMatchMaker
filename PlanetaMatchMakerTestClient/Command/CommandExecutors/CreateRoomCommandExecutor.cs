@@ -17,19 +17,13 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomCommandOptions options,
             CancellationToken cancellationToken)
         {
-            await sharedClient.CreateRoomAsync(options.RoomGroupIndex, options.MaxPlayerCount, options.PortNumber,
-                options.Password);
-            OutputStream.WriteLine(
-                $"Room created with id \"{sharedClient.HostingRoomId}\" in room group {sharedClient.HostingRoomGroupIndex}.");
+            await sharedClient.CreateRoomAsync(options.MaxPlayerCount, options.PortNumber, options.Password);
+            OutputStream.WriteLine($"Room created with id \"{sharedClient.HostingRoomId}\".");
         }
     }
 
     internal class CreateRoomCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "room_group_index", Required = true,
-            HelpText = "An index of room group where room is created.")]
-        public byte RoomGroupIndex { get; set; }
-
         [CommandLine.Value(1, MetaName = "max_player_count", Required = true,
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
