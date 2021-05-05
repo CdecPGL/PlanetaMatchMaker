@@ -51,7 +51,7 @@ namespace pgl {
 		}
 
 		const auto message_handler = make_message_handler(header.message_type);
-		const auto header_size = minimal_serializer::get_serialized_size<request_message_header>();
+		const auto header_size = minimal_serializer::serialized_size_v<request_message_header>;
 		const auto message_size = message_handler->get_message_size();
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message header received. (type: ",
 			header.message_type, ", size: ", header_size, ")");

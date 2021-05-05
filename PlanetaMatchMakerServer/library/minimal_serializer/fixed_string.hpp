@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019 Cdec
+Copyright (c) 2019-2021 Cdec
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
@@ -20,20 +20,27 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include "string_utility.hpp"
 
 namespace minimal_serializer {
-	// Fixed length string which is trivial type. This class holds characters as uint8_t instead of char.
+	/**
+	 * @brief Fixed length string which is trivial type. This class holds characters as uint8_t instead of char.
+	 * @tparam Length A max length of string.
+	 */
 	template <size_t Length>
 	class fixed_string final : boost::less_than_comparable<fixed_string<Length>>,
-		boost::equality_comparable<fixed_string<Length>> {
+								boost::equality_comparable<fixed_string<Length>> {
 	public:
 		constexpr fixed_string() = default;
 		constexpr fixed_string(const fixed_string& other) = default;
 		constexpr fixed_string(fixed_string&& other) = default;
 
+		/**
+		 * @brief A constructor from raw string.
+		 * @param c_str A raw string by char array.
+		 */
 		fixed_string(const char* c_str) {
 			const auto str_length = get_c_string_length(c_str);
 			if (str_length > Length) {
 				const auto message = generate_string("The length of string (", str_length, " exceeds defined length (",
-					Length, ")");
+													Length, ")");
 				throw std::out_of_range(message);
 			}
 
@@ -41,6 +48,10 @@ namespace minimal_serializer {
 			for (auto i = str_length; i < Length; ++i) data_[i] = 0;
 		}
 
+		/**
+		 * @brief A constructor from std::string.
+		 * @param str A string by std::string.
+		 */
 		constexpr fixed_string(const std::string& str) : fixed_string(str.c_str()) { }
 
 		~fixed_string() = default;
@@ -72,17 +83,26 @@ namespace minimal_serializer {
 			return data_.at(idx);
 		}
 
-		// Return actual string size
+		/**
+		 * @brief Get the actual size of the string without terminal character "\0". This is same as length().
+		 * @return The actual size of the string.
+		 */
 		[[nodiscard]] constexpr size_t size() const {
 			return data_[Length - 1] ? Length : get_c_string_length(reinterpret_cast<const char*>(data_.data()));
 		}
 
-		// Return actual string size
+		/**
+		 * @brief Get the actual size of the string without terminal character "\0". This is same as size().
+		 * @return The actual size of the string.
+		 */
 		[[nodiscard]] constexpr size_t length() const {
 			return size();
 		}
 
-		// Return max string size
+		/**
+		 * @brief Get the max size of this string class.
+		 * @return The max size of this string class.
+		 */
 		[[nodiscard]] constexpr size_t max_size() const {
 			return Length;
 		}
@@ -98,16 +118,15 @@ namespace minimal_serializer {
 			return std::string(reinterpret_cast<const char*>(data_.data()));
 		}
 
+	private:
+		std::array<uint8_t, Length> data_;
+
 		[[nodiscard]] constexpr static size_t get_c_string_length(const char* c_str) {
 			return *c_str ? 1 + get_c_string_length(c_str + 1) : 0;
 		}
 
-		void on_serialize(serializer& serializer) {
-			serializer += data_;
-		}
-
-	private:
-		std::array<uint8_t, Length> data_;
+	public:
+		using serialize_targets = serialize_target_container<&fixed_string::data_>;
 	};
 
 	template <size_t Length>

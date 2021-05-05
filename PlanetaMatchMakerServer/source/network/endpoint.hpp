@@ -22,10 +22,10 @@ namespace pgl {
 		static endpoint make_from_boost_endpoint(
 			const boost::asio::basic_socket<boost::asio::ip::tcp>::endpoint_type& boost_endpoint);
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += ip_address;
-			serializer += port_number;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&endpoint::ip_address,
+			&endpoint::port_number
+		>;
 	};
 }
 

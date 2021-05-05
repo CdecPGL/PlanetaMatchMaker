@@ -9,27 +9,27 @@ BOOST_AUTO_TEST_SUITE(serialize_pack_test)
 		uint64_t value2;
 		std::array<uint8_t, 4> value3;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += value1;
-			serializer += value2;
-			serializer += value3;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&test_struct1::value1,
+			&test_struct1::value2,
+			&test_struct1::value3
+		>;
 	};
 
 	struct test_struct2 final {
 		int64_t value1;
 		std::array<uint16_t, 8> value2;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += value1;
-			serializer += value2;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&test_struct2::value1,
+			&test_struct2::value2
+		>;
 	};
 
 	BOOST_AUTO_TEST_CASE(test_packed_one_data_size) {
 		using test_t = test_struct1;
 		const test_t data{};
-		const auto expected = minimal_serializer::get_serialized_size<test_t>();
+		const auto expected = minimal_serializer::serialized_size_v<test_t>;
 		const auto actual = pgl::pack_data(data).size();
 		BOOST_CHECK_EQUAL(expected, actual);
 	}
@@ -39,7 +39,8 @@ BOOST_AUTO_TEST_SUITE(serialize_pack_test)
 		using test_t2 = test_struct2;
 		const test_t1 data1{};
 		const test_t2 data2{};
-		const auto expected = minimal_serializer::get_serialized_size<test_t1>() + minimal_serializer::get_serialized_size<test_t2>();
+		const auto expected = minimal_serializer::serialized_size_v<test_t1> + minimal_serializer::serialized_size_v<
+			test_t2>;
 		const auto actual = pgl::pack_data(data1, data2).size();
 		BOOST_CHECK_EQUAL(expected, actual);
 	}
@@ -75,7 +76,8 @@ BOOST_AUTO_TEST_SUITE(serialize_pack_test)
 	BOOST_AUTO_TEST_CASE(test_unpack_lack_of_data_exception) {
 		using test_t = uint64_t;
 		test_t actual;
-		BOOST_CHECK_EXCEPTION(pgl::unpack_data(std::vector<uint8_t>(1), actual), minimal_serializer::serialization_error,
+		BOOST_CHECK_EXCEPTION(pgl::unpack_data(std::vector<uint8_t>(1), actual),
+			minimal_serializer::serialization_error,
 			[](auto) {return true; });
 	}
 

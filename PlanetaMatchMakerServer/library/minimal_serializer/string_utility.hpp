@@ -20,7 +20,7 @@ namespace minimal_serializer {
 	// return true if generating string from enum type is supported. If this value is false, enum type values are treated as its underlying type values. This depends on nameof C++.
 	constexpr bool is_generate_enum_string_supported = nameof::is_nameof_enum_supported;
 
-	template<typename T>
+	template <typename T>
 	void generate_string_converter(std::ostringstream& oss, T&& value) {
 		using NonCVRefT = std::remove_cv_t<std::remove_reference_t<T>>;
 		// char types is recognized as character in ostringstream, so '0' means 'end of string' and '0' in char types will not displayed.
@@ -36,14 +36,15 @@ namespace minimal_serializer {
 			else {
 				oss << static_cast<std::underlying_type_t<NonCVRefT>>(value);
 			}
-		} else {
+		}
+		else {
 			oss << value;
 		}
 	}
 
-	template<>
-	inline void generate_string_converter(std::ostringstream& oss, const std::type_info& type_info) {
-		oss << type_info.name();
+	template <>
+	inline void generate_string_converter(std::ostringstream& oss, const std::type_info& value) {
+		oss << value.name();
 	}
 
 	inline void generate_string_impl(std::ostringstream&) {}
