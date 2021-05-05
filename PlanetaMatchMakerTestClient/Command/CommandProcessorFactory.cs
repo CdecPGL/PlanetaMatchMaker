@@ -12,6 +12,7 @@ namespace PlanetaGameLabo.MatchMaker
             var commandMap = new ICommandExecutor[]
             {
                 new ConnectCommandExecutor(outputStream), new DisconnectCommandExecutor(outputStream),
+                new CreateRoomCommandExecutor(outputStream), 
                 new ListRoomCommandExecutor(outputStream), new JoinRoomCommandExecutor(outputStream),
                 new UpdateHostingRoomStatusCommandExecutor(outputStream),
                 new ConnectionTestCommandExecutor(outputStream), new CreatePortMappingCommandExecutor(outputStream),

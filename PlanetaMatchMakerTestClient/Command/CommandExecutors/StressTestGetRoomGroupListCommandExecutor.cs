@@ -13,7 +13,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
         }
 
-        public override string Explanation => "Connect indicated clients.";
+        public override string Explanation => "Connect and get room repeatedly.";
         public override Command command => Command.StressTestGetRoomList;
 
         protected override async Task StressTest(MatchMakerClient client,
