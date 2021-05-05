@@ -1,15 +1,5 @@
 namespace PlanetaGameLabo.MatchMaker
 {
-    public struct ListRoomGroupResultItem
-    {
-        internal ListRoomGroupResultItem(ListRoomGroupReplyMessage.RoomGroupInfo info)
-        {
-            Name = info.Name;
-        }
-
-        public readonly string Name;
-    }
-
     public struct ListRoomResultItem
     {
         internal ListRoomResultItem(ListRoomReplyMessage.RoomInfo info)

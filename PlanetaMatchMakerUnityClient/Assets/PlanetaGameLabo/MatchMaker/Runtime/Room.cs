@@ -1,23 +1,9 @@
 namespace PlanetaGameLabo.MatchMaker
 {
-    public sealed class RoomGroupInfo
-    {
-        public RoomGroupInfo(ListRoomGroupResultItem roomGroupResult)
-        {
-            name = roomGroupResult.Name;
-        }
-
-        /// <summary>
-        /// A name of room group.
-        /// </summary>
-        public string name { get; }
-    }
-
     public sealed class RoomInfo
     {
-        public RoomInfo(byte roomGroupIndex, ListRoomResultItem roomResult)
+        public RoomInfo(ListRoomResultItem roomResult)
         {
-            this.roomGroupIndex = roomGroupIndex;
             roomId = roomResult.RoomId;
             hostPlayerFullName = roomResult.HostPlayerFullName;
             settingFlags = roomResult.SettingFlags;
@@ -25,11 +11,6 @@ namespace PlanetaGameLabo.MatchMaker
             currentPlayerCount = roomResult.CurrentPlayerCount;
             createDatetime = roomResult.CreateDatetime;
         }
-
-        /// <summary>
-        /// An index of room group where this room exists.
-        /// </summary>
-        public byte roomGroupIndex { get; }
 
         /// <summary>
         /// An id of this room.
@@ -65,11 +46,6 @@ namespace PlanetaGameLabo.MatchMaker
     public interface IReadOnlyHostingRoomInfo
     {
         /// <summary>
-        /// An index of room group hosting room exist.
-        /// </summary>
-        byte roomGroupIndex { get; }
-
-        /// <summary>
         /// An id of hosting room.
         /// </summary>
         uint roomId { get; }
@@ -102,17 +78,15 @@ namespace PlanetaGameLabo.MatchMaker
 
     public sealed class HostingRoomInfo : IReadOnlyHostingRoomInfo
     {
-        public HostingRoomInfo(CreateRoomResult createRoomResult, byte roomGroupIndex, string password)
+        public HostingRoomInfo(CreateRoomResult createRoomResult, string password)
         {
             currentPlayerCount = createRoomResult.CurrentPlayerCount;
             isOpen = (createRoomResult.SettingFlags | RoomSettingFlag.OpenRoom) == RoomSettingFlag.OpenRoom;
             maxPlayerCount = createRoomResult.MaxPlayerCount;
             this.password = password;
-            this.roomGroupIndex = roomGroupIndex;
             roomId = createRoomResult.RoomId;
         }
 
-        public byte roomGroupIndex { get; set; }
         public uint roomId { get; set; }
         public byte maxPlayerCount { get; set; }
         public byte currentPlayerCount { get; set; }

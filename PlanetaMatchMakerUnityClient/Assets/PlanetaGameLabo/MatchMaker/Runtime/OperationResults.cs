@@ -15,7 +15,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     public struct RequestRoomListResult
     {
-        public RequestRoomListResult(byte totalRoomCount, byte startIndex,
+        public RequestRoomListResult(ushort totalRoomCount, ushort startIndex,
             IReadOnlyList<RoomInfo> roomInfoList)
         {
             this.totalRoomCount = totalRoomCount;
@@ -23,8 +23,8 @@ namespace PlanetaGameLabo.MatchMaker
             this.roomInfoList = roomInfoList;
         }
 
-        public readonly byte totalRoomCount;
-        public readonly byte startIndex;
+        public readonly ushort totalRoomCount;
+        public readonly ushort startIndex;
         public readonly IReadOnlyList<RoomInfo> roomInfoList;
     }
 
