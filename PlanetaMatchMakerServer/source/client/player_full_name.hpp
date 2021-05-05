@@ -51,10 +51,10 @@ namespace pgl {
 		 */
 		[[nodiscard]] bool is_name_assigned() const;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += name;
-			serializer += tag;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&player_full_name::name,
+			&player_full_name::tag
+		>;
 	};
 }
 

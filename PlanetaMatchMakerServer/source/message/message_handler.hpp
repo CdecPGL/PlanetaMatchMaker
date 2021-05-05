@@ -30,7 +30,7 @@ namespace pgl {
 		message_handler_base& operator=(message_handler_base&& message_handler_base) = delete;
 
 		[[nodiscard]] size_t get_message_size() const override final {
-			return minimal_serializer::get_serialized_size<Message>();
+			return minimal_serializer::serialized_size_v<Message>;
 		}
 
 		void operator()(std::shared_ptr<message_handle_parameter> param) override final {
