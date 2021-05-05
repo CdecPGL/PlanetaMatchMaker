@@ -10,8 +10,7 @@ namespace pgl {
 		const message_parameter_validator parameter_validator(param);
 
 		// Check room group existence
-		parameter_validator.validate_room_group_existence(message.group_index);
-		auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
+		auto& room_data_container = param->server_data.get_room_data_container();
 
 		// Check room existence
 		parameter_validator.validate_room_existence(room_data_container, message.room_id);
@@ -51,7 +50,7 @@ namespace pgl {
 			case update_room_status_notice_message::status::remove:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Remove ", room_data, ".");
 				room_data_container.remove_data(room_data.room_id);
-				param->session_data.delete_hosting_room_id(message.group_index, room_data.room_id);
+				param->session_data.delete_hosting_room_id(room_data.room_id);
 				break;
 			default:
 				break;

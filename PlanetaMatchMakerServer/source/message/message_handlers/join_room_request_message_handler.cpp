@@ -8,9 +8,7 @@ namespace pgl {
 		const message_parameter_validator_with_reply<message_type::join_room_reply, join_room_reply_message>
 			parameter_validator(param);
 
-		// Check room group existence
-		parameter_validator.validate_room_group_existence(message.group_index);
-		const auto& room_data_container = param->server_data.get_room_data_container(message.group_index);
+		const auto& room_data_container = param->server_data.get_room_data_container();
 
 		// Check room existence
 		parameter_validator.validate_room_existence(room_data_container, message.room_id);
@@ -21,7 +19,7 @@ namespace pgl {
 		// Check if the room is open
 		if ((room_data.setting_flags & room_setting_flag::open_room) != room_setting_flag::open_room) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
-				"\" in room group \"", message.group_index, "\" is not opened.");
+				"\" is not opened.");
 			const reply_message_header header{
 				message_type::join_room_reply,
 				message_error_code::room_permission_denied
@@ -34,8 +32,7 @@ namespace pgl {
 		if ((room_data.setting_flags & room_setting_flag::public_room) != room_setting_flag::public_room && room_data.
 			password != message.password) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-				"The password is wrong for requested room \"", message.room_id,
-				"\" in room group \"", message.group_index, ".");
+				"The password is wrong for requested room \"", message.room_id, "\".");
 			const reply_message_header header{
 				message_type::join_room_reply,
 				message_error_code::room_password_wrong
@@ -52,13 +49,12 @@ namespace pgl {
 			};
 			send(param, header, reply);
 			const auto error_message = minimal_serializer::generate_string("Requested room \"", message.room_id,
-				"\" in room group \"", message.group_index, "\" is full of players (", room_data.current_player_count,
+				"\" is full of players (", room_data.current_player_count,
 				").");
 			throw server_session_error(server_session_error_code::continuable_error, error_message);
 		}
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
-			"\" in room group \"", message.group_index, "\" accepted new player. (", room_data.current_player_count,
-			").");
+			"\" accepted new player. (", room_data.current_player_count, ").");
 
 		// Reply to the client
 		const reply_message_header header{

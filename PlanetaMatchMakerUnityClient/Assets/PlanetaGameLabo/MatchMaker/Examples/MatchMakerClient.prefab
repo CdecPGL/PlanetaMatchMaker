@@ -48,7 +48,7 @@ MonoBehaviour:
   _isSingleton: 0
   _serverAddress: 127.0.0.1
   _serverPort: 57000
-  _gameTransportProtocol: 0
+  _gameTransportProtocol: 1
   _gameDefaultPort: 52000
   _gamePortCandidates:
   - _startPort: 50000

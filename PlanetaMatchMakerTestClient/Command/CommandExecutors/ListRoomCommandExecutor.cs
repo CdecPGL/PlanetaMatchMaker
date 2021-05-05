@@ -18,7 +18,6 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             var (totalRoomCount, matchedRoomCount, results) = await sharedClient.GetRoomListAsync(
-                options.RoomGroupIndex,
                 options.StartIndex, options.Count, options.SortKind, options.SearchTargetFlag, options.SearchName,
                 options.SearchTag);
 
@@ -34,10 +33,6 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal class ListRoomCommandOptions : StandardCommandOptions
     {
-        [CommandLine.Value(0, MetaName = "room_group_index", Required = true,
-            HelpText = "An index of room group where room is created.")]
-        public byte RoomGroupIndex { get; set; }
-
         [CommandLine.Value(1, MetaName = "start_index", Required = true,
             HelpText = "An start index of result.")]
         public byte StartIndex { get; set; }

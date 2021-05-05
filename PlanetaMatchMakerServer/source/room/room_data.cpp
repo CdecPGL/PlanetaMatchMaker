@@ -82,9 +82,4 @@ namespace pgl {
 		                                                             .host_player_full_name.generate_full_name() << ")";
 		return os;
 	}
-
-	std::ostream& operator<<(std::ostream& os, const room_group_data& room_group_data) {
-		os << "room_group(name=" << room_group_data.name << ")";
-		return os;
-	}
 }

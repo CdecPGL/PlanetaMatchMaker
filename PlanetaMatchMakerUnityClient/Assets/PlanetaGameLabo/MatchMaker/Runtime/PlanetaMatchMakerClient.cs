@@ -158,16 +158,6 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
-        /// An index of room group currently referencing.
-        /// </summary>
-        public byte roomGroupIndex { get; set; }
-
-        /// <summary>
-        /// A list of room group currently available.
-        /// </summary>
-        public IReadOnlyList<RoomGroupInfo> roomGroupInfoList => _roomGroupInfoList.AsReadOnly();
-
-        /// <summary>
         /// A hosting room information.
         /// This is valid when the client is hosting room.
         /// </summary>
@@ -211,7 +201,6 @@ namespace PlanetaGameLabo.MatchMaker
                 status = Status.Connecting;
                 var returnedPlayerFullName = await ConnectImplAsync(playerName);
                 status = Status.SearchingRoom;
-                await GetRoomGroupListImplAsync();
                 return new ConnectResult(returnedPlayerFullName);
             }, () =>
             {
@@ -245,7 +234,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="searchName"></param>
         /// <param name="searchTag"></param>
         /// <param name="callback"></param>
-        public void RequestRoomList(byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
+        public void RequestRoomList(ushort resultStartIndex, ushort resultCount, RoomDataSortKind sortKind,
             RoomSearchTargetFlag targetFlags, string searchName = "", ushort searchTag = 0,
             Action<ErrorInfo, RequestRoomListResult> callback = null)
         {
@@ -264,18 +253,12 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="searchName"></param>
         /// <param name="searchTag"></param>
         public async Task<(ErrorInfo errorInfo, RequestRoomListResult result)> RequestRoomListAsync(
-            byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
+            ushort resultStartIndex, ushort resultCount, RoomDataSortKind sortKind,
             RoomSearchTargetFlag targetFlags, string searchName = "", ushort searchTag = 0)
         {
             if (status != Status.SearchingRoom)
             {
                 Debug.LogError("The operation is valid when searching room.");
-                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
-            }
-
-            if (_roomGroupInfoList.Count == 0)
-            {
-                Debug.LogError("There are no room group.");
                 return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
@@ -598,8 +581,6 @@ namespace PlanetaGameLabo.MatchMaker
         private LogLevel _debugLogLevel = LogLevel.Info;
 
         private MatchMakerClient _client;
-
-        private List<RoomGroupInfo> _roomGroupInfoList = new List<RoomGroupInfo>();
         private Task _task;
         private Status _status = Status.Disconnected;
         private HostingRoomInfo _hostingRoomInfo;
@@ -736,33 +717,23 @@ namespace PlanetaGameLabo.MatchMaker
             return await _client.ConnectAsync(_serverAddress, _serverPort, playerName);
         }
 
-        private async Task GetRoomGroupListImplAsync()
-        {
-            _roomGroupInfoList = (await _client.GetRoomGroupListAsync()).Select(result => new RoomGroupInfo(result))
-                .ToList();
-        }
-
         private async Task<HostRoomResult> CreateRoomImplAsync(byte maxPlayerCount,
             string password = "")
         {
-            // ルームの作成を行っている間にメンバーフィールドのroomGroupIndexが変更される可能性があるので、作成時点でのroomGroupIndexを保持しておき、それを使用する
-            var roomGroupIndexSnapshot = roomGroupIndex;
             var createRoomResult =
-                await _client.CreateRoomAsync(roomGroupIndexSnapshot, maxPlayerCount, _gameDefaultPort, password);
-            _hostingRoomInfo = new HostingRoomInfo(createRoomResult, roomGroupIndexSnapshot, password);
+                await _client.CreateRoomAsync(maxPlayerCount, _gameDefaultPort, password);
+            _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
             return new HostRoomResult(_hostingRoomInfo);
         }
 
         private async Task<HostRoomWithCreatingPortMappingResult>
             CreateRoomWithCreatingPortMappingImplAsync(byte maxPlayerCount, string password = "")
         {
-            // ルームの作成を行っている間にメンバーフィールドのroomGroupIndexが変更される可能性があるので、作成時点でのroomGroupIndexを保持しておき、それを使用する
-            var roomGroupIndexSnapshot = roomGroupIndex;
             var gameDefaultPortSnapshot = _gameDefaultPort;
-            var result = await _client.CreateRoomWithCreatingPortMappingAsync(roomGroupIndexSnapshot, maxPlayerCount,
+            var result = await _client.CreateRoomWithCreatingPortMappingAsync(maxPlayerCount,
                 _gameTransportProtocol, GenerateGamePortCandidateList(), gameDefaultPortSnapshot,
                 (int)(_natDiscoverTimeOutSeconds * 1000), password);
-            _hostingRoomInfo = new HostingRoomInfo(result.CreteRoomResult, roomGroupIndexSnapshot, password);
+            _hostingRoomInfo = new HostingRoomInfo(result.CreteRoomResult, password);
             return new HostRoomWithCreatingPortMappingResult(_hostingRoomInfo, result.IsDefaultPortUsed,
                 result.IsDefaultPortUsed ? gameDefaultPortSnapshot : result.UsedPrivatePortFromCandidates,
                 result.IsDefaultPortUsed ? gameDefaultPortSnapshot : result.UsedPublicPortFromCandidates);
@@ -770,7 +741,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private async Task<IPEndPoint> JoinRoomImplAsync(uint roomId, string password = "")
         {
-            return await _client.JoinRoomAsync(roomGroupIndex, roomId, password);
+            return await _client.JoinRoomAsync(roomId, password);
         }
 
         private async Task UpdateHostingRoomStatusImplAsync(RoomStatus roomStatus,
@@ -790,16 +761,15 @@ namespace PlanetaGameLabo.MatchMaker
             await _client.UpdateHostingRoomCurrentPlayerCountAsync(currentPlayerCount);
         }
 
-        private async Task<(byte totalRoomCount, byte matchedRoomCount, byte startIndex, IReadOnlyList<RoomInfo>
+        private async Task<(ushort totalRoomCount, ushort matchedRoomCount, ushort startIndex, IReadOnlyList<RoomInfo>
                 roomInfoList)>
-            GetRoomListAsync(byte resultStartIndex, byte resultCount, RoomDataSortKind sortKind,
+            GetRoomListAsync(ushort resultStartIndex, ushort resultCount, RoomDataSortKind sortKind,
                 RoomSearchTargetFlag targetFlags, string searchName, ushort searchTag)
         {
-            var hostRoomGroupIndex = roomGroupIndex;
-            var (totalRoomCount, matchedRoomCount, roomInfoList) = await _client.GetRoomListAsync(hostRoomGroupIndex,
+            var (totalRoomCount, matchedRoomCount, roomInfoList) = await _client.GetRoomListAsync(
                 resultStartIndex, resultCount, sortKind, targetFlags, searchName, searchTag);
             return (totalRoomCount, resultStartIndex, matchedRoomCount,
-                roomInfoList.Select(result => new RoomInfo(hostRoomGroupIndex, result)).ToList().AsReadOnly());
+                roomInfoList.Select(result => new RoomInfo(result)).ToList().AsReadOnly());
         }
 
         #endregion
@@ -823,7 +793,6 @@ namespace PlanetaGameLabo.MatchMaker
         {
             status = Status.Disconnected;
             _hostingRoomInfo = null;
-            _roomGroupInfoList.Clear();
         }
 
         #endregion

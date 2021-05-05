@@ -45,11 +45,6 @@ namespace pgl {
 		struct has_bitwise_operators<room_search_target_flag> : std::true_type {};
 	}
 
-	// 24 bytes
-	struct room_group_data final {
-		room_group_name_t name;
-	};
-
 	enum class room_data_sort_kind : uint8_t {
 		name_ascending,
 		name_descending,
@@ -65,5 +60,4 @@ namespace pgl {
 		const player_full_name& search_full_name);
 
 	std::ostream& operator <<(std::ostream& os, const room_data& room_data);
-	std::ostream& operator <<(std::ostream& os, const room_group_data& room_group_data);
 }

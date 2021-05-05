@@ -37,19 +37,17 @@ Options of `message_type` are below.
 |:---|---:|
 |authentication_request|0|
 |authentication_reply|1|
-|list_room_group_request|2|
-|list_room_group_reply|3|
-|create_room_request|4|
-|create_room_reply|5|
-|list_room_request|6|
-|list_room_reply|7|
-|join_room_request|8|
-|join_room_reply|9|
-|update_room_status_notice|10|
-|connection_test_request|11|
-|connection_test_reply|12|
-|random_match_request|13|
-|keep_alive_notice|14|
+|create_room_request|2|
+|create_room_reply|3|
+|list_room_request|4|
+|list_room_reply|5|
+|join_room_request|6|
+|join_room_reply|7|
+|update_room_status_notice|8|
+|connection_test_request|9|
+|connection_test_reply|10|
+|random_match_request|11|
+|keep_alive_notice|12|
 
 There are reply message types in the table, but these are not available as a message to the server.
 
@@ -76,9 +74,8 @@ Options of `error_code` are as below.
 |room_password_wrong|5|Indicated password of room is not correct.|
 |room_full|6|The number of player reaches limit.|
 |room_permission_denied|7|Request is rejected because indicated room is the room which you are not host of or closed.|
-|room_group_not_found|8|Indicated room group is not found.|
-|room_group_full|9|The number of room reaches limit.|
-|client_already_hosting_room|10|Request is failed because the client is already hosting room.|
+|room_group_full|8|The number of room reaches limit.|
+|client_already_hosting_room|9|Request is failed because the client is already hosting room.|
 
 ## Communication Flow
 
@@ -129,51 +126,16 @@ The size is 8 bytes.
 |request_parameter_wrong|A player name is empty.|no|
 |DISCONNECT|Authentication request is duplicate.|no|
 
-### List Room Group Request
-
-A request to get all room group information.
-
-#### Parameters
-
-The size is 1 bytes.
-
-|Name|Type|Size|Explanation|
-|:---|:---|---:|:---|
-|dummy|8 bits unsigned integer|1|A dummy value which is not used.|
-
-#### Reply
-
-The size is 245 bytes.
-
-|Name|Type|Size|Explanation|
-|:---|:---|---:|:---|
-|room_group_count|8 bits unsigned integer|1|The number of room group.|
-|max_room_count_per_room_group|32 bits unsigned integer|4|A limit of room count per one room group.|
-|room_group_info_list|A 10 elements array of room_group_info|240|A list of room group information.|
-
-`room_group_info` is 24 bytes data as below.
-
-|Name|Type|Size|Explanation|
-|:---|:---|---:|:---|
-|name|24 byte length UTF-8 string|24|A name of room group.|
-
-#### Error Codes
-
-|Name|Condition|Continuable|
-|:---|:---|:---|
-|ok|The request is processed succesfully.|yes|
-
 ### Create Room Request
 
 A request to create room.
 
 #### Parameters
 
-The size is 20 bytes.
+The size is 19 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|group_index|8 bits unsigned integer|1|An index of group where you want to create room.|
 |password|16 byte length UTF-8 string|16|A password of room you create. If this is empty, the room is created as a public room.|
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
 |port_number|16 bits unsigned integer|2|A port number which is used for game host.  to 65535 is available.|
@@ -202,13 +164,12 @@ A request to get room informations which matches to requested parameters.
 
 #### Parameters
 
-The size is 31 bytes.
+The size is 32 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|group_index|8 bits unsigned integer|1|An index of group where you want to list room.|
-|start_index|8 bits unsigned integer|1|A start index of room data which will be replied from search results.|
-|count|8 bits unsigned integer|1|The number of room data which will be replied from search results.|
+|start_index|8 bits unsigned integer|2|A start index of room data which will be replied from search results.|
+|count|8 bits unsigned integer|2|The number of room data which will be replied from search results.|
 |sort_kind|8 bits unsigned integer|1|A sort kind of result.|
 |search_target_flags|8 bits unsigned integer|1|A flags to indicate search target.|
 |search_full_name|player_full_name|26|A query to search room by the room's host player name.|
@@ -241,13 +202,13 @@ Options are as below.
 
 #### Reply
 
-The size is 249 bytes.
+The size is 252 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|total_room_count|8 bits unsigned integer|1|The number of rooms existing in the room group in the server.|
-|matched_room_count|8 bits unsigned integer|1|The number of rooms which match to the query of the room.|
-|reply_room_count|8 bits unsigned integer|1|The number of rooms which is included in reply messages.|
+|total_room_count|8 bits unsigned integer|2|The number of rooms existing in the room group in the server.|
+|matched_room_count|8 bits unsigned integer|2|The number of rooms which match to the query of the room.|
+|reply_room_count|8 bits unsigned integer|2|The number of rooms which is included in reply messages.|
 |room_info_list|A 6 elements array of room_info|246|A result room info list.|
 
 `room_info` is 41 bytes data as below.
@@ -290,11 +251,10 @@ A request to get the information to join the room.
 
 #### Parameters
 
-The size is 21 bytes.
+The size is 20 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|group_index|8 bits unsigned integer|1|An index of group where the room you want to join exists.|
 |room_id|32 bits unsigned integer|4|An id of the room you want to join.|
 |password|16 byte length UTF-8 string|16|A password of the room you want to join. This is only refered when indicated room is private.|
 
@@ -330,11 +290,10 @@ A notice to inform new status of the room the client hosts.
 
 #### Parameters
 
-The size is 8 bytes.
+The size is 7 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|group_index|8 bits unsigned integer|1|An index of group where the room you want to join exists.|
 |room_id|32 bits unsigned integer|4|An id of the room you want to join.|
 |status|8 bits unsigned integer|1|A new status of the room.|
 |is_current_player_count_changed|boolean|1|A flag which indicates if playr count is updated.|

@@ -5,7 +5,6 @@ namespace PlanetaGameLabo.MatchMaker
 {
     using SessionKeyType = UInt32;
     using VersionType = UInt16;
-    using RoomGroupIndexType = Byte;
     using RoomIdType = UInt32;
 
 #pragma warning disable 0649
@@ -35,9 +34,6 @@ namespace PlanetaGameLabo.MatchMaker
         // Request is rejected because indicated room is the room which you are not host of or closed.
         RoomPermissionDenied,
 
-        // Indicated room group is not found.
-        RoomGroupNotFound,
-
         // The number of room reaches limit.
         RoomGroupFull,
 
@@ -49,8 +45,6 @@ namespace PlanetaGameLabo.MatchMaker
     {
         AuthenticationRequest,
         AuthenticationReply,
-        ListRoomGroupRequest,
-        ListRoomGroupReply,
         CreateRoomRequest,
         CreateRoomReply,
         ListRoomRequest,
@@ -101,40 +95,11 @@ namespace PlanetaGameLabo.MatchMaker
         public ushort PlayerTag;
     }
 
-    // 1 bytes
-    [Serializable]
-    [Message(MessageType.ListRoomGroupRequest)]
-    internal struct ListRoomGroupRequestMessage
-    {
-        public byte Dummy;
-    }
-
-    // 245 bytes
-    [Serializable]
-    [Message(MessageType.ListRoomGroupReply)]
-    internal struct ListRoomGroupReplyMessage
-    {
-        [Serializable]
-        public struct RoomGroupInfo
-        {
-            [FixedLength(RoomConstants.RoomGroupNameLength)]
-            public string Name;
-        }
-
-        public byte RoomGroupCount;
-        public uint MaxRoomCountPerRoomGroup;
-
-        [FixedLength(RoomConstants.RoomGroupMaxCount)]
-        public RoomGroupInfo[] RoomGroupInfoList;
-    }
-
-    // 20 bytes
+    // 19 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     internal struct CreateRoomRequestMessage
     {
-        public RoomGroupIndexType GroupIndex;
-
         [FixedLength(RoomConstants.RoomPasswordLength)]
         public string Password;
 
@@ -151,20 +116,19 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomIdType RoomId;
     }
 
-    // 31 bytes
+    // 32 bytes
     [Serializable]
     [Message(MessageType.ListRoomRequest)]
     internal struct ListRoomRequestMessage
     {
-        public RoomGroupIndexType GroupIndex;
-        public byte StartIndex;
-        public byte Count;
+        public UInt16 StartIndex;
+        public UInt16 Count;
         public RoomDataSortKind SortKind;
         public RoomSearchTargetFlag SearchTargetFlags;
         public PlayerFullName SearchFullName;
     }
 
-    // 249 bytes
+    // 252 bytes
     [Serializable]
     [Message(MessageType.ListRoomReply)]
     internal struct ListRoomReplyMessage
@@ -181,20 +145,19 @@ namespace PlanetaGameLabo.MatchMaker
             public Datetime CreateDatetime;
         }
 
-        public byte TotalRoomCount; // the number of rooms server managing
-        public byte MatchedRoomCount; // the number of rooms matched to requested condition
-        public byte ReplyRoomCount; // the number of rooms in these replies
+        public UInt16 TotalRoomCount; // the number of rooms server managing
+        public UInt16 MatchedRoomCount; // the number of rooms matched to requested condition
+        public UInt16 ReplyRoomCount; // the number of rooms in these replies
 
         [FixedLength(RoomConstants.ListRoomReplyRoomInfoCount)]
         public RoomInfo[] RoomInfoList;
     }
 
-    // 21 bytes
+    // 20 bytes
     [Serializable]
     [Message(MessageType.JoinRoomRequest)]
     internal struct JoinRoomRequestMessage
     {
-        public RoomGroupIndexType GroupIndex;
         public RoomIdType RoomId;
 
         [FixedLength(RoomConstants.RoomPasswordLength)]
@@ -209,12 +172,11 @@ namespace PlanetaGameLabo.MatchMaker
         public EndPoint GameHostEndPoint;
     }
 
-    // 8 bytes
+    // 7 bytes
     [Serializable]
     [Message(MessageType.UpdateRoomStatusNotice)]
     internal struct UpdateRoomStatusNoticeMessage
     {
-        public RoomGroupIndexType GroupIndex;
         public RoomIdType RoomId;
         public RoomStatus Status;
         public bool IsCurrentPlayerCountChanged;

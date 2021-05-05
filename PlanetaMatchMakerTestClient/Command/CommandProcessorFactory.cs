@@ -12,7 +12,7 @@ namespace PlanetaGameLabo.MatchMaker
             var commandMap = new ICommandExecutor[]
             {
                 new ConnectCommandExecutor(outputStream), new DisconnectCommandExecutor(outputStream),
-                new ListRoomGroupCommandExecutor(outputStream), new CreateRoomCommandExecutor(outputStream),
+                new CreateRoomCommandExecutor(outputStream), 
                 new ListRoomCommandExecutor(outputStream), new JoinRoomCommandExecutor(outputStream),
                 new UpdateHostingRoomStatusCommandExecutor(outputStream),
                 new ConnectionTestCommandExecutor(outputStream), new CreatePortMappingCommandExecutor(outputStream),
@@ -21,7 +21,7 @@ namespace PlanetaGameLabo.MatchMaker
                 new CreateRoomWithCreatingPortMappingCommandExecutor(outputStream),
                 new TestAllCommandExecutor(outputStream), new StressTestConnectAndStayCommandExecutor(outputStream),
                 new StressTestConnectAndDisconnectCommandExecutor(outputStream),
-                new StressTestGetRoomGroupListCommandExecutor(outputStream)
+                new StressTestGetRoomListCommandExecutor(outputStream)
             };
             return new CommandProcessor(outputStream, commandMap);
         }
@@ -31,7 +31,6 @@ namespace PlanetaGameLabo.MatchMaker
     {
         Connect,
         Disconnect,
-        ListRoomGroup,
         CreateRoom,
         ListRoom,
         JoinRoom,
@@ -44,6 +43,6 @@ namespace PlanetaGameLabo.MatchMaker
         TestAll,
         StressTestConnectAndStay,
         StressTestConnectAndDisconnect,
-        StressTestGetRoomGroupList
+        StressTestGetRoomList
     };
 }

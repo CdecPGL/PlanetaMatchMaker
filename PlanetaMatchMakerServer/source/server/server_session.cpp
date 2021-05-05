@@ -50,7 +50,7 @@ namespace pgl {
 				// Prepare data
 				const auto message_handler_param = std::make_shared<message_handle_parameter>(message_handle_parameter{
 					shared_this->socket_, shared_this->server_data_, yield,
-					chrono::seconds(shared_this->server_setting_.time_out_seconds),
+					chrono::seconds(shared_this->server_setting_.common.time_out_seconds),
 					*shared_this->session_data_,
 					shared_this->server_setting_
 				});
@@ -63,7 +63,7 @@ namespace pgl {
 				while (true) {
 					try {
 						shared_this->message_handler_invoker_.handle_message(message_handler_param,
-							shared_this->server_setting_.enable_session_key_check);
+							shared_this->server_setting_.common.enable_session_key_check);
 					}
 					catch (const server_session_error& e) {
 						if (e.error_code() == server_session_error_code::continuable_error) {
@@ -148,11 +148,9 @@ namespace pgl {
 
 	void server_session::remove_hosting_room_if_need() const {
 		if (session_data_->is_hosting_room()) {
-			server_data_.get_room_data_container(session_data_->hosting_room_group_index()).remove_data(
-				session_data_->hosting_room_id());
+			server_data_.get_room_data_container().remove_data(session_data_->hosting_room_id());
 			log_with_endpoint(log_level::info, session_data_->remote_endpoint().to_boost_endpoint(),
-				"Hosting room(Group index: ", session_data_->hosting_room_group_index(), ", ID: ",
-				session_data_->hosting_room_id(), ") is removed.");
+				"Hosting room(ID: ", session_data_->hosting_room_id(), ") is removed.");
 		}
 	}
 

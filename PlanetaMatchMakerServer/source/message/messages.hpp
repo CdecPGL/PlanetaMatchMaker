@@ -17,8 +17,6 @@ namespace pgl {
 	enum class message_type : uint8_t {
 		authentication_request,
 		authentication_reply,
-		list_room_group_request,
-		list_room_group_reply,
 		create_room_request,
 		create_room_reply,
 		list_room_request,
@@ -80,41 +78,13 @@ namespace pgl {
 		}
 	};
 
-	// 1 bytes
-	struct list_room_group_request_message final {
-		uint8_t dummy;
-
-		void on_serialize(minimal_serializer::serializer& serializer) { serializer += dummy; }
-	};
-
-	// 245 bytes
-	struct list_room_group_reply_message final {
-		struct room_group_info final {
-			room_group_name_t name;
-
-			void on_serialize(minimal_serializer::serializer& serializer) { serializer += name; }
-		};
-
-		uint8_t room_group_count;
-		uint32_t max_room_count_per_room_group;
-		std::array<room_group_info, room_group_max_count> room_group_info_list;
-
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += room_group_count;
-			serializer += max_room_count_per_room_group;
-			serializer += room_group_info_list;
-		}
-	};
-
-	// 20 bytes
+	// 19 bytes
 	struct create_room_request_message final {
-		room_group_index_t group_index;
 		room_password_t password;
 		uint8_t max_player_count;
 		port_number_type port_number;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += group_index;
 			serializer += password;
 			serializer += max_player_count;
 			serializer += port_number;
@@ -128,17 +98,15 @@ namespace pgl {
 		void on_serialize(minimal_serializer::serializer& serializer) { serializer += room_id; }
 	};
 
-	// 31 bytes
+	// 32 bytes
 	struct list_room_request_message final {
-		room_group_index_t group_index;
-		uint8_t start_index;
-		uint8_t count;
+		uint16_t start_index;
+		uint16_t count;
 		room_data_sort_kind sort_kind;
 		room_search_target_flag search_target_flags;
 		player_full_name search_full_name;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += group_index;
 			serializer += start_index;
 			serializer += count;
 			serializer += sort_kind;
@@ -147,7 +115,7 @@ namespace pgl {
 		}
 	};
 
-	// 249 bytes
+	// 252 bytes
 	struct list_room_reply_message final {
 		//41 bytes
 		struct room_info final {
@@ -168,9 +136,9 @@ namespace pgl {
 			}
 		};
 
-		uint8_t total_room_count; // the number of rooms server managing
-		uint8_t matched_room_count; // the number of rooms matched to requested condition
-		uint8_t reply_room_count; // the number of rooms in these replies
+		uint16_t total_room_count; // the number of rooms server managing
+		uint16_t matched_room_count; // the number of rooms matched to requested condition
+		uint16_t reply_room_count; // the number of rooms in these replies
 		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
@@ -181,14 +149,12 @@ namespace pgl {
 		}
 	};
 
-	// 21 bytes
+	// 20 bytes
 	struct join_room_request_message final {
-		room_group_index_t group_index;
 		room_id_t room_id;
 		room_password_t password;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += group_index;
 			serializer += room_id;
 			serializer += password;
 		}
@@ -201,18 +167,16 @@ namespace pgl {
 		void on_serialize(minimal_serializer::serializer& serializer) { serializer += game_host_endpoint; }
 	};
 
-	// 8 bytes
+	// 7 bytes
 	struct update_room_status_notice_message final {
 		enum class status : uint8_t { open, close, remove };
 
-		room_group_index_t group_index;
 		room_id_t room_id;
 		status status;
 		bool is_current_player_count_changed;
 		uint8_t current_player_count;
 
 		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += group_index;
 			serializer += room_id;
 			serializer += status;
 			serializer += is_current_player_count_changed;

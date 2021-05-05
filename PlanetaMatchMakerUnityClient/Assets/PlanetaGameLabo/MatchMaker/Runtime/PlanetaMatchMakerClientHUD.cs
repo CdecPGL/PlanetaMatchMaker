@@ -67,22 +67,7 @@ namespace PlanetaGameLabo.MatchMaker
                         GUILayout.Label($"Connecting..");
                         break;
                     case PlanetaMatchMakerClient.Status.SearchingRoom:
-                        // Display room group list
                         GUILayout.Label($"Player Full Name: {_client.playerFullName.GenerateFullName()}");
-                        GUILayout.Label("===Room Group List===");
-                        for (var i = 0; i < _client.roomGroupInfoList.Count; ++i)
-                        {
-                            GUILayout.Label($"{i}: {_client.roomGroupInfoList[i].name}");
-                        }
-
-                        GUILayout.Label("Selected Room Group Index");
-                        var roomGroupIndexStr = GUILayout.TextField(_client.roomGroupIndex.ToString());
-                        byte.TryParse(roomGroupIndexStr, out var roomGroupIndex);
-                        if (_client.roomGroupIndex != roomGroupIndex)
-                        {
-                            _client.roomGroupIndex = roomGroupIndex;
-                            RequestRoomList();
-                        }
 
                         // Display room list
                         GUILayout.Label($"===Room List Setting===");
@@ -95,7 +80,7 @@ namespace PlanetaGameLabo.MatchMaker
                         GUILayout.Label("Search Tag");
                         ushort.TryParse(GUILayout.TextField(_roomSearchTag.ToString()),
                             out _roomSearchTag);
-                        GUILayout.Label($"===Room List in Group {_client.roomGroupIndex}===");
+                        GUILayout.Label($"===Room List===");
                         GUILayout.Label($"Push button to join.");
                         foreach (var room in _roomList)
                         {
@@ -182,8 +167,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             while (true)
             {
-                if (_client.status == PlanetaMatchMakerClient.Status.SearchingRoom &&
-                    _client.roomGroupIndex < _client.roomGroupInfoList.Count)
+                if (_client.status == PlanetaMatchMakerClient.Status.SearchingRoom)
                 {
                     RequestRoomList();
                 }

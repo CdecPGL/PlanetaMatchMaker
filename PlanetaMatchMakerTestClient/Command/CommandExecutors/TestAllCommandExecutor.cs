@@ -26,7 +26,6 @@ namespace PlanetaGameLabo.MatchMaker
             tests.Add((nameof(RemovePortMappings), RemovePortMappings));
             tests.Add((nameof(ListPortMappingsAndCheckRemoved), ListPortMappingsAndCheckRemoved));
             tests.Add((nameof(Connect), Connect));
-            tests.Add((nameof(ListRoomGroupList), ListRoomGroupList));
             tests.Add((nameof(CreateRoom), CreateRoom));
             tests.Add((nameof(ListRoomAndCheckRoomCreated), ListRoomAndCheckRoomCreated));
             tests.Add((nameof(RemoveRoom), RemoveRoom));
@@ -167,33 +166,12 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        private async Task ListRoomGroupList(MatchMakerClient sharedClient, TestAllCommandOptions options,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                var roomGroupList = await sharedClient.GetRoomGroupListAsync();
-                if (!roomGroupList.Any())
-                {
-                    throw new TestFailedException(true, "No room group is listed in ListRoomGroupRequest.");
-                }
-            }
-            catch (ClientErrorException e)
-            {
-                throw new TestFailedException(false, e.Message);
-            }
-            catch (ArgumentException e)
-            {
-                throw new TestFailedException(false, e.Message);
-            }
-        }
-
         private async Task CreateRoom(MatchMakerClient sharedClient, TestAllCommandOptions options,
             CancellationToken cancellationToken)
         {
             try
             {
-                await sharedClient.CreateRoomAsync(0, 8, options.GameHostDefaultPort);
+                await sharedClient.CreateRoomAsync(8, options.GameHostDefaultPort);
                 lastHostedRoomId = sharedClient.HostingRoomId;
             }
             catch (ClientErrorException e)
@@ -212,7 +190,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var (_, _, roomInfoList) =
-                    await sharedClient.GetRoomListAsync(0, 0, 100, RoomDataSortKind.NameAscending);
+                    await sharedClient.GetRoomListAsync(0, 100, RoomDataSortKind.NameAscending);
                 if (roomInfoList.All(r =>
                     r.RoomId != lastHostedRoomId && r.HostPlayerFullName == sharedClient.PlayerFullName))
                 {
@@ -244,7 +222,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var (_, _, roomInfoList) =
-                    await sharedClient.GetRoomListAsync(0, 0, 100, RoomDataSortKind.NameAscending);
+                    await sharedClient.GetRoomListAsync( 0, 100, RoomDataSortKind.NameAscending);
                 if (roomInfoList.Any(r => r.RoomId == lastHostedRoomId))
                 {
                     throw new TestFailedException(true, "Created room is not removed in ListRoomRequest.");
@@ -261,7 +239,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                await sharedClient.CreateRoomWithCreatingPortMappingAsync(0, 8, options.GameHostProtocol,
+                await sharedClient.CreateRoomWithCreatingPortMappingAsync(8, options.GameHostProtocol,
                     options.GameHostPortCandidates, options.GameHostDefaultPort, options.DiscoverTimeoutMilliSeconds);
                 lastHostedRoomId = sharedClient.HostingRoomId;
             }
@@ -299,7 +277,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var (_, _, roomInfoList) =
-                    await secondClient.GetRoomListAsync(0, 0, 100, RoomDataSortKind.NameAscending);
+                    await secondClient.GetRoomListAsync(0, 100, RoomDataSortKind.NameAscending);
                 if (roomInfoList.All(r => r.RoomId != lastHostedRoomId))
                 {
                     throw new TestFailedException(true, "Room created by host is not listed in ListRoomRequest.");
@@ -316,7 +294,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                await secondClient.JoinRoomAsync(0, lastHostedRoomId);
+                await secondClient.JoinRoomAsync(lastHostedRoomId);
             }
             catch (ClientErrorException e)
             {
