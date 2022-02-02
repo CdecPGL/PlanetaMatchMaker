@@ -35,10 +35,10 @@ namespace pgl {
 		message_type message_type;
 		session_key_type session_key;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += message_type;
-			serializer += session_key;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&request_message_header::message_type,
+			&request_message_header::session_key
+		>;
 	};
 
 	// 2 bytes
@@ -46,10 +46,10 @@ namespace pgl {
 		message_type message_type;
 		message_error_code error_code;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += message_type;
-			serializer += error_code;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&reply_message_header::message_type,
+			&reply_message_header::error_code
+		>;
 	};
 
 	// size of message should be less than (256 bytes - header size)
@@ -59,10 +59,10 @@ namespace pgl {
 		version_type version;
 		player_name_t player_name;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += version;
-			serializer += player_name;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&authentication_request_message::version,
+			&authentication_request_message::player_name
+		>;
 	};
 
 	// 8 bytes
@@ -71,11 +71,11 @@ namespace pgl {
 		session_key_type session_key;
 		player_tag_t player_tag;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += version;
-			serializer += session_key;
-			serializer += player_tag;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&authentication_reply_message::version,
+			&authentication_reply_message::session_key,
+			&authentication_reply_message::player_tag
+		>;
 	};
 
 	// 19 bytes
@@ -84,18 +84,20 @@ namespace pgl {
 		uint8_t max_player_count;
 		port_number_type port_number;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += password;
-			serializer += max_player_count;
-			serializer += port_number;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&create_room_request_message::password,
+			&create_room_request_message::max_player_count,
+			&create_room_request_message::port_number
+		>;
 	};
 
 	// 4 bytes
 	struct create_room_reply_message final {
 		room_id_t room_id;
 
-		void on_serialize(minimal_serializer::serializer& serializer) { serializer += room_id; }
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&create_room_reply_message::room_id
+		>;
 	};
 
 	// 32 bytes
@@ -106,13 +108,13 @@ namespace pgl {
 		room_search_target_flag search_target_flags;
 		player_full_name search_full_name;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += start_index;
-			serializer += count;
-			serializer += sort_kind;
-			serializer += search_target_flags;
-			serializer += search_full_name;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&list_room_request_message::start_index,
+			&list_room_request_message::count,
+			&list_room_request_message::sort_kind,
+			&list_room_request_message::search_target_flags,
+			&list_room_request_message::search_full_name
+		>;
 	};
 
 	// 252 bytes
@@ -126,14 +128,14 @@ namespace pgl {
 			uint8_t current_player_count;
 			datetime create_datetime;
 
-			void on_serialize(minimal_serializer::serializer& serializer) {
-				serializer += room_id;
-				serializer += host_player_full_name;
-				serializer += setting_flags;
-				serializer += max_player_count;
-				serializer += current_player_count;
-				serializer += create_datetime;
-			}
+			using serialize_targets = minimal_serializer::serialize_target_container<
+				&room_info::room_id,
+				&room_info::host_player_full_name,
+				&room_info::setting_flags,
+				&room_info::max_player_count,
+				&room_info::current_player_count,
+				&room_info::create_datetime
+			>;
 		};
 
 		uint16_t total_room_count; // the number of rooms server managing
@@ -141,12 +143,12 @@ namespace pgl {
 		uint16_t reply_room_count; // the number of rooms in these replies
 		std::array<room_info, list_room_reply_room_info_count> room_info_list;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += total_room_count;
-			serializer += matched_room_count;
-			serializer += reply_room_count;
-			serializer += room_info_list;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&list_room_reply_message::total_room_count,
+			&list_room_reply_message::matched_room_count,
+			&list_room_reply_message::reply_room_count,
+			&list_room_reply_message::room_info_list
+		>;
 	};
 
 	// 20 bytes
@@ -154,17 +156,19 @@ namespace pgl {
 		room_id_t room_id;
 		room_password_t password;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += room_id;
-			serializer += password;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&join_room_request_message::room_id,
+			&join_room_request_message::password
+		>;
 	};
 
 	//18 bytes
 	struct join_room_reply_message final {
 		endpoint game_host_endpoint;
 
-		void on_serialize(minimal_serializer::serializer& serializer) { serializer += game_host_endpoint; }
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&join_room_reply_message::game_host_endpoint
+		>;
 	};
 
 	// 7 bytes
@@ -176,12 +180,12 @@ namespace pgl {
 		bool is_current_player_count_changed;
 		uint8_t current_player_count;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += room_id;
-			serializer += status;
-			serializer += is_current_player_count_changed;
-			serializer += current_player_count;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&update_room_status_notice_message::room_id,
+			&update_room_status_notice_message::status,
+			&update_room_status_notice_message::is_current_player_count_changed,
+			&update_room_status_notice_message::current_player_count
+		>;
 	};
 
 	// 3 bytes
@@ -189,27 +193,35 @@ namespace pgl {
 		transport_protocol protocol;
 		port_number_type port_number;
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += protocol;
-			serializer += port_number;
-		}
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&connection_test_request_message::protocol,
+			&connection_test_request_message::port_number
+		>;
 	};
 
 	// 1 bytes
 	struct connection_test_reply_message final {
 		bool succeed;
 
-		void on_serialize(minimal_serializer::serializer& serializer) { serializer += succeed; }
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&connection_test_reply_message::succeed
+		>;
 	};
 
 	struct random_match_request_message final {
-		void on_serialize(minimal_serializer::serializer& serializer [[maybe_unused]]) { }
+		uint8_t dummy;
+
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&random_match_request_message::dummy
+		>;
 	};
 
 	// 1 byte
 	struct keep_alive_notice_message final {
 		uint8_t dummy;
 
-		void on_serialize(minimal_serializer::serializer& serializer) { serializer += dummy; }
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&keep_alive_notice_message::dummy
+		>;
 	};
 }

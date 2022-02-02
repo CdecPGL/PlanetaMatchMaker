@@ -35,12 +35,13 @@ namespace pgl {
 
 		static datetime now();
 
-		void on_serialize(minimal_serializer::serializer& serializer) {
-			serializer += unix_time_;
-		}
-
 	private:
 		int64_t unix_time_;
+
+	public:
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&datetime::unix_time_
+		>;
 	};
 
 	std::string get_now_datetime_string();

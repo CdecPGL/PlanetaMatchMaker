@@ -6,66 +6,76 @@
 #include "minimal_serializer/serializer.hpp"
 
 namespace pgl {
+	/**
+	 * Get a size of serialized multiple data.
+	 *
+	 * @tparam Data A type of data.
+	 * @return A size of serialized multiple data.
+	 */
 	template <typename... Data>
-	size_t get_packed_size() {
-		return (minimal_serializer::get_serialized_size<minimal_serializer::remove_cvref_t<Data>>() + ...);
-	}
+	constexpr size_t get_packed_size() { return (minimal_serializer::serialized_size_v<Data> + ...); }
 
 	inline void pack_data_impl(std::vector<uint8_t>&, size_t) {}
 
 	template <typename First, typename ... Rests>
 	void pack_data_impl(std::vector<uint8_t>& buffer, const size_t pos, const First& first, const Rests& ... rests) {
-		auto serialized_data = minimal_serializer::serialize(first);
-		auto size = serialized_data.size();
+		constexpr auto size = minimal_serializer::serialized_size_v<First>;
 		if (pos + size > buffer.size()) {
-			auto message = minimal_serializer::generate_string("Data range(pos=", pos, ", size=", size, ") exceeds the size of buffer(",
-				buffer.size(), ") in data packing.");
+			auto message = minimal_serializer::generate_string("Data range(pos=", pos, ", size=", size,
+				") exceeds the size of buffer(", buffer.size(), ") in data packing.");
 			throw minimal_serializer::serialization_error(message);
 		}
-		std::memcpy(buffer.data() + pos, serialized_data.data(), size);
+		minimal_serializer::serialize(first, buffer, pos);
 		pack_data_impl(buffer, pos + size, rests...);
 	}
 
-	// Serialize multi data
+	/**
+	 * Serialize multiple data.
+	 *
+	 * @param first First data to serialize.
+	 * @param rests Rest data to serialize.
+	 * @tparam First A type of first data.
+	 * @tparam Rests Types of rest data.
+	 * @return A byte array of serialized data.
+	 * @exception minimal_serializer::serialization_error Failed to serialize.
+	 */
 	template <typename First, typename... Rests>
 	std::vector<uint8_t> pack_data(const First& first, const Rests& ... rests) {
-		// When there are only one data, serialize directory to avoid redundant buffer copy
-		if constexpr (sizeof...(Rests) == 0) {
-			return minimal_serializer::serialize(first);
-		} else {
-			auto total_size = get_packed_size<First, Rests...>();
-			std::vector<uint8_t> buffer(total_size);
-			pack_data_impl(buffer, 0, first, rests...);
-			return buffer;
-		}
+		constexpr auto total_size = get_packed_size<First, Rests...>();
+		std::vector<uint8_t> buffer(total_size);
+		pack_data_impl(buffer, 0, first, rests...);
+		return buffer;
 	}
 
 	inline void unpack_data_impl(const std::vector<uint8_t>&, size_t) {}
 
 	template <typename First, typename ... Rests>
 	void unpack_data_impl(const std::vector<uint8_t>& buffer, const size_t pos, First& first, Rests& ... rests) {
-		auto size = minimal_serializer::get_serialized_size<First>();
+		constexpr auto size = minimal_serializer::serialized_size_v<First>;
 		if (pos + size > buffer.size()) {
-			auto message = minimal_serializer::generate_string("Data range(pos=", pos, ", size=", size, ") exceeds the size of buffer(",
-				buffer.size(), ") in data unpacking.");
+			auto message = minimal_serializer::generate_string("Data range(pos=", pos, ", size=", size,
+				") exceeds the size of buffer(", buffer.size(), ") in data unpacking.");
 			throw minimal_serializer::serialization_error(message);
 		}
-		std::vector<uint8_t> data(size);
-		std::memcpy(data.data(), buffer.data() + pos, size);
-		minimal_serializer::deserialize(first, data);
+
+		minimal_serializer::deserialize(first, buffer, pos);
 		unpack_data_impl(buffer, pos + size, rests...);
 	}
 
-	// Deserialize multi data
+	/**
+	 * Deserialize multiple data.
+	 *
+	 * @param buffer A byte array of serialized data.
+	 * @param first First data to deserialize.
+	 * @param rests Rest data to deserialize.
+	 * @tparam First A type of first data.
+	 * @tparam Rests Types of rest data.
+	 * @exception minimal_serializer::serialization_error Failed to deserialize.
+	 */
 	template <typename First, typename ... Rests>
 	void unpack_data(const std::vector<uint8_t>& buffer, First& first, Rests& ... rests) {
 		static_assert(!(std::is_const_v<First> || (std::is_const_v<Rests> || ...)),
 			"First and all Rests must not be const.");
-		// When there are only one data, deserialize directory to avoid redundant buffer copy
-		if constexpr (sizeof...(Rests) == 0) {
-			minimal_serializer::deserialize(first, buffer);
-		} else {
-			unpack_data_impl(buffer, 0, first, rests...);
-		}
+		unpack_data_impl(buffer, 0, first, rests...);
 	}
 }
