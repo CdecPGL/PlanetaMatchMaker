@@ -10,15 +10,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 using System;
 
-namespace CdecPGL.MinimalSerializer
-{
-    public sealed class InvalidSerializationException : Exception
-    {
+namespace CdecPGL.MinimalSerializer {
+    public sealed class InvalidSerializationException : Exception {
         public InvalidSerializationException() : base() { }
         public InvalidSerializationException(string message) : base(message) { }
-
-        public InvalidSerializationException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
     }
 }

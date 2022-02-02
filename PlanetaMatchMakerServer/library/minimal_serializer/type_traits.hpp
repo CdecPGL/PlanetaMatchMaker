@@ -110,7 +110,6 @@ namespace minimal_serializer {
 	>(std::declval<T>()))::value;
 
 	// float is available in boost.endian if Boost Library version >= 1.74.0
-	// TODO: Check the size of float is 32 bit and it of double is 64 bit
 #if BOOST_VERSION >= 107400
 	template <typename T>
 	constexpr bool is_serializable_builtin_type_v =
@@ -123,8 +122,8 @@ namespace minimal_serializer {
 		std::is_same_v<T, int64_t> ||
 		std::is_same_v<T, uint64_t> ||
 		std::is_same_v<T, bool> ||
-		std::is_same_v<T, float> ||
-		std::is_same_v<T, double>;
+		std::is_same_v<T, float> && sizeof(float) == 4 ||
+		std::is_same_v<T, double> && sizeof(double) == 8;
 #else
 	template <typename T>
 	constexpr bool is_serializable_builtin_type_v =
