@@ -5,6 +5,8 @@
 #include "minimal_serializer/string_utility.hpp"
 #include "minimal_serializer/serializer.hpp"
 
+#include "concepts.hpp"
+
 namespace pgl {
 	/**
 	 * Get a size of serialized multiple data.
@@ -12,12 +14,12 @@ namespace pgl {
 	 * @tparam Data A type of data.
 	 * @return A size of serialized multiple data.
 	 */
-	template <typename... Data>
+	template <serializable... Data>
 	constexpr size_t get_packed_size() { return (minimal_serializer::serialized_size_v<Data> + ...); }
 
 	inline void pack_data_impl(std::vector<uint8_t>&, size_t) {}
 
-	template <typename First, typename ... Rests>
+	template <serializable First, serializable ... Rests>
 	void pack_data_impl(std::vector<uint8_t>& buffer, const size_t pos, const First& first, const Rests& ... rests) {
 		constexpr auto size = minimal_serializer::serialized_size_v<First>;
 		if (pos + size > buffer.size()) {
@@ -39,7 +41,7 @@ namespace pgl {
 	 * @return A byte array of serialized data.
 	 * @exception minimal_serializer::serialization_error Failed to serialize.
 	 */
-	template <typename First, typename... Rests>
+	template <serializable First, serializable... Rests>
 	std::vector<uint8_t> pack_data(const First& first, const Rests& ... rests) {
 		constexpr auto total_size = get_packed_size<First, Rests...>();
 		std::vector<uint8_t> buffer(total_size);
@@ -49,7 +51,7 @@ namespace pgl {
 
 	inline void unpack_data_impl(const std::vector<uint8_t>&, size_t) {}
 
-	template <typename First, typename ... Rests>
+	template <serializable First, serializable ... Rests>
 	void unpack_data_impl(const std::vector<uint8_t>& buffer, const size_t pos, First& first, Rests& ... rests) {
 		constexpr auto size = minimal_serializer::serialized_size_v<First>;
 		if (pos + size > buffer.size()) {
@@ -72,10 +74,8 @@ namespace pgl {
 	 * @tparam Rests Types of rest data.
 	 * @exception minimal_serializer::serialization_error Failed to deserialize.
 	 */
-	template <typename First, typename ... Rests>
+	template <typename First, typename ... Rests> requires(serializable_all<First, Rests...>&& not_constant_all<First, Rests...>)
 	void unpack_data(const std::vector<uint8_t>& buffer, First& first, Rests& ... rests) {
-		static_assert(!(std::is_const_v<First> || (std::is_const_v<Rests> || ...)),
-			"First and all Rests must not be const.");
 		unpack_data_impl(buffer, 0, first, rests...);
 	}
 }

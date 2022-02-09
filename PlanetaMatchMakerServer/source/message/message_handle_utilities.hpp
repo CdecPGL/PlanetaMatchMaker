@@ -9,8 +9,8 @@
 #include "message_handle_parameter.hpp"
 
 namespace pgl {
-	// Send data to remote endpoint. server_session_error will be thrown when send error occured.
-	template <typename FirstData, typename... RestData>
+	// Send data to remote endpoint. server_session_error will be thrown when send error occurred.
+	template <serializable FirstData, serializable... RestData>
 	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&& ... rest_data) {
 		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
 			get_packed_size<FirstData, RestData...>(), " bytes)");
@@ -39,12 +39,10 @@ namespace pgl {
 		}
 	}
 
-	// Receive data. server_session_error will be thrown when reception error occured.
+	// Receive data. server_session_error will be thrown when reception error occurred.
 	// todo: use shared_ptr to avoid invalid reference access in lambda function
-	template <typename FirstData, typename... RestData>
+	template <typename FirstData, typename... RestData> requires(serializable_all<FirstData, RestData...> && not_constant_all<FirstData, RestData...>)
 	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData& ... rest_data) {
-		static_assert(!(std::is_const_v<FirstData> || (std::is_const_v<RestData> || ...)),
-			"FirstData and all RestData must not be const.");
 		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 

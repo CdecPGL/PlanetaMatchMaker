@@ -21,7 +21,7 @@ namespace pgl {
 	void { handle_message_impl(true, specified_message_type, std::move(param), check_session_key); }
 
 	void message_handler_invoker::handle_message_impl(const bool enable_message_specification,
-		message_type specified_message_type, std::shared_ptr<message_handle_parameter> param,
+		message_type specified_message_type, const std::shared_ptr<message_handle_parameter> param,
 		const bool check_session_key) const {
 
 		// Receive ana analyze a message header
@@ -51,7 +51,7 @@ namespace pgl {
 		}
 
 		const auto message_handler = make_message_handler(header.message_type);
-		const auto header_size = minimal_serializer::serialized_size_v<request_message_header>;
+		constexpr auto header_size = minimal_serializer::serialized_size_v<request_message_header>;
 		const auto message_size = message_handler->get_message_size();
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message header received. (type: ",
 			header.message_type, ", size: ", header_size, ")");

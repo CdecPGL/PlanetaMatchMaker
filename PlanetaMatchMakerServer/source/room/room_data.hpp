@@ -15,10 +15,8 @@ namespace pgl {
 		open_room = 2
 	};
 
-	namespace enum_concept {
-		template <>
-		struct has_bitwise_operators<room_setting_flag> : std::true_type {};
-	}
+	template <>
+	struct enum_concept::has_bitwise_operators<room_setting_flag> : std::true_type {};
 
 	struct room_data final {
 		room_id_t room_id;
@@ -40,10 +38,8 @@ namespace pgl {
 		closed_room = 8
 	};
 
-	namespace enum_concept {
-		template <>
-		struct has_bitwise_operators<room_search_target_flag> : std::true_type {};
-	}
+	template <>
+	struct enum_concept::has_bitwise_operators<room_search_target_flag> : std::true_type {};
 
 	enum class room_data_sort_kind : uint8_t {
 		name_ascending,

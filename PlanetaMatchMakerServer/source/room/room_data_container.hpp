@@ -37,7 +37,7 @@ namespace pgl {
 		 *
 		 * @return The number of room data.
 		 */
-		size_t size() const { return container_.size(); }
+		[[nodiscard]] size_t size() const { return container_.size(); }
 
 		/**
 		 * Add new room data with ID of passed room data.

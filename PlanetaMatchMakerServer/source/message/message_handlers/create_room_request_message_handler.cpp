@@ -13,7 +13,7 @@ using namespace boost;
 
 namespace pgl {
 	void create_room_request_message_handler::handle_message(const create_room_request_message& message,
-		std::shared_ptr<message_handle_parameter> param) {
+		const std::shared_ptr<message_handle_parameter> param) {
 
 		const message_parameter_validator_with_reply<message_type::create_room_reply, create_room_reply_message>
 			parameter_validator(param);

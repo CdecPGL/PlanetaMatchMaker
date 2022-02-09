@@ -12,7 +12,7 @@ using namespace boost;
 
 namespace pgl {
 	void authentication_request_message_handler::handle_message(const authentication_request_message& message,
-		std::shared_ptr<message_handle_parameter> param) {
+		const std::shared_ptr<message_handle_parameter> param) {
 
 		authentication_reply_message reply{
 			api_version,

@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019-2021 Cdec
+Copyright (c) 2019-2022 Cdec
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
@@ -11,8 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #pragma once
 
 #include <type_traits>
-
-#include <boost/version.hpp>
 
 namespace minimal_serializer {
 	/**
@@ -105,9 +103,19 @@ namespace minimal_serializer {
 		static auto check(...) -> std::false_type;
 	};
 
+	// To avoid an error of trying to access member alias of non class type.
 	template <typename T>
-	constexpr bool has_serialize_targets_definition_v = decltype(has_serialize_targets_definition_impl::check<T
-	>(std::declval<T>()))::value;
+	constexpr auto has_serialize_targets_definition_impl2() {
+		if constexpr (std::is_class_v<T>) {
+			return decltype(has_serialize_targets_definition_impl::check<T>(std::declval<T>()))::value;
+		}
+		else {
+			return false;
+		}
+	}
+
+	template <typename T>
+	constexpr bool has_serialize_targets_definition_v = has_serialize_targets_definition_impl2<T>();
 
 	// float is available in boost.endian if Boost Library version >= 1.74.0
 #if BOOST_VERSION >= 107400
@@ -122,8 +130,8 @@ namespace minimal_serializer {
 		std::is_same_v<T, int64_t> ||
 		std::is_same_v<T, uint64_t> ||
 		std::is_same_v<T, bool> ||
-		std::is_same_v<T, float> && sizeof(float) == 4 ||
-		std::is_same_v<T, double> && sizeof(double) == 8;
+		(std::is_same_v<T, float> && sizeof(float) == 4) ||
+		(std::is_same_v<T, double> && sizeof(double) == 8);
 #else
 	template <typename T>
 	constexpr bool is_serializable_builtin_type_v =
@@ -156,4 +164,12 @@ namespace minimal_serializer {
 		is_serializable_enum_v<T> ||
 		is_serializable_tuple_v<T> ||
 		is_serializable_custom_type_v<T>;
+
+#if __cpp_concepts
+	/**
+	 * @brief A concept to constrain types to serializable.
+	 */
+	template <typename T>
+	concept serializable = is_serializable_v<T>;
+#endif
 }

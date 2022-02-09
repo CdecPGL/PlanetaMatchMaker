@@ -31,7 +31,7 @@ namespace pgl {
 				break;
 		}
 
-		return asio::ip::tcp::endpoint(boost_address, port_number);
+		return { boost_address, port_number };
 	}
 
 	endpoint endpoint::make_from_boost_endpoint(
@@ -39,12 +39,12 @@ namespace pgl {
 		endpoint endpoint{};
 		if (boost_endpoint.address().is_v4()) {
 			// IPv4-Mapped IPv6 Address (example, ::ffff:192.0.0.1)
-			auto bytes = boost_endpoint.address().to_v4().to_bytes();
+			const auto bytes = boost_endpoint.address().to_v4().to_bytes();
 			std::memcpy(endpoint.ip_address.data(), ipv4_prefix.data(), ipv4_prefix.size());
 			std::memcpy(endpoint.ip_address.data() + 12, bytes.data(), bytes.size());
 		}
 		else {
-			auto bytes = boost_endpoint.address().to_v6().to_bytes();
+			const auto bytes = boost_endpoint.address().to_v6().to_bytes();
 			std::memcpy(endpoint.ip_address.data(), bytes.data(), bytes.size());
 		}
 

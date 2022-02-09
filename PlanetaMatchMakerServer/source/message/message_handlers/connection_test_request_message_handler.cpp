@@ -145,7 +145,7 @@ namespace pgl {
 				? param->server_setting.connection_test.connection_check_tcp_time_out_seconds
 				: param->server_setting.connection_test.connection_check_udp_time_out_seconds, " seconds.");
 		try {
-			const std::string test_text = u8"Hello. This is PMMS.";
+			const std::string test_text = "Hello. This is PMMS.";
 			switch (message.protocol) {
 				case transport_protocol::tcp:
 					reply.succeed = test_connection_tcp(*param, target_endpoint, test_text);

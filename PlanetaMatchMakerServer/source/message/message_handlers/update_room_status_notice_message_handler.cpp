@@ -5,7 +5,7 @@
 namespace pgl {
 
 	void update_room_status_notice_message_handler::handle_message(const update_room_status_notice_message& message,
-		std::shared_ptr<message_handle_parameter> param) {
+		const std::shared_ptr<message_handle_parameter> param) {
 
 		const message_parameter_validator parameter_validator(param);
 

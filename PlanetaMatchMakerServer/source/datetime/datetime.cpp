@@ -77,15 +77,15 @@ namespace pgl {
 		const auto date_time = boost::posix_time::second_clock::universal_time();
 		const auto date = date_time.date();
 		const auto time = date_time.time_of_day();
-		return datetime(date.year(), date.month(), date.day(), static_cast<int>(time.hours()),
-			static_cast<int>(time.minutes()), static_cast<int>(time.seconds()));
+		return { date.year(), date.month(), date.day(), static_cast<int>(time.hours()),
+			static_cast<int>(time.minutes()), static_cast<int>(time.seconds()) };
 	}
 
 	string get_now_datetime_string() {
 		const auto date_time = boost::posix_time::microsec_clock::universal_time();
 		ostringstream oss;
 		// deleting of std::locale::facet mey not be necessary.
-		auto facet = new boost::posix_time::time_facet();
+		const auto facet = new boost::posix_time::time_facet();
 		facet->format("%Y-%m-%d %H:%M:%S.%f UTC");
 		oss.imbue(locale(locale::classic(), facet));
 		oss << date_time;

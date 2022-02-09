@@ -38,11 +38,9 @@ namespace boost {
 	}
 }
 
-namespace std {
-	template <>
-	struct hash<pgl::endpoint> {
-		size_t operator()(const pgl::endpoint& endpoint) const noexcept {
-			return boost::hash_value(endpoint);
-		}
-	};
-}
+template <>
+struct std::hash<pgl::endpoint> {
+	size_t operator()(const pgl::endpoint& endpoint) const noexcept {
+		return boost::hash_value(endpoint);
+	}
+};

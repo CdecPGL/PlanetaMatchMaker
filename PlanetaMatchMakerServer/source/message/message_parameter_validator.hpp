@@ -22,7 +22,7 @@ namespace pgl {
 		// Check a max player count is valid. If it is not valid, throw server error.
 		void validate_max_player_count(uint8_t max_player_count, bool is_continuable = true) const;
 
-		const std::shared_ptr<message_handle_parameter>& get_message_handle_parameter() const;
+		[[nodiscard]] const std::shared_ptr<message_handle_parameter>& get_message_handle_parameter() const;
 	private:
 		std::shared_ptr<message_handle_parameter> param_;
 	};
@@ -30,7 +30,7 @@ namespace pgl {
 	template <message_type ReplyMessageType, class TReplyMessage>
 	class message_parameter_validator_with_reply final {
 	public:
-		explicit message_parameter_validator_with_reply(std::shared_ptr<message_handle_parameter> param) :
+		explicit message_parameter_validator_with_reply(const std::shared_ptr<message_handle_parameter> param) :
 			message_parameter_validator_(param) {}
 
 		// Check a room id exists. If it doesn't exist, reply error message to client and throw server error.

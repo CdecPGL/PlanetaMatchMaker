@@ -3,7 +3,7 @@
 
 namespace pgl {
 	void join_room_request_message_handler::handle_message(const join_room_request_message& message,
-		std::shared_ptr<message_handle_parameter> param) {
+		const std::shared_ptr<message_handle_parameter> param) {
 
 		const message_parameter_validator_with_reply<message_type::join_room_reply, join_room_reply_message>
 			parameter_validator(param);
@@ -20,7 +20,7 @@ namespace pgl {
 		if ((room_data.setting_flags & room_setting_flag::open_room) != room_setting_flag::open_room) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
 				"\" is not opened.");
-			const reply_message_header header{
+			constexpr reply_message_header header{
 				message_type::join_room_reply,
 				message_error_code::room_permission_denied
 			};
@@ -33,7 +33,7 @@ namespace pgl {
 			password != message.password) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
 				"The password is wrong for requested room \"", message.room_id, "\".");
-			const reply_message_header header{
+			constexpr reply_message_header header{
 				message_type::join_room_reply,
 				message_error_code::room_password_wrong
 			};
@@ -43,7 +43,7 @@ namespace pgl {
 
 		// Check player acceptable
 		if (room_data.current_player_count >= room_data.max_player_count) {
-			const reply_message_header header{
+			constexpr reply_message_header header{
 				message_type::join_room_reply,
 				message_error_code::room_full
 			};
@@ -57,7 +57,7 @@ namespace pgl {
 			"\" accepted new player. (", room_data.current_player_count, ").");
 
 		// Reply to the client
-		const reply_message_header header{
+		constexpr reply_message_header header{
 			message_type::join_room_reply,
 			message_error_code::ok
 		};

@@ -155,8 +155,7 @@ namespace pgl {
 	}
 
 	void server_session::remove_player_full_name_if_need() const {
-		auto& player_name_container = server_data_.get_player_name_container();
-		if (player_name_container.is_player_exist(session_data_->client_player_name())) {
+		if (const auto& player_name_container = server_data_.get_player_name_container(); player_name_container.is_player_exist(session_data_->client_player_name())) {
 			server_data_.get_player_name_container().remove_player_name(session_data_->client_player_name());
 			log_with_endpoint(log_level::info, session_data_->remote_endpoint().to_boost_endpoint(),
 				"Player full name(name: ", session_data_->client_player_name().name, ", Tag: ",

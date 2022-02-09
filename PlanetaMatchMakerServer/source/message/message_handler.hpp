@@ -25,16 +25,16 @@ namespace pgl {
 		message_handler_base() = default;
 		message_handler_base(const message_handler_base& message_handler_base) = delete;
 		message_handler_base(message_handler_base&& message_handler_base) = delete;
-		virtual ~message_handler_base() = default;
+		~message_handler_base() override = default;
 		message_handler_base& operator=(const message_handler_base& message_handler_base) = delete;
 		message_handler_base& operator=(message_handler_base&& message_handler_base) = delete;
 
-		[[nodiscard]] size_t get_message_size() const override final {
+		[[nodiscard]] size_t get_message_size() const final {
 			return minimal_serializer::serialized_size_v<Message>;
 		}
 
-		void operator()(std::shared_ptr<message_handle_parameter> param) override final {
-			Message message;
+		void operator()(std::shared_ptr<message_handle_parameter> param) final {
+			Message message{};
 			receive(param, message);
 			handle_message(message, std::move(param));
 		}

@@ -15,11 +15,9 @@ namespace pgl {
 	public:
 		using message_handler_generator_type = std::function<std::unique_ptr<message_handler>()>;
 
-		template <message_type MessageType, class MessageHandler>
+		template <message_type MessageType, class MessageHandler> requires(std::derived_from<MessageHandler, message_handler>)
 		void register_handler() {
-			assert(handler_generator_map_.find(MessageType) == handler_generator_map_.end());
-			static_assert(std::is_base_of_v<message_handler, MessageHandler>,
-				"MessageHandler must be a child class of message_handler.");
+			assert(!handler_generator_map_.contains(MessageType));
 			log(log_level::debug, "Register message handler (", NAMEOF_TYPE(MessageHandler), ") for ", MessageType,
 				".");
 			handler_generator_map_.emplace(MessageType, []() {
@@ -36,7 +34,7 @@ namespace pgl {
 		std::unordered_map<message_type, message_handler_generator_type> handler_generator_map_;
 
 		[[nodiscard]] bool is_handler_exist(const message_type message_type) const {
-			return handler_generator_map_.find(message_type) != handler_generator_map_.end();
+			return !handler_generator_map_.contains(message_type);
 		}
 
 		[[nodiscard]] std::unique_ptr<message_handler> make_message_handler(const message_type message_type) const {

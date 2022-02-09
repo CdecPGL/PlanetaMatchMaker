@@ -10,7 +10,7 @@ using namespace minimal_serializer;
 namespace pgl {
 	player_full_name player_name_container::assign_player_name(const player_name_t& player_name) {
 		lock_guard lock(mutex_);
-		auto it = name_map_.find(player_name);
+		const auto it = name_map_.find(player_name);
 		if (it == name_map_.end()) {
 			name_map_.emplace(player_name, name_data{2, {1}});
 			return player_full_name{player_name, 1};
@@ -23,8 +23,7 @@ namespace pgl {
 
 		// find not used tag
 		while (it->second.next_tag == player_full_name::not_assigned_tag || it
-		                                                                    ->second.used_tags.find(it->second.next_tag)
-			!= it->second.used_tags.end()
+		                                                                    ->second.used_tags.contains(it->second.next_tag)
 		) { ++it->second.next_tag; }
 		// use tag and set next tag
 		const auto tag = it->second.next_tag++;
@@ -34,7 +33,7 @@ namespace pgl {
 
 	void player_name_container::remove_player_name(const player_full_name& player_full_name) {
 		lock_guard lock(mutex_);
-		auto name_it = name_map_.find(player_full_name.name);
+		const auto name_it = name_map_.find(player_full_name.name);
 		if (name_it == name_map_.end()) {
 			throw player_name_error(generate_string("The player full name (name: ", player_full_name.name, ", tag: ",
 				player_full_name.tag, ") does not exist."));
@@ -55,7 +54,7 @@ namespace pgl {
 		const auto name_it = name_map_.find(player_full_name.name);
 		if (name_it == name_map_.end()) { return false; }
 
-		return name_it->second.used_tags.find(player_full_name.tag) != name_it->second.used_tags.end();
+		return name_it->second.used_tags.contains(player_full_name.tag);
 	}
 
 	player_name_error::player_name_error(const std::string& message): runtime_error(message) {}

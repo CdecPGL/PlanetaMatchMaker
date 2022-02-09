@@ -42,21 +42,21 @@ namespace pgl {
 
 	std::filesystem::path get_application_log_directory() {
 #if BOOST_OS_WINDOWS
-		const auto system_log_directory = filesystem::path("C:\\log");
+		auto system_log_directory = filesystem::path("C:\\log");
 #else
-		const auto system_log_directory = filesystem::path("/var/log");
+		auto system_log_directory = filesystem::path("/var/log");
 #endif
 		return system_log_directory;
 	}
 
 	std::filesystem::path get_or_create_application_setting_directory() {
-		const auto setting_path(get_application_setting_directory());
+		auto setting_path(get_application_setting_directory());
 		if (!exists(setting_path)) { create_directory(setting_path); }
 		return setting_path;
 	}
 
 	std::filesystem::path get_or_create_application_log_directory() {
-		const auto log_directory(get_application_log_directory());
+		auto log_directory(get_application_log_directory());
 		if (!exists(log_directory)) { create_directory(log_directory); }
 		return log_directory;
 	}

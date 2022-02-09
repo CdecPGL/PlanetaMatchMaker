@@ -37,11 +37,11 @@ int main(const int argc, char* argv[]) {
 		server.run();
 	}
 	catch (const std::exception& e) {
-		cerr << "Fatal error occured: " << e.what() << endl;
+		cerr << "Fatal error occurred: " << e.what() << endl;
 		exit(1);
 	}
 	catch (...) {
-		cerr << "Fatal error occured." << endl;
+		cerr << "Fatal error occurred." << endl;
 		exit(1);
 	}
 }

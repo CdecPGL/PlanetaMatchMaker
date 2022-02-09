@@ -23,10 +23,8 @@ namespace pgl {
 	 * @tparam S A type of data to hold.
 	 * @tparam UniqueMemberVariable A member variable pointer of the member variable in Data which should be unique in this container.
 	 */
-	template <typename IdType, typename S, auto UniqueMemberVariable>
+	template <typename IdType, typename S, auto UniqueMemberVariable> requires(std::same_as<S, member_variable_pointer_class_t<UniqueMemberVariable>>)
 	class unique_variables_container_impl {
-		static_assert(std::is_same_v<S, member_variable_pointer_class_t<UniqueMemberVariable>>, "The member variable which is indicated by UniqueMemberVariable should be a member of S.");
-		
 		using member_t = member_variable_pointer_variable_t<UniqueMemberVariable>;
 		using s_param_t = typename boost::call_traits<S>::param_type;
 		using id_param_t = typename boost::call_traits<IdType>::param_type;
@@ -65,7 +63,7 @@ namespace pgl {
 		[[nodiscard]] bool is_unique(id_param_t id, s_param_t data) const {
 			auto unique_value = get_unique_value(data);
 			auto it = id_to_variable_map_.find(id);
-			if (it == id_to_variable_map_.end()) { return used_variable_.find(unique_value) == used_variable_.end(); }
+			if (it == id_to_variable_map_.end()) { return !used_variable_.contains(unique_value); }
 
 			return it->second == unique_value;
 		}
@@ -78,7 +76,7 @@ namespace pgl {
 		 */
 		[[nodiscard]] bool is_unique(s_param_t data) const {
 			auto unique_value = get_unique_value(data);
-			return used_variable_.find(unique_value) == used_variable_.end();
+			return !used_variable_.contains(unique_value);
 		}
 
 	private:
@@ -96,7 +94,7 @@ namespace pgl {
 	 * @tparam S A type of data to hold.
 	 * @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
 	 */
-	template <typename IdType, typename S, auto... UniqueMemberVariables>
+	template <typename IdType, typename S, auto... UniqueMemberVariables> requires(std::same_as<S, member_variable_pointer_class_t<UniqueMemberVariables>> && ...)
 	class unique_variables_container
 		final : boost::noncopyable, unique_variables_container_impl<IdType, S, UniqueMemberVariables>... {
 		using s_param_t = typename boost::call_traits<S>::param_type;
@@ -149,7 +147,7 @@ namespace pgl {
 	 */
 	class unique_variable_duplication_error final : public std::runtime_error {
 	public:
-		unique_variable_duplication_error() : runtime_error("A unique member variable is duplicated.") {};
+		unique_variable_duplication_error() : runtime_error("A unique member variable is duplicated.") {}
 		using runtime_error::runtime_error;
 	};
 
@@ -160,7 +158,7 @@ namespace pgl {
 	 * @tparam Data A type of data to hold.
 	 * @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
 	 */
-	template <typename Id, typename Data, auto... UniqueMemberVariables>
+	template <typename Id, typename Data, auto... UniqueMemberVariables> requires(std::same_as<Data, member_variable_pointer_class_t<UniqueMemberVariables>> && ...)
 	class thread_safe_data_container final : boost::noncopyable {
 	public:
 		using id_param_type = typename boost::call_traits<Id>::param_type;
@@ -174,7 +172,7 @@ namespace pgl {
 		 */
 		[[nodiscard]] bool is_data_exist(id_param_type id) const {
 			std::shared_lock lock(mutex_);
-			return data_map_.find(id) != data_map_.end();
+			return data_map_.contains(id);
 		}
 
 		/**
@@ -227,9 +225,9 @@ namespace pgl {
 
 			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
 
-			Id id;
+			Id id{};
 			do { id = random_id_generator(); }
-			while (data_map_.find(id) != data_map_.end());
+			while (data_map_.contains(id));
 			id_setter(data, id);
 			data_map_.emplace(id, data);
 			unique_variables_.add_or_update_variables(id, data);
@@ -250,8 +248,7 @@ namespace pgl {
 				std::shared_lock lock(mutex_);
 				data.reserve(data_map_.size());
 				for (auto&& pair : data_map_) {
-					const auto data_elem = pair.second.load();
-					if (filter_function(data_elem)) { data.push_back(data_elem); }
+					if (const auto data_elem = pair.second.load(); filter_function(data_elem)) { data.push_back(data_elem); }
 				}
 			}
 			std::sort(data.begin(), data.end(), compare_function);

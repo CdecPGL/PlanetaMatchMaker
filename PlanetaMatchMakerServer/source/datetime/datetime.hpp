@@ -53,11 +53,9 @@ namespace boost {
 	}
 }
 
-namespace std {
-	template <>
-	struct hash<pgl::datetime> {
-		size_t operator()(const pgl::datetime& datetime) const noexcept {
-			return boost::hash_value(datetime);
-		}
-	};
-}
+template <>
+struct std::hash<pgl::datetime> {
+	size_t operator()(const pgl::datetime& datetime) const noexcept {
+		return boost::hash_value(datetime);
+	}
+};

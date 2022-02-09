@@ -19,42 +19,46 @@ namespace pgl {
 		struct has_bitwise_operators : std::false_type {};
 		template<typename T>
 		struct has_and_or_operators : has_bitwise_operators<T> {};
-	}
 
-	namespace type_traits {
-		template<bool Con> using concept_t = typename std::enable_if<Con, std::nullptr_t>::type;
+		template<typename T>
+		concept bitwise_operatable = has_bitwise_operators<T>::value;
+
+		template<typename T>
+		concept bitwise_and_or_operatable = has_and_or_operators<T>::value;
+
+		template<typename T>
+		concept enum_compatible= std::is_enum_v<T>;
 	}
 
 	namespace detail {
-		using namespace type_traits;
-		template<typename T, concept_t<std::is_enum<T>::value> = nullptr>
-		constexpr std::underlying_type_t<T> underlying_cast(T e) { return static_cast<std::underlying_type_t<T>>(e); }
+		template<enum_concept::enum_compatible T>
+		constexpr auto underlying_cast(T e) { return static_cast<std::underlying_type_t<T>>(e); }
 	}
 	
-	template<typename T, type_traits::concept_t<enum_concept::has_and_or_operators<T>::value> = nullptr>
+	template<enum_concept::bitwise_and_or_operatable T>
 	constexpr T operator&(T l, T r) { return static_cast<T>(detail::underlying_cast(l) & detail::underlying_cast(r)); }
-	template<typename T, type_traits::concept_t<enum_concept::has_and_or_operators<T>::value> = nullptr>
+	template<enum_concept::bitwise_and_or_operatable T>
 	T & operator&=(T & l, T r) {
 		l = static_cast<T>(detail::underlying_cast(l) & detail::underlying_cast(r));
 		return l;
 	}
 	
-	template<typename T, type_traits::concept_t<enum_concept::has_and_or_operators<T>::value> = nullptr>
+	template<enum_concept::bitwise_and_or_operatable T>
 	constexpr T operator|(T l, T r) { return static_cast<T>(detail::underlying_cast(l) | detail::underlying_cast(r)); }
-	template<typename T, type_traits::concept_t<enum_concept::has_and_or_operators<T>::value> = nullptr>
+	template<enum_concept::bitwise_and_or_operatable T>
 	T & operator|=(T & l, T r) {
 		l = static_cast<T>(detail::underlying_cast(l) | detail::underlying_cast(r));
 		return l;
 	}
 	
-	template<typename T, type_traits::concept_t<enum_concept::has_bitwise_operators<T>::value> = nullptr>
+	template<enum_concept::bitwise_operatable T>
 	constexpr T operator^(T l, T r) { return static_cast<T>(detail::underlying_cast(l) ^ detail::underlying_cast(r)); }
-	template<typename T, type_traits::concept_t<enum_concept::has_bitwise_operators<T>::value> = nullptr>
+	template<enum_concept::bitwise_operatable T>
 	T & operator^=(T & l, T r) {
 		l = static_cast<T>(detail::underlying_cast(l) ^ detail::underlying_cast(r));
 		return l;
 	}
 	
-	template<typename T, type_traits::concept_t<enum_concept::has_bitwise_operators<T>::value> = nullptr>
+	template<enum_concept::bitwise_operatable T>
 	constexpr T operator~(T op) { return static_cast<T>(~detail::underlying_cast(op)); }
 }

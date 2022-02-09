@@ -15,7 +15,7 @@ namespace pgl {
 	 * - Empty (""): Name and tag are empty.
 	 */
 	struct player_full_name final {
-		const static player_tag_t not_assigned_tag = 0;
+		constexpr static player_tag_t not_assigned_tag = 0;
 		
 		/**
 		 * A name of player. Empty name means name is not assigned.
@@ -67,9 +67,7 @@ namespace boost {
 	}
 }
 
-namespace std {
-	template <>
-	struct hash<pgl::player_full_name> {
-		size_t operator()(const pgl::player_full_name& value) const noexcept { return boost::hash_value(value); }
-	};
-}
+template <>
+struct std::hash<pgl::player_full_name> {
+	size_t operator()(const pgl::player_full_name& value) const noexcept { return boost::hash_value(value); }
+};
