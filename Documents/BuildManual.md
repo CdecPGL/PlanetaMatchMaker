@@ -20,7 +20,7 @@ g++ is not supported now.
 
 - Boost Library 1.77 or higher
 - CMake 3.21.3 or higher
-- minimal-serializer v0.2.3 (included in this repogitory)
+- minimal-serializer v0.2.4 (included in this repogitory)
 - nameof C++ 0.10.1 (included in this repogitory)
 
 ### Build by CMake with Docker (Linux)
@@ -86,7 +86,7 @@ Currently, the server project is compatible with gcc so specify clang++ to cmake
 
 ### Dependencies
 
-- minimal-serializer v0.2.3 (included in this repogitory)
+- minimal-serializer v0.2.4 (included in this repogitory)
 - [Open.NAT (compile error fixed version of commit 643f04e8227fe873731b884244bcee4cc84c8d49)](https://github.com/lontivero/Open.NAT) (included in this repogitory)
 
 ### Build by Visual Studio (Windows)
@@ -116,7 +116,7 @@ dotnet test PlanetaMatchMakerClientTest -c Release
 
 ### Dependencies
 
-- minimal-serializer v0.2.3 (included in this repogitory)
+- minimal-serializer v0.2.4 (included in this repogitory)
 - [Open.NAT (compile error fixed version of commit 643f04e8227fe873731b884244bcee4cc84c8d49)](https://github.com/lontivero/Open.NAT) (included in this repogitory)
 - Command Line Parser v2.6.0 (from NuGet)
 
