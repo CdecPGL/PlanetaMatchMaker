@@ -16,7 +16,7 @@ namespace pgl {
 	Destination range_checked_static_cast(const Source& source) {
 		Destination destination{static_cast<Destination>(source)};
 		Source round_trip{static_cast<Source>(destination)};
-		if (round_trip != source || std::is_unsigned_v<Destination> && source < 0) {
+		if (round_trip != source || (std::is_unsigned_v<Destination> && source < 0)) {
 			auto error_message = minimal_serializer::generate_string("Source value (", source, ") of type (",
 				nameof::nameof_type<Source>(), ") is out of range in destination type (",
 				nameof::nameof_type<Destination>(), ").");
