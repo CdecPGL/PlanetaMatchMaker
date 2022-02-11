@@ -1,10 +1,10 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.21.3)
 
 file(GLOB_RECURSE source_files "*.cpp")
 add_executable (PlanetaMatchMakerServerTest ${source_files})
 
 # Boost Library
-find_package(Boost 1.70.0 REQUIRED COMPONENTS unit_test_framework)
+find_package(Boost 1.77.0 REQUIRED COMPONENTS unit_test_framework)
 # to avoid warnings, use SYSTEM (-isystem option of gcc)
 target_include_directories(PlanetaMatchMakerServerTest SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerTest ${Boost_LIBRARIES})

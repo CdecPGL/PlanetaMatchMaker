@@ -11,17 +11,17 @@ To build server project, you need a compiler which is compatible with C++17.
 
 Following compilers and platforms are tested.
 
-- MSVC 14.28 (Windows)
-- clang 9.0.0 (Alpine)
+- MSVC 14.30 (VS 17.0.2) (Windows)
+- clang 12.0.1 (Alpine)
 
 g++ is not supported now.
 
 ### Dependencies
 
-- Boost Library 1.70 or higher
-- CMake 3.8 or higher
-- minimal-serializer v0.1.5 (included in this repogitory)
-- nameof C++ 0.97 (included in this repogitory)
+- Boost Library 1.77 or higher
+- CMake 3.21.3 or higher
+- minimal-serializer v0.2.3 (included in this repogitory)
+- nameof C++ 0.10.1 (included in this repogitory)
 
 ### Build by CMake with Docker (Linux)
 
@@ -49,7 +49,7 @@ Currently, the server project is compatible with gcc so specify clang++ to cmake
 
 ### Bulild by CMake Manually (Linux)
 
-1. Install cmake 3.8 or higher
+1. Install cmake 3.21.3 or higher
 1. Install clang++ 3.8 or higher
 1. Create build directory and move created directory
 1. Generate makefile with cmake command
@@ -71,9 +71,9 @@ Currently, the server project is compatible with gcc so specify clang++ to cmake
 
 ### Build by Visual Studio (Windows)
 
-1. Install a compiler (VC++15.7, g++7 or clang5) which is compatible with C++17
+1. Install a compiler (VC++ or clang) which is compatible with C++20
 1. Install vcpkg
-1. Install Boost Library 1.70 or higher by vcpkg
+1. Install Boost Library 1.77 or higher by vcpkg
 1. Open `PlanetaMatchMaker.sln`
 1. Build `PlanetaMatchMakerServer` project
 1. Build and run `PlanetaMatchMakerServerTest` project if need
@@ -86,7 +86,7 @@ Currently, the server project is compatible with gcc so specify clang++ to cmake
 
 ### Dependencies
 
-- minimal-serializer v0.1.5 (included in this repogitory)
+- minimal-serializer v0.2.3 (included in this repogitory)
 - [Open.NAT (compile error fixed version of commit 643f04e8227fe873731b884244bcee4cc84c8d49)](https://github.com/lontivero/Open.NAT) (included in this repogitory)
 
 ### Build by Visual Studio (Windows)
@@ -116,13 +116,13 @@ dotnet test PlanetaMatchMakerClientTest -c Release
 
 ### Dependencies
 
-- minimal-serializer v0.1.5 (included in this repogitory)
+- minimal-serializer v0.2.3 (included in this repogitory)
 - [Open.NAT (compile error fixed version of commit 643f04e8227fe873731b884244bcee4cc84c8d49)](https://github.com/lontivero/Open.NAT) (included in this repogitory)
 - Command Line Parser v2.6.0 (from NuGet)
 
 ### Build by Visual Studio (Windows)
 
-1. Install Visual Studio 2019 or higher
+1. Install Visual Studio 2022 or higher
 1. Open the solution
 1. Build `PlanetaMatchMakerTestClient` project
 
@@ -159,6 +159,7 @@ Following versions are tested.
 
 - Unity 2019.2.12f1 (Windows)
 - Unity 2019.3.13f1 (Windows)
+- Unity 2021.2.8f1 (Windows)
 
 ### Dependencies
 

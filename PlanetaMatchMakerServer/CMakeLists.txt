@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.21.3)
 
 # Sources in this project
 set(main_source "source/main/main.cpp")
@@ -17,11 +17,11 @@ set (includes "library" "source")
 target_include_directories(PlanetaMatchMakerServerLib PUBLIC ${includes})
 
 # Boost Library
-find_package(Boost 1.70.0 REQUIRED COMPONENTS thread coroutine date_time filesystem log)
-target_include_directories(PlanetaMatchMakerServerLib SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+find_package(Boost 1.77.0 REQUIRED COMPONENTS thread coroutine date_time filesystem log)
+target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerLib ${Boost_LIBRARIES})
 
-# Avoid to error of Boost Library 1.70 for MSVC
+# Avoid to error of Boost Library 1.77 for MSVC
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   add_definitions(-D_WIN32_WINNT=0x0601)
 endif()

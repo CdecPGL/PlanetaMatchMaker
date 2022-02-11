@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.21.3)
 enable_testing()
 
 project ("PlanetaMatchMaker" CXX)
@@ -21,7 +21,7 @@ macro(install_symlink filepath sympath)
 endmacro(install_symlink)
 
 # C++ configurations
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

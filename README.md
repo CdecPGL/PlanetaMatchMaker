@@ -47,7 +47,7 @@ Following commands are example to run a server with port 57000 by using docker.
 
 ```bash
 docker pull cdec/plaenta-match-maker:server-alpine
-docker run -p 57000:57000 cdec/plaenta-match-maker:server-alpine
+docker run -p 57000:57000 cdec/planeta-match-maker:server-alpine
 ```
 
 You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.

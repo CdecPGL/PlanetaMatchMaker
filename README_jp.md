@@ -47,7 +47,7 @@ Dockerを使用することで、数ステップでサーバーをインスト�
 
 ```bash
 docker pull cdec/plaenta-match-maker:server-alpine
-docker run -p 57000:57000 cdec/plaenta-match-maker:server-alpine
+docker run -p 57000:57000 cdec/planeta-match-maker:server-alpine
 ```
 
 サーバー設定ファイルで指定されているポートでTCP通信を受け取ることができるよう、ファイアーウォールの設定が必要になることがあります。
