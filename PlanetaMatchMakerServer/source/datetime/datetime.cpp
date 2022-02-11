@@ -65,14 +65,6 @@ namespace pgl {
 		return boost::hash_value(unix_time_);
 	}
 
-	bool datetime::operator<(const datetime& other) const {
-		return unix_time_ < other.unix_time_;
-	}
-
-	bool datetime::operator==(const datetime& other) const {
-		return unix_time_ == other.unix_time_;
-	}
-
 	datetime datetime::now() {
 		const auto date_time = boost::posix_time::second_clock::universal_time();
 		const auto date = date_time.date();

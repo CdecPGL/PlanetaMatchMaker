@@ -4,13 +4,12 @@
 #include <string>
 
 #include <boost/functional/hash.hpp>
-#include <boost/operators.hpp>
 
 #include "minimal_serializer/serializer.hpp"
 
 namespace pgl {
 	// 8 bytes
-	struct datetime final : private boost::less_than_comparable<datetime>, boost::equality_comparable<datetime> {
+	struct datetime final {
 		datetime() = default;
 		datetime(int year, int month, int day);
 		datetime(int year, int month, int day, int hour, int minute, int second);
@@ -29,9 +28,7 @@ namespace pgl {
 
 		[[nodiscard]] size_t get_hash() const;
 
-		bool operator<(const datetime& other) const;
-
-		bool operator==(const datetime& other) const;
+		auto operator<=>(const datetime& other) const = default;
 
 		static datetime now();
 
@@ -48,14 +45,10 @@ namespace pgl {
 }
 
 namespace boost {
-	inline size_t hash_value(const pgl::datetime& datetime) {
-		return datetime.get_hash();
-	}
+	inline size_t hash_value(const pgl::datetime& datetime) { return datetime.get_hash(); }
 }
 
 template <>
 struct std::hash<pgl::datetime> {
-	size_t operator()(const pgl::datetime& datetime) const noexcept {
-		return boost::hash_value(datetime);
-	}
+	size_t operator()(const pgl::datetime& datetime) const noexcept { return boost::hash_value(datetime); }
 };

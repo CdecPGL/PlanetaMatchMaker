@@ -1,4 +1,5 @@
 #include <iostream>
+//#include <syncstream>
 
 #include "console_logger.hpp"
 #include "logger_common.hpp"
@@ -20,6 +21,7 @@ namespace pgl {
 				break;
 		}
 
+		//std::osyncstream sos{*os};
 		output_formatted_log(*os, level, header, message);
 	}
 

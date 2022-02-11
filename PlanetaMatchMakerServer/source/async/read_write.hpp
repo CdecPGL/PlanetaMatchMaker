@@ -9,7 +9,6 @@
 namespace pgl {
 	/*
 	 * Send multi serializable data in one communication
-	 * todo: Reduce redundant copy. Currently, there are two copy steps (copy in serialization and copy in pack_data)
 	 */
 	template <serializable... Data>
 	void packed_async_write(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context yield,
@@ -20,7 +19,6 @@ namespace pgl {
 
 	/*
 	 * Receive multi serializable data in one communication
-	 * todo: Reduce redundant copy. Currently, there are two copy steps (copy in serialization and copy in pack_data)
 	 */
 	template <typename... Data> requires(serializable_all<Data...> && not_constant_all<Data...>)
 	void unpacked_async_read(boost::asio::ip::tcp::socket& socket, boost::asio::yield_context yield, Data& ... data) {
