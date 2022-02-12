@@ -38,6 +38,7 @@ namespace PlanetaGameLabo.MatchMaker
         NotHostingRoom,
         ConnectionClosed,
         CreatingPortMappingFailed,
+        ConnectionEstablishModeMismatch,
         NotReachable,
         InvalidOperation,
         SystemError, // Not continuable system error
@@ -70,6 +71,8 @@ namespace PlanetaGameLabo.MatchMaker
                     return "Unexpected error.";
                 case ClientErrorCode.CreatingPortMappingFailed:
                     return "Failed to create port mapping to NAT.";
+                case ClientErrorCode.ConnectionEstablishModeMismatch:
+                    return "Failed to operation because connection establish mode is different.";
                 case ClientErrorCode.NotReachable:
                     return "This machine is not reachable from machines via internet.";
                 case ClientErrorCode.SystemError:
@@ -92,6 +95,7 @@ namespace PlanetaGameLabo.MatchMaker
                 case ClientErrorCode.NotHostingRoom:
                 case ClientErrorCode.ConnectionClosed:
                 case ClientErrorCode.CreatingPortMappingFailed:
+                case ClientErrorCode.ConnectionEstablishModeMismatch:
                 case ClientErrorCode.NotReachable:
                 case ClientErrorCode.InvalidOperation:
                     return true;

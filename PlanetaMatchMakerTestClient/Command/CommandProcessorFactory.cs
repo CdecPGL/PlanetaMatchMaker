@@ -8,7 +8,7 @@ namespace PlanetaGameLabo.MatchMaker
         public static CommandProcessor Create()
         {
             var outputStream =
-                new StreamWriter(System.Console.OpenStandardOutput(), Console.OutputEncoding) {AutoFlush = true};
+                new StreamWriter(System.Console.OpenStandardOutput(), Console.OutputEncoding) { AutoFlush = true };
             var commandMap = new ICommandExecutor[]
             {
                 new ConnectCommandExecutor(outputStream), new DisconnectCommandExecutor(outputStream),
@@ -16,11 +16,12 @@ namespace PlanetaGameLabo.MatchMaker
                 new CreateRoomWithExternalServiceCommandExecutor(outputStream),
                 new CreateRoomWithCreatingPortMappingCommandExecutor(outputStream),
                 new ListRoomCommandExecutor(outputStream), new JoinRoomCommandExecutor(outputStream),
+                new JoinRoomWithExternalServiceCommandExecutor(outputStream),
                 new UpdateHostingRoomStatusCommandExecutor(outputStream),
                 new ConnectionTestCommandExecutor(outputStream), new CreatePortMappingCommandExecutor(outputStream),
                 new ShowPortMappingsCommandExecutor(outputStream),
-                new ReleasePortMappingsCommandExecutor(outputStream),
-                new TestAllCommandExecutor(outputStream), new StressTestConnectAndStayCommandExecutor(outputStream),
+                new ReleasePortMappingsCommandExecutor(outputStream), new TestAllCommandExecutor(outputStream),
+                new StressTestConnectAndStayCommandExecutor(outputStream),
                 new StressTestConnectAndDisconnectCommandExecutor(outputStream),
                 new StressTestGetRoomListCommandExecutor(outputStream)
             };
@@ -37,6 +38,7 @@ namespace PlanetaGameLabo.MatchMaker
         CreateRoomWithCreatingPortMapping,
         ListRoom,
         JoinRoom,
+        JoinRoomWithExternalService,
         UpdateHostingRoomStatus,
         ConnectionTest,
         CreatePortMapping,

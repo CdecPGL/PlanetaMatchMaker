@@ -1,4 +1,4 @@
-#if PMM_FacepunchSteamworks || true
+#if PMM_FacepunchSteamworks
 using System;
 using System.Threading.Tasks;
 using Steamworks;
@@ -35,19 +35,15 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         /// </summary>
         /// <param name="roomId"></param>
         /// <param name="password"></param>
-        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ClientErrorException">Establish connection mode of the room is different from indicated one.</exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns>Game host steam networking identity</returns>
         public static async Task<SteamId> JoinRoomWithSteamAsync(this MatchMakerClient client,
             uint roomId, string password = "")
         {
-            var response = await client.JoinRoomAsync(roomId, password).ConfigureAwait(false);
-            if (response.ConnectionEstablishMode != GameHostConnectionEstablishMode.Steam)
-            {
-                throw new InvalidOperationException(
-                    $"Connection establish mode of the room is not steam but {response.ConnectionEstablishMode}.");
-            }
-
+            var response = await client
+                .JoinRoomWithExternalServiceAsync(roomId, GameHostConnectionEstablishMode.Steam, password)
+                .ConfigureAwait(false);
             var steamId64 = response.GetExternalIdAsUInt64();
             SteamId steamId = steamId64;
 
