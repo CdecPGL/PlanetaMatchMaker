@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using CdecPGL.MinimalSerializer;
 
-#pragma warning disable CA1303
 namespace PlanetaGameLabo.MatchMaker
 {
     /// <summary>
@@ -487,7 +486,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task<(ushort totalRoomCount, ushort matchedRoomCount, ListRoomResultItem[] roomInfoList)>
             GetRoomListAsync(
-                byte startIndex, byte count, RoomDataSortKind sortKind,
+                ushort startIndex, ushort count, RoomDataSortKind sortKind,
                 RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All,
                 string searchName = "", ushort searchTag = PlayerFullName.NotAssignedTag)
         {
@@ -1177,4 +1176,3 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 }
-#pragma warning restore CA1303

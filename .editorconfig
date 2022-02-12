@@ -127,6 +127,7 @@ dotnet_naming_symbols.interfaces.applicable_kinds = interface
 dotnet_naming_symbols.interfaces.applicable_accessibilities = *
 dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
 dotnet_naming_symbols.type_parameters.applicable_accessibilities = *
+dotnet_diagnostic.CA1303.severity=silent
 
 ###############################
 # C# Code Style Rules         #

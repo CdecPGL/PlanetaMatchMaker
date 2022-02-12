@@ -178,8 +178,8 @@ The size is 32 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|start_index|8 bits unsigned integer|2|A start index of room data which will be replied from search results.|
-|count|8 bits unsigned integer|2|The number of room data which will be replied from search results.|
+|start_index|16 bits unsigned integer|2|A start index of room data which will be replied from search results.|
+|count|16 bits unsigned integer|2|The number of room data which will be replied from search results.|
 |sort_kind|8 bits unsigned integer|1|A sort kind of result.|
 |search_target_flags|8 bits unsigned integer|1|A flags to indicate search target.|
 |search_full_name|player_full_name|26|A query to search room by the room's host player name.|
@@ -216,9 +216,9 @@ The size is 252 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|total_room_count|8 bits unsigned integer|2|The number of rooms existing in the room group in the server.|
-|matched_room_count|8 bits unsigned integer|2|The number of rooms which match to the query of the room.|
-|reply_room_count|8 bits unsigned integer|2|The number of rooms which is included in reply messages.|
+|total_room_count|16 bits unsigned integer|2|The number of rooms existing in the room group in the server.|
+|matched_room_count|16 bits unsigned integer|2|The number of rooms which match to the query of the room.|
+|reply_room_count|16 bits unsigned integer|2|The number of rooms which is included in reply messages.|
 |room_info_list|A 6 elements array of room_info|246|A result room info list.|
 
 `room_info` is 41 bytes data as below.

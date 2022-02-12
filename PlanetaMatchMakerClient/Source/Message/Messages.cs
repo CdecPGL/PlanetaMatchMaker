@@ -176,6 +176,7 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public GameHostConnectionEstablishMode GameHostConnectionEstablishMode;
         public EndPoint GameHostEndPoint;
+
         [FixedLength(RoomConstants.GameHostExternalIdLength)]
         public byte[] GameHostExternalId;
     }
