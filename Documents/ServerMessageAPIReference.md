@@ -132,13 +132,22 @@ A request to create room.
 
 #### Parameters
 
-The size is 19 bytes.
+The size is 148 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |password|16 byte length UTF-8 string|16|A password of room you create. If this is empty, the room is created as a public room.|
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
-|port_number|16 bits unsigned integer|2|A port number which is used for game host.  to 65535 is available.|
+|signaling_method|8 bits unsigned integer|1|A method how to establish P2P connection.|
+|port_number|16 bits unsigned integer|2|A port number which is used for game host. 49152 to 65535 is available.|
+|external_id|128 elements byte array.|128|An id where clients connect using external service like Steam Networking.|
+
+Options of `game_host_signaling_method` are as below.
+
+|Name|Value|
+|:---|---:|
+|direct|0|
+|external_service|255|
 
 #### Reply
 
@@ -260,11 +269,20 @@ The size is 20 bytes.
 
 #### Reply
 
-The size is 18 bytes.
+The size is 147 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
+|game_host_signaling_method|8 bits unsigned integer|1|A method how to establish P2P connection.|
 |game_host_endpoint|endpoint|18|An endpoint of game host which is hosting the room you want to join.|
+|game_host_external_id|128 elements byte array.|128|An id to connect to the host using external service like Steam Networking.|
+
+Options of `game_host_signaling_method` are as below.
+
+|Name|Value|
+|:---|---:|
+|direct|0|
+|external_service|255|
 
 `game_host_endpoint` is 18 bytes data as below.
 
@@ -329,7 +347,7 @@ The size is 3 bytes.
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |protocol|8 bits unsigned integer|1|A transport prptocol to use for connection test.|
-|port_number|16 bits unsigned integer|2|A port number to use for connection test.  to 65535 is available.|
+|port_number|16 bits unsigned integer|2|A port number to use for connection test. 49152 to 65535 is available.|
 
 Options of `prptocol` are as below.
 
