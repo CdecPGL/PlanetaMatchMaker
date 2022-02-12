@@ -1,6 +1,6 @@
 namespace PlanetaGameLabo.MatchMaker
 {
-    public struct ListRoomResultItem
+    public readonly struct ListRoomResultItem
     {
         internal ListRoomResultItem(ListRoomReplyMessage.RoomInfo info)
         {
@@ -12,15 +12,15 @@ namespace PlanetaGameLabo.MatchMaker
             CreateDatetime = info.CreateDatetime;
         }
 
-        public readonly uint RoomId;
-        public readonly PlayerFullName HostPlayerFullName;
-        public readonly RoomSettingFlag SettingFlags;
-        public readonly byte MaxPlayerCount;
-        public readonly byte CurrentPlayerCount;
-        public readonly Datetime CreateDatetime;
+        public uint RoomId { get; }
+        public PlayerFullName HostPlayerFullName { get; }
+        public RoomSettingFlag SettingFlags { get; }
+        public byte MaxPlayerCount { get; }
+        public byte CurrentPlayerCount { get; }
+        public Datetime CreateDatetime { get; }
     }
 
-    public struct CreateRoomResult
+    public readonly struct CreateRoomResult
     {
         internal CreateRoomResult(uint roomId, RoomSettingFlag settingFlags, byte maxPlayerCount,
             byte currentPlayerCount)
@@ -31,13 +31,13 @@ namespace PlanetaGameLabo.MatchMaker
             CurrentPlayerCount = currentPlayerCount;
         }
 
-        public readonly uint RoomId;
-        public readonly RoomSettingFlag SettingFlags;
-        public readonly byte MaxPlayerCount;
-        public readonly byte CurrentPlayerCount;
+        public uint RoomId { get; }
+        public RoomSettingFlag SettingFlags { get; }
+        public byte MaxPlayerCount { get; }
+        public byte CurrentPlayerCount { get; }
     }
 
-    public struct CreateRoomWithCreatingPortMappingResult
+    public readonly struct CreateRoomWithCreatingPortMappingResult
     {
         public CreateRoomWithCreatingPortMappingResult(bool isDefaultPortUsed, ushort usedPrivatePortFromCandidates,
             ushort usedPublicPortFromCandidates, CreateRoomResult creteRoomResult)
@@ -48,9 +48,9 @@ namespace PlanetaGameLabo.MatchMaker
             CreteRoomResult = creteRoomResult;
         }
 
-        public readonly bool IsDefaultPortUsed;
-        public readonly ushort UsedPrivatePortFromCandidates;
-        public readonly ushort UsedPublicPortFromCandidates;
-        public readonly CreateRoomResult CreteRoomResult;
+        public bool IsDefaultPortUsed { get; }
+        public ushort UsedPrivatePortFromCandidates { get; }
+        public ushort UsedPublicPortFromCandidates { get; }
+        public CreateRoomResult CreteRoomResult { get; }
     }
 }
