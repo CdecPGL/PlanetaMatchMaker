@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -106,7 +105,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         public byte MaxPlayerCount;
 
-        public RoomSignalingMethod SignalingMethod;
+        public GameHostSignalingMethod SignalingMethod;
 
         public ushort PortNumber;
 
@@ -175,7 +174,7 @@ namespace PlanetaGameLabo.MatchMaker
     [Message(MessageType.JoinRoomReply)]
     internal struct JoinRoomReplyMessage
     {
-        public RoomSignalingMethod GameHostSignalingMethod;
+        public GameHostSignalingMethod GameHostSignalingMethod;
         public EndPoint GameHostEndPoint;
         [FixedLength(RoomConstants.RoomGameHostExternalIdLength)]
         public byte[] GameHostExternalId;

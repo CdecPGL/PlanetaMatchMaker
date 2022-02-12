@@ -36,7 +36,7 @@ namespace PlanetaGameLabo.MatchMaker
         CreateDatetimeDescending
     }
 
-    public enum RoomSignalingMethod : byte
+    public enum GameHostSignalingMethod : byte
     {
         Direct,
         ExternalService = 0xff

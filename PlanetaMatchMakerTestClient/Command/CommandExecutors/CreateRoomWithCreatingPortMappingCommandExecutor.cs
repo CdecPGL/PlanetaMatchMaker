@@ -9,7 +9,7 @@ namespace PlanetaGameLabo.MatchMaker
         CreateRoomWithCreatingPortMappingCommandExecutor : StandardCommandExecutorBase<
             CreateRoomWithCreatingPortMappingCommandOptions>
     {
-        public override string Explanation => "Create room to indicated room group with creating port mapping if need.";
+        public override string Explanation => "Create a room with creating port mapping if need.";
         public override Command command => Command.CreateRoomWithCreatingPortMapping;
 
         public CreateRoomWithCreatingPortMappingCommandExecutor(StreamWriter outputStream) : base(outputStream)

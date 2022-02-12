@@ -6,7 +6,7 @@ namespace PlanetaGameLabo.MatchMaker
 {
     internal class CreateRoomCommandExecutor : StandardCommandExecutorBase<CreateRoomCommandOptions>
     {
-        public override string Explanation => "Create room to indicated room group.";
+        public override string Explanation => "Create a room.";
         public override Command command => Command.CreateRoom;
 
         public CreateRoomCommandExecutor(StreamWriter outputStream) : base(outputStream)
