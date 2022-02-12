@@ -8,6 +8,9 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PlanetaGameLabo.MatchMaker.Test
@@ -94,6 +97,25 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void InvalidGameHostPortValidationTest(ushort port)
         {
             Assert.IsFalse(Validator.ValidateGameHostPort(port));
+        }
+
+        [DataTestMethod]
+        [DataRow(new byte[0])]
+        public void ValidGameHostExternalIdValidationTest(byte[] externalId)
+        {
+            Assert.IsTrue(Validator.ValidateGameHostExternalId(externalId));
+        }
+
+        [TestMethod]
+        public void ValidListLengthGameHostExternalIdValidationTest()
+        {
+            Assert.IsTrue(Validator.ValidateGameHostExternalId(Enumerable.Repeat<byte>(1, RoomConstants.RoomGameHostExternalIdLength).ToArray()));
+        }
+
+        [TestMethod]
+        public void InvalidGameHostExternalIdValidationTest()
+        {
+            Assert.IsFalse(Validator.ValidateGameHostExternalId(Enumerable.Repeat<byte>(1, RoomConstants.RoomGameHostExternalIdLength+1).ToArray()));
         }
 
         [DataTestMethod]

@@ -69,6 +69,17 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
+        /// Validate a room game host external id.
+        /// Not null string whose length is not more than limit is valid.
+        /// </summary>
+        /// <param name="externalId"></param>
+        /// <returns></returns>
+        public static bool ValidateGameHostExternalId(byte[] externalId)
+        {
+            return externalId != null && externalId.Length <= RoomConstants.RoomGameHostExternalIdLength;
+        }
+
+        /// <summary>
         /// Validate a room password.
         /// Not null string whose length is not more than limit is valid.
         /// </summary>

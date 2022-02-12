@@ -35,4 +35,10 @@ namespace PlanetaGameLabo.MatchMaker
         CreateDatetimeAscending,
         CreateDatetimeDescending
     }
+
+    public enum RoomSignalingMethod : byte
+    {
+        Direct,
+        ExternalService = 0xff
+    }
 }

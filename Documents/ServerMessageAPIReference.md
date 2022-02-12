@@ -144,10 +144,10 @@ The size is 148 bytes.
 
 Options of `game_host_signaling_method` are as below.
 
-|Name|Value|
-|:---|---:|
-|direct|0|
-|external_service|255|
+|Name|Value|Reference Property|
+|:---|---:|:---|
+|direct|0|port_number|
+|external_service|255|external_id|
 
 #### Reply
 
@@ -279,10 +279,10 @@ The size is 147 bytes.
 
 Options of `game_host_signaling_method` are as below.
 
-|Name|Value|
-|:---|---:|
-|direct|0|
-|external_service|255|
+|Name|Value|Reference Property|
+|:---|---:|:---|
+|direct|0|game_host_endpoint|
+|external_service|255|game_host_external_id|
 
 `game_host_endpoint` is 18 bytes data as below.
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -211,6 +212,53 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 return await CreateRoomCoreAsync(portNumber, maxPlayerCount, password)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// Create and host new room which uses external se to the server.
+        /// </summary>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="externalId">The ID in external service for signaling.</param>
+        /// <param name="password"></param>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        public async Task<CreateRoomResult> CreateRoomWithExternalServiceAsync(byte maxPlayerCount, byte[] externalId,
+            string password = "")
+        {
+            if (!Validator.ValidateGameHostExternalId(externalId))
+            {
+                throw new ArgumentException($"External id whose length is more than {RoomConstants.RoomGameHostExternalIdLength} is not available.");
+            }
+
+            if (!Validator.ValidateRoomPassword(password))
+            {
+                throw new ArgumentException(
+                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
+                    nameof(password));
+            }
+
+            await semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (!Connected)
+                {
+                    throw new ClientErrorException(ClientErrorCode.NotConnected);
+                }
+
+                if (IsHostingRoom)
+                {
+                    throw new ClientErrorException(ClientErrorCode.AlreadyHostingRoom,
+                        "The client can host only one room.");
+                }
+
+                return await CreateRoomWithExternalServiceCoreAsync(externalId, maxPlayerCount, password)
                     .ConfigureAwait(false);
             }
             finally
@@ -506,8 +554,8 @@ namespace PlanetaGameLabo.MatchMaker
                     $"Send JoinRoomRequest. ({nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.Password)}: {requestBody.Password})");
 
                 var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>().ConfigureAwait(false);
-                Logger.Log(LogLevel.Info,
-                    $"Receive JoinRoomReply. ({nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint})");
+                Logger.Log(LogLevel.Info, 
+                    $"Receive JoinRoomReply. ({nameof(replyBody.GameHostSignalingMethod)}: {replyBody.GameHostSignalingMethod}, {nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint}, {nameof(replyBody.GameHostExternalId)}: {string.Join("", replyBody.GameHostExternalId.Select(b => $"{b:X00}"))})");
 
                 Close();
                 return (IPEndPoint)replyBody.GameHostEndPoint;
@@ -766,11 +814,53 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var requestBody = new CreateRoomRequestMessage
             {
-                Password = password, MaxPlayerCount = maxPlayerCount, portNumber = portNumber
+                Password = password,
+                MaxPlayerCount = maxPlayerCount, 
+                SignalingMethod = RoomSignalingMethod.Direct,
+                PortNumber = portNumber,
+                ExternalId = Enumerable.Repeat<byte>(0, RoomConstants.RoomGameHostExternalIdLength).ToArray()
             };
             await SendRequestAsync(requestBody).ConfigureAwait(false);
             Logger.Log(LogLevel.Info,
-                $"Send CreateRoomRequest. ({nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.portNumber)}: {requestBody.portNumber})");
+                $"Send CreateRoomRequest. ({nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.PortNumber)}: {requestBody.PortNumber})");
+
+            var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>().ConfigureAwait(false);
+            Logger.Log(LogLevel.Info, $"Receive CreateRoomReply. ({nameof(replyBody.RoomId)}: {replyBody.RoomId})");
+            // In server, the room  is created as open room and which has 1 player.
+            IsHostingRoom = true;
+            HostingRoomId = replyBody.RoomId;
+            HostingRoomSettingFlags =
+                (string.IsNullOrEmpty(password) ? RoomSettingFlag.PublicRoom : RoomSettingFlag.None) &
+                RoomSettingFlag.OpenRoom;
+            return new CreateRoomResult(HostingRoomId, HostingRoomSettingFlags, maxPlayerCount, 1);
+        }
+
+        /// <summary>
+        /// Create and host new room which uses external service as signaling method to the server without try block and parameter validations.
+        /// </summary>
+        /// <param name="externalId">The port number which is used for accept TCP connection of game</param>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="password"></param>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        private async Task<CreateRoomResult> CreateRoomWithExternalServiceCoreAsync(byte[] externalId, byte maxPlayerCount,
+            string password = "")
+        {
+            var resizedExternalId = new byte[RoomConstants.RoomGameHostExternalIdLength];
+            Array.Copy(externalId, resizedExternalId, externalId.Length);
+
+            var requestBody = new CreateRoomRequestMessage
+            {
+                Password = password,
+                MaxPlayerCount = maxPlayerCount,
+                SignalingMethod = RoomSignalingMethod.ExternalService,
+                PortNumber = 0,
+                ExternalId = resizedExternalId
+            };
+            await SendRequestAsync(requestBody).ConfigureAwait(false);
+            Logger.Log(LogLevel.Info,
+                $"Send CreateRoomRequest. ({nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.ExternalId)}: {string.Join("", requestBody.ExternalId.Select(b => $"{b:X00}"))})");
 
             var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>().ConfigureAwait(false);
             Logger.Log(LogLevel.Info, $"Receive CreateRoomReply. ({nameof(replyBody.RoomId)}: {replyBody.RoomId})");

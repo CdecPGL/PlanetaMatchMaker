@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
@@ -95,7 +96,7 @@ namespace PlanetaGameLabo.MatchMaker
         public ushort PlayerTag;
     }
 
-    // 19 bytes
+    // 148 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     internal struct CreateRoomRequestMessage
@@ -105,7 +106,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public byte MaxPlayerCount;
 
-        public ushort portNumber;
+        public RoomSignalingMethod SignalingMethod;
+
+        public ushort PortNumber;
+
+        [FixedLength(RoomConstants.RoomGameHostExternalIdLength)]
+        public byte[] ExternalId;
     }
 
     // 4 bytes
@@ -164,12 +170,15 @@ namespace PlanetaGameLabo.MatchMaker
         public string Password;
     }
 
-    //18 bytes
+    // 147 bytes
     [Serializable]
     [Message(MessageType.JoinRoomReply)]
     internal struct JoinRoomReplyMessage
     {
+        public RoomSignalingMethod GameHostSignalingMethod;
         public EndPoint GameHostEndPoint;
+        [FixedLength(RoomConstants.RoomGameHostExternalIdLength)]
+        public byte[] GameHostExternalId;
     }
 
     // 7 bytes
