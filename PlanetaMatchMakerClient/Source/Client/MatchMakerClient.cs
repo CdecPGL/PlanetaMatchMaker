@@ -95,14 +95,14 @@ namespace PlanetaGameLabo.MatchMaker
 
             if (!Validator.ValidateServerPort(serverPort))
             {
-                throw new ArgumentException("0 is not available.", nameof(serverAddress));
+                throw new ArgumentException("0 is not available.", nameof(serverPort));
             }
 
             if (!Validator.ValidatePlayerName(playerName))
             {
                 throw new ArgumentException(
                     $"null string or string whose length is more than {ClientConstants.PlayerNameLength} is not available.",
-                    nameof(serverAddress));
+                    nameof(playerName));
             }
 
             await semaphore.WaitAsync().ConfigureAwait(false);
