@@ -18,9 +18,10 @@ namespace pgl {
 	template <>
 	struct enum_concept::has_bitwise_operators<room_setting_flag> : std::true_type {};
 
-	enum class room_game_host_signaling_method : uint8_t {
-		direct,
-		external_service = 0xff,
+	enum class game_host_connection_establish_mode : uint8_t {
+		builtin,
+		steam,
+		others = 0xff,
 	};
 
 	struct room_data final {
@@ -31,9 +32,9 @@ namespace pgl {
 		uint8_t max_player_count;
 		datetime create_datetime;
 		endpoint host_endpoint;
-		room_game_host_signaling_method game_host_signaling_method;
+		game_host_connection_establish_mode game_host_signaling_method;
 		endpoint game_host_endpoint;
-		room_game_host_external_id_t game_host_external_id;
+		game_host_external_id_t game_host_external_id;
 		uint8_t current_player_count;
 	};
 

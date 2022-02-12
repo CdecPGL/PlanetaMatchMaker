@@ -1,31 +1,24 @@
 using System;
 using System.Linq;
 using System.Net;
+using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
 {
     public readonly struct RoomHostEndpoint : IEquatable<RoomHostEndpoint>
     {
-        internal RoomHostEndpoint(GameHostSignalingMethod signalingMethod, IPEndPoint ipEndpoint, byte[] externalId)
+        internal RoomHostEndpoint(GameHostConnectionEstablishMode connectionEstablishMode, IPEndPoint ipEndpoint,
+            byte[] externalId)
         {
-            SignalingMethod = signalingMethod;
+            ConnectionEstablishMode = connectionEstablishMode;
             IPEndpoint = ipEndpoint;
             ExternalId = externalId;
-
-            try
-            {
-                ExternalIdString = Utility.ConvertFixedLengthArrayToString(ExternalId);
-            }
-            catch (ArgumentException)
-            {
-                ExternalIdString = null;
-            }
         }
 
         /// <summary>
         /// A signaling method to connect to the host.
         /// </summary>
-        public GameHostSignalingMethod SignalingMethod { get; }
+        public GameHostConnectionEstablishMode ConnectionEstablishMode { get; }
 
         /// <summary>
         /// An IP endpoint of the game host when signaling method is direct.
@@ -38,10 +31,50 @@ namespace PlanetaGameLabo.MatchMaker
         public byte[] ExternalId { get; }
 
         /// <summary>
-        /// An string which is generated from the external service ID as UTF-8 of game host when signaling method is external service.
-        /// This property will be null if external service ID is not UTF-8 string.
+        /// Get external id as UTF-8 string.
         /// </summary>
-        public string ExternalIdString { get; }
+        /// <exception cref="ArgumentException">The external id is not UTF-8 string.</exception>
+        /// <returns></returns>
+        public string GetExternalIdAsString()
+        {
+            return Utility.ConvertFixedLengthArrayToString(ExternalId);
+        }
+
+        /// <summary>
+        /// Get external id as uint64.
+        /// </summary>
+        /// <returns></returns>
+        public ulong GetExternalIdAsUInt64()
+        {
+            var size = Serializer.GetSerializedSize<ulong>();
+            var data = new byte[size];
+            Array.Copy(ExternalId, data, size);
+            return Serializer.Deserialize<ulong>(data);
+        }
+
+        /// <summary>
+        /// Get external id as uint32.
+        /// </summary>
+        /// <returns></returns>
+        public uint GetExternalIdAsUInt32()
+        {
+            var size = Serializer.GetSerializedSize<uint>();
+            var data = new byte[size];
+            Array.Copy(ExternalId, data, size);
+            return Serializer.Deserialize<uint>(data);
+        }
+
+        /// <summary>
+        /// Get external id as uint16.
+        /// </summary>
+        /// <returns></returns>
+        public ushort GetExternalIdAsUInt16()
+        {
+            var size = Serializer.GetSerializedSize<ushort>();
+            var data = new byte[size];
+            Array.Copy(ExternalId, data, size);
+            return Serializer.Deserialize<ushort>(data);
+        }
 
         public override bool Equals(object obj)
         {
@@ -64,7 +97,10 @@ namespace PlanetaGameLabo.MatchMaker
         public override int GetHashCode()
         {
             var externalIdByteString = string.Join("", ExternalId.Select(b => $"{b:X00}"));
-            return new { SignalingMethod, IPEndpoint, externalIdString = externalIdByteString }.GetHashCode();
+            return new
+            {
+                SignalingMethod = ConnectionEstablishMode, IPEndpoint, externalIdString = externalIdByteString
+            }.GetHashCode();
         }
 
         public static bool operator ==(RoomHostEndpoint left, RoomHostEndpoint right)
@@ -79,7 +115,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(RoomHostEndpoint other)
         {
-            return SignalingMethod == other.SignalingMethod && IPEndpoint.Equals(other.IPEndpoint) &&
+            return ConnectionEstablishMode == other.ConnectionEstablishMode && IPEndpoint.Equals(other.IPEndpoint) &&
                    ExternalId.SequenceEqual(other.ExternalId);
         }
     }

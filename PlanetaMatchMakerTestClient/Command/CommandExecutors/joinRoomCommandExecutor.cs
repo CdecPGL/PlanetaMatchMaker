@@ -20,7 +20,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var roomEndpoint =
                 await sharedClient.JoinRoomAsync(options.Id, options.Password);
-            OutputStream.WriteLine($"Obtain game host signaling mode: {roomEndpoint.SignalingMethod}");
+            OutputStream.WriteLine($"Obtain game host signaling mode: {roomEndpoint.ConnectionEstablishMode}");
             OutputStream.WriteLine($"Obtain game host endpoint of room: {roomEndpoint.IPEndpoint}");
             OutputStream.WriteLine($"Obtain game host external id of room: {string.Join("",roomEndpoint.ExternalId.Select(b=>$"{b:X00}"))} ({roomEndpoint.ExternalIdString})");
             OutputStream.WriteLine("Connection will be closed.");

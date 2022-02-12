@@ -10,15 +10,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 using System;
 
-namespace CdecPGL.MinimalSerializer
-{
+namespace CdecPGL.MinimalSerializer {
     [AttributeUsage(AttributeTargets.Field)]
-    public sealed class FixedLengthAttribute : Attribute
-    {
+    public sealed class FixedLengthAttribute : Attribute {
         public int Length { get; }
 
-        public FixedLengthAttribute(int length)
-        {
+        public FixedLengthAttribute(int length) {
             Length = length;
         }
     }

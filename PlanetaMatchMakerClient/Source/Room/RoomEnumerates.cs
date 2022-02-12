@@ -36,9 +36,10 @@ namespace PlanetaGameLabo.MatchMaker
         CreateDatetimeDescending
     }
 
-    public enum GameHostSignalingMethod : byte
+    public enum GameHostConnectionEstablishMode : byte
     {
-        Direct,
-        ExternalService = 0xff
+        Builtin,
+        Steam,
+        Others = 0xff
     }
 }

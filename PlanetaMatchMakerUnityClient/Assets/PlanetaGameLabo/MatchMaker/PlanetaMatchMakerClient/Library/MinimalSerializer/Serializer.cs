@@ -34,6 +34,11 @@ namespace CdecPGL.MinimalSerializer
 
         public static byte[] Serialize(object obj)
         {
+            if (obj == null)
+            {
+                throw new InvalidSerializationException("Null reference is not serializable.");
+            }
+
             var size = GetSerializedSize(obj.GetType());
             var data = new byte[size];
             var pos = 0;
@@ -123,8 +128,7 @@ namespace CdecPGL.MinimalSerializer
             }
             else
             {
-                ThrowNotSerializableException(type);
-                throw new InvalidSerializationException("Logical error of serializable check.");
+                throw CreateNotSerializableException(type);
             }
 
             serializedSizeCache.TryAdd(type, size);
@@ -149,11 +153,7 @@ namespace CdecPGL.MinimalSerializer
 
         private static int GetSerializedSizeOfFieldSerializableType(FieldInfo field, Type type)
         {
-            // check cache here because this method doesn't called by GetSerializableSizeImpl, which checks cache
-            if (serializedSizeCache.ContainsKey(type))
-            {
-                return serializedSizeCache[type];
-            }
+            // field serialize type is not same size between same type, so not cache the size
 
             int size;
             if (type == typeof(string))
@@ -212,18 +212,12 @@ namespace CdecPGL.MinimalSerializer
             }
             else
             {
-                ThrowNotSerializableException(type);
-                throw new InvalidSerializationException("Logical error of serializable check.");
+                throw CreateNotSerializableException(type);
             }
         }
 
         private static void SerializeDirectSerializableType(object obj, byte[] destination, ref int pos)
         {
-            if (obj == null)
-            {
-                throw new InvalidSerializationException("Null reference is not serializable.");
-            }
-
             var type = obj.GetType();
             if (type.IsEnum)
             {
@@ -284,12 +278,6 @@ namespace CdecPGL.MinimalSerializer
             ref int pos)
         {
             var obj = field.GetValue(ownerObj);
-            if (obj == null)
-            {
-                throw new InvalidSerializationException(
-                    $"Null reference is not serializable.({field.Name} in {ownerObj})");
-            }
-
             if (field.FieldType == typeof(string))
             {
                 var maxLength = GetLengthOfFixedLengthAttribute(field);
@@ -331,11 +319,6 @@ namespace CdecPGL.MinimalSerializer
 
         private static void SerializeComplexSerializableType(object obj, byte[] destination, ref int pos)
         {
-            if (obj == null)
-            {
-                throw new InvalidSerializationException("Null reference is not serializable.");
-            }
-
             var type = obj.GetType();
             foreach (var field in GetFieldsOfComplexSerializableType(type))
             {
@@ -367,8 +350,7 @@ namespace CdecPGL.MinimalSerializer
             }
             else
             {
-                ThrowNotSerializableException(type);
-                throw new InvalidSerializationException("Logical error of serializable check.");
+                throw CreateNotSerializableException(type);
             }
         }
 
@@ -486,10 +468,11 @@ namespace CdecPGL.MinimalSerializer
 
         private static bool IsComplexSerializableType(Type type)
         {
-            return type.IsLayoutSequential && type.IsSerializable && GetFieldsOfComplexSerializableType(type).Length > 0;
+            // Except decimal directly because decimal is not primitive type so IsPrimitive is not available.
+            return type.IsLayoutSequential && type.IsSerializable && GetFieldsOfComplexSerializableType(type).Length > 0 && !type.IsPrimitive && type != typeof(decimal);
         }
 
-        private static void ThrowNotSerializableException(Type type)
+        private static InvalidSerializationException CreateNotSerializableException(Type type)
         {
             throw new InvalidSerializationException(
                 $"The type ({type}) is not serializable. Primitive types, fixed string, fixed array and class (struct) which is sequential and serializable are available.");

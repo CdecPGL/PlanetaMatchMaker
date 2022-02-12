@@ -76,7 +76,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateGameHostExternalId(byte[] externalId)
         {
-            return externalId != null && externalId.Length <= RoomConstants.RoomGameHostExternalIdLength;
+            return externalId != null && externalId.Length <= RoomConstants.GameHostExternalIdLength;
         }
 
         /// <summary>

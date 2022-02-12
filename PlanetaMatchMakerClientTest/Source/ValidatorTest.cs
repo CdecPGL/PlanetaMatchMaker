@@ -109,13 +109,13 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [TestMethod]
         public void ValidListLengthGameHostExternalIdValidationTest()
         {
-            Assert.IsTrue(Validator.ValidateGameHostExternalId(Enumerable.Repeat<byte>(1, RoomConstants.RoomGameHostExternalIdLength).ToArray()));
+            Assert.IsTrue(Validator.ValidateGameHostExternalId(Enumerable.Repeat<byte>(1, RoomConstants.GameHostExternalIdLength).ToArray()));
         }
 
         [TestMethod]
         public void InvalidGameHostExternalIdValidationTest()
         {
-            Assert.IsFalse(Validator.ValidateGameHostExternalId(Enumerable.Repeat<byte>(1, RoomConstants.RoomGameHostExternalIdLength+1).ToArray()));
+            Assert.IsFalse(Validator.ValidateGameHostExternalId(Enumerable.Repeat<byte>(1, RoomConstants.GameHostExternalIdLength+1).ToArray()));
         }
 
         [DataTestMethod]

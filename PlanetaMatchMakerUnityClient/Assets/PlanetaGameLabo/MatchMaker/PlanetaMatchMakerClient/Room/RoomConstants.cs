@@ -4,5 +4,6 @@ namespace PlanetaGameLabo.MatchMaker
     {
         public const int RoomPasswordLength = 16;
         public const int ListRoomReplyRoomInfoCount = 6;
+        public const int RoomGameHostExternalIdLength = 128;
     }
 }

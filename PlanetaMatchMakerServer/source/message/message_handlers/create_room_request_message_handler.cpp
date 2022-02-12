@@ -71,7 +71,7 @@ namespace pgl {
 				message.max_player_count,
 				datetime::now(),
 				host_endpoint,
-				message.signaling_method,
+				message.connection_establish_mode,
 				game_host_endpoint,
 				message.external_id,
 				1

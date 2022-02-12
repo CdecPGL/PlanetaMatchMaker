@@ -13,7 +13,9 @@ Server binary for linux and windows, and client library for C# including Unity a
 
 - Creating room and joining room
 - Searching room by owners name
-- Port mapping auto creation by UPnP which allows NAT traversal
+- NAT traversal
+  - Builtin Mode: Attemt to establish P2P connection by port mapping auto creation with UPnP
+  - Steam Relay Mode: Help to exchange SteamID64 to establish P2P connection for Steam relay service
 - (Not implemented now) Random Matching
 
 ## Platforms
@@ -36,7 +38,9 @@ A library by below languages and platforms.
 
 You can easily install and use server and client.
 
-### Server (Docker)
+### Server
+
+#### Docker
 
 You can very easily install server by using docker by following steps.
 
@@ -54,7 +58,7 @@ You may need to set firewall to acceppt recieve connection of TCP port which is 
 
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
-### Server (Mannual)
+#### Mannual
 
 In linux and windows, you can install server by manually by following steps.
 
@@ -67,20 +71,36 @@ You may need to set firewall to acceppt recieve connection of TCP port which is 
 
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
-### C# Client
+### Client
+
+#### C#
 
 1. Download source codes from release page or clone this repogitory
 1. Put source codes in `PlanetaMatchMakerClient/Source` directory to your project
 
-### Unity Client (Unity Package)
+#### Unity (Unity Package)
 
 1. Download unity package from release page
 1. Import the unity package to your project
 
-### Unity Client (Mannual)
+#### Unity (Mannual)
 
 1. Download source codes from release page or clone this repogitory
 1. Copy all files in `PlanetaMatchMakerUnityClient/Assets` to `Assets` directory of your unity project
+
+### Steam Integration in Client
+
+1. Place steamworks library for C# in below table
+1. Define macro in below table
+1. Add `using PlanetaGameLabo.MatchMaker.Extentions;` in your code
+1. Use `MatchMakerClient.CreateRoomWithSteamAsync` and `MatchMakerClient.JoinRoomWithSteamAsync`
+
+Note that enabling `Facepunch.Steamworks` and `Steamworks.NET` at same time is not supported.
+
+|Name|Macro|Repository|
+|:---|:---|:---|
+|Facepunch.Steamworks|PMM_FacepunchSteamworks|[URL](https://github.com/Facepunch/Facepunch.Steamworks)|
+|Steamworks.NET|PMM_SteamworksNET|[URL](https://github.com/rlabrecque/Steamworks.NET)|
 
 ## Documents
 

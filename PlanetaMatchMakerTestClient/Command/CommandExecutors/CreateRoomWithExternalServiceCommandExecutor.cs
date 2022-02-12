@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    internal class CreateRoomWithExternalServiceCommandExecutor : StandardCommandExecutorBase<CreateRoomWithExternalServiceCommandOptions>
+    internal class
+        CreateRoomWithExternalServiceCommandExecutor : StandardCommandExecutorBase<
+            CreateRoomWithExternalServiceCommandOptions>
     {
         public override string Explanation => "Create a room with external service ID.";
         public override Command command => Command.CreateRoomWithExternalService;
@@ -17,7 +19,8 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomWithExternalServiceCommandOptions options,
             CancellationToken cancellationToken)
         {
-            await sharedClient.CreateRoomWithExternalServiceAsync(options.MaxPlayerCount, options.ExternalId, options.Password);
+            await sharedClient.CreateRoomWithExternalServiceAsync(options.MaxPlayerCount,
+                options.ConnectionEstablishMode, options.ExternalId, options.Password);
             OutputStream.WriteLine($"Room created with id \"{sharedClient.HostingRoomId}\".");
         }
     }
@@ -28,7 +31,11 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Max player count of room.")]
         public byte MaxPlayerCount { get; set; }
 
-        [CommandLine.Value(2, MetaName = "external_id", Required = true,
+        [CommandLine.Value(2, MetaName = "connection_establish_mode", Required = true,
+            HelpText = "A way how clients connect to the host.")]
+        public GameHostConnectionEstablishMode ConnectionEstablishMode { get; set; }
+
+        [CommandLine.Value(3, MetaName = "external_id", Required = true,
             HelpText = "An ID of eternal service for signaling.")]
         public string ExternalId { get; set; }
 
