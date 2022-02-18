@@ -24,7 +24,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             // Add '\0' if need
             var destination = new byte[Math.Min(arrayLength, rawArray.Length + 1)];
-            for (var i = 0; i < arrayLength; ++i)
+            for (var i = 0; i < arrayLength && i < rawArray.Length + 1; ++i)
             {
                 destination[i] = i < rawArray.Length ? rawArray[i] : (byte)'\0';
             }

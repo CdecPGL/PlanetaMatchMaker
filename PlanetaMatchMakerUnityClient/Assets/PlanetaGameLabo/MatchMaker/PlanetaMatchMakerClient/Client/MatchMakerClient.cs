@@ -5,8 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using CdecPGL.MinimalSerializer;
 
-#pragma warning disable CA1303
 namespace PlanetaGameLabo.MatchMaker
 {
     /// <summary>
@@ -95,14 +95,14 @@ namespace PlanetaGameLabo.MatchMaker
 
             if (!Validator.ValidateServerPort(serverPort))
             {
-                throw new ArgumentException("0 is not available.", nameof(serverAddress));
+                throw new ArgumentException("0 is not available.", nameof(serverPort));
             }
 
             if (!Validator.ValidatePlayerName(playerName))
             {
                 throw new ArgumentException(
                     $"null string or string whose length is more than {ClientConstants.PlayerNameLength} is not available.",
-                    nameof(serverAddress));
+                    nameof(playerName));
             }
 
             await semaphore.WaitAsync().ConfigureAwait(false);
@@ -133,7 +133,7 @@ namespace PlanetaGameLabo.MatchMaker
 
                 // Authentication Request
                 var requestBody =
-                    new AuthenticationRequestMessage {Version = ClientConstants.ApiVersion, PlayerName = playerName};
+                    new AuthenticationRequestMessage { Version = ClientConstants.ApiVersion, PlayerName = playerName };
                 await SendRequestAsync(requestBody).ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
                     $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(playerName)}: {playerName})");
@@ -141,7 +141,7 @@ namespace PlanetaGameLabo.MatchMaker
                 Logger.Log(LogLevel.Info,
                     $"Receive AuthenticationReply. ({nameof(replyBody.SessionKey)}: {replyBody.SessionKey}, {nameof(replyBody.Version)}: {replyBody.Version}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
                 sessionKey = replyBody.SessionKey;
-                PlayerFullName = new PlayerFullName {Name = playerName, Tag = replyBody.PlayerTag};
+                PlayerFullName = new PlayerFullName { Name = playerName, Tag = replyBody.PlayerTag };
 
                 keepAliveSenderNotificator.StartKeepAliveProc();
                 return PlayerFullName;
@@ -210,13 +210,108 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                return await CreateRoomCoreAsync(portNumber, maxPlayerCount, password)
+                return await CreateRoomCoreAsync(GameHostConnectionEstablishMode.Builtin, portNumber,
+                        Array.Empty<byte>(), maxPlayerCount, password)
                     .ConfigureAwait(false);
             }
             finally
             {
                 semaphore.Release();
             }
+        }
+
+        /// <summary>
+        /// Create and host new room which uses external se to the server.
+        /// </summary>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="connectionEstablishMode"></param>
+        /// <param name="externalId">The ID in external service for connection establishment.</param>
+        /// <param name="password"></param>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        public async Task<CreateRoomResult> CreateRoomWithExternalServiceAsync(byte maxPlayerCount,
+            GameHostConnectionEstablishMode connectionEstablishMode, byte[] externalId, string password = "")
+        {
+            if (!Validator.ValidateGameHostExternalId(externalId))
+            {
+                throw new ArgumentException(
+                    $"External id whose length is more than {RoomConstants.GameHostExternalIdLength} is not available.");
+            }
+
+            if (!Validator.ValidateRoomPassword(password))
+            {
+                throw new ArgumentException(
+                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
+                    nameof(password));
+            }
+
+            if (connectionEstablishMode == GameHostConnectionEstablishMode.Builtin)
+            {
+                throw new ArgumentException(
+                    $"Use ${nameof(CreateRoomAsync)} or ${nameof(CreateRoomWithCreatingPortMappingAsync)} if you want to use GameHostConnectionEstablishMode.Builtin.",
+                    nameof(connectionEstablishMode));
+            }
+
+            await semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (!Connected)
+                {
+                    throw new ClientErrorException(ClientErrorCode.NotConnected);
+                }
+
+                if (IsHostingRoom)
+                {
+                    throw new ClientErrorException(ClientErrorCode.AlreadyHostingRoom,
+                        "The client can host only one room.");
+                }
+
+                return await CreateRoomCoreAsync(connectionEstablishMode, 0, externalId, maxPlayerCount, password)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// Create and host new room which uses external se to the server.
+        /// </summary>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="connectionEstablishMode"></param>
+        /// <param name="externalId">The ID in external service for connection establishment. string, uint64, uint32 and uint16 are supported.</param>
+        /// <param name="password"></param>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        public async Task<CreateRoomResult> CreateRoomWithExternalServiceAsync<T>(byte maxPlayerCount,
+            GameHostConnectionEstablishMode connectionEstablishMode, T externalId, string password = "")
+        {
+            byte[] externalIdArray;
+            switch (externalId)
+            {
+                case string s:
+                    externalIdArray = Utility.ConvertStringToFixedLengthArray(s,
+                        RoomConstants.GameHostExternalIdLength);
+                    break;
+                case ulong v:
+                    externalIdArray = Serializer.Serialize(v);
+                    break;
+                case uint v:
+                    externalIdArray = Serializer.Serialize(v);
+                    break;
+                case ushort v:
+                    externalIdArray = Serializer.Serialize(v);
+                    break;
+                default:
+                    throw new ArgumentException("Unsupported type.", nameof(externalId));
+            }
+
+            return await CreateRoomWithExternalServiceAsync(maxPlayerCount, connectionEstablishMode, externalIdArray,
+                    password)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -245,7 +340,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var portNumberCandidateArray = portNumberCandidates.ToList();
             if (portNumberCandidateArray.Any(
-                portNumberCandidate => !Validator.ValidateGameHostPort(portNumberCandidate)))
+                    portNumberCandidate => !Validator.ValidateGameHostPort(portNumberCandidate)))
             {
                 throw new ArgumentException("Dynamic/private port is available.", nameof(portNumberCandidates));
             }
@@ -364,7 +459,8 @@ namespace PlanetaGameLabo.MatchMaker
                     Logger.Log(LogLevel.Info, "Second connection test is succeeded. Start to create room.");
                 }
 
-                var createRoomResult = await CreateRoomCoreAsync(portNumber, maxPlayerCount, password)
+                var createRoomResult = await CreateRoomCoreAsync(GameHostConnectionEstablishMode.Builtin, portNumber,
+                        Array.Empty<byte>(), maxPlayerCount, password)
                     .ConfigureAwait(false);
 
                 return new CreateRoomWithCreatingPortMappingResult(isDefaultPortUsed, usedPrivatePortFromCandidates,
@@ -404,7 +500,7 @@ namespace PlanetaGameLabo.MatchMaker
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                var searchFullName = new PlayerFullName() {Name = searchName, Tag = searchTag};
+                var searchFullName = new PlayerFullName() { Name = searchName, Tag = searchTag };
 
                 if (searchName.Length > ClientConstants.PlayerNameLength)
                 {
@@ -489,28 +585,42 @@ namespace PlanetaGameLabo.MatchMaker
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (!Connected)
-                {
-                    throw new ClientErrorException(ClientErrorCode.NotConnected);
-                }
-
-                if (IsHostingRoom)
-                {
-                    throw new ClientErrorException(ClientErrorCode.AlreadyHostingRoom,
-                        "The client hosting a room can't join the room.");
-                }
-
-                var requestBody = new JoinRoomRequestMessage {RoomId = roomId, Password = password};
-                await SendRequestAsync(requestBody).ConfigureAwait(false);
-                Logger.Log(LogLevel.Info,
-                    $"Send JoinRoomRequest. ({nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.Password)}: {requestBody.Password})");
-
-                var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>().ConfigureAwait(false);
-                Logger.Log(LogLevel.Info,
-                    $"Receive JoinRoomReply. ({nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint})");
-
-                Close();
+                var replyBody = await JoinRoomCoreAsync(roomId, GameHostConnectionEstablishMode.Builtin, password)
+                    .ConfigureAwait(false);
                 return (IPEndPoint)replyBody.GameHostEndPoint;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// Join to a room with external service on the server.
+        /// </summary>
+        /// <param name="roomId"></param>
+        /// <param name="connectionEstablishMode"></param>
+        /// <param name="password"></param>
+        /// <exception cref="ClientErrorException">Establish connection mode of the room is different from indicated one.</exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns>Game host info</returns>
+        public async Task<JoinRoomWithExternalServiceResult> JoinRoomWithExternalServiceAsync(uint roomId,
+            GameHostConnectionEstablishMode connectionEstablishMode, string password = "")
+        {
+            if (!Validator.ValidateRoomPassword(password))
+            {
+                throw new ArgumentException(
+                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
+                    nameof(password));
+            }
+
+            await semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                var replyBody = await JoinRoomCoreAsync(roomId, connectionEstablishMode, password)
+                    .ConfigureAwait(false);
+                return new JoinRoomWithExternalServiceResult(replyBody.GameHostConnectionEstablishMode,
+                    replyBody.GameHostExternalId);
             }
             finally
             {
@@ -755,22 +865,33 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Create and host new room to the server without try block and parameter validations.
         /// </summary>
+        /// <param name="connectionEstablishMode"></param>
         /// <param name="portNumber">The port number which is used for accept TCP connection of game</param>
+        /// <param name="externalId"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="password"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        private async Task<CreateRoomResult> CreateRoomCoreAsync(ushort portNumber, byte maxPlayerCount,
+        private async Task<CreateRoomResult> CreateRoomCoreAsync(
+            GameHostConnectionEstablishMode connectionEstablishMode, ushort portNumber, byte[] externalId,
+            byte maxPlayerCount,
             string password = "")
         {
+            var resizedExternalId = new byte[RoomConstants.GameHostExternalIdLength];
+            Array.Copy(externalId, resizedExternalId, externalId.Length);
+
             var requestBody = new CreateRoomRequestMessage
             {
-                Password = password, MaxPlayerCount = maxPlayerCount, portNumber = portNumber
+                Password = password,
+                MaxPlayerCount = maxPlayerCount,
+                ConnectionEstablishMode = connectionEstablishMode,
+                PortNumber = portNumber,
+                ExternalId = resizedExternalId
             };
             await SendRequestAsync(requestBody).ConfigureAwait(false);
             Logger.Log(LogLevel.Info,
-                $"Send CreateRoomRequest. ({nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.portNumber)}: {requestBody.portNumber})");
+                $"Send CreateRoomRequest. ({nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.ConnectionEstablishMode)}: {requestBody.ConnectionEstablishMode}, {nameof(requestBody.PortNumber)}: {requestBody.PortNumber}, {nameof(requestBody.ExternalId)}: {string.Join("", requestBody.ExternalId.Select(b => $"{b:X2}"))})");
 
             var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>().ConfigureAwait(false);
             Logger.Log(LogLevel.Info, $"Receive CreateRoomReply. ({nameof(replyBody.RoomId)}: {replyBody.RoomId})");
@@ -781,6 +902,41 @@ namespace PlanetaGameLabo.MatchMaker
                 (string.IsNullOrEmpty(password) ? RoomSettingFlag.PublicRoom : RoomSettingFlag.None) &
                 RoomSettingFlag.OpenRoom;
             return new CreateRoomResult(HostingRoomId, HostingRoomSettingFlags, maxPlayerCount, 1);
+        }
+
+        private async Task<JoinRoomReplyMessage> JoinRoomCoreAsync(uint roomId,
+            GameHostConnectionEstablishMode connectionEstablishMode,
+            string password)
+        {
+            if (!Connected)
+            {
+                throw new ClientErrorException(ClientErrorCode.NotConnected);
+            }
+
+            if (IsHostingRoom)
+            {
+                throw new ClientErrorException(ClientErrorCode.AlreadyHostingRoom,
+                    "The client hosting a room can't join the room.");
+            }
+
+            var requestBody = new JoinRoomRequestMessage { RoomId = roomId, Password = password };
+            await SendRequestAsync(requestBody).ConfigureAwait(false);
+            Logger.Log(LogLevel.Info,
+                $"Send JoinRoomRequest. ({nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.Password)}: {requestBody.Password})");
+
+            var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>().ConfigureAwait(false);
+            Logger.Log(LogLevel.Info,
+                $"Receive JoinRoomReply. ({nameof(replyBody.GameHostConnectionEstablishMode)}: {replyBody.GameHostConnectionEstablishMode}, {nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint}, {nameof(replyBody.GameHostExternalId)}: {string.Join("", replyBody.GameHostExternalId.Select(b => $"{b:X2}"))})");
+
+            if (replyBody.GameHostConnectionEstablishMode != connectionEstablishMode)
+            {
+                throw new ClientErrorException(ClientErrorCode.ConnectionEstablishModeMismatch,
+                    $"Room Host: {replyBody.GameHostConnectionEstablishMode}, expected: {connectionEstablishMode}");
+            }
+
+            Close();
+
+            return replyBody;
         }
 
         /// <summary>
@@ -830,7 +986,7 @@ namespace PlanetaGameLabo.MatchMaker
                         try
                         {
                             using (var socket = await Task.Run(tcpListener.AcceptSocketAsync, cancellationToken)
-                                .ConfigureAwait(false))
+                                       .ConfigureAwait(false))
                             {
                                 // Echo received message
                                 var buffer = new ArraySegment<byte>(new byte[64]);
@@ -911,7 +1067,7 @@ namespace PlanetaGameLabo.MatchMaker
                     task = Func(udpClient, cancelTokenSource.Token);
                 }
 
-                var requestBody = new ConnectionTestRequestMessage {Protocol = protocol, PortNumber = portNumber};
+                var requestBody = new ConnectionTestRequestMessage { Protocol = protocol, PortNumber = portNumber };
                 Logger.Log(LogLevel.Info,
                     $"Send ConnectionTestRequest. ({nameof(requestBody.Protocol)}: {requestBody.Protocol}, {nameof(requestBody.PortNumber)}: {requestBody.PortNumber})");
                 await SendRequestAsync(requestBody).ConfigureAwait(false);
@@ -938,7 +1094,7 @@ namespace PlanetaGameLabo.MatchMaker
         private TcpClient CreateTcpClient()
         {
             var newTcpClient =
-                new TcpClient {ReceiveTimeout = TimeoutMilliSeconds, SendTimeout = TimeoutMilliSeconds};
+                new TcpClient { ReceiveTimeout = TimeoutMilliSeconds, SendTimeout = TimeoutMilliSeconds };
             newTcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             return newTcpClient;
         }
@@ -1020,4 +1176,3 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 }
-#pragma warning restore CA1303

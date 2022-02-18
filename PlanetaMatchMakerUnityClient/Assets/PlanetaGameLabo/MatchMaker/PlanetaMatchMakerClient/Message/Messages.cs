@@ -95,7 +95,7 @@ namespace PlanetaGameLabo.MatchMaker
         public ushort PlayerTag;
     }
 
-    // 148 bytes
+    // 84 bytes
     [Serializable]
     [Message(MessageType.CreateRoomRequest)]
     internal struct CreateRoomRequestMessage
@@ -105,11 +105,11 @@ namespace PlanetaGameLabo.MatchMaker
 
         public byte MaxPlayerCount;
 
-        public GameHostSignalingMethod SignalingMethod;
+        public GameHostConnectionEstablishMode ConnectionEstablishMode;
 
         public ushort PortNumber;
 
-        [FixedLength(RoomConstants.RoomGameHostExternalIdLength)]
+        [FixedLength(RoomConstants.GameHostExternalIdLength)]
         public byte[] ExternalId;
     }
 
@@ -169,14 +169,15 @@ namespace PlanetaGameLabo.MatchMaker
         public string Password;
     }
 
-    // 147 bytes
+    // 83 bytes
     [Serializable]
     [Message(MessageType.JoinRoomReply)]
     internal struct JoinRoomReplyMessage
     {
-        public GameHostSignalingMethod GameHostSignalingMethod;
+        public GameHostConnectionEstablishMode GameHostConnectionEstablishMode;
         public EndPoint GameHostEndPoint;
-        [FixedLength(RoomConstants.RoomGameHostExternalIdLength)]
+
+        [FixedLength(RoomConstants.GameHostExternalIdLength)]
         public byte[] GameHostExternalId;
     }
 

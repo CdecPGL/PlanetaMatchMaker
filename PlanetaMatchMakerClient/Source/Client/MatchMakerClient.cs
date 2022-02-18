@@ -891,7 +891,7 @@ namespace PlanetaGameLabo.MatchMaker
             };
             await SendRequestAsync(requestBody).ConfigureAwait(false);
             Logger.Log(LogLevel.Info,
-                $"Send CreateRoomRequest. ({nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.ConnectionEstablishMode)}: {requestBody.ConnectionEstablishMode}, {nameof(requestBody.PortNumber)}: {requestBody.PortNumber}, {nameof(requestBody.ExternalId)}: {string.Join("", requestBody.ExternalId.Select(b => $"{b:X00}"))})");
+                $"Send CreateRoomRequest. ({nameof(requestBody.Password)}: {requestBody.Password}, {nameof(requestBody.MaxPlayerCount)}: {requestBody.MaxPlayerCount}, {nameof(requestBody.ConnectionEstablishMode)}: {requestBody.ConnectionEstablishMode}, {nameof(requestBody.PortNumber)}: {requestBody.PortNumber}, {nameof(requestBody.ExternalId)}: {string.Join("", requestBody.ExternalId.Select(b => $"{b:X2}"))})");
 
             var replyBody = await ReceiveReplyAsync<CreateRoomReplyMessage>().ConfigureAwait(false);
             Logger.Log(LogLevel.Info, $"Receive CreateRoomReply. ({nameof(replyBody.RoomId)}: {replyBody.RoomId})");
@@ -926,7 +926,7 @@ namespace PlanetaGameLabo.MatchMaker
 
             var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>().ConfigureAwait(false);
             Logger.Log(LogLevel.Info,
-                $"Receive JoinRoomReply. ({nameof(replyBody.GameHostConnectionEstablishMode)}: {replyBody.GameHostConnectionEstablishMode}, {nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint}, {nameof(replyBody.GameHostExternalId)}: {string.Join("", replyBody.GameHostExternalId.Select(b => $"{b:X00}"))})");
+                $"Receive JoinRoomReply. ({nameof(replyBody.GameHostConnectionEstablishMode)}: {replyBody.GameHostConnectionEstablishMode}, {nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint}, {nameof(replyBody.GameHostExternalId)}: {string.Join("", replyBody.GameHostExternalId.Select(b => $"{b:X2}"))})");
 
             if (replyBody.GameHostConnectionEstablishMode != connectionEstablishMode)
             {

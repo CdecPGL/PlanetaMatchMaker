@@ -109,6 +109,15 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
+        /// A way how clients establish connection to the game hoset.
+        /// </summary>
+        public GameHostConnectionEstablishMode connectionEstablishMode
+        {
+            get => _connectionEstablishMode;
+            set => _connectionEstablishMode = value;
+        }
+
+        /// <summary>
         /// A transport protocol your game is using.
         /// </summary>
         public TransportProtocol gameTransportProtocol
@@ -167,6 +176,15 @@ namespace PlanetaGameLabo.MatchMaker
         /// True if the client is hosting room.
         /// </summary>
         public bool isHostingRoom => _client.IsHostingRoom;
+
+        /// <summary>
+        /// An ID of external service.
+        /// </summary>
+        public byte[] externalId
+        {
+            get => _externalId.value;
+            set => _externalId.value = value;
+        }
 
         public PlayerFullName playerFullName => _client.PlayerFullName;
 
@@ -556,7 +574,17 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("Port of Match Making Server")]
         private ushort _serverPort = 57000;
 
-        [SerializeField, Tooltip("A transport protocol used for game")]
+
+        [SerializeField, Tooltip("Timeout seconds to send and receive data between match making server")]
+        private float _serverCommunicationTimeOutSeconds = 10;
+
+        [SerializeField, Tooltip("The interval time to send alive notice to the server to avoid timeout.")]
+        private int _keepAliveNoticeIntervalSeconds = 30;
+
+        [SerializeField]
+        private GameHostConnectionEstablishMode _connectionEstablishMode = GameHostConnectionEstablishMode.Builtin;
+
+        [Header("===Builtin Mode===")] [SerializeField, Tooltip("A transport protocol used for game")]
         private TransportProtocol _gameTransportProtocol;
 
         [SerializeField, Tooltip("Port of Game Host")]
@@ -568,22 +596,19 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("Timeout seconds to discover NAT device")]
         private float _natDiscoverTimeOutSeconds = 5;
 
-        [SerializeField, Tooltip("Timeout seconds to send and receive data between match making server")]
-        private float _serverCommunicationTimeOutSeconds = 10;
-
-        [SerializeField, Tooltip("The interval time to send alive notice to the server to avoid timeout.")]
-        private int _keepAliveNoticeIntervalSeconds = 30;
-
-        [SerializeField, Tooltip("Enable debug log")]
-        private bool _enableDebugLog;
-        
-        [SerializeField, Tooltip("Threshold of log level to output when debug log is enabled")]
-        private LogLevel _debugLogLevel = LogLevel.Info;
-
         private MatchMakerClient _client;
         private Task _task;
         private Status _status = Status.Disconnected;
         private HostingRoomInfo _hostingRoomInfo;
+
+        [Header("===External Service Mode===")] [SerializeField, Tooltip("An ID of external service")]
+        private FixedSizeByteArray _externalId = new FixedSizeByteArray(RoomConstants.GameHostExternalIdLength);
+
+        [Header("===Development===")] [SerializeField, Tooltip("Enable debug log")]
+        private bool _enableDebugLog;
+
+        [SerializeField, Tooltip("Threshold of log level to output when debug log is enabled")]
+        private LogLevel _debugLogLevel = LogLevel.Info;
 
         #endregion
 
@@ -720,8 +745,10 @@ namespace PlanetaGameLabo.MatchMaker
         private async Task<HostRoomResult> CreateRoomImplAsync(byte maxPlayerCount,
             string password = "")
         {
-            var createRoomResult =
-                await _client.CreateRoomAsync(maxPlayerCount, _gameDefaultPort, password);
+            var createRoomResult = _connectionEstablishMode == GameHostConnectionEstablishMode.Builtin
+                ? await _client.CreateRoomAsync(maxPlayerCount, _gameDefaultPort, password)
+                : await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount, _connectionEstablishMode,
+                    _externalId, password);
             _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
             return new HostRoomResult(_hostingRoomInfo);
         }

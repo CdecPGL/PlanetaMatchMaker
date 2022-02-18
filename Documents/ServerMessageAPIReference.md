@@ -140,7 +140,7 @@ The size is 84 bytes.
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
 |connection_establish_mode|8 bits unsigned integer|1|A way how to establish P2P connection.|
 |port_number|16 bits unsigned integer|2|A port number which is used for game host. 49152 to 65535 is available. This is used when `connection_establish_mode` is `builtin`.|
-|external_id|64 elements byte array.|64|An id where clients connect using external service like Steam Networking. This is used when `connection_establish_mode` is not `builtin`.|
+|external_id|64 elements byte array.|64|An id where clients connect using external service like Steam Networking. This is used when `connection_establish_mode` is not `builtin`. This is left justified and big endien.|
 
 Options of `connection_establish_mode` are as below.
 
@@ -276,7 +276,7 @@ The size is 83 bytes.
 |:---|:---|---:|:---|
 |game_host_connection_establish_mode|8 bits unsigned integer|1|A method how to establish P2P connection.|
 |game_host_endpoint|endpoint|18|An endpoint of game host which is hosting the room you want to join.|
-|game_host_external_id|64 elements byte array.|64|An id to connect to the host using external service like Steam Networking.|
+|game_host_external_id|64 elements byte array.|64|An id to connect to the host using external service like Steam Networking. This is left justified and big endien.|
 
 Options of `game_host_connection_establish_mode` are as below.
 

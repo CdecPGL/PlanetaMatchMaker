@@ -4,7 +4,7 @@ using CdecPGL.MinimalSerializer;
 namespace PlanetaGameLabo.MatchMaker
 {
     [Serializable]
-    public struct PlayerFullName
+    public struct PlayerFullName : IEquatable<PlayerFullName>
     {
         [FixedLength(ClientConstants.PlayerNameLength)]
         public string Name;
@@ -33,7 +33,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var other = (PlayerFullName)obj;
-                return Name == other.Name && Tag == other.Tag;
+                return Equals(other);
             }
             catch (InvalidCastException)
             {
@@ -49,6 +49,16 @@ namespace PlanetaGameLabo.MatchMaker
         public static bool operator !=(PlayerFullName left, PlayerFullName right)
         {
             return !(left == right);
+        }
+
+        public bool Equals(PlayerFullName other)
+        {
+            return Name == other.Name && Tag == other.Tag;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { Name, Tag }.GetHashCode();
         }
     }
 }
