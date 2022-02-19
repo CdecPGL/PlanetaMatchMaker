@@ -90,8 +90,8 @@ You can change settings by editing [the setting file](Documents/ServerSettings.m
 
 ### Steam Integration in Client
 
-1. Place steamworks library for C# in below table
-1. Define macro in below table
+1. Install steamworks library for C# in below table
+1. Set pre-defined macro of compiler in below table
 1. Add `using PlanetaGameLabo.MatchMaker.Extentions;` in your code
 1. Use `MatchMakerClient.CreateRoomWithSteamAsync` and `MatchMakerClient.JoinRoomWithSteamAsync`
 

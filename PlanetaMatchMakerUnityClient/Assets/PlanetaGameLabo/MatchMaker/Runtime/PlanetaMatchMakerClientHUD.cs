@@ -20,6 +20,7 @@ namespace PlanetaGameLabo.MatchMaker
         private string _errorMessage;
         private bool _isJoinedRoom;
         private IPEndPoint _joinedRoomHost;
+        private string _joinedRoomHostExternalId;
 
         private string _playerName = "test";
         private string _roomPassword = "";
@@ -35,6 +36,8 @@ namespace PlanetaGameLabo.MatchMaker
         private bool _openRoom = true;
         private byte _roomCurrentPlayerCount;
 
+        private bool _useExternalService;
+
         private void Awake()
         {
             _client = GetComponent<PlanetaMatchMakerClient>();
@@ -47,6 +50,7 @@ namespace PlanetaGameLabo.MatchMaker
             using (var _ = new GUILayout.AreaScope(new Rect(position, size)))
             {
                 GUI.Box(new Rect(Vector2.zero, size), "");
+                _useExternalService = GUILayout.Toggle(_useExternalService, "Use External Service");
                 switch (_client.status)
                 {
                     case PlanetaMatchMakerClient.Status.Disconnected:
@@ -59,7 +63,9 @@ namespace PlanetaGameLabo.MatchMaker
 
                         if (_isJoinedRoom)
                         {
-                            GUILayout.Label($"Joined Room Host: {_joinedRoomHost}");
+                            GUILayout.Label(_useExternalService
+                                ? $"Joined Room Host ExId: {_joinedRoomHostExternalId}"
+                                : $"Joined Room Host: {_joinedRoomHost}");
                         }
 
                         break;
@@ -85,10 +91,17 @@ namespace PlanetaGameLabo.MatchMaker
                         foreach (var room in _roomList)
                         {
                             if (GUILayout.Button(
-                                $"{room.hostPlayerFullName}: {room.roomId}({room.currentPlayerCount}/{room.maxPlayerCount})\n[{room.settingFlags}]\n@{room.createDatetime}")
-                            )
+                                    $"{room.hostPlayerFullName}: {room.roomId}({room.currentPlayerCount}/{room.maxPlayerCount})\n[{room.settingFlags}]\n@{room.createDatetime}")
+                               )
                             {
-                                JoinRoom(room.roomId);
+                                if (_useExternalService)
+                                {
+                                    JoinRoomWithExternalService(room.roomId);
+                                }
+                                else
+                                {
+                                    JoinRoom(room.roomId);
+                                }
                             }
                         }
 
@@ -102,12 +115,22 @@ namespace PlanetaGameLabo.MatchMaker
                         GUILayout.Label($"===Operations===");
                         if (GUILayout.Button("Create"))
                         {
-                            HostRoom();
+                            if (_useExternalService)
+                            {
+                                HostRoomWithExternalService();
+                            }
+                            else
+                            {
+                                HostRoom();
+                            }
                         }
 
-                        if (GUILayout.Button("CreateWithPM"))
+                        if (!_useExternalService)
                         {
-                            HostRoomWithCreatingPortMapping();
+                            if (GUILayout.Button("CreateWithPM"))
+                            {
+                                HostRoomWithCreatingPortMapping();
+                            }
                         }
 
                         if (GUILayout.Button("Disconnect"))
@@ -258,6 +281,24 @@ namespace PlanetaGameLabo.MatchMaker
                 });
         }
 
+        private void HostRoomWithExternalService()
+        {
+            _isErrorOccured = false;
+            var externalId = gameObject.name;
+            _client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Others, externalId, _roomMaxPlayerCount,
+                _roomPassword,
+                (errorInfo, args) =>
+                {
+                    if (errorInfo)
+                    {
+                        return;
+                    }
+
+                    _isErrorOccured = true;
+                    _errorMessage = errorInfo.message;
+                });
+        }
+
         private void JoinRoom(uint roomId)
         {
             try
@@ -276,6 +317,34 @@ namespace PlanetaGameLabo.MatchMaker
                     _isErrorOccured = true;
                     _errorMessage = errorInfo.message;
                 });
+            }
+            catch (InvalidOperationException e)
+            {
+                Debug.LogException(e);
+                _isErrorOccured = true;
+                _errorMessage = e.Message;
+            }
+        }
+
+        private void JoinRoomWithExternalService(uint roomId)
+        {
+            try
+            {
+                _isErrorOccured = false;
+                _client.JoinRoomWithExternalService(GameHostConnectionEstablishMode.Others, roomId, _roomPassword,
+                    (errorInfo, args) =>
+                    {
+                        if (errorInfo)
+                        {
+                            Close();
+                            _isJoinedRoom = true;
+                            _joinedRoomHostExternalId = args.GetExternalIdAsString();
+                            return;
+                        }
+
+                        _isErrorOccured = true;
+                        _errorMessage = errorInfo.message;
+                    });
             }
             catch (InvalidOperationException e)
             {
