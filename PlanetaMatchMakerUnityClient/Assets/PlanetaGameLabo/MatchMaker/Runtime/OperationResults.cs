@@ -3,7 +3,7 @@ using System.Net;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    public struct ConnectResult
+    public readonly struct ConnectResult
     {
         public ConnectResult(PlayerFullName playerFullName)
         {
@@ -13,7 +13,7 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly PlayerFullName playerFullName;
     }
 
-    public struct RequestRoomListResult
+    public readonly struct RequestRoomListResult
     {
         public RequestRoomListResult(ushort totalRoomCount, ushort startIndex,
             IReadOnlyList<RoomInfo> roomInfoList)
@@ -28,7 +28,7 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly IReadOnlyList<RoomInfo> roomInfoList;
     }
 
-    public struct HostRoomResult
+    public readonly struct HostRoomResult
     {
         public HostRoomResult(IReadOnlyHostingRoomInfo hostRoomInfo)
         {
@@ -38,7 +38,7 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly IReadOnlyHostingRoomInfo hostRoomInfo;
     }
 
-    public struct HostRoomWithCreatingPortMappingResult
+    public readonly struct HostRoomWithCreatingPortMappingResult
     {
         public HostRoomWithCreatingPortMappingResult(HostingRoomInfo hostRoomInfo, bool isDefaultPortUsed,
             ushort privatePort, ushort publicPort)
@@ -55,7 +55,7 @@ namespace PlanetaGameLabo.MatchMaker
         public readonly ushort publicPort;
     }
 
-    public struct JoinRoomResult
+    public readonly struct JoinRoomResult
     {
         public JoinRoomResult(IPEndPoint roomGameHostEndPoint)
         {

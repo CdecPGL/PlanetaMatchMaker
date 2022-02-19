@@ -109,15 +109,6 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
-        /// A way how clients establish connection to the game hoset.
-        /// </summary>
-        public GameHostConnectionEstablishMode connectionEstablishMode
-        {
-            get => _connectionEstablishMode;
-            set => _connectionEstablishMode = value;
-        }
-
-        /// <summary>
         /// A transport protocol your game is using.
         /// </summary>
         public TransportProtocol gameTransportProtocol
@@ -176,15 +167,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// True if the client is hosting room.
         /// </summary>
         public bool isHostingRoom => _client.IsHostingRoom;
-
-        /// <summary>
-        /// An ID of external service.
-        /// </summary>
-        public byte[] externalId
-        {
-            get => _externalId.value;
-            set => _externalId.value = value;
-        }
 
         public PlayerFullName playerFullName => _client.PlayerFullName;
 
@@ -365,6 +347,51 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
+        /// Create and host new room to the server with trying to create port mapping.
+        /// </summary>
+        /// <param name="connectionEstablishMode"></param>
+        /// <param name="externalId"></param>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="password"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public void HostRoomWithExternalService<T>(GameHostConnectionEstablishMode connectionEstablishMode,
+            T externalId, byte maxPlayerCount, string password = "", Action<ErrorInfo, HostRoomResult> callback = null)
+        {
+            RunTask(
+                async () => await HostRoomWithExternalServiceAsync(connectionEstablishMode, externalId, maxPlayerCount,
+                    password), callback);
+        }
+
+        /// <summary>
+        /// Create and host new room to the server with external service to establish connection.
+        /// </summary>
+        /// <param name="externalId"></param>
+        /// <param name="maxPlayerCount"></param>
+        /// <param name="password"></param>
+        /// <param name="connectionEstablishMode"></param>
+        /// <returns></returns>
+        public async Task<(ErrorInfo errorInfo, HostRoomResult result)> HostRoomWithExternalServiceAsync<T>(
+            GameHostConnectionEstablishMode connectionEstablishMode, T externalId, byte maxPlayerCount,
+            string password = "")
+        {
+            if (status != Status.SearchingRoom)
+            {
+                Debug.LogError("The operation is valid when searching room.");
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
+            }
+
+            return await RunTaskWithErrorHandlingAsync(async () =>
+            {
+                status = Status.StartingHostingRoom;
+                var result = await CreateRoomWithExternalServiceImplAsync(connectionEstablishMode, externalId,
+                    maxPlayerCount, password);
+                status = Status.HostingRoom;
+                return result;
+            }, () => status = Status.SearchingRoom);
+        }
+
+        /// <summary>
         /// Change open status of hosting room.
         /// </summary>
         /// <param name="isOpen"></param>
@@ -516,6 +543,47 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
+        /// Join to a room with external service on the server.
+        /// </summary>
+        /// <param name="connectionEstablishMode"></param>
+        /// <param name="roomId"></param>
+        /// <param name="password"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public void JoinRoomWithExternalService(GameHostConnectionEstablishMode connectionEstablishMode, uint roomId,
+            string password = "", Action<ErrorInfo, JoinRoomWithExternalServiceResult> callback = null)
+        {
+            RunTask(async () => await JoinRoomWithExternalServiceAsync(connectionEstablishMode, roomId, password),
+                callback);
+        }
+
+        /// <summary>
+        /// Join to a room with external service on the server.
+        /// </summary>
+        /// <param name="connectionEstablishMode"></param>
+        /// <param name="roomId"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public async Task<(ErrorInfo errorInfo, JoinRoomWithExternalServiceResult result)>
+            JoinRoomWithExternalServiceAsync(
+                GameHostConnectionEstablishMode connectionEstablishMode, uint roomId, string password = "")
+        {
+            if (status != Status.SearchingRoom)
+            {
+                Debug.LogError("The operation is valid when searching room.");
+                return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
+            }
+
+            return await RunTaskWithErrorHandlingAsync(async () =>
+            {
+                status = Status.StartingJoiningRoom;
+                var result = await JoinRoomWithExternalServiceImplAsync(connectionEstablishMode, roomId, password);
+                Disconnect();
+                return result;
+            }, () => status = Status.SearchingRoom);
+        }
+
+        /// <summary>
         /// Check if the client is connected to client and update status.
         /// </summary>
         /// <returns></returns>
@@ -581,9 +649,6 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("The interval time to send alive notice to the server to avoid timeout.")]
         private int _keepAliveNoticeIntervalSeconds = 30;
 
-        [SerializeField]
-        private GameHostConnectionEstablishMode _connectionEstablishMode = GameHostConnectionEstablishMode.Builtin;
-
         [Header("===Builtin Mode===")] [SerializeField, Tooltip("A transport protocol used for game")]
         private TransportProtocol _gameTransportProtocol;
 
@@ -597,12 +662,8 @@ namespace PlanetaGameLabo.MatchMaker
         private float _natDiscoverTimeOutSeconds = 5;
 
         private MatchMakerClient _client;
-        private Task _task;
         private Status _status = Status.Disconnected;
         private HostingRoomInfo _hostingRoomInfo;
-
-        [Header("===External Service Mode===")] [SerializeField, Tooltip("An ID of external service")]
-        private FixedSizeByteArray _externalId = new FixedSizeByteArray(RoomConstants.GameHostExternalIdLength);
 
         [Header("===Development===")] [SerializeField, Tooltip("Enable debug log")]
         private bool _enableDebugLog;
@@ -658,7 +719,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         #region OperationHelpers
 
-        private async Task<ErrorInfo> RunTaskWithErrorHandlingAsync(Func<Task> task, Action errorHandler)
+        internal async Task<ErrorInfo> RunTaskWithErrorHandlingAsync(Func<Task> task, Action errorHandler)
         {
             try
             {
@@ -684,7 +745,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        private async Task<(ErrorInfo errorInfo, T result)> RunTaskWithErrorHandlingAsync<T>(Func<Task<T>> task,
+        internal async Task<(ErrorInfo errorInfo, T result)> RunTaskWithErrorHandlingAsync<T>(Func<Task<T>> task,
             Action errorHandler, T defaultResult = default)
         {
             try
@@ -711,7 +772,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
-        private void RunTask(Func<Task<ErrorInfo>> task, Action<ErrorInfo> callback)
+        internal static void RunTask(Func<Task<ErrorInfo>> task, Action<ErrorInfo> callback)
         {
             async Task Wrapper()
             {
@@ -719,10 +780,10 @@ namespace PlanetaGameLabo.MatchMaker
                 callback?.Invoke(errorInfo);
             }
 
-            _task = Task.Run(Wrapper);
+            Task.Run(Wrapper);
         }
 
-        private void RunTask<T>(Func<Task<(ErrorInfo, T)>> task, Action<ErrorInfo, T> callback)
+        internal static void RunTask<T>(Func<Task<(ErrorInfo, T)>> task, Action<ErrorInfo, T> callback)
         {
             async Task Wrapper()
             {
@@ -730,7 +791,7 @@ namespace PlanetaGameLabo.MatchMaker
                 callback?.Invoke(errorInfo, result);
             }
 
-            _task = Task.Run(Wrapper);
+            Task.Run(Wrapper);
         }
 
         #endregion
@@ -745,10 +806,7 @@ namespace PlanetaGameLabo.MatchMaker
         private async Task<HostRoomResult> CreateRoomImplAsync(byte maxPlayerCount,
             string password = "")
         {
-            var createRoomResult = _connectionEstablishMode == GameHostConnectionEstablishMode.Builtin
-                ? await _client.CreateRoomAsync(maxPlayerCount, _gameDefaultPort, password)
-                : await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount, _connectionEstablishMode,
-                    _externalId, password);
+            var createRoomResult = await _client.CreateRoomAsync(maxPlayerCount, _gameDefaultPort, password);
             _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
             return new HostRoomResult(_hostingRoomInfo);
         }
@@ -766,9 +824,36 @@ namespace PlanetaGameLabo.MatchMaker
                 result.IsDefaultPortUsed ? gameDefaultPortSnapshot : result.UsedPublicPortFromCandidates);
         }
 
+        private async Task<HostRoomResult> CreateRoomWithExternalServiceImplAsync<T>(
+            GameHostConnectionEstablishMode connectionEstablishMode, T externalId, byte maxPlayerCount,
+            string password = "")
+        {
+            CreateRoomResult createRoomResult;
+            switch (externalId)
+            {
+                case byte[] externalIdByteArray:
+                    createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
+                        connectionEstablishMode, externalIdByteArray, password);
+                    break;
+                default:
+                    createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
+                        connectionEstablishMode, externalId, password);
+                    break;
+            }
+
+            _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
+            return new HostRoomResult(_hostingRoomInfo);
+        }
+
         private async Task<IPEndPoint> JoinRoomImplAsync(uint roomId, string password = "")
         {
             return await _client.JoinRoomAsync(roomId, password);
+        }
+
+        private async Task<JoinRoomWithExternalServiceResult> JoinRoomWithExternalServiceImplAsync(
+            GameHostConnectionEstablishMode connectionEstablishMode, uint roomId, string password = "")
+        {
+            return await _client.JoinRoomWithExternalServiceAsync(roomId, connectionEstablishMode, password);
         }
 
         private async Task UpdateHostingRoomStatusImplAsync(RoomStatus roomStatus,

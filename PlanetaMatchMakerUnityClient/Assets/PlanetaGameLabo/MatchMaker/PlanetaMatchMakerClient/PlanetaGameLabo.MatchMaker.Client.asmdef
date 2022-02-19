@@ -1,3 +1,15 @@
-﻿{
-	"name": "PlanetaGameLabo.MatchMaker.Client"
+{
+    "name": "PlanetaGameLabo.MatchMaker.Client",
+    "references": [
+        "GUID:68bd7fdb68ef2684e982e8a9825b18a5"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

@@ -10,12 +10,26 @@ using UnityEditor;
 
 namespace PlanetaGameLabo.MatchMaker
 {
+    /**
+     * A type which represents fixed size byte array which is displayed in inspector.
+     */
     [Serializable]
     public sealed class FixedSizeByteArray
     {
+        /// <summary>
+        /// The length of byte array.
+        /// </summary>
         public int length { get; }
-        public byte[] value { get => _value; set => _value = value; }
 
+        /// <summary>
+        /// A byte array.
+        /// </summary>
+        public byte[] value => _value;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="length">The length of byte array.</param>
         public FixedSizeByteArray(int length)
         {
             this.length = length;

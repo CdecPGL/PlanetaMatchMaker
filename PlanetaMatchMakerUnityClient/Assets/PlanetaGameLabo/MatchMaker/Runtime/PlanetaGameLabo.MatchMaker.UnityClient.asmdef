@@ -1,9 +1,9 @@
 {
     "name": "PlanetaGameLabo.MatchMake.UnityClient",
     "references": [
-        "GUID:77a0a11167b633744a76778abfb898a9"
+        "GUID:77a0a11167b633744a76778abfb898a9",
+        "GUID:68bd7fdb68ef2684e982e8a9825b18a5"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -11,5 +11,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": []
+    "versionDefines": [],
+    "noEngineReferences": false
 }
