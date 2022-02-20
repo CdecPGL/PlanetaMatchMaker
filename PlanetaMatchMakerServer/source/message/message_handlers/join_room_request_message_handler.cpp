@@ -16,6 +16,21 @@ namespace pgl {
 
 		join_room_reply_message reply{};
 
+		// Check if connection establish mode matches
+		if (room_data.game_host_connection_establish_mode != message.connection_establish_mode) {
+			// connection_establish_mode.others is not converted to string correctly in nameof++ so convert to string as int
+			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
+				"Connection establish mode of client \"", static_cast<uint32_t>(message.connection_establish_mode),
+				"\" doesn't match one of requested room \"",
+				static_cast<uint32_t>(room_data.game_host_connection_establish_mode), "\".");
+			constexpr reply_message_header header{
+				message_type::join_room_reply,
+				message_error_code::room_connection_establish_mode_mismatch
+			};
+			send(param, header, reply);
+			return;
+		}
+
 		// Check if the room is open
 		if ((room_data.setting_flags & room_setting_flag::open_room) != room_setting_flag::open_room) {
 			log_with_endpoint(log_level::error, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
@@ -62,6 +77,7 @@ namespace pgl {
 			message_error_code::ok
 		};
 		reply.game_host_endpoint = room_data.game_host_endpoint;
+		reply.game_host_external_id = room_data.game_host_external_id;
 		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ", message_type::join_room_request,
 			" message.");
 		send(param, header, reply);

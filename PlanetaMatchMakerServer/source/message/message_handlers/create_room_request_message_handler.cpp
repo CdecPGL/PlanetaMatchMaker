@@ -20,8 +20,10 @@ namespace pgl {
 
 		auto& room_data_container = param->server_data.get_room_data_container();
 
-		// Check port number is valid
-		parameter_validator.validate_port_number(message.port_number);
+		// Check port number is valid.
+		if (message.connection_establish_mode == game_host_connection_establish_mode::builtin) {
+			parameter_validator.validate_port_number(message.port_number);
+		}
 
 		// Check max player count is valid.
 		parameter_validator.validate_max_player_count(message.max_player_count);

@@ -34,7 +34,7 @@ namespace pgl {
 		std::unordered_map<message_type, message_handler_generator_type> handler_generator_map_;
 
 		[[nodiscard]] bool is_handler_exist(const message_type message_type) const {
-			return !handler_generator_map_.contains(message_type);
+			return handler_generator_map_.contains(message_type);
 		}
 
 		[[nodiscard]] std::unique_ptr<message_handler> make_message_handler(const message_type message_type) const {

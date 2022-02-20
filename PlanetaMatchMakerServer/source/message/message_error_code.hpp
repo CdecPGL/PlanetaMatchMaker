@@ -21,6 +21,8 @@ namespace pgl {
 		room_permission_denied,
 		// The number of room reaches limit.
 		room_group_full,
+		// Connection establish mode of the room host doesn't match expected one in the client.
+		room_connection_establish_mode_mismatch,
 		// Request is failed because the client is already hosting room.
 		client_already_hosting_room,
 	};

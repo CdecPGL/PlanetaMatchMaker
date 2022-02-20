@@ -174,7 +174,7 @@ A request to get room informations which matches to requested parameters.
 
 #### Parameters
 
-The size is 32 bytes.
+The size is 30 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -182,7 +182,7 @@ The size is 32 bytes.
 |count|16 bits unsigned integer|2|The number of room data which will be replied from search results.|
 |sort_kind|8 bits unsigned integer|1|A sort kind of result.|
 |search_target_flags|8 bits unsigned integer|1|A flags to indicate search target.|
-|search_full_name|player_full_name|26|A query to search room by the room's host player name.|
+|search_full_name|player_full_name|24|A query to search room by the room's host player name.|
 
 Options of `sort_kind` are as below.
 
@@ -203,7 +203,7 @@ Options are as below.
 |open_room|4|
 |closed_room|8|
 
-`player_full_name` is 26 bytes data as below.
+`player_full_name` is 24 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -212,25 +212,26 @@ Options are as below.
 
 #### Reply
 
-The size is 252 bytes.
+The size is 246 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |total_room_count|16 bits unsigned integer|2|The number of rooms existing in the room group in the server.|
 |matched_room_count|16 bits unsigned integer|2|The number of rooms which match to the query of the room.|
 |reply_room_count|16 bits unsigned integer|2|The number of rooms which is included in reply messages.|
-|room_info_list|A 6 elements array of room_info|246|A result room info list.|
+|room_info_list|A 6 elements array of room_info|240|A result room info list.|
 
-`room_info` is 41 bytes data as below.
+`room_info` is 40 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |room_id|32 bits unsigned integer|4|An id of the room.|
-|host_player_full_name|player_full_name|26|A name of player who is hosting the room.|
+|host_player_full_name|player_full_name|24|A name of player who is hosting the room.|
 |setting_flags|8 bits unsigned integer|1|A flags which indicate a setting of the room.|
 |max_player_count|8 bits unsigned integer|1|Player capability of this room.|
-|create_datetime|8 bits unsigned integer|1|The number of player which joins the room currently.|
+|current_player_count|8 bits unsigned integer|1|The number of player which joins the room currently.|
 |create_datetime|64 bits unsigned integer which indicates unix time|8|A datetime the room created.|
+|connection_establish_mode|8 bits unsigned integer|1|A way how to establish P2P connection in the room.|
 
 `setting_flags` are treated as bit flags.
 Options are as below.
@@ -261,30 +262,22 @@ A request to get the information to join the room.
 
 #### Parameters
 
-The size is 20 bytes.
+The size is 21 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |room_id|32 bits unsigned integer|4|An id of the room you want to join.|
+|connection_establish_mode|8 bits unsigned integer|1|An expected way how to establish P2P connection in the room.|
 |password|16 byte length UTF-8 string|16|A password of the room you want to join. This is only refered when indicated room is private.|
 
 #### Reply
 
-The size is 83 bytes.
+The size is 82 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|game_host_connection_establish_mode|8 bits unsigned integer|1|A method how to establish P2P connection.|
 |game_host_endpoint|endpoint|18|An endpoint of game host which is hosting the room you want to join.|
 |game_host_external_id|64 elements byte array.|64|An id to connect to the host using external service like Steam Networking. This is left justified and big endien.|
-
-Options of `game_host_connection_establish_mode` are as below.
-
-|Name|Value|Host Identifier|Explanation|
-|:---|---:|:---|:---|
-|builtin|0|`port_number` property|Use builtin method.|
-|steam|1|`external_id` property containing SteamID64 as 64bits unsigned integer|Use Steam relay service.|
-|others|255|`external_id` property|Use other external service.|
 
 `game_host_endpoint` is 18 bytes data as below.
 
@@ -303,6 +296,7 @@ Options of `game_host_connection_establish_mode` are as below.
 |room_permission_denied|Indicated room is closed.|yes|
 |room_password_wrong|Indicated password is wrong.|yes|
 |room_full|The number of player reaches limit.|yes|
+|room_connection_establish_mode_mismatch|Connection establish mode of the room host doesn't match expected one in the client.|yes|
 
 ### Update Room Status Notice
 

@@ -37,6 +37,9 @@ namespace PlanetaGameLabo.MatchMaker
         // The number of room reaches limit.
         RoomGroupFull,
 
+        // Connection establish mode of the room host doesn't match expected one in the client.
+        RoomConnectionEstablishModeMismatch,
+
         // Request is failed because the client is already hosting room.
         ClientAlreadyHostingRoom,
     };
@@ -121,7 +124,7 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomIdType RoomId;
     }
 
-    // 32 bytes
+    // 30 bytes
     [Serializable]
     [Message(MessageType.ListRoomRequest)]
     internal struct ListRoomRequestMessage
@@ -133,12 +136,12 @@ namespace PlanetaGameLabo.MatchMaker
         public PlayerFullName SearchFullName;
     }
 
-    // 252 bytes
+    // 246 bytes
     [Serializable]
     [Message(MessageType.ListRoomReply)]
     internal struct ListRoomReplyMessage
     {
-        //39 bytes
+        //40 bytes
         [Serializable]
         public struct RoomInfo
         {
@@ -148,6 +151,7 @@ namespace PlanetaGameLabo.MatchMaker
             public byte MaxPlayerCount;
             public byte CurrentPlayerCount;
             public Datetime CreateDatetime;
+            public GameHostConnectionEstablishMode ConnectionEstablishMode;
         }
 
         public UInt16 TotalRoomCount; // the number of rooms server managing
@@ -158,23 +162,24 @@ namespace PlanetaGameLabo.MatchMaker
         public RoomInfo[] RoomInfoList;
     }
 
-    // 20 bytes
+    // 21 bytes
     [Serializable]
     [Message(MessageType.JoinRoomRequest)]
     internal struct JoinRoomRequestMessage
     {
         public RoomIdType RoomId;
 
+        public GameHostConnectionEstablishMode ConnectionEstablishMode;
+
         [FixedLength(RoomConstants.RoomPasswordLength)]
         public string Password;
     }
 
-    // 83 bytes
+    // 82 bytes
     [Serializable]
     [Message(MessageType.JoinRoomReply)]
     internal struct JoinRoomReplyMessage
     {
-        public GameHostConnectionEstablishMode GameHostConnectionEstablishMode;
         public EndPoint GameHostEndPoint;
 
         [FixedLength(RoomConstants.GameHostExternalIdLength)]

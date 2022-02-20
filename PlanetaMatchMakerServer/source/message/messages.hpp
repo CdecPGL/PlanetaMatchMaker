@@ -104,7 +104,7 @@ namespace pgl {
 		>;
 	};
 
-	// 32 bytes
+	// 30 bytes
 	struct list_room_request_message final {
 		uint16_t start_index;
 		uint16_t count;
@@ -121,9 +121,9 @@ namespace pgl {
 		>;
 	};
 
-	// 252 bytes
+	// 246 bytes
 	struct list_room_reply_message final {
-		//41 bytes
+		//40 bytes
 		struct room_info final {
 			room_id_t room_id;
 			player_full_name host_player_full_name;
@@ -131,6 +131,7 @@ namespace pgl {
 			uint8_t max_player_count;
 			uint8_t current_player_count;
 			datetime create_datetime;
+			game_host_connection_establish_mode connection_establish_mode;
 
 			using serialize_targets = minimal_serializer::serialize_target_container<
 				&room_info::room_id,
@@ -138,7 +139,8 @@ namespace pgl {
 				&room_info::setting_flags,
 				&room_info::max_player_count,
 				&room_info::current_player_count,
-				&room_info::create_datetime
+				&room_info::create_datetime,
+				&room_info::connection_establish_mode
 			>;
 		};
 
@@ -155,25 +157,25 @@ namespace pgl {
 		>;
 	};
 
-	// 20 bytes
+	// 21 bytes
 	struct join_room_request_message final {
 		room_id_t room_id;
+		game_host_connection_establish_mode connection_establish_mode;
 		room_password_t password;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
 			&join_room_request_message::room_id,
+			&join_room_request_message::connection_establish_mode,
 			&join_room_request_message::password
 		>;
 	};
 
-	// 83 bytes
+	// 82 bytes
 	struct join_room_reply_message final {
-		game_host_connection_establish_mode game_host_connection_establish_mode;
 		endpoint game_host_endpoint;
 		game_host_external_id_t game_host_external_id;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
-			&join_room_reply_message::game_host_connection_establish_mode,
 			&join_room_reply_message::game_host_endpoint,
 			&join_room_reply_message::game_host_external_id
 		>;

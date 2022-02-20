@@ -69,6 +69,7 @@ namespace pgl {
 						matched_data_list[matched_data_index].max_player_count,
 						matched_data_list[matched_data_index].current_player_count,
 						matched_data_list[matched_data_index].create_datetime,
+						matched_data_list[matched_data_index].game_host_connection_establish_mode
 					};
 				}
 				else { reply.room_info_list[j] = {}; }

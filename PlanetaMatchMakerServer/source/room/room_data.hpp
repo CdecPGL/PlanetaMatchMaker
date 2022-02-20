@@ -32,7 +32,7 @@ namespace pgl {
 		uint8_t max_player_count;
 		datetime create_datetime;
 		endpoint host_endpoint;
-		game_host_connection_establish_mode game_host_signaling_method;
+		game_host_connection_establish_mode game_host_connection_establish_mode;
 		endpoint game_host_endpoint;
 		game_host_external_id_t game_host_external_id;
 		uint8_t current_player_count;

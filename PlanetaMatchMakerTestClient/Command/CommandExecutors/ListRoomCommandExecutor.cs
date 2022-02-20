@@ -26,7 +26,7 @@ namespace PlanetaGameLabo.MatchMaker
             foreach (var result in results)
             {
                 OutputStream.WriteLine(
-                    $"    Name: {result.HostPlayerFullName}, ID: {result.RoomId}, Create: {result.CreateDatetime}, PlayerCount: {result.CurrentPlayerCount}/{result.MaxPlayerCount}, SettingFlags: {result.SettingFlags}");
+                    $"    Name: {result.HostPlayerFullName}, ID: {result.RoomId}, Create: {result.CreateDatetime}, PlayerCount: {result.CurrentPlayerCount}/{result.MaxPlayerCount}, SettingFlags: {result.SettingFlags}, ConnectionEstablishMode: {result.ConnectionEstablishMode}");
             }
         }
     }

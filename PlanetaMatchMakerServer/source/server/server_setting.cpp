@@ -99,7 +99,7 @@ namespace pgl {
 	}
 
 	void output_connection_test_setting_to_log(const server_connection_test_setting& setting) {
-		log(log_level::info, "--------Log--------");
+		log(log_level::info, "--------Connection Test--------");
 		log(log_level::info, NAMEOF(setting.connection_check_tcp_time_out_seconds), ": ",
 			setting.connection_check_tcp_time_out_seconds);
 		log(log_level::info, NAMEOF(setting.connection_check_udp_time_out_seconds), ": ",

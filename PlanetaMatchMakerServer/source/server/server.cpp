@@ -17,7 +17,11 @@ namespace pgl {
 		// Setup acceptor
 		const auto tcp = get_tcp(server_setting_->common.ip_version);
 		acceptor_.open(tcp);
-		acceptor_.bind(asio::ip::tcp::endpoint(tcp, server_setting_->common.port));
+		try { acceptor_.bind(asio::ip::tcp::endpoint(tcp, server_setting_->common.port)); }
+		catch (system::system_error&) {
+			log(log_level::fatal, "Failed to start listening ", server_setting_->common.port, " port.");
+			throw;
+		}
 		acceptor_.listen();
 	}
 

@@ -15,6 +15,7 @@ namespace PlanetaGameLabo.MatchMaker
             MaxPlayerCount = info.MaxPlayerCount;
             CurrentPlayerCount = info.CurrentPlayerCount;
             CreateDatetime = info.CreateDatetime;
+            ConnectionEstablishMode = info.ConnectionEstablishMode;
         }
 
         public uint RoomId { get; }
@@ -23,6 +24,7 @@ namespace PlanetaGameLabo.MatchMaker
         public byte MaxPlayerCount { get; }
         public byte CurrentPlayerCount { get; }
         public Datetime CreateDatetime { get; }
+        public GameHostConnectionEstablishMode ConnectionEstablishMode { get; }
     }
 
     public readonly struct CreateRoomResult
