@@ -619,8 +619,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var replyBody = await JoinRoomCoreAsync(roomId, connectionEstablishMode, password)
                     .ConfigureAwait(false);
-                return new JoinRoomWithExternalServiceResult(replyBody.GameHostConnectionEstablishMode,
-                    replyBody.GameHostExternalId);
+                return new JoinRoomWithExternalServiceResult(connectionEstablishMode, replyBody.GameHostExternalId);
             }
             finally
             {
@@ -919,20 +918,17 @@ namespace PlanetaGameLabo.MatchMaker
                     "The client hosting a room can't join the room.");
             }
 
-            var requestBody = new JoinRoomRequestMessage { RoomId = roomId, Password = password };
+            var requestBody = new JoinRoomRequestMessage
+            {
+                RoomId = roomId, ConnectionEstablishMode = connectionEstablishMode, Password = password
+            };
             await SendRequestAsync(requestBody).ConfigureAwait(false);
             Logger.Log(LogLevel.Info,
-                $"Send JoinRoomRequest. ({nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.Password)}: {requestBody.Password})");
+                $"Send JoinRoomRequest. ({nameof(requestBody.RoomId)}: {requestBody.RoomId}, {nameof(requestBody.ConnectionEstablishMode)}: {requestBody.ConnectionEstablishMode}, {nameof(requestBody.Password)}: {requestBody.Password})");
 
             var replyBody = await ReceiveReplyAsync<JoinRoomReplyMessage>().ConfigureAwait(false);
             Logger.Log(LogLevel.Info,
-                $"Receive JoinRoomReply. ({nameof(replyBody.GameHostConnectionEstablishMode)}: {replyBody.GameHostConnectionEstablishMode}, {nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint}, {nameof(replyBody.GameHostExternalId)}: {string.Join("", replyBody.GameHostExternalId.Select(b => $"{b:X2}"))})");
-
-            if (replyBody.GameHostConnectionEstablishMode != connectionEstablishMode)
-            {
-                throw new ClientErrorException(ClientErrorCode.ConnectionEstablishModeMismatch,
-                    $"Room Host: {replyBody.GameHostConnectionEstablishMode}, expected: {connectionEstablishMode}");
-            }
+                $"Receive JoinRoomReply. ({nameof(replyBody.GameHostEndPoint)}: {replyBody.GameHostEndPoint}, {nameof(replyBody.GameHostExternalId)}: {string.Join("", replyBody.GameHostExternalId.Select(b => $"{b:X2}"))})");
 
             Close();
 
