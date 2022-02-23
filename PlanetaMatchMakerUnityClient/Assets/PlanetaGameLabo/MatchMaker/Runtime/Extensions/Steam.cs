@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Steamworks;
+using UnityEngine;
 
 namespace PlanetaGameLabo.MatchMaker.Extentions
 {
@@ -53,10 +54,18 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             HostRoomWithSteamAsync(this PlanetaMatchMakerClient client,
                 byte maxPlayerCount, string password = "")
         {
-            var steamId64 = SteamLibraryHelpers.GetSteamId64();
-            return await client.HostRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam, steamId64,
-                maxPlayerCount, password);
-        }
+	        ulong steamId64;
+	        try {
+		        steamId64 = SteamLibraryHelpers.GetSteamId64();
+	        }
+	        catch (InvalidOperationException e) {
+		        Debug.LogException(e);
+		        return (new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation), default);
+	        }
+	        
+	        return await client.HostRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam, steamId64,
+			        maxPlayerCount, password);
+	        }
 
         /// <summary>
         /// Join to a room on the server and get SteamIdentity.
@@ -97,9 +106,15 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
                 .JoinRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam, roomId, password)
                 .ConfigureAwait(false);
 
-            var steamId64 = result.GetExternalIdAsUInt64();
-            var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
-            return (error, new JoinRoomWithSteamResult(steamIdentity));
+            try {
+	            var steamId64 = result.GetExternalIdAsUInt64();
+	            var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
+	            return (error, new JoinRoomWithSteamResult(steamIdentity));
+            }
+            catch (InvalidOperationException e) {
+	            Debug.LogException(e);
+	            return (new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation), default);
+            }
         }
     }
 }
