@@ -1,7 +1,7 @@
 version: 2.1
 
 executors:
-  cpp_alpine:
+  cpp:
     working_directory: ~/workspace
     docker:
       - image: cdec/planeta-match-maker-dev:0.3.0
@@ -258,19 +258,19 @@ commands:
             ghr -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -n ${CIRCLE_TAG} ${ADDITIONAL_OPTIONS} ${CIRCLE_TAG} artifacts/
 
 jobs:
-  build_server_alpine_clang:
-    executor: cpp_alpine
+  build_server_clang:
+    executor: cpp
     steps:
       - build_server_linux:
-          build_id: PlanetaMatchMakerServer_alpine_clang
-          artifact_name: PlanetaMatchMakerServer_alpine_x86_64.tar.gz
+          build_id: PlanetaMatchMakerServer_clang
+          artifact_name: PlanetaMatchMakerServer_x86_64
           compiler: clang++
 
-  test_server_alpine_clang:
-    executor: cpp_alpine
+  test_server_clang:
+    executor: cpp
     steps:
       - test_server_linux:
-          build_id: PlanetaMatchMakerServer_alpine_clang
+          build_id: PlanetaMatchMakerServer_clang
 
   # build_server_windows_clang:
   #   executor: windows_cpp
@@ -349,16 +349,16 @@ jobs:
 workflows:
   build_test_and_release:
     jobs:
-      - build_server_alpine_clang:
+      - build_server_clang:
           filters:
             tags:
               only: /^v.*/
             branches:
               only: master
 
-      - test_server_alpine_clang:
+      - test_server_clang:
           requires:
-            - build_server_alpine_clang
+            - build_server_clang
           filters:
             tags:
               only: /^v.*/
@@ -436,7 +436,7 @@ workflows:
 
       - release_artifacts:
           requires:
-            - test_server_alpine_clang
+            - test_server_clang
             # - test_server_windows_clang
             - test_client_linux
             - test_client_windows
