@@ -4,7 +4,7 @@ executors:
   cpp_alpine:
     working_directory: ~/workspace
     docker:
-      - image: cdec/planeta-match-maker:dev-alpine
+      - image: cdec/planeta-match-maker-dev:0.3.0
   csharp:
     working_directory: ~/workspace
     docker:

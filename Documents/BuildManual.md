@@ -34,8 +34,8 @@ g++ is not supported now.
 1. Run test with ctest command if need
 
 ```bash
-docker build -t planeta-match-maker:dev-alpine PlanetaMatchMaker/Docker/dev-alpine
-docker run -it planeta-match-maker:dev-alpine /bin/ash
+docker build -t planeta-match-maker-dev PlanetaMatchMaker/Docker/dev
+docker run -it planeta-match-maker-dev /bin/ash
 # In the docker container
 mkdir build
 cd build
