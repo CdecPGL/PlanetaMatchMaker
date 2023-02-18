@@ -1,6 +1,9 @@
 using System;
 using CdecPGL.MinimalSerializer;
 
+// Ignore below suggestion because we use .NET type only for type alias because type alias is not available for type keyword in .Net Standard 2.0
+// ReSharper disable BuiltInTypeReferenceStyle
+
 namespace PlanetaGameLabo.MatchMaker
 {
     using SessionKeyType = UInt32;
