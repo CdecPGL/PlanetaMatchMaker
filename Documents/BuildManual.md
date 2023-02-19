@@ -194,3 +194,20 @@ UNITY_EXECUTABLE='A path of Unity executable'
 - Reference: https://github.com/boostorg/proto/issues/20
 
 Replace `#if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1700))` to `#if BOOST_WORKAROUND(BOOST_MSVC, < 1800)` around line 230 of `boost/proto/generate.hpp`.
+
+#### MSVC: `fatal  error C1189: #error:  WinSock.h has already been included`
+
+- Target: ServerTest
+- Library: Boost Library 1.78.0
+- Platform: MSVC
+- Reference: https://groups.google.com/g/boost-list/c/TKNG4U5UDU0
+
+Add `WIN32_LEAN_AND_MEAN` to predefined macro.
+
+#### MSVC: `error LNK2005: "public: virtual __cdecl boost::unit_test::lazy_ostream::~lazy_ostream(void)"`
+
+- Target: ServerTest
+- Library: Boost Library 1.78.0
+- Platform: MSVC
+
+Include `boost/test/unit_test.hpp` intead of `boost/test/included/unit_test.hpp`.
