@@ -45,7 +45,7 @@ make -j4
 ctest
 ```
 
-Currently, the server project is compatible with gcc so specify clang++ to cmake.
+Currently, the server project is not compatible with gcc so specify clang++ to cmake.
 
 ### Bulild by CMake Manually (Linux)
 
