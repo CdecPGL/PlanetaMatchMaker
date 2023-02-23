@@ -18,7 +18,8 @@ int main(const int argc, char* argv[]) {
 
 		// Load setting
 		auto setting = std::make_unique<server_setting>();
-		setting->load_from_setting_file(setting_file_path);
+		setting->load_from_json_file(setting_file_path);
+		setting->load_from_env_var();
 
 		// Setup log
 		if (setting->log.enable_console_log) { enable_console_log(setting->log.console_log_level, false); }

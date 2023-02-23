@@ -50,11 +50,20 @@ namespace pgl {
 
 		/**
 		 * Load server setting from JSON file.
+		 * Settings which is not in json file will not be updated.
 		 *
 		 * @param file_path A path of setting file.
 		 * @exception server_setting_error Loading setting file is failed or the content of the file is invalid.
 		 */
-		void load_from_setting_file(const std::filesystem::path& file_path);
+		void load_from_json_file(const std::filesystem::path& file_path);
+
+		/**
+		 * Load server setting from environment variable.
+		 * Settings which is not in environment variable will not be updated.
+		 *
+		 * @exception server_setting_error Some environment variables are invalid.
+		 */
+		void load_from_env_var();
 
 		/**
 		 * Output content of setting to stdout.
