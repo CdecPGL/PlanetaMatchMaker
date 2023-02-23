@@ -21,9 +21,10 @@ find_package(Boost 1.77.0 REQUIRED COMPONENTS thread coroutine date_time filesys
 target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerLib ${Boost_LIBRARIES})
 
-# Avoid to error of Boost Library 1.77 for MSVC
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  add_definitions(-D_WIN32_WINNT=0x0601)
+	# -D_WIN32_WINNT=0x0601: To avoid error of Boost Library 1.77 for MSVC
+	# _CRT_SECURE_NO_WARNINGS: To avoid error for getenv
+  add_definitions(-D_WIN32_WINNT=0x0601 _CRT_SECURE_NO_WARNINGS)
 endif()
 
 # Main executable

@@ -10,6 +10,23 @@
 using namespace boost;
 using namespace pgl;
 
+bool set_env_var(const std::string& var_name, const std::string& value) {
+#ifdef _MSC_VER
+	return _putenv((var_name + "=" + lexical_cast<std::string>(value)).c_str()) == 0;
+#else
+	return setenv(var_name.c_str(), value.c_str(), 1) == 0;
+#endif
+}
+
+bool unset_env_var(const std::string& var_name) {
+#ifdef _MSC_VER
+	return _putenv((var_name + "=").c_str()) == 0;
+#else
+	return unsetenv(var_name.c_str()) == 0;
+#endif
+}
+
+
 struct setting_file_fixture {
 	setting_file_fixture(): setting_path(std::filesystem::temp_directory_path() / "pmms_test_setting.json") { }
 	virtual ~setting_file_fixture() { if (exists(setting_path)) { remove(setting_path); } }
@@ -27,16 +44,16 @@ struct env_var_fixture {
 	virtual ~env_var_fixture() { delete_all_pmms_env_vars(); }
 
 private:
-	void delete_all_pmms_env_vars() {
+	static void delete_all_pmms_env_vars() {
 		std::vector<std::string> remove_env_list;
 		for (char** env_ptr = environ; const auto e = *env_ptr; ++env_ptr) {
 			const std::string env(e);
-			const auto idx = env.find_first_of("=");
+			const auto idx = env.find_first_of(R"(=)");
 			if (idx == std::string::npos) { continue; }
 			if (const auto name = env.substr(0, idx); name.starts_with("PMMS_")) { remove_env_list.push_back(name); }
 		}
 
-		std::ranges::for_each(remove_env_list, [](const std::string& n) { _putenv((n + "=").c_str()); });
+		std::ranges::for_each(remove_env_list, [](const std::string& n) { unset_env_var(n); });
 	}
 };
 
@@ -428,9 +445,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 
 	template <typename T>
 	void set_typed_env_var(const std::string& name, const T& value) {
-		if (_putenv((name + "=" + lexical_cast<std::string>(value)).c_str()) != 0) {
-			BOOST_FAIL("Failed to set envionment variable");
-		}
+		if (!set_env_var(name, lexical_cast<std::string>(value))) { BOOST_FAIL("Failed to set envionment variable"); }
 	}
 
 	template <>

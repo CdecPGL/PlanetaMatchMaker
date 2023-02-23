@@ -1,7 +1,5 @@
 #include <fstream>
 #include <concepts>
-#include <cstdlib>
-#include <algorithm>
 
 #include <boost/json.hpp>
 #include <boost/lexical_cast.hpp>
@@ -9,7 +7,7 @@
 #include "minimal_serializer/string_utility.hpp"
 
 #include "server/server_setting.hpp"
-#include "utilities/checked_static_cast.hpp"
+#include "utilities/env_var.hpp"
 
 using namespace boost;
 using namespace minimal_serializer;
@@ -192,84 +190,11 @@ namespace pgl {
 		}
 	}
 
-	template <typename T>
-	bool overwrite_by_env_var(T& value, const std::string& var_name) {
-		// determine the size of environment variable
-		size_t buffer_length;
-		if (const auto result = getenv_s(&buffer_length, nullptr, 0, var_name.c_str()); result != 0) {
-			throw server_setting_error(generate_string("The environment variable \"", var_name,
-				"\" can not be not read (", result, ")"));
-		}
-		if (buffer_length == 0) {
-			// environment variable not found
-			return false;
-		}
-
-		// read the environment variable
-		const auto buffer = std::make_unique<char[]>(buffer_length);
-		if (const auto result = getenv_s(&buffer_length, buffer.get(), buffer_length, var_name.c_str()); result != 0) {
-			throw server_setting_error(generate_string("The environment variable \"", var_name,
-				"\" can not be not read (", result, ")"));
-		}
-
-		const std::string value_str(buffer.get());
-		try { value = lexical_cast<T>(value_str); }
-		catch (const bad_lexical_cast& e) {
-			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", value_str,
-				"\" is not convertible to ", nameof::nameof_type<T>(), " (", e.what(), ")"));
-		}
-		return true;
-	}
-
 	template <>
-	bool overwrite_by_env_var<bool>(bool& value, const std::string& var_name) {
+	bool get_env_var<ip_version>(const std::string& var_name, ip_version& dest) {
 		std::string str;
-		if (!overwrite_by_env_var(str, var_name)) { return false; }
-		auto lower_str = str;
-		std::ranges::transform(lower_str, lower_str.begin(), [](const char c) {
-			return static_cast<char>(tolower(c));
-		});
-		if (lower_str == "true") { value = true; }
-		else if (lower_str == "false") { value = false; }
-		else {
-			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", str,
-				"\" is not convertible to bool (true or false)."));
-		}
-
-		return true;
-	}
-
-	template <>
-	bool overwrite_by_env_var<uint8_t>(uint8_t& value, const std::string& var_name) {
-		int32_t v;
-		if (!overwrite_by_env_var(v, var_name)) { return false; }
-		try { value = range_checked_static_cast<uint8_t>(v); }
-		catch (const static_cast_range_error& e) {
-			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", v,
-				"\" is not convertible to uint8_t.", e.what()));
-		}
-
-		return true;
-	}
-
-	template <>
-	bool overwrite_by_env_var<int8_t>(int8_t& value, const std::string& var_name) {
-		int32_t v;
-		if (!overwrite_by_env_var(v, var_name)) { return false; }
-		try { value = range_checked_static_cast<int8_t>(v); }
-		catch (const static_cast_range_error& e) {
-			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", v,
-				"\" is not convertible to uint8_t.", e.what()));
-		}
-
-		return true;
-	}
-
-	template <>
-	bool overwrite_by_env_var<ip_version>(ip_version& value, const std::string& var_name) {
-		std::string str;
-		if (!overwrite_by_env_var(str, var_name)) { return false; }
-		try { value = string_to_ip_version(str); }
+		if (!get_env_var(var_name, str)) { return false; }
+		try { dest = string_to_ip_version(str); }
 		catch (const std::out_of_range& e) {
 			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", str,
 				"\" is not convertible to ip_version (", e.what(), ")."));
@@ -279,10 +204,10 @@ namespace pgl {
 	}
 
 	template <>
-	bool overwrite_by_env_var<log_level>(log_level& value, const std::string& var_name) {
+	bool get_env_var<log_level>(const std::string& var_name, log_level& dest) {
 		std::string str;
-		if (!overwrite_by_env_var(str, var_name)) { return false; }
-		try { value = string_to_log_level(str); }
+		if (!get_env_var(var_name, str)) { return false; }
+		try { dest = string_to_log_level(str); }
 		catch (const std::out_of_range& e) {
 			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", str,
 				"\" is not convertible to log_level (", e.what(), ")."));
@@ -292,29 +217,29 @@ namespace pgl {
 	}
 
 	void server_setting::load_from_env_var() {
-		overwrite_by_env_var(common.enable_session_key_check, "PMMS_COMMON_ENABLE_SESSION_KEY_CHECK");
-		overwrite_by_env_var(common.time_out_seconds, "PMMS_COMMON_TIME_OUT_SECONDS");
-		overwrite_by_env_var<ip_version>(common.ip_version, "PMMS_COMMON_IP_VERSION");
-		overwrite_by_env_var(common.port, "PMMS_COMMON_PORT");
-		overwrite_by_env_var(common.max_connection_per_thread, "PMMS_COMMON_MAX_CONNECTION_PER_THREAD");
-		overwrite_by_env_var(common.thread, "PMMS_COMMON_MAX_THREAD");
-		overwrite_by_env_var(common.max_room_count, "PMMS_COMMON_MAX_ROOM_COUNT");
-		overwrite_by_env_var(common.max_player_per_room, "PMMS_COMMON_MAX_PLAYER_PER_ROOM");
+		get_env_var("PMMS_COMMON_ENABLE_SESSION_KEY_CHECK", common.enable_session_key_check);
+		get_env_var("PMMS_COMMON_TIME_OUT_SECONDS", common.time_out_seconds);
+		get_env_var<ip_version>("PMMS_COMMON_IP_VERSION", common.ip_version);
+		get_env_var("PMMS_COMMON_PORT", common.port);
+		get_env_var("PMMS_COMMON_MAX_CONNECTION_PER_THREAD", common.max_connection_per_thread);
+		get_env_var("PMMS_COMMON_MAX_THREAD", common.thread);
+		get_env_var("PMMS_COMMON_MAX_ROOM_COUNT", common.max_room_count);
+		get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
 		validate_common_setting(common);
 
-		overwrite_by_env_var(log.enable_console_log, "PMMS_LOG_ENABLE_CONSOLE_LOG");
-		overwrite_by_env_var<log_level>(log.console_log_level, "PMMS_LOG_CONSOLE_LOG_LEVEL");
-		overwrite_by_env_var(log.enable_file_log, "PMMS_LOG_ENABLE_FILE_LOG");
-		overwrite_by_env_var<log_level>(log.file_log_level, "PMMS_LOG_FILE_LOG_LEVEL");
-		overwrite_by_env_var(log.file_log_path, "PMMS_LOG_FILE_LOG_PATH");
+		get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);
+		get_env_var<log_level>("PMMS_LOG_CONSOLE_LOG_LEVEL", log.console_log_level);
+		get_env_var("PMMS_LOG_ENABLE_FILE_LOG", log.enable_file_log);
+		get_env_var<log_level>("PMMS_LOG_FILE_LOG_LEVEL", log.file_log_level);
+		get_env_var("PMMS_LOG_FILE_LOG_PATH", log.file_log_path);
 		validate_log_setting(log);
 
-		overwrite_by_env_var(connection_test.connection_check_tcp_time_out_seconds,
-			"PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS");
-		overwrite_by_env_var(connection_test.connection_check_udp_time_out_seconds,
-			"PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS");
-		overwrite_by_env_var(connection_test.connection_check_udp_try_count,
-			"PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT");
+		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS",
+			connection_test.connection_check_tcp_time_out_seconds);
+		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS",
+			connection_test.connection_check_udp_time_out_seconds);
+		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT",
+			connection_test.connection_check_udp_try_count);
 		validate_connection_test_setting(connection_test);
 	}
 
