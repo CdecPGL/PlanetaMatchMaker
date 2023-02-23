@@ -7,14 +7,13 @@ In example code of this manual, default current directory is the directory this 
 
 ### Environment
 
-To build server project, you need a compiler which is compatible with C++17.
+To build server project, you need MSVC or clang whose version is compatible with C++20.
+gcc is not supported.
 
 Following compilers and platforms are tested.
 
 - MSVC 14.34 (VS 17.4.5) (Windows)
 - clang 12.0.1 (Alpine)
-
-g++ is not supported now.
 
 ### Dependencies
 
@@ -45,7 +44,7 @@ make -j4
 ctest
 ```
 
-Currently, the server project is not compatible with gcc so specify clang++ to cmake.
+The server project is not compatible with gcc so specify clang++ to cmake.
 
 ### Bulild by CMake Manually (Linux)
 
@@ -67,7 +66,7 @@ make -j4
 ctest
 ```
 
-Currently, the server project is compatible with gcc so specify clang++ to cmake.
+The server project is compatible with gcc so specify clang++ to cmake.
 
 ### Build by Visual Studio (Windows)
 

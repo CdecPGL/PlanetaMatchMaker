@@ -5,7 +5,7 @@ add_executable (PlanetaMatchMakerServerTest ${source_files})
 
 # Boost Library
 find_package(Boost 1.77.0 REQUIRED COMPONENTS unit_test_framework json)
-# to avoid warnings, use SYSTEM (-isystem option of gcc)
+# to avoid warnings, use SYSTEM (-isystem option of clang)
 target_include_directories(PlanetaMatchMakerServerTest SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerTest ${Boost_LIBRARIES})
 
