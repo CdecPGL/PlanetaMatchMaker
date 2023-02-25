@@ -9,6 +9,16 @@ find_package(Boost 1.77.0 REQUIRED COMPONENTS unit_test_framework json)
 target_include_directories(PlanetaMatchMakerServerTest SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerTest ${Boost_LIBRARIES})
 
+
+# Additional compiler configurations
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  # Suppress unused-result warning because ignoring return value of functions is common case in test code
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4834")
+elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+  # Suppress unused-result warning because ignoring return value of functions is common case in test code
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-result")
+endif()
+
 target_link_libraries(PlanetaMatchMakerServerTest PlanetaMatchMakerServerLib)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

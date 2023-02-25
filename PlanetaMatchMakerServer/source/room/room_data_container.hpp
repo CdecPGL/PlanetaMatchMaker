@@ -56,9 +56,7 @@ namespace pgl {
 		 * @param data New room data.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicate.
 		 */
-		room_id_t assign_id_and_add(const room_data& data) {
-			return container_.assign_id_and_add(data);
-		}
+		room_id_t assign_id_and_add(const room_data& data) { return container_.assign_id_and_add(data); }
 
 		/**
 		 * Search room data which matches conditions.
