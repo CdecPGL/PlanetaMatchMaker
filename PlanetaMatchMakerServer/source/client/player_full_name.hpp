@@ -56,6 +56,13 @@ namespace pgl {
 			&player_full_name::tag
 		>;
 	};
+
+	inline size_t hash_value(const player_full_name& datetime) {
+		size_t seed = 0;
+		boost::hash_combine(seed, hash_value(datetime.name));
+		boost::hash_combine(seed, boost::hash_value(datetime.tag));
+		return seed;
+	}
 }
 
 namespace boost {

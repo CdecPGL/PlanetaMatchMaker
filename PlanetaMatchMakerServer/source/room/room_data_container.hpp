@@ -12,7 +12,8 @@ namespace pgl {
 	 */
 	class room_data_container final {
 	public:
-		using container_type = thread_safe_data_container<room_id_t, room_data, &room_data::host_player_full_name>;
+		using container_type = thread_safe_data_container<room_data, &room_data::room_id, &
+			room_data::host_player_full_name>;
 		using id_param_type = container_type::id_param_type;
 		using data_param_type = container_type::data_param_type;
 
