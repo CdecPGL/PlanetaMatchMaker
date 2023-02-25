@@ -103,7 +103,7 @@ namespace pgl {
 	 * 
 	 * @tparam Data A type of data to hold.
 	 * @tparam IdMemberVariable A member variable pointer of ID value.
-	* @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
+	 * @tparam UniqueMemberVariables Member variable pointers of the member variables in Data which should be unique in this container.
 	 */
 	template <typename Data, auto Data::* IdMemberVariable, auto Data::*... UniqueMemberVariables>
 	class thread_safe_data_container final : boost::noncopyable {
@@ -113,20 +113,55 @@ namespace pgl {
 		using data_param_type = typename boost::call_traits<Data>::param_type;
 
 		/**
-		 * Add new data with indicated ID.
+		 * Add or update data.
 		 *
-		 * @param id An ID for new data.
-		 * @param data Data to add.
-		 * @throw unique_variable_duplication_error An id or unique member variable is duplicated.
+		 * @param data New data of rvalue reference.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 * @return true if added.
 		 */
-		void add_data(id_param_type id, data_param_type data) {
-			std::lock_guard lock(mutex_);
+		bool add_or_update(Data&& data) {
+			const auto id = get_id(data);
+			std::shared_lock lock(mutex_);
 
-			if (data_map_.contains(id)) { throw unique_variable_duplication_error(); }
 			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
 
-			data_map_.emplace(id, data);
-			unique_variables_.add_or_update_variables(data);
+			auto&& [it, is_added] = data_map_.insert_or_assign(id, data);
+			unique_variables_.add_or_update_variables(it->second);
+			return is_added;
+		}
+
+		/**
+		 * Update data of indicated ID.
+		 *
+		 * @param data New data.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 * @return true if added.
+		 */
+		bool add_or_update(const Data& data) { return add_or_update(Data{data}); }
+
+		/**
+		 * Add new data with automatically assigned ID.
+		 *
+		 * @param data Data of rvalue reference
+		 * @param id_setter (optional) A function to set assigned ID to the data. In default, assigned ID is not set to the data.
+		 * @param random_id_generator (optional) A functions to generate new ID. In default, built-in random value generator will be used.
+		 * @return An ID assigned to new data.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 */
+		id_type assign_id_and_add_data(Data&& data,
+			std::function<void(Data&, id_param_type)>&& id_setter = [](Data&, id_param_type) {},
+			std::function<id_type()>&& random_id_generator = generate_random_id<id_type>) {
+			std::lock_guard lock(mutex_);
+
+			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
+
+			id_type id{};
+			do { id = random_id_generator(); }
+			while (data_map_.contains(id));
+			id_setter(data, id);
+			auto&& [it,_] = data_map_.emplace(id, data);
+			unique_variables_.add_or_update_variables(it->second);
+			return id;
 		}
 
 		/**
@@ -138,20 +173,10 @@ namespace pgl {
 		 * @return An ID assigned to new data.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
 		 */
-		id_type assign_id_and_add_data(Data& data,
+		id_type assign_id_and_add_data(const Data& data,
 			std::function<void(Data&, id_param_type)>&& id_setter = [](Data&, id_param_type) {},
 			std::function<id_type()>&& random_id_generator = generate_random_id<id_type>) {
-			std::lock_guard lock(mutex_);
-
-			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
-
-			id_type id{};
-			do { id = random_id_generator(); }
-			while (data_map_.contains(id));
-			id_setter(data, id);
-			data_map_.emplace(id, data);
-			unique_variables_.add_or_update_variables(data);
-			return id;
+			return assign_id_and_add_data(Data{ data }, std::move(id_setter), std::move(random_id_generator));
 		}
 
 		/**
@@ -211,23 +236,6 @@ namespace pgl {
 		}
 
 		/**
-		 * Update data of indicated ID.
-		 *
-		 * @param id An ID data you want to update.
-		 * @param data New data.
-		 * @throw std::out_of_range A data with passed Id does not exist.
-		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
-		 */
-		void update_data(id_param_type id, data_param_type data) {
-			std::shared_lock lock(mutex_);
-
-			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
-
-			data_map_.at(id) = data;
-			unique_variables_.add_or_update_variables(data);
-		}
-
-		/**
 		 * Check data existence for specific ID.
 		 *
 		 * @param id ID to check.
@@ -261,5 +269,7 @@ namespace pgl {
 		std::unordered_map<id_type, std::atomic<Data>> data_map_;
 		unique_variables_container<Data, IdMemberVariable, UniqueMemberVariables...> unique_variables_;
 		mutable std::shared_mutex mutex_;
+
+		static id_type get_id(const data_param_type data) { return data.*IdMemberVariable; }
 	};
 }

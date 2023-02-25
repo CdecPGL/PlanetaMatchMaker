@@ -64,7 +64,7 @@ const auto data4 = test_struct1{
 
 BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	////////////////////////////////
-	// add_data, get_data 
+	// add_or_update, get_data 
 	////////////////////////////////
 
 	BOOST_AUTO_TEST_CASE(test_add_and_get) {
@@ -72,41 +72,71 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		auto container = container_t();
 
 		// exercise
-		container.add_data(data1.id, data1);
-		container.add_data(data2.id, data2);
+		const auto result1 = container.add_or_update(data1);
+		const auto result2 = container.add_or_update(data2);
 		const auto actual1 = container.get_data(data1.id);
 		const auto actual2 = container.get_data(data2.id);
 
 		// verify
+		BOOST_CHECK_EQUAL(result1, true);
+		BOOST_CHECK_EQUAL(result2, true);
 		BOOST_CHECK_EQUAL(actual1, data1);
 		BOOST_CHECK_EQUAL(actual2, data2);
 	}
 
 	////////////////////////////////
-	// add_data 
+	// add_or_update 
 	////////////////////////////////
 
-	BOOST_AUTO_TEST_CASE(test_add_already_exist_id) {
+	BOOST_AUTO_TEST_CASE(test_update) {
 		// set up
 		auto container = container_t();
-		auto duplicate_data = data2;
-		duplicate_data.id = data1.id;
-		container.add_data(data1.id, data1);
+		auto updated_data1 = data3;
+		updated_data1.id = data1.id;
+		auto updated_data2 = data4;
+		updated_data2.id = data2.id;
+		container.add_or_update(data1);
+		container.add_or_update(data2);
 
-		// exercise and verify
-		BOOST_CHECK_THROW(container.add_data(duplicate_data.id, duplicate_data), unique_variable_duplication_error);
+		// exercise
+		const auto result1 = container.add_or_update(updated_data1);
+		const auto result2 = container.add_or_update(updated_data2);
+		const auto actual1 = container.get_data(updated_data1.id);
+		const auto actual2 = container.get_data(updated_data2.id);
+
+		// verify
+		BOOST_CHECK_EQUAL(result1, false);
+		BOOST_CHECK_EQUAL(result2, false);
+		BOOST_CHECK_EQUAL(actual1, updated_data1);
+		BOOST_CHECK_EQUAL(actual2, updated_data2);
 	}
 
-	BOOST_DATA_TEST_CASE(test_add_already_exist_idunique_variable, unit_test::data::make({
+	BOOST_DATA_TEST_CASE(test_add_already_exist_unique_variable, unit_test::data::make({
+		// id is different but unique variable1 is duplicated
 		test_struct1{19, -13.2f, false, {64, 47, 84}, u8"test1", 0},
+		// id is different but unique variable2 is duplicated
 		test_struct1{19, -13.2f, false, {64, 47, 84}, u8"test", 1},
 		}), duplicate_data) {
 		// set up
 		auto container = container_t();
-		container.add_data(data1.id, data1);
+		container.add_or_update(data1);
 
 		// exercise and verify
-		BOOST_CHECK_THROW(container.add_data(duplicate_data.id, duplicate_data), unique_variable_duplication_error);
+		BOOST_CHECK_THROW(container.add_or_update(duplicate_data),
+			unique_variable_duplication_error);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_update_by_same_data) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		container.add_or_update(data1);
+		const auto actual1 = container.get_data(data1.id);
+
+		// verify
+		BOOST_CHECK_EQUAL(actual1, data1);
 	}
 
 	////////////////////////////////
@@ -160,7 +190,7 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	BOOST_AUTO_TEST_CASE(test_get_not_exist_data) {
 		// set up
 		auto container = container_t();
-		container.add_data(data1.id, data1);
+		container.add_or_update(data1);
 
 		// exercise and verify
 		// ReSharper disable once CppNoDiscardExpression
@@ -171,10 +201,10 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		// set up
 		auto container = container_t();
 		const auto expected = std::vector{data2, data4, data1};
-		container.add_data(data1.id, data1);
-		container.add_data(data2.id, data2);
-		container.add_data(data3.id, data3);
-		container.add_data(data4.id, data4);
+		container.add_or_update(data1);
+		container.add_or_update(data2);
+		container.add_or_update(data3);
+		container.add_or_update(data4);
 
 		// exercise
 		const auto result = container.get_data(
@@ -215,10 +245,10 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	), start_idx, count, expected) {
 		// set up
 		auto container = container_t();
-		container.add_data(data1.id, data1);
-		container.add_data(data2.id, data2);
-		container.add_data(data3.id, data3);
-		container.add_data(data4.id, data4);
+		container.add_or_update(data1);
+		container.add_or_update(data2);
+		container.add_or_update(data3);
+		container.add_or_update(data4);
 
 		// exercise
 		const auto result = container.get_range_data(
@@ -232,71 +262,13 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	}
 
 	////////////////////////////////
-	// update_data 
-	////////////////////////////////
-
-	BOOST_AUTO_TEST_CASE(test_update) {
-		// set up
-		auto container = container_t();
-		auto updated_data1 = data3;
-		updated_data1.id = data1.id;
-		auto updated_data2 = data4;
-		updated_data2.id = data2.id;
-		container.add_data(data1.id, data1);
-		container.add_data(data2.id, data2);
-
-		// exercise
-		container.update_data(updated_data1.id, updated_data1);
-		container.update_data(updated_data2.id, updated_data2);
-		const auto actual1 = container.get_data(updated_data1.id);
-		const auto actual2 = container.get_data(updated_data2.id);
-
-		// verify
-		BOOST_CHECK_EQUAL(actual1, updated_data1);
-		BOOST_CHECK_EQUAL(actual2, updated_data2);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_update_by_same_data) {
-		// set up
-		auto container = container_t();
-		container.add_data(data1.id, data1);
-
-		// exercise
-		container.update_data(data1.id, data1);
-		const auto actual1 = container.get_data(data1.id);
-
-		// verify
-		BOOST_CHECK_EQUAL(actual1, data1);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_update_not_exist_id) {
-		// set up
-		auto container = container_t();
-
-		// exercise and verify
-		BOOST_CHECK_THROW(container.update_data(data1.id, data1), std::out_of_range);
-	}
-
-	BOOST_DATA_TEST_CASE(test_update_already_exist_unique_variable, unit_test::data::make({
-		test_struct1{19, -13.2f, false, {64, 47, 84}, u8"test1", 0},
-		test_struct1{19, -13.2f, false, {64, 47, 84}, u8"test", 1},
-		}), duplicate_data) {
-		// set up
-		auto container = container_t();
-		container.add_data(data1.id, data1);
-
-		// exercise and verify
-		BOOST_CHECK_THROW(container.update_data(duplicate_data.id, duplicate_data), unique_variable_duplication_error);
-	}
-
-	////////////////////////////////
 	// is_exist_data 
 	////////////////////////////////
 
 	BOOST_AUTO_TEST_CASE(test_is_exist_for_exist_data) {
 		// set up
 		auto container = container_t();
-		container.add_data(data1.id, data1);
+		container.add_or_update(data1);
 
 		// exercise
 		const auto result = container.is_data_exist(data1.id);
@@ -308,7 +280,7 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	BOOST_AUTO_TEST_CASE(test_is_exist_for_not_exist_data) {
 		// set up
 		auto container = container_t();
-		container.add_data(data1.id, data1);
+		container.add_or_update(data1);
 
 		// exercise
 		const auto result = container.is_data_exist(data2.id);
@@ -324,8 +296,8 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	BOOST_AUTO_TEST_CASE(test_remove) {
 		// set up
 		auto container = container_t();
-		container.add_data(data1.id, data1);
-		container.add_data(data2.id, data2);
+		container.add_or_update(data1);
+		container.add_or_update(data2);
 
 		// exercise
 		container.remove_data(data1.id);
@@ -364,7 +336,7 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	BOOST_AUTO_TEST_CASE(test_size_for_one_data) {
 		// set up
 		auto container = container_t();
-		container.add_data(data1.id, data1);
+		container.add_or_update(data1);
 
 		// exercise
 		const auto result = container.size();

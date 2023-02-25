@@ -41,14 +41,6 @@ namespace pgl {
 		[[nodiscard]] size_t size() const { return container_.size(); }
 
 		/**
-		 * Add new room data with ID of passed room data.
-		 *
-		 * @param data New room data.
-		 * @throw unique_variable_duplication_error Unique member variable is duplicate.
-		 */
-		void add_data(data_param_type data) { container_.add_data(data.room_id, data); }
-
-		/**
 		 * Add new room data with ID assigned automatically.
 		 *
 		 * @param data New room data.
@@ -96,12 +88,22 @@ namespace pgl {
 		}
 
 		/**
-		 * Update room data with the ID of passed room data.
+		 * Add or update room.
+		 *
+		 * @param data A room data rvalue reference to update.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 * @return true if added.
+		*/
+		bool add_or_update(room_data&& data) { return container_.add_or_update(std::forward<room_data>(data)); }
+
+		/**
+		 * Add or update room.
 		 *
 		 * @param data A room data to update.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
-		 */
-		void update_data(data_param_type data) { container_.update_data(data.room_id, data); }
+		 * @return true if added.
+		*/
+		bool add_or_update(const room_data& data) { return container_.add_or_update(data); }
 
 		/**
 		 * Remove room data with an ID.

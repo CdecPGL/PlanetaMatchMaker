@@ -40,12 +40,12 @@ namespace pgl {
 			case update_room_status_notice_message::status::open:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Open ", room_data, ".");
 				room_data.setting_flags |= room_setting_flag::open_room;
-				room_data_container.update_data(room_data);
+				room_data_container.add_or_update(room_data);
 				break;
 			case update_room_status_notice_message::status::close:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Close ", room_data, ".");
 				room_data.setting_flags &= ~room_setting_flag::open_room;
-				room_data_container.update_data(room_data);
+				room_data_container.add_or_update(room_data);
 				break;
 			case update_room_status_notice_message::status::remove:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Remove ", room_data, ".");
