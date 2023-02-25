@@ -64,8 +64,8 @@ namespace pgl {
 			auto game_host_endpoint = host_endpoint;
 			game_host_endpoint.port_number = message.port_number;
 			const auto is_public = message.password.length() == 0;
-			room_data room_data{
-				{}, // assign in room_data_container.assign_id_and_add_data(room_data)
+			const room_data room_data{
+				{}, // assign in room_data_container.assign_id_and_add(room_data)
 				param->session_data.client_player_name(),
 				(is_public ? room_setting_flag::public_room : room_setting_flag::none) |
 				room_setting_flag::open_room,
@@ -79,7 +79,7 @@ namespace pgl {
 				1
 			};
 
-			reply.room_id = room_data_container.assign_id_and_add_data(room_data);
+			reply.room_id = room_data_container.assign_id_and_add(room_data);
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New ",
 				is_public ? "public" : "private", " room for player \"",
 				param->session_data.client_player_name().generate_full_name(), "\" is created with id: ",

@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	}
 
 	////////////////////////////////
-	// assign_id_and_add_data, get_data 
+	// assign_id_and_add, get_data 
 	////////////////////////////////
 
 	BOOST_AUTO_TEST_CASE(test_assign_id_and_add_and_get) {
@@ -148,23 +148,22 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		auto container = container_t();
 		auto non_const_data1 = data1;
 		auto non_const_data2 = data2;
-		const auto id_setter = [](test_struct1& data, const uint8_t& id) { data.id = id; };
 
 		// exercise
-		const auto id1 = container.assign_id_and_add_data(non_const_data1, id_setter);
-		const auto id2 = container.assign_id_and_add_data(non_const_data2, id_setter);
+		const auto id1 = container.assign_id_and_add(non_const_data1);
+		const auto id2 = container.assign_id_and_add(non_const_data2);
+		non_const_data1.id = id1;
+		non_const_data2.id = id2;
 		const auto actual1 = container.get_data(non_const_data1.id);
 		const auto actual2 = container.get_data(non_const_data2.id);
 
 		// verify
-		non_const_data1.id = id1;
-		non_const_data2.id = id2;
 		BOOST_CHECK_EQUAL(actual1, non_const_data1);
 		BOOST_CHECK_EQUAL(actual2, non_const_data2);
 	}
 
 	////////////////////////////////
-	// assign_id_and_add_data 
+	// assign_id_and_add
 	////////////////////////////////
 
 	BOOST_DATA_TEST_CASE(test_assign_id_and_add_already_exist_unique_variable, unit_test::data::make({
@@ -173,13 +172,12 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		}), duplicate_data) {
 		// set up
 		auto container = container_t();
-		auto non_const_data1 = data1;
-		const auto id_setter = [](test_struct1& data, const uint8_t& id) { data.id = id; };
-		container.assign_id_and_add_data(non_const_data1, id_setter);
+		const auto non_const_data1 = data1;
+		container.assign_id_and_add(non_const_data1);
 
 		// exercise and verify
 		auto non_const_duplicate_data = duplicate_data;
-		BOOST_CHECK_THROW(container.assign_id_and_add_data(non_const_duplicate_data, id_setter),
+		BOOST_CHECK_THROW(container.assign_id_and_add(non_const_duplicate_data),
 			unique_variable_duplication_error);
 	}
 

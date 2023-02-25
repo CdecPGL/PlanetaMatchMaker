@@ -143,22 +143,22 @@ namespace pgl {
 		 * Add new data with automatically assigned ID.
 		 *
 		 * @param data Data of rvalue reference
-		 * @param id_setter (optional) A function to set assigned ID to the data. In default, assigned ID is not set to the data.
 		 * @param random_id_generator (optional) A functions to generate new ID. In default, built-in random value generator will be used.
 		 * @return An ID assigned to new data.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
 		 */
-		id_type assign_id_and_add_data(Data&& data,
-			std::function<void(Data&, id_param_type)>&& id_setter = [](Data&, id_param_type) {},
+		id_type assign_id_and_add(Data&& data,
 			std::function<id_type()>&& random_id_generator = generate_random_id<id_type>) {
 			std::lock_guard lock(mutex_);
-
-			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
 
 			id_type id{};
 			do { id = random_id_generator(); }
 			while (data_map_.contains(id));
-			id_setter(data, id);
+			data.*IdMemberVariable = id;
+
+			// Check if unique because ensure id of passed data is not duplicate existing id
+			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
+
 			auto&& [it,_] = data_map_.emplace(id, data);
 			unique_variables_.add_or_update_variables(it->second);
 			return id;
@@ -168,15 +168,13 @@ namespace pgl {
 		 * Add new data with automatically assigned ID.
 		 *
 		 * @param data Data to add.
-		 * @param id_setter (optional) A function to set assigned ID to the data. In default, assigned ID is not set to the data.
 		 * @param random_id_generator (optional) A functions to generate new ID. In default, built-in random value generator will be used.
 		 * @return An ID assigned to new data.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
 		 */
-		id_type assign_id_and_add_data(const Data& data,
-			std::function<void(Data&, id_param_type)>&& id_setter = [](Data&, id_param_type) {},
+		id_type assign_id_and_add(const Data& data,
 			std::function<id_type()>&& random_id_generator = generate_random_id<id_type>) {
-			return assign_id_and_add_data(Data{ data }, std::move(id_setter), std::move(random_id_generator));
+			return assign_id_and_add(Data{data}, std::move(random_id_generator));
 		}
 
 		/**

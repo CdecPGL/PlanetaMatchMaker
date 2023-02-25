@@ -43,13 +43,21 @@ namespace pgl {
 		/**
 		 * Add new room data with ID assigned automatically.
 		 *
+		 * @param data New room data rvalue reference.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicate.
+		 */
+		room_id_t assign_id_and_add(room_data&& data) {
+			return container_.assign_id_and_add(std::forward<room_data>(data));
+		}
+
+		/**
+		 * Add new room data with ID assigned automatically.
+		 *
 		 * @param data New room data.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicate.
 		 */
-		room_id_t assign_id_and_add_data(room_data& data) {
-			return container_.assign_id_and_add_data(data, [](room_data& data, id_param_type id) {
-				data.room_id = id;
-			});
+		room_id_t assign_id_and_add(const room_data& data) {
+			return container_.assign_id_and_add(data);
 		}
 
 		/**
