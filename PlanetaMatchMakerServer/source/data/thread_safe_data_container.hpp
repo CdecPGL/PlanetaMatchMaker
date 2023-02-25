@@ -182,21 +182,21 @@ namespace pgl {
 		 * 
 		 * @param id ID to get data.
 		 * @throw std::out_of_range A data with passed ID does not exist.
-		* @return Data which has passed ID.
+		 * @return Data which has passed ID.
 		 */
-		[[nodiscard]] Data get_data(id_param_type id) const {
+		[[nodiscard]] Data get(id_param_type id) const {
 			std::shared_lock lock(mutex_);
 			return data_map_.at(id).load();
 		}
 
 		/**
-		 * Get sorted and filtered data.
+		 * Search data by filter and return sorted result.
 		 *
-		 * @param compare_function A function used to sorting.
-		 * @param filter_function A function used to filtering.
+		 * @param compare_function A function used to sort.
+		 * @param filter_function A function used to filter.
 		 * @return A list of data.
 		 */
-		[[nodiscard]] std::vector<Data> get_data(
+		[[nodiscard]] std::vector<Data> search(
 			std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
 			std::vector<Data> data;
@@ -214,18 +214,18 @@ namespace pgl {
 		}
 
 		/**
-		 * Get sorted and filtered data with indicating range.
+		 * Search data by filter and return sorted result with indicating range.
 		 *
 		 * @param start_idx A start index of range.
 		 * @param count The number of data in range.
-		 * @param compare_function A function used to sorting.
-		 * @param filter_function A function used to filtering.
+		 * @param compare_function A function used to sort.
+		 * @param filter_function A function used to filter.
 		 * @return A list of data.
 		 */
-		[[nodiscard]] std::vector<Data> get_range_data(const size_t start_idx, size_t count,
+		[[nodiscard]] std::vector<Data> search_range(const size_t start_idx, size_t count,
 			std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
-			std::vector<Data> data = get_data(std::move(compare_function), std::move(filter_function));
+			std::vector<Data> data = search(std::move(compare_function), std::move(filter_function));
 			count = std::min(count, data.size() >= start_idx ? data.size() - start_idx : 0);
 			std::vector<Data> result(count);
 			const auto end_idx_plus_one = start_idx + count;
@@ -239,7 +239,7 @@ namespace pgl {
 		 * @param id ID to check.
 		 * @return Whether data exists for the ID.
 		 */
-		[[nodiscard]] bool is_data_exist(id_param_type id) const {
+		[[nodiscard]] bool contains(id_param_type id) const {
 			std::shared_lock lock(mutex_);
 			return data_map_.contains(id);
 		}
@@ -248,12 +248,12 @@ namespace pgl {
 		 * Remove data of indicated ID.
 		 *
 		 * @param id An ID data you want to remove.
+		 * @return true if removed.
 		 */
-		void remove_data(id_param_type id) {
+		bool try_remove(id_param_type id) {
 			std::lock_guard lock(mutex_);
-			auto it = data_map_.find(id);
 			unique_variables_.remove_variables(id);
-			data_map_.erase(it);
+			return data_map_.erase(id) == 1;
 		}
 
 		/**

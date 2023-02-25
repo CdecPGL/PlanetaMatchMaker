@@ -14,7 +14,7 @@ namespace pgl {
 
 		// Check room existence
 		parameter_validator.validate_room_existence(room_data_container, message.room_id);
-		auto room_data = room_data_container.get_data(message.room_id);
+		auto room_data = room_data_container.get(message.room_id);
 
 		// Check if the client is host of requested room
 		if (room_data.host_endpoint != endpoint::make_from_boost_endpoint(param->socket.remote_endpoint())) {
@@ -49,7 +49,7 @@ namespace pgl {
 				break;
 			case update_room_status_notice_message::status::remove:
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Remove ", room_data, ".");
-				room_data_container.remove_data(room_data.room_id);
+				room_data_container.try_remove(room_data.room_id);
 				param->session_data.delete_hosting_room_id(room_data.room_id);
 				break;
 			default:

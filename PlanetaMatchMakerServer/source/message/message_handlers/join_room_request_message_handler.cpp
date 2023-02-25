@@ -12,7 +12,7 @@ namespace pgl {
 
 		// Check room existence
 		parameter_validator.validate_room_existence(room_data_container, message.room_id);
-		const auto room_data = room_data_container.get_data(message.room_id);
+		const auto room_data = room_data_container.get(message.room_id);
 
 		join_room_reply_message reply{};
 

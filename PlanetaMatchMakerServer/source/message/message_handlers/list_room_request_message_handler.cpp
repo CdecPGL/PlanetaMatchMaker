@@ -22,7 +22,7 @@ namespace pgl {
 		// Generate room data list to send
 		std::vector<room_data> matched_data_list;
 		try {
-			matched_data_list = room_data_container.get_data(message.sort_kind, message.search_target_flags,
+			matched_data_list = room_data_container.search(message.sort_kind, message.search_target_flags,
 				message.search_full_name);
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
 				" rooms are matched in ", room_data_container.size(), " rooms.");

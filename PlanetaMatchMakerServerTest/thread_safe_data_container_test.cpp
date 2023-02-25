@@ -64,7 +64,7 @@ const auto data4 = test_struct1{
 
 BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	////////////////////////////////
-	// add_or_update, get_data 
+	// add_or_update, get 
 	////////////////////////////////
 
 	BOOST_AUTO_TEST_CASE(test_add_and_get) {
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		// exercise
 		const auto result1 = container.add_or_update(data1);
 		const auto result2 = container.add_or_update(data2);
-		const auto actual1 = container.get_data(data1.id);
-		const auto actual2 = container.get_data(data2.id);
+		const auto actual1 = container.get(data1.id);
+		const auto actual2 = container.get(data2.id);
 
 		// verify
 		BOOST_CHECK_EQUAL(result1, true);
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		// exercise
 		const auto result1 = container.add_or_update(updated_data1);
 		const auto result2 = container.add_or_update(updated_data2);
-		const auto actual1 = container.get_data(updated_data1.id);
-		const auto actual2 = container.get_data(updated_data2.id);
+		const auto actual1 = container.get(updated_data1.id);
+		const auto actual2 = container.get(updated_data2.id);
 
 		// verify
 		BOOST_CHECK_EQUAL(result1, false);
@@ -133,14 +133,14 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 
 		// exercise
 		container.add_or_update(data1);
-		const auto actual1 = container.get_data(data1.id);
+		const auto actual1 = container.get(data1.id);
 
 		// verify
 		BOOST_CHECK_EQUAL(actual1, data1);
 	}
 
 	////////////////////////////////
-	// assign_id_and_add, get_data 
+	// assign_id_and_add, get 
 	////////////////////////////////
 
 	BOOST_AUTO_TEST_CASE(test_assign_id_and_add_and_get) {
@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		const auto id2 = container.assign_id_and_add(non_const_data2);
 		non_const_data1.id = id1;
 		non_const_data2.id = id2;
-		const auto actual1 = container.get_data(non_const_data1.id);
-		const auto actual2 = container.get_data(non_const_data2.id);
+		const auto actual1 = container.get(non_const_data1.id);
+		const auto actual2 = container.get(non_const_data2.id);
 
 		// verify
 		BOOST_CHECK_EQUAL(actual1, non_const_data1);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	}
 
 	////////////////////////////////
-	// get_data 
+	// get 
 	////////////////////////////////
 
 	BOOST_AUTO_TEST_CASE(test_get_not_exist_data) {
@@ -192,10 +192,14 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 
 		// exercise and verify
 		// ReSharper disable once CppNoDiscardExpression
-		BOOST_CHECK_THROW(container.get_data(9), std::out_of_range); // NOLINT(clang-diagnostic-unused-result)
+		BOOST_CHECK_THROW(container.get(9), std::out_of_range); // NOLINT(clang-diagnostic-unused-result)
 	}
 
-	BOOST_AUTO_TEST_CASE(test_get_filterd) {
+	////////////////////////////////
+	// search
+	////////////////////////////////
+
+	BOOST_AUTO_TEST_CASE(test_search) {
 		// set up
 		auto container = container_t();
 		const auto expected = std::vector{data2, data4, data1};
@@ -205,7 +209,7 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		container.add_or_update(data4);
 
 		// exercise
-		const auto result = container.get_data(
+		const auto result = container.search(
 			[](const auto& l, const auto& r) { return l.id < r.id; },
 			[](const auto& d) { return d.value1 >= 0; }
 		);
@@ -214,13 +218,13 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
 	}
 
-	BOOST_AUTO_TEST_CASE(test_get_filterd_no_data) {
+	BOOST_AUTO_TEST_CASE(test_search_no_data) {
 		// set up
 		const auto container = container_t();
 		const auto expected = std::vector<test_struct1>{};
 
 		// exercise
-		const auto result = container.get_data(
+		const auto result = container.search(
 			[](const auto& l, const auto& r) { return l.id < r.id; },
 			[](const auto& d) { return d.value1 >= 0; }
 		);
@@ -230,10 +234,10 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	}
 
 	////////////////////////////////
-	// get_range_data 
+	// search_range 
 	////////////////////////////////
 
-	BOOST_DATA_TEST_CASE(test_get_ranged, unit_test::data::make({
+	BOOST_DATA_TEST_CASE(test_search_range, unit_test::data::make({
 		std::tuple{0, 3, std::vector{ data2, data4, data1 }}, // full in range
 		std::tuple{1, 1, std::vector{ data4}}, // partly in range
 		std::tuple{1, 3, std::vector{ data4, data1}}, // count over
@@ -249,7 +253,7 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		container.add_or_update(data4);
 
 		// exercise
-		const auto result = container.get_range_data(
+		const auto result = container.search_range(
 			start_idx, count,
 			[](const auto& l, const auto& r) { return l.id < r.id; },
 			[](const auto& d) { return d.value1 >= 0; }
@@ -260,61 +264,64 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	}
 
 	////////////////////////////////
-	// is_exist_data 
+	// contains 
 	////////////////////////////////
 
-	BOOST_AUTO_TEST_CASE(test_is_exist_for_exist_data) {
+	BOOST_AUTO_TEST_CASE(test_contains_for_exist_data) {
 		// set up
 		auto container = container_t();
 		container.add_or_update(data1);
 
 		// exercise
-		const auto result = container.is_data_exist(data1.id);
+		const auto result = container.contains(data1.id);
 
 		// verify
 		BOOST_CHECK_EQUAL(result, true);
 	}
 
-	BOOST_AUTO_TEST_CASE(test_is_exist_for_not_exist_data) {
+	BOOST_AUTO_TEST_CASE(test_contains_for_not_exist_data) {
 		// set up
 		auto container = container_t();
 		container.add_or_update(data1);
 
 		// exercise
-		const auto result = container.is_data_exist(data2.id);
+		const auto result = container.contains(data2.id);
 
 		// verify
 		BOOST_CHECK_EQUAL(result, false);
 	}
 
 	////////////////////////////////
-	// remove_data 
+	// try_remove 
 	////////////////////////////////
 
-	BOOST_AUTO_TEST_CASE(test_remove) {
+	BOOST_AUTO_TEST_CASE(test_try_remove_data_exist) {
 		// set up
 		auto container = container_t();
 		container.add_or_update(data1);
 		container.add_or_update(data2);
 
 		// exercise
-		container.remove_data(data1.id);
-		const auto actual1 = container.is_data_exist(data1.id);
-		const auto actual2 = container.is_data_exist(data2.id);
+		const auto result = container.try_remove(data1.id);
+		const auto actual1 = container.contains(data1.id);
+		const auto actual2 = container.contains(data2.id);
 
 		// verify
+		BOOST_CHECK_EQUAL(result, true);
 		BOOST_CHECK_EQUAL(actual1, false);
 		BOOST_CHECK_EQUAL(actual2, true);
 	}
 
-	// Make not error and return result by bool?
-	//BOOST_AUTO_TEST_CASE(test_remove_not_exist_data) {
-	//	// set up
-	//	auto container = container_t();
+	BOOST_AUTO_TEST_CASE(test_try_remove_data_not_exist) {
+		// set up
+		auto container = container_t();
 
-	//	// exercise and verify
-	//	BOOST_CHECK_THROW(container.remove_data(data1.id), std::out_of_range);
-	//}
+		// exercise
+		const auto result = container.try_remove(data1.id);
+
+		// verify
+		BOOST_CHECK_EQUAL(result, false);
+	}
 
 	////////////////////////////////
 	// size 

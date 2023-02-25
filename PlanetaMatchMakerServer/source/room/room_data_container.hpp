@@ -23,7 +23,7 @@ namespace pgl {
 		 * @param id An ID to check existence.
 		 * @return Whether the room exists.
 		 */
-		[[nodiscard]] bool is_data_exist(id_param_type id) const { return container_.is_data_exist(id); }
+		[[nodiscard]] bool contains(id_param_type id) const { return container_.contains(id); }
 
 		/**
 		 * Get a room data with specific ID.
@@ -31,7 +31,7 @@ namespace pgl {
 		 * @param id An ID to get room data.
 		 * @return A room data.
 		 */
-		[[nodiscard]] room_data get_data(id_param_type id) const { return container_.get_data(id); }
+		[[nodiscard]] room_data get(id_param_type id) const { return container_.get(id); }
 
 		/**
 		 * Get the number of room data.
@@ -61,7 +61,7 @@ namespace pgl {
 		}
 
 		/**
-		 * Get room data which matches conditions.
+		 * Search room data which matches conditions.
 		 *
 		 * @param sort_kind A kind of sort for the result list. A room data which exactly matches search_full_name is always located top whatever sort kind is.
 		 * @param search_target_flags A flags of condition to search rooms. Rooms whose status matches some more than or equals one flag will be returned.
@@ -69,15 +69,15 @@ namespace pgl {
 		 * @return A list of result room data.
 		 * @throw std::out_of_range room_data_sort_kind is invalid.
 		 */
-		std::vector<room_data> get_data(const room_data_sort_kind sort_kind,
+		std::vector<room_data> search(const room_data_sort_kind sort_kind,
 			const room_search_target_flag search_target_flags,
 			const player_full_name& search_full_name) const {
-			return container_.get_data(get_room_data_compare_function(sort_kind, search_full_name),
+			return container_.search(get_room_data_compare_function(sort_kind, search_full_name),
 				get_room_data_filter_function(search_target_flags, search_full_name));
 		}
 
 		/**
-		 * Get room data which matches conditions with range.
+		 * Search room data which matches conditions with range.
 		 *
 		 * @param start_idx A start index of range.
 		 * @param count The number of data in range.
@@ -87,10 +87,10 @@ namespace pgl {
 		 * @return A list of result room data.
 		 * @throw std::out_of_range room_data_sort_kind is invalid.
 		 */
-		std::vector<room_data> get_range_data(const int start_idx, const int count,
+		std::vector<room_data> search_range(const int start_idx, const int count,
 			const room_data_sort_kind sort_kind, const room_search_target_flag search_target_flags,
 			const player_full_name& search_full_name) const {
-			return container_.get_range_data(start_idx, count,
+			return container_.search_range(start_idx, count,
 				get_room_data_compare_function(sort_kind, search_full_name),
 				get_room_data_filter_function(search_target_flags, search_full_name));
 		}
@@ -117,8 +117,9 @@ namespace pgl {
 		 * Remove room data with an ID.
 		 *
 		 * @param id An ID of room data to remove.
+		 * @return true if removed.
 		 */
-		void remove_data(id_param_type id) { container_.remove_data(id); }
+		bool try_remove(id_param_type id) { return container_.try_remove(id); }
 
 	private:
 		container_type container_;
