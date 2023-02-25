@@ -195,6 +195,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="thread_safe_data_container_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PlanetaMatchMakerServer\PlanetaMatchMakerServer.vcxproj">

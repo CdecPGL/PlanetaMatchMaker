@@ -6,5 +6,6 @@
     <ClCompile Include="datetime_test.cpp" />
     <ClCompile Include="serialize_pack_test.cpp" />
     <ClCompile Include="server_setting_test.cpp" />
+    <ClCompile Include="thread_safe_data_container_test.cpp" />
   </ItemGroup>
 </Project>

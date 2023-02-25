@@ -17,15 +17,6 @@
 #include "random_id_generator.hpp"
 
 namespace pgl {
-	template <typename D, auto P>
-	using multi_index_hashed_unique_member_t = boost::multi_index::hashed_unique<
-		boost::multi_index::member<
-			D,
-			member_variable_pointer_variable_t<P>,
-			P
-		>
-	>;
-
 	/**
 	 * A container to hold data and manage them with checking values of multiple unique members duplication.
 	 *
@@ -35,11 +26,20 @@ namespace pgl {
 	 */
 	template <typename Data, auto Data::* IdMemberVariable, auto Data::*... UniqueMemberVariables>
 	class unique_variables_container final {
+		template <auto Data::* P>
+		using multi_index_hashed_unique_member_t = boost::multi_index::hashed_unique<
+			boost::multi_index::member<
+				Data,
+				member_variable_pointer_variable_t<P>,
+				P
+			>
+		>;
+
 		using container_type = boost::multi_index_container<
 			std::reference_wrapper<const Data>,
 			boost::multi_index::indexed_by<
-				multi_index_hashed_unique_member_t<Data, IdMemberVariable>,
-				multi_index_hashed_unique_member_t<Data, UniqueMemberVariables>...
+				multi_index_hashed_unique_member_t<IdMemberVariable>,
+				multi_index_hashed_unique_member_t<UniqueMemberVariables>...
 			>
 		>;
 		using id_type = member_variable_pointer_variable_t<IdMemberVariable>;
@@ -61,7 +61,8 @@ namespace pgl {
 		void remove_variables(id_param_type id) { data_.erase(id); }
 
 		/**
-		 * Check if indicated data is unique for all unique member variables.
+		 * Check if indicated data is unique for id and all unique member variables.
+		 * Duplication with data whose id is same as the id of passed data is ignored.
 		 *
 		 * @param data A data to check.
 		 * @return Whether indicated data is unique.
@@ -77,7 +78,10 @@ namespace pgl {
 			constexpr auto p = std::get<Index>(std::tuple(IdMemberVariable, UniqueMemberVariables...));
 			const auto& v = data.*p;
 			const auto& c = data_.template get<Index>();
-			auto is_unique = c.find(v) == c.end();
+			const auto it = c.find(v);
+			auto is_unique = it == c.end();
+			// Ignore duplication with myself 
+			if (!is_unique && it->get().*IdMemberVariable == data.*IdMemberVariable) { is_unique = true; }
 			return is_unique_in_all_indexes<Index + 1>(data) && is_unique;
 		}
 
@@ -109,44 +113,16 @@ namespace pgl {
 		using data_param_type = typename boost::call_traits<Data>::param_type;
 
 		/**
-		 * Check data existence for specific ID.
-		 * 
-		 * @param id ID to check.
-		 * @return Whether data exists for the ID.
-		 */
-		[[nodiscard]] bool is_data_exist(id_param_type id) const {
-			std::shared_lock lock(mutex_);
-			return data_map_.contains(id);
-		}
-
-		/**
-		 * Get data by ID.
-		 * 
-		 * @param id ID to get data.
-		 * @return Data which has passed ID.
-		 */
-		[[nodiscard]] Data get_data(id_param_type id) const {
-			std::shared_lock lock(mutex_);
-			return data_map_.at(id).load();
-		}
-
-		/**
-		 * Get the number of data.
-		 *
-		 * @return The number of data.
-		 */
-		[[nodiscard]] size_t size() const { return data_map_.size(); }
-
-		/**
 		 * Add new data with indicated ID.
 		 *
 		 * @param id An ID for new data.
 		 * @param data Data to add.
-		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 * @throw unique_variable_duplication_error An id or unique member variable is duplicated.
 		 */
 		void add_data(id_param_type id, data_param_type data) {
 			std::lock_guard lock(mutex_);
 
+			if (data_map_.contains(id)) { throw unique_variable_duplication_error(); }
 			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
 
 			data_map_.emplace(id, data);
@@ -176,6 +152,18 @@ namespace pgl {
 			data_map_.emplace(id, data);
 			unique_variables_.add_or_update_variables(data);
 			return id;
+		}
+
+		/**
+		 * Get data by ID.
+		 * 
+		 * @param id ID to get data.
+		 * @throw std::out_of_range A data with passed ID does not exist.
+		* @return Data which has passed ID.
+		 */
+		[[nodiscard]] Data get_data(id_param_type id) const {
+			std::shared_lock lock(mutex_);
+			return data_map_.at(id).load();
 		}
 
 		/**
@@ -227,6 +215,7 @@ namespace pgl {
 		 *
 		 * @param id An ID data you want to update.
 		 * @param data New data.
+		 * @throw std::out_of_range A data with passed Id does not exist.
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
 		 */
 		void update_data(id_param_type id, data_param_type data) {
@@ -234,8 +223,19 @@ namespace pgl {
 
 			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
 
-			unique_variables_.add_or_update_variables(data);
 			data_map_.at(id) = data;
+			unique_variables_.add_or_update_variables(data);
+		}
+
+		/**
+		 * Check data existence for specific ID.
+		 *
+		 * @param id ID to check.
+		 * @return Whether data exists for the ID.
+		 */
+		[[nodiscard]] bool is_data_exist(id_param_type id) const {
+			std::shared_lock lock(mutex_);
+			return data_map_.contains(id);
 		}
 
 		/**
@@ -249,6 +249,13 @@ namespace pgl {
 			unique_variables_.remove_variables(id);
 			data_map_.erase(it);
 		}
+
+		/**
+		 * Get the number of data.
+		 *
+		 * @return The number of data.
+		 */
+		[[nodiscard]] size_t size() const { return data_map_.size(); }
 
 	private:
 		std::unordered_map<id_type, std::atomic<Data>> data_map_;
