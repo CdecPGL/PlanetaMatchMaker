@@ -35,8 +35,9 @@ namespace pgl {
 			>
 		>;
 
+		// it is efficient to use std::reference_wrapper<const Data> but using it causes unintentionally behavior which prevents pass tests so use Data
 		using container_type = boost::multi_index_container<
-			std::reference_wrapper<const Data>,
+			Data,
 			boost::multi_index::indexed_by<
 				multi_index_hashed_unique_member_t<IdMemberVariable>,
 				multi_index_hashed_unique_member_t<UniqueMemberVariables>...
@@ -81,7 +82,7 @@ namespace pgl {
 			const auto it = c.find(v);
 			auto is_unique = it == c.end();
 			// Ignore duplication with myself 
-			if (!is_unique && it->get().*IdMemberVariable == data.*IdMemberVariable) { is_unique = true; }
+			if (!is_unique && *it.*IdMemberVariable == data.*IdMemberVariable) { is_unique = true; }
 			return is_unique_in_all_indexes<Index + 1>(data) && is_unique;
 		}
 
