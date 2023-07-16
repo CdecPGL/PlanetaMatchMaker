@@ -224,7 +224,6 @@
     <ClInclude Include="source\server\server_shared_data_repository.hpp" />
     <ClInclude Include="source\server\server_thread.hpp" />
     <ClInclude Include="source\session\session_data.hpp" />
-    <ClInclude Include="source\session\session_key.hpp" />
     <ClInclude Include="source\utilities\application.hpp" />
     <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
     <ClInclude Include="source\utilities\class_traits.hpp" />
@@ -277,7 +276,6 @@
     <ClCompile Include="source\server\server_setting.cpp" />
     <ClCompile Include="source\server\server_thread.cpp" />
     <ClCompile Include="source\session\session_data.cpp" />
-    <ClCompile Include="source\session\session_key.cpp" />
     <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
     <ClCompile Include="source\utilities\file_utilities.cpp" />
     <ClCompile Include="source\logger\log.cpp" />

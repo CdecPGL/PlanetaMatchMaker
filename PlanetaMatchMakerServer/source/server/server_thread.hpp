@@ -4,7 +4,6 @@
 #include <vector>
 
 #include <boost/asio.hpp>
-#include <boost/noncopyable.hpp>
 
 #include "message/message_handler_invoker.hpp"
 

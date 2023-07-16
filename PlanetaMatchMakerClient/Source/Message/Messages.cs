@@ -6,7 +6,6 @@ using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    using SessionKeyType = UInt32;
     using VersionType = UInt16;
     using RoomIdType = UInt32;
 
@@ -62,12 +61,11 @@ namespace PlanetaGameLabo.MatchMaker
         KeepAlive
     }
 
-    // 5 bytes. Use for notice message too
+    // 1 bytes. Use for notice message too
     [Serializable]
     internal struct RequestMessageHeader
     {
         public MessageType MessageType;
-        public SessionKeyType SessionKey;
     }
 
     // 2 bytes
@@ -89,13 +87,12 @@ namespace PlanetaGameLabo.MatchMaker
         public string PlayerName;
     }
 
-    // 6 bytes
+    // 4 bytes
     [Serializable]
     [Message(MessageType.Authentication)]
     internal struct AuthenticationReplyMessage
     {
         public VersionType Version;
-        public SessionKeyType SessionKey;
         public ushort PlayerTag;
     }
 

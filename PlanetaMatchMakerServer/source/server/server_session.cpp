@@ -58,13 +58,10 @@ namespace pgl {
 
 				// Authenticate client
 				shared_this->message_handler_invoker_.handle_specific_message(message_type::authentication,
-					message_handler_param, false);
+					message_handler_param);
 
 				// Receive message
-				while (true) {
-					shared_this->message_handler_invoker_.handle_message(message_handler_param,
-						shared_this->server_setting_.common.enable_session_key_check);
-				}
+				while (true) { shared_this->message_handler_invoker_.handle_message(message_handler_param); }
 			}
 			catch (const server_session_intended_disconnect_error& e) {
 				log_with_endpoint(log_level::info,

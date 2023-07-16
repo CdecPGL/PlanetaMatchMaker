@@ -18,7 +18,6 @@ Those settings are loaded when server starts.
 
 |Name|Type|Default|Env Var|Explanation|
 |:---|:---|---:|:---|:---|
-|enable_session_key_check|boolean|true|PMMS_COMMON_ENABLE_SESSION_KEY_CHECK|Wheather session key check is enabled.|
 |time_out_seconds|integer (1-3600)|300|PMMS_COMMON_TIME_OUT_SECONDS|Timeout seconds to send or receive message.|
 |ip_version|string ("v4", "v6")|"v4"|PMMS_COMMON_IP_VERSION|IP version to use. ("v4" or "v6")|
 |port|integer (0-65535)|57000|PMMS_COMMON_PORT|Port number to accept.|

@@ -9,7 +9,6 @@
 #include "room/room_constants.hpp"
 #include "data/data_constants.hpp"
 #include "room/room_data.hpp"
-#include "session/session_key.hpp"
 #include "client/client_constants.hpp"
 #include "message_constants.hpp"
 
@@ -25,14 +24,12 @@ namespace pgl {
 		keep_alive
 	};
 
-	// 5 bytes. Use for notice message too
+	// 1 bytes. Use for notice message too
 	struct request_message_header final {
 		message_type message_type;
-		session_key_type session_key;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
-			&request_message_header::message_type,
-			&request_message_header::session_key
+			&request_message_header::message_type
 		>;
 	};
 
@@ -60,15 +57,13 @@ namespace pgl {
 		>;
 	};
 
-	// 8 bytes
+	// 4 bytes
 	struct authentication_reply_message final {
 		version_type version;
-		session_key_type session_key;
 		player_tag_t player_tag;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
 			&authentication_reply_message::version,
-			&authentication_reply_message::session_key,
 			&authentication_reply_message::player_tag
 		>;
 	};

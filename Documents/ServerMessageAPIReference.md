@@ -17,9 +17,9 @@ There are three types of message.
 To communicate with the server, you should follow below flow.
 
 1. [Client] Connect to the server by TCP
-1. [Client] Send authentication request and get a session key
+1. [Client] Send authentication request
 1. Message roop
-    1. [Client] Send requests or notices you need with the session key
+    1. [Client] Send requests or notices
     1. [Server] Reply to the request with one or more messages
     1. [Client] Process reply
 
@@ -45,25 +45,24 @@ If errors occured while handling messages, the server returns only reply message
 
 ### Request/Notice Header
 
-The size is 5 bytes.
+The size is 1 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |message_type|8 bits unsigned integer|1|A type of message.|
-|session_key|32 bits unsigned integer|4|A session key which is generated when authentication.|
 
 Options of `message_type` are below.
 
-|Name|Type|Value|
+|Name|Category|Value|
 |:---|:---|---:|
 |authentication|request|0|
-|create_room|request|2|
-|list_room|request|4|
-|join_room|request|6|
-|update_room_status|notice|8|
-|connection_test|request|9|
-|random_match|request|11|
-|keep_alive|notice|12|
+|create_room|request|1|
+|list_room|request|2|
+|join_room|request|3|
+|update_room_status|notice|4|
+|connection_test|request|5|
+|random_match|request|6|
+|keep_alive|notice|7|
 
 ### Reply Header
 
@@ -96,7 +95,7 @@ Options of `error_code` are as below.
 
 ### Authentication Request
 
-A request to authenticate and get a session key.
+A request to authenticate.
 
 #### Parameters
 
@@ -109,12 +108,11 @@ The size is 26 bytes.
 
 #### Reply
 
-The size is 8 bytes.
+The size is 4 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |version|16 bits unsigned integer|2|An API version number of the server.|
-|session_key|32 bits unsigned integer|4|A generated session key.|
 |player_tag|16 bits unsigned integer|2|A tag number of player to avoid duplication of player name.|
 
 #### Error Codes

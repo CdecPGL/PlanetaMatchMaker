@@ -139,8 +139,7 @@ namespace PlanetaGameLabo.MatchMaker
                     $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(playerName)}: {playerName})");
                 var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Receive AuthenticationReply. ({nameof(replyBody.SessionKey)}: {replyBody.SessionKey}, {nameof(replyBody.Version)}: {replyBody.Version}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
-                sessionKey = replyBody.SessionKey;
+                    $"Receive AuthenticationReply. ({nameof(replyBody.Version)}: {replyBody.Version}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
                 PlayerFullName = new PlayerFullName { Name = playerName, Tag = replyBody.PlayerTag };
 
                 keepAliveSenderNotificator.StartKeepAliveProc();
@@ -775,7 +774,6 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private TcpClient tcpClient;
-        private uint sessionKey;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private readonly KeepAliveSenderNotificator keepAliveSenderNotificator;
 
@@ -791,7 +789,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 keepAliveSenderNotificator.UpdateLastRequestTime();
-                await tcpClient.SendRequestMessage(messageBody, sessionKey).ConfigureAwait(false);
+                await tcpClient.SendRequestMessage(messageBody).ConfigureAwait(false);
             }
             catch (MessageErrorException e)
             {

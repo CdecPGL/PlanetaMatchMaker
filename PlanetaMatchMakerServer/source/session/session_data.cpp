@@ -1,15 +1,6 @@
 #include "session/session_data.hpp"
-#include "session/session_key.hpp"
 
 namespace pgl {
-	session_key_type session_data::generate_session_key() {
-		if (is_session_key_generated()) { throw std::runtime_error("A session key can't be generated multi times."); }
-
-		session_key_ = generate_random_session_key();
-		is_session_key_generated_ = true;
-		return session_key_;
-	}
-
 	void session_data::set_hosting_room_id(const room_id_t room_id) {
 		if (is_hosting_room_) { throw std::runtime_error("A hosting room is already set."); }
 
@@ -33,23 +24,22 @@ namespace pgl {
 		client_player_name_ = player_full_name;
 	}
 
+	void session_data::set_authenticated() {
+		if (is_authenticated_) { throw std::runtime_error("A session is already authenticated."); }
+
+		is_authenticated_ = true;
+	}
+
+
 	room_id_t session_data::hosting_room_id() const {
 		if (!is_hosting_room_) { throw std::runtime_error("A hosting room is not set."); }
 
 		return hosting_room_id_;
 	}
 
-	bool session_data::is_session_key_generated() const { return is_session_key_generated_; }
-
 	bool session_data::is_hosting_room() const { return is_hosting_room_; }
-
-	bool session_data::check_session_key(const session_key_type session_key) const {
-		if (!is_session_key_generated_) { throw std::runtime_error("A session key is not generated."); }
-
-		return is_session_key_generated_ && session_key_ == session_key;
-	}
 
 	const endpoint& session_data::remote_endpoint() const { return remote_endpoint_; }
 	const player_full_name& session_data::client_player_name() const { return client_player_name_; }
-
+	bool session_data::is_authenticated() const { return is_authenticated_; }
 }

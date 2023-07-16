@@ -59,7 +59,6 @@ namespace pgl {
 		}
 
 		server_common_setting s;
-		EXTRACT_WITH_DEFAULT(*obj, s, bool, enable_session_key_check);
 		EXTRACT_WITH_DEFAULT(*obj, s, uint16_t, time_out_seconds);
 		EXTRACT_WITH_DEFAULT(*obj, s, ip_version, ip_version);
 		EXTRACT_WITH_DEFAULT(*obj, s, uint16_t, port);
@@ -81,7 +80,6 @@ namespace pgl {
 
 	void output_common_setting_to_log(const server_common_setting& setting) {
 		log(log_level::info, "--------Common--------");
-		log(log_level::info, NAMEOF(setting.enable_session_key_check), ": ", setting.enable_session_key_check);
 		log(log_level::info, NAMEOF(setting.time_out_seconds), ": ", setting.time_out_seconds);
 		log(log_level::info, NAMEOF(setting.ip_version), ": ", setting.ip_version);
 		log(log_level::info, NAMEOF(setting.port), ": ", setting.port);
@@ -217,7 +215,6 @@ namespace pgl {
 	}
 
 	void server_setting::load_from_env_var() {
-		get_env_var("PMMS_COMMON_ENABLE_SESSION_KEY_CHECK", common.enable_session_key_check);
 		get_env_var("PMMS_COMMON_TIME_OUT_SECONDS", common.time_out_seconds);
 		get_env_var<ip_version>("PMMS_COMMON_IP_VERSION", common.ip_version);
 		get_env_var("PMMS_COMMON_PORT", common.port);

@@ -16,12 +16,11 @@ namespace PlanetaGameLabo.MatchMaker
         /// <typeparam name="T">A type of message</typeparam>
         /// <param name="client"></param>
         /// <param name="messageBody"></param>
-        /// <param name="sessionKey"></param>
         /// <exception cref="MessageErrorException">Failed to receive a message.</exception>
         /// <exception cref="ObjectDisposedException">The Socket has been closed.</exception>
         /// <exception cref="SocketException">Is is possible to reach timeout</exception>
         /// <returns></returns>
-        internal static async Task SendRequestMessage<T>(this TcpClient client, T messageBody, uint sessionKey = 0)
+        internal static async Task SendRequestMessage<T>(this TcpClient client, T messageBody)
         {
             var messageAttribute = messageBody.GetType().GetCustomAttribute<MessageAttribute>() ??
                                    throw new MessageErrorException(
@@ -31,7 +30,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var header = new RequestMessageHeader
                 {
-                    MessageType = messageAttribute.MessageType, SessionKey = sessionKey
+                    MessageType = messageAttribute.MessageType
                 };
                 var requestHeaderData = new ArraySegment<byte>(Serializer.Serialize(header));
                 var requestBodyData = new ArraySegment<byte>(Serializer.Serialize(messageBody));

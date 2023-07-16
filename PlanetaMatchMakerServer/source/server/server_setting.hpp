@@ -16,7 +16,6 @@ namespace pgl {
 	std::ostream& operator <<(std::ostream& os, const server_setting_error& error);
 
 	struct server_common_setting final {
-		bool enable_session_key_check = true;
 		uint16_t time_out_seconds = 300;
 		ip_version ip_version = ip_version::v4;
 		uint16_t port = 57000;
