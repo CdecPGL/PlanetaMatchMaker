@@ -10,14 +10,14 @@
 
 namespace pgl {
 	void register_handlers(message_handler_invoker& invoker) {
-		invoker.register_handler<message_type::authentication_request, authentication_request_message_handler>();
-		invoker.register_handler<message_type::create_room_request, create_room_request_message_handler>();
-		invoker.register_handler<message_type::join_room_request, join_room_request_message_handler>();
-		invoker.register_handler<message_type::list_room_request, list_room_request_message_handler>();
-		invoker.register_handler<message_type::update_room_status_notice, update_room_status_notice_message_handler
+		invoker.register_handler<message_type::authentication, authentication_request_message_handler>();
+		invoker.register_handler<message_type::create_room, create_room_request_message_handler>();
+		invoker.register_handler<message_type::join_room, join_room_request_message_handler>();
+		invoker.register_handler<message_type::list_room, list_room_request_message_handler>();
+		invoker.register_handler<message_type::update_room_status, update_room_status_notice_message_handler
 		>();
-		invoker.register_handler<message_type::connection_test_request, connection_test_request_message_handler>();
-		invoker.register_handler<message_type::keep_alive_notice, keep_alive_notice_message_handler>();
+		invoker.register_handler<message_type::connection_test, connection_test_request_message_handler>();
+		invoker.register_handler<message_type::keep_alive, keep_alive_notice_message_handler>();
 	}
 
 	std::shared_ptr<message_handler_invoker> message_handler_invoker_factory::make_shared_standard() {

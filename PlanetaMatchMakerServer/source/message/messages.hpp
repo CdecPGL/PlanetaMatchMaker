@@ -15,19 +15,14 @@
 
 namespace pgl {
 	enum class message_type : uint8_t {
-		authentication_request,
-		authentication_reply,
-		create_room_request,
-		create_room_reply,
-		list_room_request,
-		list_room_reply,
-		join_room_request,
-		join_room_reply,
-		update_room_status_notice,
-		connection_test_request,
-		connection_test_reply,
-		random_match_request,
-		keep_alive_notice
+		authentication,
+		create_room,
+		list_room,
+		join_room,
+		update_room_status,
+		connection_test,
+		random_match,
+		keep_alive
 	};
 
 	// 5 bytes. Use for notice message too

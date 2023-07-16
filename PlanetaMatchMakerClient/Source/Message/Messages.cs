@@ -52,19 +52,14 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal enum MessageType : byte
     {
-        AuthenticationRequest,
-        AuthenticationReply,
-        CreateRoomRequest,
-        CreateRoomReply,
-        ListRoomRequest,
-        ListRoomReply,
-        JoinRoomRequest,
-        JoinRoomReply,
-        UpdateRoomStatusNotice,
-        ConnectionTestRequest,
-        ConnectionTestReply,
-        RandomMatchRequest,
-        KeepAliveNotice
+        Authentication,
+        CreateRoom,
+        ListRoom,
+        JoinRoom,
+        UpdateRoomStatus,
+        ConnectionTest,
+        RandomMatch,
+        KeepAlive
     }
 
     // 5 bytes. Use for notice message too
@@ -85,7 +80,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 2 bytes
     [Serializable]
-    [Message(MessageType.AuthenticationRequest)]
+    [Message(MessageType.Authentication)]
     internal struct AuthenticationRequestMessage
     {
         public VersionType Version;
@@ -96,7 +91,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 6 bytes
     [Serializable]
-    [Message(MessageType.AuthenticationReply)]
+    [Message(MessageType.Authentication)]
     internal struct AuthenticationReplyMessage
     {
         public VersionType Version;
@@ -106,7 +101,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 84 bytes
     [Serializable]
-    [Message(MessageType.CreateRoomRequest)]
+    [Message(MessageType.CreateRoom)]
     internal struct CreateRoomRequestMessage
     {
         [FixedLength(RoomConstants.RoomPasswordLength)]
@@ -124,7 +119,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 4 bytes
     [Serializable]
-    [Message(MessageType.CreateRoomReply)]
+    [Message(MessageType.CreateRoom)]
     internal struct CreateRoomReplyMessage
     {
         public RoomIdType RoomId;
@@ -132,7 +127,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 30 bytes
     [Serializable]
-    [Message(MessageType.ListRoomRequest)]
+    [Message(MessageType.ListRoom)]
     internal struct ListRoomRequestMessage
     {
         public UInt16 StartIndex;
@@ -144,7 +139,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 246 bytes
     [Serializable]
-    [Message(MessageType.ListRoomReply)]
+    [Message(MessageType.ListRoom)]
     internal struct ListRoomReplyMessage
     {
         //40 bytes
@@ -170,7 +165,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 21 bytes
     [Serializable]
-    [Message(MessageType.JoinRoomRequest)]
+    [Message(MessageType.JoinRoom)]
     internal struct JoinRoomRequestMessage
     {
         public RoomIdType RoomId;
@@ -183,7 +178,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 82 bytes
     [Serializable]
-    [Message(MessageType.JoinRoomReply)]
+    [Message(MessageType.JoinRoom)]
     internal struct JoinRoomReplyMessage
     {
         public EndPoint GameHostEndPoint;
@@ -194,7 +189,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 7 bytes
     [Serializable]
-    [Message(MessageType.UpdateRoomStatusNotice)]
+    [Message(MessageType.UpdateRoomStatus)]
     internal struct UpdateRoomStatusNoticeMessage
     {
         public RoomIdType RoomId;
@@ -205,7 +200,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 21 bytes
     [Serializable]
-    [Message(MessageType.ConnectionTestRequest)]
+    [Message(MessageType.ConnectionTest)]
     internal struct ConnectionTestRequestMessage
     {
         public TransportProtocol Protocol;
@@ -214,7 +209,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     //18 bytes
     [Serializable]
-    [Message(MessageType.ConnectionTestReply)]
+    [Message(MessageType.ConnectionTest)]
     internal struct ConnectionTestReplyMessage
     {
         public bool Succeed;
@@ -222,7 +217,7 @@ namespace PlanetaGameLabo.MatchMaker
 
     // 1 byte
     [Serializable]
-    [Message(MessageType.KeepAliveNotice)]
+    [Message(MessageType.KeepAlive)]
     internal struct KeepAliveNoticeMessage
     {
         public byte Dummy;

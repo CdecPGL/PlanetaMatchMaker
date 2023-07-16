@@ -54,23 +54,16 @@ The size is 5 bytes.
 
 Options of `message_type` are below.
 
-|Name|Value|
-|:---|---:|
-|authentication_request|0|
-|authentication_reply|1|
-|create_room_request|2|
-|create_room_reply|3|
-|list_room_request|4|
-|list_room_reply|5|
-|join_room_request|6|
-|join_room_reply|7|
-|update_room_status_notice|8|
-|connection_test_request|9|
-|connection_test_reply|10|
-|random_match_request|11|
-|keep_alive_notice|12|
-
-There are reply message types in the table, but these are not available as a message to the server.
+|Name|Type|Value|
+|:---|:---|---:|
+|authentication|request|0|
+|create_room|request|2|
+|list_room|request|4|
+|join_room|request|6|
+|update_room_status|notice|8|
+|connection_test|request|9|
+|random_match|request|11|
+|keep_alive|notice|12|
 
 ### Reply Header
 

@@ -10,9 +10,9 @@
         "max_player_per_room": 16
     },
     "log":{
-        "enable_console_log": false,
+        "enable_console_log": true,
         "console_log_level": "info",
-        "enable_file_log": true,
+        "enable_file_log": false,
         "file_log_level": "info",
         "file_log_path": ""
     },

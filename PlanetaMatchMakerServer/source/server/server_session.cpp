@@ -57,7 +57,7 @@ namespace pgl {
 				});
 
 				// Authenticate client
-				shared_this->message_handler_invoker_.handle_specific_message(message_type::authentication_request,
+				shared_this->message_handler_invoker_.handle_specific_message(message_type::authentication,
 					message_handler_param, false);
 
 				// Receive message
@@ -72,14 +72,15 @@ namespace pgl {
 					"Intended disconnect: ", e);
 				shared_this->restart();
 			}
+			catch (const server_session_error& e) {
+				// output log as info for session error because it is caused by external factors like disconnection by client and network error.
+				log_with_endpoint(log_level::info, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+					e, " Disconnect the connection.");
+				shared_this->restart();
+			}
 			catch (const system::system_error& e) {
 				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
 					"Unhandled error: ", e, " Disconnect the connection: ");
-				shared_this->restart();
-			}
-			catch (const server_session_error& e) {
-				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-					e, " Disconnect the connection.");
 				shared_this->restart();
 			}
 			catch (const std::exception& e) {

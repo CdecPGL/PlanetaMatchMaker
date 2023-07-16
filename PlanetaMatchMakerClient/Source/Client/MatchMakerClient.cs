@@ -1118,8 +1118,8 @@ namespace PlanetaGameLabo.MatchMaker
 
             public void StopKeepAliveProc()
             {
-                cancellationTokenSource.Cancel();
-                cancellationTokenSource.Dispose();
+                cancellationTokenSource?.Cancel();
+                cancellationTokenSource?.Dispose();
                 cancellationTokenSource = null;
             }
 
