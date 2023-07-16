@@ -173,6 +173,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\authentication\authentication_result.hpp" />
+    <ClInclude Include="source\authentication\game.hpp" />
     <ClInclude Include="source\client\client_error_code.hpp" />
     <ClInclude Include="library\nameof.hpp" />
     <ClInclude Include="source\async\read_write.hpp" />

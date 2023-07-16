@@ -10,7 +10,9 @@
 #include "data/data_constants.hpp"
 #include "room/room_data.hpp"
 #include "client/client_constants.hpp"
+#include "authentication/game.hpp"
 #include "message_constants.hpp"
+#include "authentication/authentication_result.hpp"
 
 namespace pgl {
 	enum class message_type : uint8_t {
@@ -46,24 +48,31 @@ namespace pgl {
 
 	// size of message should be less than (256 bytes - header size)
 
-	// 26 bytes
+	// 74 bytes
 	struct authentication_request_message final {
-		version_type version;
+		api_version_type api_version;
+		game_id_t game_id;
+		game_version_t game_version;
 		player_name_t player_name;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
-			&authentication_request_message::version,
+			&authentication_request_message::api_version,
+			&authentication_request_message::game_id,
+			&authentication_request_message::game_version,
 			&authentication_request_message::player_name
 		>;
 	};
 
-	// 4 bytes
+	// 29 bytes
 	struct authentication_reply_message final {
-		version_type version;
+		authentication_result result;
+		api_version_type api_version;
+		game_version_t game_version;
 		player_tag_t player_tag;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
-			&authentication_reply_message::version,
+			&authentication_reply_message::api_version,
+			&authentication_reply_message::game_version,
 			&authentication_reply_message::player_tag
 		>;
 	};

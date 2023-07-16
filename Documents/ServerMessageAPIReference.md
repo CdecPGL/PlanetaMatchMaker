@@ -81,15 +81,14 @@ Options of `error_code` are as below.
 |:---|---:|:---|
 |ok|0|Request is processed successfully.|
 |server_error|1|Server internal error.|
-|api_version_mismatch|2|Server api version doesn't match to the version the client required.|
-|operation_invalid|3|The operation is invalid in current state.|
-|room_not_found|4|Indicated room is not found.|
-|request_parameter_wrong|5|Wrong parameters which must be rejected in the client is passed for request.|
-|room_password_wrong|6|Indicated password of room is not correct.|
-|room_full|7|The number of player reaches limit.|
-|room_permission_denied|8|Request is rejected because indicated room is the room which you are not host of or closed.|
-|room_count_exceeds_limit|9|The number of room reaches limit.|
-|client_already_hosting_room|10|Request is failed because the client is already hosting room.|
+|operation_invalid|2|The operation is invalid in current state.|
+|room_not_found|3|Indicated room is not found.|
+|request_parameter_wrong|4|Wrong parameters which must be rejected in the client is passed for request.|
+|room_password_wrong|5|Indicated password of room is not correct.|
+|room_full|6|The number of player reaches limit.|
+|room_permission_denied|7|Request is rejected because indicated room is the room which you are not host of or closed.|
+|room_count_exceeds_limit|8|The number of room reaches limit.|
+|client_already_hosting_room|9|Request is failed because the client is already hosting room.|
 
 ## Message Body Structure
 
@@ -99,28 +98,43 @@ A request to authenticate.
 
 #### Parameters
 
-The size is 26 bytes.
+The size is 74 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|version|16 bits unsigned integer|2|An API version number the client requires.|
+|api_version|16 bits unsigned integer|2|An API version number the client requires.|
+|game_id|24 byte length UTF-8 string|24|A game ID of the client.|
+|game_version|24 byte length UTF-8 string|24|A game version number of the client.|
 |player_name_t|24 byte length UTF-8 string|24|A name of player. This must not be empty.|
 
 #### Reply
 
-The size is 4 bytes.
+The size is 29 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
-|version|16 bits unsigned integer|2|An API version number of the server.|
+|result|8 bits unsigned integer|1|A result of authentication.|
+|api_version|16 bits unsigned integer|2|An API version number of the server.|
+|game_version|24 byte length UTF-8 string|24|A game version the server accepts.|
 |player_tag|16 bits unsigned integer|2|A tag number of player to avoid duplication of player name.|
+
+Options of `result` are as below.
+
+|Name|Value|Host Identifier|Explanation|
+|:---|---:|:---|:---|
+|success|0|Authentication is succeeded.|
+|api_version_mismatch|1|An API version of server is different from what the client required.|
+|game_id_mismatch|2|Client game id doesn't match to the acceptable value in the server.|
+|game_version_mismatch|3|Client game version doesn't match to the version the server required.|
+
+Note that authentication failure are not treated as error.
+If authentication is failed, the server closes the connection immediately after reply.
 
 #### Error Codes
 
 |Name|Condition|Continuable|
 |:---|:---|:---|
 |ok|The request is processed succesfully.|yes|
-|api_version_mismatch|An API version of server is different from what the client required.|no|
 |request_parameter_wrong|A player name is empty.|no|
 |operation_invalid|Authentication request is send more than twice.|no|
 

@@ -13,9 +13,6 @@ namespace pgl {
 		//////////////////////////////////////////
 		// below here is the same as client_error_code
 		//////////////////////////////////////////
-		// Server api version doesn't match to the version the client required.
-		api_version_mismatch,
-		// The operation is invalid in the current state.
 		operation_invalid,
 		// Wrong parameters which must be rejected in the client is passed for request.
 		request_parameter_wrong,

@@ -24,11 +24,9 @@ namespace pgl {
 		// For compatibility of clang and gcc, we don't use secure version by MSVC like getenv_s
 		// The return value of getenv must be only used for temporal reference
 		// ReSharper disable once CppDeprecatedEntity
-		const auto* temp_value = getenv(var_name.c_str());  // NOLINT(concurrency-mt-unsafe)
+		const auto* temp_value = getenv(var_name.c_str()); // NOLINT(concurrency-mt-unsafe)
 
-		if(temp_value == nullptr) {
-			return false;
-		}
+		if (temp_value == nullptr) { return false; }
 
 		// copy and construct string from environment variable value
 		const std::string value_str(temp_value);
@@ -81,6 +79,21 @@ namespace pgl {
 				v, "\" is not convertible to uint8_t.", e.what()));
 		}
 
+		return true;
+	}
+
+	// std::u8string support because boost::lexical_cast doesn't support std::u8string
+	template <>
+	inline bool get_env_var<std::u8string>(const std::string& var_name, std::u8string& dest) {
+		// For compatibility of clang and gcc, we don't use secure version by MSVC like getenv_s
+		// The return value of getenv must be only used for temporal reference
+		// ReSharper disable once CppDeprecatedEntity
+		const auto* temp_value = getenv(var_name.c_str()); // NOLINT(concurrency-mt-unsafe)
+
+		if (temp_value == nullptr) { return false; }
+
+		// copy and construct string from environment variable value
+		dest = std::u8string(reinterpret_cast<const char8_t*>(temp_value));
 		return true;
 	}
 }

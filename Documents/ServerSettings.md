@@ -26,6 +26,22 @@ Those settings are loaded when server starts.
 |max_room_count|integer (1-65535)|1000|PMMS_COMMON_MAX_ROOM_COUNT|A limit of room count.|
 |max_player_per_room|integer (1-255)|16|PMMS_COMMON_MAX_PLAYER_PER_ROOM|A limit of player count in each room.|
 
+### `authentication` Section
+
+|Name|Type|Default|Env Var|Explanation|
+|:---|:---|---:|:---|:---|
+|game_id|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_ID|A game id to accept.|
+|enable_game_version_check|boolean|false|PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK|Wheather game version check is enabled.|
+|game_version|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_VERSION|A game version to accept. This setting is reffered only if enable_game_version_check is true.|
+
+Detail of each `game_version_check_mode` options is below.
+
+|Option|Explanation|
+|:---|:---|
+|ignore|The server does't check game version of clients|
+|overall|The server checks a game version of all clients matches the value of `game_version` setting.|
+|room|The server checks a game version of clients in a room matches a host of the room.|
+
 ### `log` Section
 
 |Name|Type|Default|Env Var|Explanation|

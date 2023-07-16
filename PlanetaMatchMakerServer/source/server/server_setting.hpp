@@ -5,6 +5,7 @@
 
 #include "logger/log.hpp"
 #include "network/network_layer.hpp"
+#include "authentication/game.hpp"
 
 namespace pgl {
 	class server_setting_error final : public std::runtime_error {
@@ -23,6 +24,12 @@ namespace pgl {
 		uint16_t thread = 1;
 		uint16_t max_room_count = 1000;
 		uint8_t max_player_per_room = 16;
+	};
+
+	struct server_authentication_setting final {
+		std::u8string game_id;
+		bool enable_game_version_check = false;
+		std::u8string game_version;
 	};
 
 	struct server_log_setting final {
@@ -44,6 +51,7 @@ namespace pgl {
 		server_setting() = default;
 
 		server_common_setting common;
+		server_authentication_setting authentication;
 		server_log_setting log;
 		server_connection_test_setting connection_test;
 

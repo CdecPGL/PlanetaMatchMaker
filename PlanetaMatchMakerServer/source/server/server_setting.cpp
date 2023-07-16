@@ -14,6 +14,7 @@ using namespace minimal_serializer;
 
 namespace pgl {
 	const std::string common_section_key = "common";
+	const std::string authentication_section_key = "authentication";
 	const std::string log_section_key = "log";
 	const std::string connection_test_section_key = "connection_test";
 
@@ -47,6 +48,19 @@ namespace pgl {
 		}
 	}
 
+	template <typename T>
+	void validate_str_length(const std::string& target, const T& v, const std::size_t& min,
+		const std::size_t& max) {
+		if (v.length() < min) {
+			throw server_setting_error(generate_string(target, " is ", v, " but the length of it must be in range ",
+				min, "-", max, "."));
+		}
+
+		if (v.length() > max) {
+			throw server_setting_error(generate_string(target, " is ", v, " but the length of it must be in range ",
+				min, "-", max, "."));
+		}
+	}
 
 	ip_version tag_invoke(json::value_to_tag<ip_version>, const json::value& jv) {
 		return string_to_ip_version(json::value_to<std::string>(jv));
@@ -87,6 +101,36 @@ namespace pgl {
 		log(log_level::info, NAMEOF(setting.thread), ": ", setting.thread);
 		log(log_level::info, NAMEOF(setting.max_room_count), ": ", setting.max_room_count);
 		log(log_level::info, NAMEOF(setting.max_player_per_room), ": ", setting.max_player_per_room);
+	}
+
+	server_authentication_setting tag_invoke(json::value_to_tag<server_authentication_setting>, const json::value& jv) {
+		const auto* obj = jv.if_object();
+		if (obj == nullptr) {
+			throw server_setting_error(generate_string("\"", authentication_section_key, "\" must be object."));
+		}
+		server_authentication_setting s;
+		EXTRACT_WITH_DEFAULT(*obj, s, std::u8string, game_id);
+		EXTRACT_WITH_DEFAULT(*obj, s, bool, enable_game_version_check);
+		EXTRACT_WITH_DEFAULT(*obj, s, std::u8string, game_version);
+		return s;
+	}
+
+	void validate_authentication_setting(const server_authentication_setting& setting) {
+		validate_str_length(authentication_section_key + ".game_id", setting.game_id, 1, game_id_bytes);
+
+		if (setting.enable_game_version_check) {
+			validate_str_length(authentication_section_key + ".game_version", setting.game_version, 1,
+				game_version_bytes);
+		}
+	}
+
+	void output_authentication_setting_to_log(const server_authentication_setting& setting) {
+		log(log_level::info, "--------Authentication--------");
+		log(log_level::info, NAMEOF(setting.game_id), ": ",
+			convert_utf8_to_system_encode(reinterpret_cast<const char*>(setting.game_id.c_str())));
+		log(log_level::info, NAMEOF(setting.enable_game_version_check), ": ", setting.enable_game_version_check);
+		log(log_level::info, NAMEOF(setting.game_version), ": ",
+			convert_utf8_to_system_encode(reinterpret_cast<const char*>(setting.game_version.c_str())));
 	}
 
 	log_level tag_invoke(json::value_to_tag<log_level>, const json::value& jv) {
@@ -172,6 +216,12 @@ namespace pgl {
 			}
 			validate_common_setting(common);
 
+			if (const auto* authentication_section = obj->if_contains(authentication_section_key);
+				authentication_section != nullptr) {
+				authentication = json::value_to<server_authentication_setting>(*authentication_section);
+			}
+			validate_authentication_setting(authentication);
+
 			if (const auto* log_section = obj->if_contains(log_section_key); log_section != nullptr) {
 				log = json::value_to<server_log_setting>(*log_section);
 			}
@@ -224,6 +274,12 @@ namespace pgl {
 		get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
 		validate_common_setting(common);
 
+		get_env_var("PMMS_AUTHENTICATION_GAME_ID", authentication.game_id);
+		get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
+		get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
+		validate_authentication_setting(authentication);
+
+
 		get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);
 		get_env_var<log_level>("PMMS_LOG_CONSOLE_LOG_LEVEL", log.console_log_level);
 		get_env_var("PMMS_LOG_ENABLE_FILE_LOG", log.enable_file_log);
@@ -244,6 +300,7 @@ namespace pgl {
 	void server_setting::output_to_log() const {
 		pgl::log(log_level::info, "================Server Setting================");
 		output_common_setting_to_log(common);
+		output_authentication_setting_to_log(authentication);
 		output_log_setting_to_log(log);
 		output_connection_test_setting_to_log(connection_test);
 		pgl::log(log_level::info, "==============================================");

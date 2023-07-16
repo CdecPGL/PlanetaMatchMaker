@@ -3,5 +3,5 @@
 #include <cstdint>
 
 namespace pgl {
-	using version_type = uint16_t;
+	using api_version_type = uint16_t;
 }
