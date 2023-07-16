@@ -1,6 +1,9 @@
 using System;
 using CdecPGL.MinimalSerializer;
 
+// Ignore below suggestion because we use .NET type only for type alias because type alias is not available for type keyword in .Net Standard 2.0
+// ReSharper disable BuiltInTypeReferenceStyle
+
 namespace PlanetaGameLabo.MatchMaker
 {
     using SessionKeyType = UInt32;
@@ -19,6 +22,9 @@ namespace PlanetaGameLabo.MatchMaker
         // Server api version and client api version are not same.
         ApiVersionMismatch,
 
+        // The operation is invalid in the current state.
+        OperationInvalid,
+
         // Wrong parameters which must be rejected in the client is passed for request.
         RequestParameterWrong,
 
@@ -34,8 +40,8 @@ namespace PlanetaGameLabo.MatchMaker
         // Request is rejected because indicated room is the room which you are not host of or closed.
         RoomPermissionDenied,
 
-        // The number of room reaches limit.
-        RoomGroupFull,
+        // The number of room exceeds limit.
+        RoomCountExceedsLimit,
 
         // Connection establish mode of the room host doesn't match expected one in the client.
         RoomConnectionEstablishModeMismatch,

@@ -824,17 +824,17 @@ namespace PlanetaGameLabo.MatchMaker
         /// <typeparam name="T">A type of the message</typeparam>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        private async Task<T> ReceiveReplyAsync<T>()
+        private async Task<T> ReceiveReplyAsync<T>() where T : struct
         {
             try
             {
                 var (errorCode, replyBody) = await tcpClient.ReceiveReplyMessage<T>().ConfigureAwait(false);
-                if (errorCode != MessageErrorCode.Ok)
+                if (errorCode != MessageErrorCode.Ok || replyBody == null)
                 {
                     throw new ClientErrorException(ClientErrorCode.RequestError, errorCode.ToString());
                 }
 
-                return replyBody;
+                return replyBody.Value;
             }
             catch (MessageErrorException e)
             {

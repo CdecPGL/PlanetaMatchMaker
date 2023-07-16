@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Net;
 using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
