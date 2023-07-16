@@ -67,6 +67,10 @@ artifacts/
 # StyleCop
 StyleCopReport.xml
 
+# Files built by Jetbrains Rider
+.idea
+
+
 # Files built by Visual Studio
 *_i.c
 *_p.c
@@ -95,6 +99,7 @@ StyleCopReport.xml
 *.pidb
 *.svclog
 *.scc
+.vscode/
 
 # Chutzpah Test files
 _Chutzpah*
