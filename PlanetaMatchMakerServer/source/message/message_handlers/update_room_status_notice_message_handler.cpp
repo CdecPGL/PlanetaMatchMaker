@@ -2,11 +2,12 @@
 #include "session/session_data.hpp"
 #include "../message_parameter_validator.hpp"
 
+using namespace minimal_serializer;
+
 namespace pgl {
-
-	void update_room_status_notice_message_handler::handle_message(const update_room_status_notice_message& message,
+	update_room_status_notice_message_handler::handle_return_t
+	update_room_status_notice_message_handler::handle_message(const update_room_status_notice_message& message,
 		const std::shared_ptr<message_handle_parameter> param) {
-
 		const message_parameter_validator parameter_validator(param);
 
 		// Check room group existence
@@ -18,18 +19,18 @@ namespace pgl {
 
 		// Check if the client is host of requested room
 		if (room_data.host_endpoint != endpoint::make_from_boost_endpoint(param->socket.remote_endpoint())) {
-			const auto error_message = minimal_serializer::generate_string("The client is not host of requested ",
+			const auto error_message = generate_string("The client is not host of requested ",
 				room_data, ". Room host endpoint is ", room_data.host_endpoint.to_boost_endpoint(), ".");
-			throw server_session_error(server_session_error_code::continuable_error, error_message);
+			throw client_error(client_error_code::room_permission_denied, false, error_message);
 		}
 
 		// Update current player count if need
 		if (message.is_current_player_count_changed) {
 			if (message.current_player_count > room_data.max_player_count) {
-				const auto error_message = minimal_serializer::generate_string("New player count \"",
+				const auto error_message = generate_string("New player count \"",
 					message.current_player_count, "\" exceeds max player count \"", room_data.max_player_count,
 					"\" for ", room_data, ".");
-				throw server_session_error(server_session_error_code::continuable_error, error_message);
+				throw client_error(client_error_code::request_parameter_wrong, false, error_message);
 			}
 
 			room_data.current_player_count = message.current_player_count;
@@ -53,7 +54,11 @@ namespace pgl {
 				param->session_data.delete_hosting_room_id(room_data.room_id);
 				break;
 			default:
-				break;
+				const auto error_message = generate_string("The new status \"", message.status, "\" for ", room_data,
+					" is invalid.");
+				throw client_error(client_error_code::request_parameter_wrong, false, error_message);
 		}
+
+		return {{}, false};
 	}
 }

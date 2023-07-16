@@ -2,7 +2,7 @@
 
 #include "async/timer.hpp"
 #include "async/read_write.hpp"
-#include "server/server_session_error.hpp"
+#include "server/server_errors.hpp"
 #include "server/server_data.hpp"
 #include "logger/log.hpp"
 #include "messages.hpp"
@@ -11,7 +11,7 @@
 namespace pgl {
 	// Send data to remote endpoint. server_session_error will be thrown when send error occurred.
 	template <serializable FirstData, serializable... RestData>
-	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&& ... rest_data) {
+	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&&... rest_data) {
 		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
@@ -29,20 +29,20 @@ namespace pgl {
 				" to the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
-				throw server_session_error(server_session_error_code::not_continuable_error,
-					extra_message + "(Failed to send message due to timeout)");
+				throw server_session_error(extra_message + "(Failed to send message due to timeout)");
 			}
 			if (e.code() == boost::asio::error::eof) {
-				throw server_session_error(server_session_error_code::unexpected_disconnection, extra_message);
+				throw server_session_error(extra_message + "(Disconnected unexpectedly)");
 			}
-			throw server_session_error(server_session_error_code::not_continuable_error, extra_message);
+			throw server_session_error(extra_message);
 		}
 	}
 
 	// Receive data. server_session_error will be thrown when reception error occurred.
 	// todo: use shared_ptr to avoid invalid reference access in lambda function
-	template <typename FirstData, typename... RestData> requires(serializable_all<FirstData, RestData...> && not_constant_all<FirstData, RestData...>)
-	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData& ... rest_data) {
+	template <typename FirstData, typename... RestData> requires(serializable_all<FirstData, RestData...> &&
+		not_constant_all<FirstData, RestData...>)
+	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData&... rest_data) {
 		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
@@ -59,13 +59,12 @@ namespace pgl {
 				" from the client. ",
 				e.code().message());
 			if (e.code() == boost::asio::error::operation_aborted) {
-				throw server_session_error(server_session_error_code::not_continuable_error,
-					extra_message + "(Failed to receive message due to timeout)");
+				throw server_session_error(extra_message + "(Failed to receive message due to timeout)");
 			}
 			if (e.code() == boost::asio::error::eof) {
-				throw server_session_error(server_session_error_code::unexpected_disconnection, extra_message);
+				throw server_session_error(extra_message + "(Disconnected unexpectedly)");
 			}
-			throw server_session_error(server_session_error_code::not_continuable_error, extra_message);
+			throw server_session_error(extra_message);
 		}
 	}
 

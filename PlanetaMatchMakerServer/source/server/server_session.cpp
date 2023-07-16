@@ -6,7 +6,7 @@
 #include "server/server_data.hpp"
 #include "room/room_data_container.hpp"
 #include "logger/log.hpp"
-#include "server_session_error.hpp"
+#include "server_errors.hpp"
 #include "utilities/checked_static_cast.hpp"
 #include "server/server_setting.hpp"
 
@@ -14,6 +14,7 @@
 
 using namespace std;
 using namespace boost;
+using namespace minimal_serializer;
 
 namespace pgl {
 	server_session::server_session(asio::ip::tcp::acceptor& acceptor, server_data& server_data,
@@ -39,9 +40,9 @@ namespace pgl {
 							shared_this->socket_.remote_endpoint()));
 				}
 				catch (system::system_error& e) {
-					const auto extra_message = minimal_serializer::generate_string("acception failed: ", e, " @",
+					const auto extra_message = generate_string("Acception failed: ", e, " @",
 						shared_this->socket_.remote_endpoint());
-					throw server_session_error(server_session_error_code::not_continuable_error, extra_message);
+					throw server_session_error(extra_message);
 				}
 
 				log_with_endpoint(log_level::info, shared_this->socket_.remote_endpoint(),
@@ -61,57 +62,29 @@ namespace pgl {
 
 				// Receive message
 				while (true) {
-					try {
-						shared_this->message_handler_invoker_.handle_message(message_handler_param,
-							shared_this->server_setting_.common.enable_session_key_check);
-					}
-					catch (const server_session_error& e) {
-						if (e.error_code() == server_session_error_code::continuable_error) {
-							log_with_endpoint(log_level::info,
-								shared_this->session_data_->remote_endpoint().to_boost_endpoint(), e);
-						}
-						else { throw; }
-					}
+					shared_this->message_handler_invoker_.handle_message(message_handler_param,
+						shared_this->server_setting_.common.enable_session_key_check);
 				}
+			}
+			catch (const server_session_intended_disconnect_error& e) {
+				log_with_endpoint(log_level::info,
+					shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+					"Intended disconnect: ", e);
+				shared_this->restart();
 			}
 			catch (const system::system_error& e) {
 				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-					"Unhandled error: ", e);
+					"Unhandled error: ", e, " Disconnect the connection: ");
 				shared_this->restart();
 			}
 			catch (const server_session_error& e) {
-				switch (e.error_code()) {
-					case server_session_error_code::expected_disconnection:
-						log_with_endpoint(log_level::info,
-							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-							"Disconnected expectedly: ", e);
-						break;
-					case server_session_error_code::unexpected_disconnection:
-						log_with_endpoint(log_level::warning,
-							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-							"Disconnected unexpectedly: ", e);
-						break;
-					case server_session_error_code::continuable_error:
-						log_with_endpoint(log_level::warning,
-							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-							"Continuable error is not handled: ", e);
-						break;
-					case server_session_error_code::not_continuable_error:
-						log_with_endpoint(log_level::error,
-							shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-							"Not continuable error: ", e);
-						break;
-					default:
-						log_with_endpoint(log_level::error,
-							shared_this->session_data_->remote_endpoint().to_boost_endpoint(), "Unexpected error: ", e);
-						break;
-				}
-
+				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+					e, " Disconnect the connection.");
 				shared_this->restart();
 			}
 			catch (const std::exception& e) {
 				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
-					typeid(e), ": ", e.what(), " Restart the connection.");
+					typeid(e), ": ", e.what(), " Disconnect the connection.");
 				shared_this->restart();
 			}
 			catch (...) {
@@ -155,7 +128,8 @@ namespace pgl {
 	}
 
 	void server_session::remove_player_full_name_if_need() const {
-		if (const auto& player_name_container = server_data_.get_player_name_container(); player_name_container.is_player_exist(session_data_->client_player_name())) {
+		if (const auto& player_name_container = server_data_.get_player_name_container(); player_name_container.
+			is_player_exist(session_data_->client_player_name())) {
 			server_data_.get_player_name_container().remove_player_name(session_data_->client_player_name());
 			log_with_endpoint(log_level::info, session_data_->remote_endpoint().to_boost_endpoint(),
 				"Player full name(name: ", session_data_->client_player_name().name, ", Tag: ",

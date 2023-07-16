@@ -124,18 +124,13 @@ namespace pgl {
 		return is_succeeded;
 	}
 
-	void connection_test_request_message_handler::handle_message(const connection_test_request_message& message,
+	connection_test_request_message_handler::handle_return_t connection_test_request_message_handler::handle_message(
+		const connection_test_request_message& message,
 		std::shared_ptr<message_handle_parameter> param) {
-
-		const message_parameter_validator_with_reply<message_type::connection_test_reply, connection_test_reply_message>
-			parameter_validator(param);
+		const message_parameter_validator parameter_validator(param);
 
 		// Check port number is valid
 		parameter_validator.validate_port_number(message.port_number);
-
-		connection_test_reply_message reply{
-			true
-		};
 
 		const auto target_endpoint = asio::ip::tcp::endpoint(
 			param->session_data.remote_endpoint().to_boost_endpoint().address(), message.port_number);
@@ -144,6 +139,10 @@ namespace pgl {
 			message.protocol == transport_protocol::tcp
 				? param->server_setting.connection_test.connection_check_tcp_time_out_seconds
 				: param->server_setting.connection_test.connection_check_udp_time_out_seconds, " seconds.");
+
+		connection_test_reply_message reply{
+			true
+		};
 		try {
 			const std::string test_text = "Hello. This is PMMS.";
 			switch (message.protocol) {
@@ -154,15 +153,9 @@ namespace pgl {
 					reply.succeed = test_connection_udp(*param, target_endpoint, test_text);
 					break;
 				default:
-					reply_message_header header{
-						message_type::connection_test_reply,
-						message_error_code::request_parameter_wrong
-					};
-					reply.succeed = false;
-					send(param, header, reply);
 					const auto error_message = minimal_serializer::generate_string("Indicated protocol \"",
 						static_cast<underlying_type_t<transport_protocol>>(message.protocol), "\" is invalid.");
-					throw server_session_error(server_session_error_code::continuable_error, error_message);
+					throw client_error(client_error_code::request_parameter_wrong, false, error_message);
 			}
 		}
 		catch (const system::system_error& e) {
@@ -174,13 +167,6 @@ namespace pgl {
 			}
 		}
 
-		reply_message_header header{
-			message_type::connection_test_reply,
-			message_error_code::ok
-		};
-
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
-			message_type::connection_test_request, " message.");
-		send(param, header, reply);
+		return {{reply}, false};
 	}
 }

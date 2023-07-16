@@ -8,9 +8,26 @@ Message is fixed size binary data to communicate between server and client.
 
 There are three types of message.
 
-- Request: A message from a client which requires a reply from the server
+- Request: A message from a client which requires one or more replies from the server
 - Notice: A message from a client which doesn't require a reply from the server
 - Reply: A message from a server to response to the request message from a client
+
+## Communication Flow
+
+To communicate with the server, you should follow below flow.
+
+1. [Client] Connect to the server by TCP
+1. [Client] Send authentication request and get a session key
+1. Message roop
+    1. [Client] Send requests or notices you need with the session key
+    1. [Server] Reply to the request with one or more messages
+    1. [Client] Process reply
+
+In below situation, the server forces to close the connection immediately without any reply.
+
+- Send invalid message type
+- Send not authentication request at first time after connection
+- Server internal error occured
 
 ## Message Structure
 
@@ -22,7 +39,11 @@ There are two types of header.
 - Request Header: A header for request message and notice message
 - Reply Header: A header for reply message
 
-### Request Header
+If errors occured while handling messages, the server returns only reply message header with error code.
+
+## Message Header Structure
+
+### Request/Notice Header
 
 The size is 5 bytes.
 
@@ -69,30 +90,16 @@ Options of `error_code` are as below.
 |ok|0|Request is processed successfully.|
 |server_error|1|Server internal error.|
 |api_version_mismatch|2|Server api version doesn't match to the version the client required.|
-|room_not_found|3|Indicated room is not found.|
-|request_parameter_wrong|4|Wrong parameters which must be rejected in the client is passed for request.|
-|room_password_wrong|5|Indicated password of room is not correct.|
-|room_full|6|The number of player reaches limit.|
-|room_permission_denied|7|Request is rejected because indicated room is the room which you are not host of or closed.|
-|room_group_full|8|The number of room reaches limit.|
-|client_already_hosting_room|9|Request is failed because the client is already hosting room.|
+|operation_invalid|3|The operation is invalid in current state.|
+|room_not_found|4|Indicated room is not found.|
+|request_parameter_wrong|5|Wrong parameters which must be rejected in the client is passed for request.|
+|room_password_wrong|6|Indicated password of room is not correct.|
+|room_full|7|The number of player reaches limit.|
+|room_permission_denied|8|Request is rejected because indicated room is the room which you are not host of or closed.|
+|room_count_exceeds_limit|9|The number of room reaches limit.|
+|client_already_hosting_room|10|Request is failed because the client is already hosting room.|
 
-## Communication Flow
-
-To communicate with the server, you should follow below flow.
-
-1. Connect to the server by TCP
-1. Send authentication request and get a session key
-1. Send requests you need with the session key
-
-In below situation, the server forces to close the connection immediately without any reply.
-
-- Send not authentication request at first time after connection
-- Send ahtnentication request more than twice
-- Send wrong session key
-- Send invalid message type
-
-## Messages
+## Message Body Structure
 
 ### Authentication Request
 
@@ -124,7 +131,7 @@ The size is 8 bytes.
 |ok|The request is processed succesfully.|yes|
 |api_version_mismatch|An API version of server is different from what the client required.|no|
 |request_parameter_wrong|A player name is empty.|no|
-|DISCONNECT|Authentication request is duplicate.|no|
+|operation_invalid|Authentication request is send more than twice.|no|
 
 ### Create Room Request
 
@@ -164,8 +171,7 @@ The size is 4 bytes.
 |:---|:---|:---|
 |ok|The request is processed succesfully.|yes|
 |client_already_hosting_room|Failed to host new room because the client already hosting room.|yes|
-|room_group_not_found|Indicated room group doesn't exist.|yes|
-|room_group_full|Indicated room group is full.|yes|
+|room_count_exceeds_limit|The number of room exceeds limit.|yes|
 |request_parameter_wrong|Max player count exceeds limit. Or indicated port number is invalid.|yes|
 
 ### List Room Request
@@ -253,7 +259,6 @@ separation = floor((reply.reply_room_count + 5) / 6);
 |Name|Condition|Continuable|
 |:---|:---|:---|
 |ok|The request is processed succesfully.|yes|
-|room_group_not_found|Indicated room group doesn't exist.|yes|
 |request_parameter_wrong|sort_kind is invalid.|yes|
 
 ### Join Room Request
@@ -291,7 +296,6 @@ The size is 82 bytes.
 |Name|Condition|Continuable|
 |:---|:---|:---|
 |ok|The request is processed succesfully.|yes|
-|room_group_not_found|Indicated room group doesn't exist.|yes|
 |room_not_found|Indicated room doesn't exist.|yes|
 |room_permission_denied|Indicated room is closed.|yes|
 |room_password_wrong|Indicated password is wrong.|yes|
@@ -327,10 +331,10 @@ Notice message is ignoreed if there are some errors in processing message.
 
 |Condition|Continuable|
 |:---|:---|
-|Indicated room group doesn't exist.|yes|
 |Indicated room doesn't exist.|yes|
 |The host of indicated room is not you.|yes|
 |The number of new player count is invalid.|yes|
+|The `status` parameter is invalid.|yes|
 
 ### Connection Test Request
 

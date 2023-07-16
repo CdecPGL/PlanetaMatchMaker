@@ -1,18 +1,10 @@
 #pragma once
 
 #include <cstdint>
-
-#include "client/client_error_code.hpp"
+#include <iostream>
 
 namespace pgl {
-	enum class message_error_code : uint8_t {
-		ok,
-		// Server internal error.
-		server_error,
-
-		//////////////////////////////////////////
-		// below here is the same as client_error_code
-		//////////////////////////////////////////
+	enum class client_error_code : uint8_t {
 		// Server api version doesn't match to the version the client required.
 		api_version_mismatch,
 		// The operation is invalid in the current state.
@@ -35,5 +27,5 @@ namespace pgl {
 		client_already_hosting_room,
 	};
 
-	message_error_code get_message_error_code_from_client_error_code(const client_error_code& error_code);
+	std::ostream& operator <<(std::ostream& os, const client_error_code& error_code);
 }

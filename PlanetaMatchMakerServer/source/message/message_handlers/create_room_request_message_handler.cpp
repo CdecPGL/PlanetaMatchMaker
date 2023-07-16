@@ -10,13 +10,13 @@
 #include "../message_parameter_validator.hpp"
 
 using namespace boost;
+using namespace minimal_serializer;
 
 namespace pgl {
-	void create_room_request_message_handler::handle_message(const create_room_request_message& message,
+	create_room_request_message_handler::handle_return_t create_room_request_message_handler::handle_message(
+		const create_room_request_message& message,
 		const std::shared_ptr<message_handle_parameter> param) {
-
-		const message_parameter_validator_with_reply<message_type::create_room_reply, create_room_reply_message>
-			parameter_validator(param);
+		const message_parameter_validator parameter_validator(param);
 
 		auto& room_data_container = param->server_data.get_room_data_container();
 
@@ -28,34 +28,21 @@ namespace pgl {
 		// Check max player count is valid.
 		parameter_validator.validate_max_player_count(message.max_player_count);
 
-		reply_message_header header{
-			message_type::create_room_reply,
-			message_error_code::ok
-		};
-
-		create_room_reply_message reply{};
-
 		// Client which is already hosting room cannot create room newly.
 		if (param->session_data.is_hosting_room()) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-				"Failed to create new room with player\"",
+			const auto error_message = generate_string("Failed to create new room with player\"",
 				param->session_data.client_player_name().generate_full_name(),
 				"\" because this client is already hosting room with id ", param->session_data.hosting_room_id(),
 				".");
-			header.error_code = message_error_code::client_already_hosting_room;
-			send(param, header, reply);
-			return;
+			throw client_error(client_error_code::client_already_hosting_room, false, error_message);
 		}
 
-		// Check if room count reached limit in room group
+		// Check if room count reached limit
 		if (room_data_container.size() == param->server_setting.common.max_room_count) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-				"Failed to create new room with player\"",
+			const auto error_message = generate_string("Failed to create new room with player\"",
 				param->session_data.client_player_name().generate_full_name(),
 				"\" because room count reaches max.");
-			header.error_code = message_error_code::room_group_full;
-			send(param, header, reply);
-			return;
+			throw client_error(client_error_code::room_count_exceeds_limit, false, error_message);
 		}
 
 		try {
@@ -79,7 +66,10 @@ namespace pgl {
 				1
 			};
 
-			reply.room_id = room_data_container.assign_id_and_add(room_data);
+			create_room_reply_message reply{
+				room_data_container.assign_id_and_add(room_data)
+			};
+
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New ",
 				is_public ? "public" : "private", " room for player \"",
 				param->session_data.client_player_name().generate_full_name(), "\" is created with id: ",
@@ -87,18 +77,13 @@ namespace pgl {
 			param->session_data.set_hosting_room_id(reply.room_id);
 
 			// Reply to the client
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
-				message_type::create_room_request,
-				" message.");
-			send(param, header, reply);
+			return {{reply}, false};
 		}
 		catch (const unique_variable_duplication_error&) {
-			log_with_endpoint(log_level::error, param->socket.remote_endpoint(),
-				"Failed to create new room with player\"",
+			const auto error_message = generate_string("Failed to create new room with player\"",
 				param->session_data.client_player_name().generate_full_name(),
 				"\" because the name is duplicated. This is not expected behavior.");
-			header.error_code = message_error_code::server_error;
-			send(param, header, reply);
+			throw server_error(false, error_message);
 		}
 	}
 }
