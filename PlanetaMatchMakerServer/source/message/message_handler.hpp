@@ -92,9 +92,20 @@ namespace pgl {
 
 			// reply message if required
 			if constexpr (!std::is_same_v<ReplyMessage, no_reply>) {
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ", header.message_type,
-					" message.");
-				for (auto&& reply_body : reply_bodies) { send(param, reply_header, reply_body); }
+				if (reply_bodies.empty()) {
+					log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
+						header.message_type, " message without body (", get_packed_size<reply_message_header>(),
+						" bytes).");
+					send(param, reply_header);
+				}
+				else {
+					for (auto&& reply_body : reply_bodies) {
+						log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
+							header.message_type, " message (", get_packed_size<reply_message_header, ReplyMessage>(),
+							" bytes).");
+						send(param, reply_header, reply_body);
+					}
+				}
 			}
 
 			// disconnect connection if required

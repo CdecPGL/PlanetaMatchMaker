@@ -7,6 +7,7 @@ There are two ways to change server setting.
 
 Server setting is located in `/etc/pmms/setting.json` (Linux) or `C:\pmms\setting.json` (Windows).
 Setting is written by JSON format which can include comments and trailing cammma.
+The encoding of the setting file must be UTF-8 without BOM.
 
 If specific environmet variables are defined, the value of environment variables are used even if setting file is located.
 

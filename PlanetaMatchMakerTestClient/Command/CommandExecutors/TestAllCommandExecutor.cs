@@ -96,7 +96,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var portMappings = await sharedClient.PortMappingCreator.GetAllPortMappingsAsync();
                 if (!portMappings.Any(m =>
-                    m.PrivatePort == lastCreatedPrivatePort && m.PublicPort == lastCreatedPublicPort))
+                        m.PrivatePort == lastCreatedPrivatePort && m.PublicPort == lastCreatedPublicPort))
                 {
                     throw new TestFailedException(true, "Created port mapping is not found in list of port mappings.");
                 }
@@ -127,7 +127,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var portMappings = await sharedClient.PortMappingCreator.GetAllPortMappingsAsync();
                 if (portMappings.Any(m =>
-                    m.PrivatePort == lastCreatedPrivatePort && m.PublicPort == lastCreatedPublicPort))
+                        m.PrivatePort == lastCreatedPrivatePort && m.PublicPort == lastCreatedPublicPort))
                 {
                     throw new TestFailedException(true,
                         "Created port mapping is not removed in list of port mappings. The cause is sometimes removing port mappings is not finished.");
@@ -192,7 +192,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var (_, _, roomInfoList) =
                     await sharedClient.GetRoomListAsync(0, 100, RoomDataSortKind.NameAscending);
                 if (roomInfoList.All(r =>
-                    r.RoomId != lastHostedRoomId && r.HostPlayerFullName == sharedClient.PlayerFullName))
+                        r.RoomId != lastHostedRoomId && r.HostPlayerFullName == sharedClient.PlayerFullName))
                 {
                     throw new TestFailedException(true, "Created room is not listed in ListRoomRequest.");
                 }
@@ -222,7 +222,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var (_, _, roomInfoList) =
-                    await sharedClient.GetRoomListAsync( 0, 100, RoomDataSortKind.NameAscending);
+                    await sharedClient.GetRoomListAsync(0, 100, RoomDataSortKind.NameAscending);
                 if (roomInfoList.Any(r => r.RoomId == lastHostedRoomId))
                 {
                     throw new TestFailedException(true, "Created room is not removed in ListRoomRequest.");
@@ -258,7 +258,8 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                secondClient = new MatchMakerClient(sharedClient.TimeoutMilliSeconds, logger: sharedClient.Logger);
+                secondClient = new MatchMakerClient(sharedClient.GameId, sharedClient.GameVersion,
+                    sharedClient.TimeoutMilliSeconds, logger: sharedClient.Logger);
                 await secondClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
             }
             catch (ClientErrorException e)
@@ -329,7 +330,7 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Timeout milli seconds to discover NAT.")]
         public int DiscoverTimeoutMilliSeconds { get; set; }
 
-        [CommandLine.Option('c', "game_host_port_candidates", Default = new ushort[] {53000, 54000}, Required = false,
+        [CommandLine.Option('c', "game_host_port_candidates", Default = new ushort[] { 53000, 54000 }, Required = false,
             Separator = ',', HelpText = "Candidates of port to map.")]
         public IEnumerable<ushort> GameHostPortCandidates { get; set; }
     }

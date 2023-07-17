@@ -71,6 +71,7 @@ namespace pgl {
 		player_tag_t player_tag;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
+			&authentication_reply_message::result,
 			&authentication_reply_message::api_version,
 			&authentication_reply_message::game_version,
 			&authentication_reply_message::player_tag

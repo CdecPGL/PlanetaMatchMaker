@@ -33,7 +33,7 @@ namespace pgl {
 		return json::value_to<T>(*value);
 	}
 
-	// std::u8string is not available in ptree with error "array required", so use std::string then convert to std::u8string.
+	// std::u8string is not available in ptree with error "array required", so use std::string then convert to std::u8string (boost library in 1.78.0).
 	template <>
 	std::u8string extract_with_default<std::u8string>(const json::object& obj, const std::string& key,
 		const std::u8string& default_value) {

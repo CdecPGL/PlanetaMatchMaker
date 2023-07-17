@@ -18,7 +18,7 @@ namespace PlanetaGameLabo.MatchMaker
         public void DisplayCommandList()
         {
             foreach (var (commandExecutor, index) in commandExecutorMap.OrderBy(p => p.Key)
-                .Select((item, index) => (item, index)))
+                         .Select((item, index) => (item, index)))
             {
                 outputStream.WriteLine($"{index}. {commandExecutor.Key}: {commandExecutor.Value.Explanation}");
             }
@@ -31,6 +31,11 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 await commandExecutorMap[command].Execute(client, args, cancellationToken);
+            }
+            catch (AuthenticationErrorException e)
+            {
+                outputStream.WriteLine(
+                    $"Error occurred: {e.Message}, Server Info (API Version: {e.ServerApiVersion}, Game Version: {e.ServerGameVersion})");
             }
             catch (ClientErrorException e)
             {

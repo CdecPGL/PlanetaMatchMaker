@@ -9,6 +9,11 @@
         "max_room_count": 1000,
         "max_player_per_room": 16
     },
+    "authentication": {
+        "game_id": "game_id",
+        "enable_game_version_check": true,
+        "game_version": "1.0.0"
+    },
     "log":{
         "enable_console_log": true,
         "console_log_level": "info",

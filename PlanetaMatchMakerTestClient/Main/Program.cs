@@ -25,13 +25,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return;
             }
 
+            Console.Write("Input Game ID: ");
+            var gameId = Console.ReadLine();
+            Console.Write("Input Game Version: ");
+            var gameVersion = Console.ReadLine();
+
             var options = ((CommandLine.Parsed<Options>)parsedResult).Value;
             var commandProcessor = CommandProcessorFactory.Create();
 
             try
             {
                 var logger = StreamLogger.CreateStandardOutputLogger(LogLevel.Debug);
-                using var client = new MatchMakerClient(logger: logger);
+                using var client = new MatchMakerClient(gameId, gameVersion, logger: logger);
                 Console.CancelKeyPress += OnKeyBoardInterrupted;
 
                 if (!string.IsNullOrEmpty(options.CommandAndOptions))
