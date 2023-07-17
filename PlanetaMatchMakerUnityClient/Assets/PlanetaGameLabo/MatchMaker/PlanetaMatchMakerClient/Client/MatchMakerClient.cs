@@ -58,19 +58,49 @@ namespace PlanetaGameLabo.MatchMaker
         public PlayerFullName PlayerFullName { get; private set; }
 
         /// <summary>
+        /// A game ID of this client.
+        /// </summary>
+        public string GameId { get; }
+
+        /// <summary>
+        /// A game version of this client.
+        /// </summary>
+        public string GameVersion { get; }
+
+        /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="gameId">A game ID of this client.</param>
+        /// <param name="gameVersion">A game version of this client.</param>
         /// <param name="timeoutMilliSeconds">Timeout milli seconds for send and receive. Timeout of connect is not effected.</param>
         /// <param name="keepAliveNoticeIntervalSeconds"></param>
         /// <param name="logger"></param>
-        public MatchMakerClient(int timeoutMilliSeconds = 10000, int keepAliveNoticeIntervalSeconds = 30,
-            ILogger logger = null)
+        /// <exception cref="ArgumentException"></exception>
+        public MatchMakerClient(string gameId, string gameVersion = "", int timeoutMilliSeconds = 10000,
+            int keepAliveNoticeIntervalSeconds = 30, ILogger logger = null)
         {
             if (logger == null)
             {
                 logger = StreamLogger.CreateStandardOutputLogger();
             }
 
+            if (string.IsNullOrEmpty(gameId) || ClientConstants.GameIdLength < gameId.Length)
+            {
+                throw new ArgumentException(
+                    $"The length of Game ID must be in range [{1}, {ClientConstants.GameIdLength}].",
+                    nameof(gameId));
+            }
+
+
+            if (gameVersion == null || ClientConstants.GameVersionLength < gameVersion.Length)
+            {
+                throw new ArgumentException(
+                    $"The length of Game Version must be in range [{0}, {ClientConstants.GameVersionLength}].",
+                    nameof(gameId));
+            }
+
+            GameId = gameId;
+            GameVersion = gameVersion;
             TimeoutMilliSeconds = timeoutMilliSeconds;
             Logger = logger;
             PortMappingCreator = new NatPortMappingCreator(logger);
@@ -83,6 +113,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="serverAddress"></param>
         /// <param name="serverPort"></param>
         /// <param name="playerName"></param>
+        /// <exception cref="AuthenticationErrorException"></exception>
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
@@ -133,13 +164,28 @@ namespace PlanetaGameLabo.MatchMaker
 
                 // Authentication Request
                 var requestBody =
-                    new AuthenticationRequestMessage { Version = ClientConstants.ApiVersion, PlayerName = playerName };
+                    new AuthenticationRequestMessage
+                    {
+                        ApiVersion = ClientConstants.ApiVersion,
+                        GameId = GameId,
+                        GameVersion = GameVersion,
+                        PlayerName = playerName
+                    };
                 await SendRequestAsync(requestBody).ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(playerName)}: {playerName})");
+                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(GameId)}: {GameId}, {nameof(GameVersion)}: {GameVersion}, {nameof(playerName)}: {playerName})");
                 var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Receive AuthenticationReply. ({nameof(replyBody.Version)}: {replyBody.Version}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
+                    $"Receive AuthenticationReply. ({nameof(replyBody.Result)}: {replyBody.Result}, {nameof(replyBody.ApiVersion)}: {replyBody.ApiVersion}, {nameof(replyBody.GameVersion)}: {replyBody.GameVersion}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
+
+                if (replyBody.Result != AuthenticationResult.Success)
+                {
+                    Logger.Log(LogLevel.Info, "Authentication Failed.");
+                    Close();
+                    throw new AuthenticationErrorException(replyBody.Result.ToErrorCode(), replyBody.ApiVersion,
+                        replyBody.GameVersion);
+                }
+
                 PlayerFullName = new PlayerFullName { Name = playerName, Tag = replyBody.PlayerTag };
 
                 keepAliveSenderNotificator.StartKeepAliveProc();

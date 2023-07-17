@@ -46,16 +46,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dontDestroyOnLoad: 1
   _isSingleton: 0
+  _gameId: test
+  _gameVersion: 1.0.0
   _serverAddress: 127.0.0.1
   _serverPort: 57000
+  _serverCommunicationTimeOutSeconds: 10
+  _keepAliveNoticeIntervalSeconds: 30
   _gameTransportProtocol: 1
   _gameDefaultPort: 52000
   _gamePortCandidates:
   - _startPort: 50000
     _endPort: 56000
   _natDiscoverTimeOutSeconds: 5
-  _serverCommunicationTimeOutSeconds: 10
-  _keepAliveNoticeIntervalSeconds: 30
   _enableDebugLog: 1
   _debugLogLevel: 0
 --- !u!114 &4546133711901321005

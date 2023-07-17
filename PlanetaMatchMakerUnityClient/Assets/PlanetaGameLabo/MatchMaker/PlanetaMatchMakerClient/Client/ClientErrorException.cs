@@ -56,7 +56,7 @@ namespace PlanetaGameLabo.MatchMaker
                 case ClientErrorCode.FailedToConnect:
                     return "Failed to connect to the server.";
                 case ClientErrorCode.RequestError:
-                    return "Request doesn't processed correctly on the server.";
+                    return "Failed to process request.";
                 case ClientErrorCode.AlreadyConnected:
                     return "The client is already connected to the server.";
                 case ClientErrorCode.NotConnected:

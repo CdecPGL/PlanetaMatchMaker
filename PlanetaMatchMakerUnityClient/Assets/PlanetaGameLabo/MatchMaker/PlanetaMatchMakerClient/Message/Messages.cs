@@ -6,7 +6,7 @@ using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    using VersionType = UInt16;
+    using ApiVersionType = UInt16;
     using RoomIdType = UInt32;
 
 #pragma warning disable 0649
@@ -17,9 +17,6 @@ namespace PlanetaGameLabo.MatchMaker
 
         // Server internal error.
         ServerError,
-
-        // Server api version and client api version are not same.
-        ApiVersionMismatch,
 
         // The operation is invalid in the current state.
         OperationInvalid,
@@ -76,23 +73,35 @@ namespace PlanetaGameLabo.MatchMaker
         public MessageErrorCode ErrorCode;
     }
 
-    // 2 bytes
+    // 74 bytes
     [Serializable]
     [Message(MessageType.Authentication)]
     internal struct AuthenticationRequestMessage
     {
-        public VersionType Version;
+        public ApiVersionType ApiVersion;
+
+        [FixedLength(ClientConstants.GameIdLength)]
+        public string GameId;
+
+        [FixedLength(ClientConstants.GameVersionLength)]
+        public string GameVersion;
 
         [FixedLength(ClientConstants.PlayerNameLength)]
         public string PlayerName;
     }
 
-    // 4 bytes
+    // 29 bytes
     [Serializable]
     [Message(MessageType.Authentication)]
     internal struct AuthenticationReplyMessage
     {
-        public VersionType Version;
+        public AuthenticationResult Result;
+
+        public ApiVersionType ApiVersion;
+
+        [FixedLength(ClientConstants.GameVersionLength)]
+        public string GameVersion;
+
         public ushort PlayerTag;
     }
 

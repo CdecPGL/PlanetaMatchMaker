@@ -620,6 +620,24 @@ namespace PlanetaGameLabo.MatchMaker
 
         #region OtherPublicMethods
 
+        /// <summary>
+        /// Close connection if connection is established and re-instantiate client instance with new game id and game version.
+        /// </summary>
+        /// <param name="gameId">New game ID</param>
+        /// <param name="gameVersion">New game version</param>
+        public void ResetClient(string gameId, string gameVersion = "")
+        {
+            if (_client.Connected)
+            {
+                _client.Close();
+            }
+
+            _gameId = gameId;
+            _gameVersion = gameVersion;
+            _client = new MatchMakerClient(_gameId, _gameVersion, (int)(_serverCommunicationTimeOutSeconds * 1000),
+                _keepAliveNoticeIntervalSeconds, new UnityLogger(_debugLogLevel));
+        }
+
         public void Dispose()
         {
             _client.Dispose();
@@ -635,6 +653,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         [SerializeField, Tooltip("the game object which is attached this component become singleton if true.")]
         private bool _isSingleton;
+
+        [SerializeField, Tooltip("A game ID used of this client")]
+        private string _gameId = "";
+
+        [SerializeField, Tooltip("A game version used of this client")]
+        private string _gameVersion = "";
 
         [SerializeField, Tooltip("IP Address of Match Making Server")]
         private string _serverAddress = "127.0.0.1";
@@ -677,7 +701,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void Awake()
         {
-            _client = new MatchMakerClient((int)(_serverCommunicationTimeOutSeconds * 1000),
+            _client = new MatchMakerClient(_gameId, _gameVersion, (int)(_serverCommunicationTimeOutSeconds * 1000),
                 _keepAliveNoticeIntervalSeconds, new UnityLogger(_debugLogLevel));
             _client.Logger.Enabled = _enableDebugLog;
             if (_dontDestroyOnLoad)
