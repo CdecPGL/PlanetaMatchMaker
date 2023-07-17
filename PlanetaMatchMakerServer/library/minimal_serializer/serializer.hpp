@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019-2022 Cdec
+Copyright (c) 2019 Cdec
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
@@ -12,7 +12,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <boost/endian/conversion.hpp>
 
-#include "string_utility.hpp"
 #include "type_traits.hpp"
 
 namespace minimal_serializer {
@@ -41,9 +40,9 @@ namespace minimal_serializer {
 	template <typename T>
 	constexpr auto static_assertion_for_not_serializable_type() -> std::enable_if_t<!is_serializable_v<T>, void> {
 		static_assert(std::is_trivial_v<T>,
-			"T must be a trivial type because the serialize size of T must not be changed in runtime.");
+					"T must be a trivial type because the serialize size of T must not be changed in runtime.");
 		static_assert(has_serialize_targets_definition_v<T>,
-			"There must be a member alias 'using serialize_targets = minimal_serializer::serialize_target_container<...>' or a template specification for minimal_serializer::serialize_target class template."
+					"There must be a member alias 'using serialize_targets = minimal_serializer::serialize_target_container<...>' or a template specification for minimal_serializer::serialize_target class template."
 		);
 	}
 
@@ -78,6 +77,9 @@ namespace minimal_serializer {
 		else if constexpr (is_serializable_tuple_v<raw_t>) {
 			return get_serialized_size_tuple<raw_t>();
 		}
+		else if constexpr (is_serializable_boost_static_string_v<raw_t>) {
+			return raw_t::static_capacity;
+		}
 		else if constexpr (is_serializable_custom_type_v<raw_t>) {
 			using target_types = typename serialize_targets_t<raw_t>::types;
 			return get_serialized_size_tuple<target_types>();
@@ -92,7 +94,7 @@ namespace minimal_serializer {
 	 * The serialized size of T. If T has const, volatile and/or reference, they will be removed.
 	 */
 	template <typename T>
-	constexpr size_t serialized_size_v = get_serialized_size_impl<T>();
+	constexpr std::size_t serialized_size_v = get_serialized_size_impl<T>();
 
 	/**
 	 * A fixed size byte array of serialized data for T.
@@ -139,6 +141,17 @@ namespace minimal_serializer {
 		}
 		else if constexpr (is_serializable_tuple_v<T>) {
 			serialize_tuple<T>(obj, buffer_top, buffer_size, offset);
+		}
+		else if constexpr (is_serializable_boost_static_string_v<T>) {
+			constexpr auto capacity = T::static_capacity;
+			if (offset + capacity > buffer_size) {
+				throw serialization_error("Serialization source is out of range.");
+			}
+
+			auto* data_ptr = buffer_top + offset;
+			obj.copy(reinterpret_cast<typename T::value_type*>(data_ptr), obj.size());
+			for (auto i = obj.size(); i < capacity; ++i) data_ptr[i] = 0;
+			offset += capacity;
 		}
 		else if constexpr (is_serializable_custom_type_v<T>) {
 			using target_types = typename serialize_targets_t<T>::const_reference_types;
@@ -237,6 +250,24 @@ namespace minimal_serializer {
 		}
 		else if constexpr (is_serializable_tuple_v<T>) {
 			deserialize_tuple<T>(obj, buffer_top, buffer_size, offset);
+		}
+		else if constexpr (is_serializable_boost_static_string_v<T>) {
+			constexpr auto capacity = T::static_capacity;
+			if (offset + capacity > buffer_size) {
+				throw serialization_error("Deserialization destination is out of range.");
+			}
+
+			// Calculate the length of string.
+			using char_type = typename T::value_type;
+			const auto* char_offset_buffer = reinterpret_cast<const char_type*>(buffer_top + offset);
+			const auto eof = T::traits_type::find(char_offset_buffer, capacity, char_type());
+			const auto size = eof != nullptr ? eof - char_offset_buffer : capacity;
+			// Copy string with specifying actual length.
+			// Note: std::memcpy() is not used because it does not set the size in boost::static_string.
+			// Note: Specify actual string size instead of capacity because assign set the third parameter as the size of string even if there is null character in the middle of string.
+			// Note: Specify actual string size instead of use overload of assign() without size because it throws exception when the length of the string equals to capacity.
+			obj.assign(reinterpret_cast<const typename T::value_type*>(buffer_top + offset), size);
+			offset += capacity;
 		}
 		else if constexpr (is_serializable_custom_type_v<T>) {
 			using target_types = typename serialize_targets_t<T>::reference_types;

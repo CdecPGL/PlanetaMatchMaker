@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019-2022 Cdec
+Copyright (c) 2019 Cdec
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
@@ -12,6 +12,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 #include <type_traits>
 #include <tuple>
+
+#include <boost/static_string/static_string.hpp>
 
 namespace minimal_serializer {
 	/**
@@ -59,9 +61,15 @@ namespace minimal_serializer {
 	template <auto FirstPtr, auto... RestPtrs>
 	class serialize_target_container final {
 		static_assert(std::is_member_object_pointer_v<decltype(FirstPtr)> && (std::is_member_object_pointer_v<decltype(
-			RestPtrs)> && ...), "FirstPtr and RestPtrs must be member function pointer.");
-		static_assert((std::is_same_v<member_variable_pointer_class_t<FirstPtr>, member_variable_pointer_class_t<
-										RestPtrs>> && ...), "All pointers must be in same class.");
+						RestPtrs)> && ...), "FirstPtr and RestPtrs must be member function pointer.");
+		static_assert(
+			(std::is_same_v<
+				member_variable_pointer_class_t<FirstPtr>,
+				member_variable_pointer_class_t<RestPtrs>
+			> && ...),
+			"All pointers must be in same class."
+		);
+
 	public:
 		using ptr_types = std::tuple<decltype(FirstPtr), decltype(RestPtrs)...>;
 		const ptr_types ptrs = ptr_types(FirstPtr, RestPtrs...);
@@ -85,38 +93,70 @@ namespace minimal_serializer {
 	};
 
 	/**
-	 * @brief A serialize target definition.
+	 * @brief A template meta function to get serialize targets type alias defined in the type.
+	 * This returns T::serialize_targets if it is defined, or returns void if it is not.
+	 */
+	struct get_serialize_targets_impl final {
+		template <typename T>
+		static auto check(T&& x) -> typename T::serialize_targets;
+
+		template <typename T>
+		static auto check(...) -> void;
+	};
+
+	/**
+	 * @brief A serialize target definition. The type will be void if T does not have serialize_targets type alias. This struct may be specialized for custom class.
 	 * @tparam T A target type.
 	 */
 	template <typename T>
 	struct serialize_targets {
-		using type = typename T::serialize_targets;
+		using type = decltype(get_serialize_targets_impl::check<T>(std::declval<T>()));
 	};
 
+	/**
+	 * @brief A serialize target definition type alias. The type will be void if T does not have serialize_targets type alias and does not have specialized serialize_targets struct template.
+	 * @tparam T A target type.
+	 * @todo Check the type of serialize_targets<T>::type is serialize_target_container or void.
+	 */
 	template <typename T>
 	using serialize_targets_t = typename serialize_targets<T>::type;
 
-	struct has_serialize_targets_definition_impl final {
+	/**
+	 * @brief Whether the type has serialize target definition.
+	 * @tparam T A target type.
+	 */
+	template <typename T>
+	constexpr bool has_serialize_targets_definition_v = !std::is_same_v<serialize_targets_t<T>, void>;
+
+	struct is_serializable_boost_static_string_impl final {
 		template <typename T>
-		static auto check(T&& x) -> decltype(std::declval<serialize_targets_t<T>>(), std::true_type{});
+#ifdef BOOST_STATIC_STRING_CPP20
+		[[deprecated("Use boost::static_strings::static_u8string instead.")]]
+#endif
+		static auto check(T&& x) -> std::enable_if_t<
+			std::is_same_v<T, boost::static_strings::static_string<T::static_capacity>>,
+			std::true_type
+		>;
+
+#ifdef BOOST_STATIC_STRING_CPP20
+		template <typename T>
+		static auto check(T&& x) -> std::enable_if_t<
+			std::is_same_v<T, boost::static_strings::static_u8string<T::static_capacity>>,
+			std::true_type
+		>;
+#endif
 
 		template <typename T>
 		static auto check(...) -> std::false_type;
 	};
 
-	// To avoid an error of trying to access member alias of non class type.
+	/**
+	 * @brief A template alias to check whether the type is boost static string which is serializable with minimal serializer.
+	 * @tparam T A target type.
+	 */
 	template <typename T>
-	constexpr auto has_serialize_targets_definition_impl2() {
-		if constexpr (std::is_class_v<T>) {
-			return decltype(has_serialize_targets_definition_impl::check<T>(std::declval<T>()))::value;
-		}
-		else {
-			return false;
-		}
-	}
-
-	template <typename T>
-	constexpr bool has_serialize_targets_definition_v = has_serialize_targets_definition_impl2<T>();
+	constexpr bool is_serializable_boost_static_string_v =
+		decltype(is_serializable_boost_static_string_impl::check<T>(std::declval<T>()))::value;
 
 	// float is available in boost.endian if Boost Library version >= 1.74.0
 #if BOOST_VERSION >= 107400
@@ -164,6 +204,7 @@ namespace minimal_serializer {
 		is_serializable_builtin_type_v<T> ||
 		is_serializable_enum_v<T> ||
 		is_serializable_tuple_v<T> ||
+		is_serializable_boost_static_string_v<T> ||
 		is_serializable_custom_type_v<T>;
 
 #if __cpp_concepts

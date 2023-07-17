@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019-2022 Cdec
+Copyright (c) 2019 Cdec
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
@@ -16,7 +16,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <boost/operators.hpp>
 #include <boost/functional/hash.hpp>
 
-#include "serializer.hpp"
 #include "string_utility.hpp"
 
 namespace minimal_serializer {
@@ -26,11 +25,12 @@ namespace minimal_serializer {
 	 * @tparam Length A max length of string.
 	 */
 	template <typename String, size_t Length>
-	class fixed_string_base final : boost::less_than_comparable<fixed_string_base<String, Length>>,
-									boost::equality_comparable<fixed_string_base<String, Length>> {
+	class fixed_string_base : boost::less_than_comparable<fixed_string_base<String, Length>>,
+							boost::equality_comparable<fixed_string_base<String, Length>> {
 		using char_t = typename String::value_type;
 		static_assert(sizeof(char_t) == sizeof(uint8_t),
-			"The type of character must have same size with uint8_t (1byte).");
+					"The type of character must have same size with uint8_t (1byte).");
+
 	public:
 		constexpr fixed_string_base() = default;
 		constexpr fixed_string_base(const fixed_string_base& other) = default;

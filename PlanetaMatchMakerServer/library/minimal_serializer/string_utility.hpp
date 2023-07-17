@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019-2022 Cdec
+Copyright (c) 2019 Cdec
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
@@ -17,6 +17,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #include <array>
 
 #include "nameof.hpp"
+
+#include "type_traits.hpp"
 
 #if __has_include(<windows.h>)
 
@@ -43,20 +45,12 @@ namespace minimal_serializer {
 		template <typename T>
 		constexpr bool is_char_as_integer_v = std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>;
 
-#ifndef __cpp_char8_t
-		/**
-		 * Not supported char types in generate_string.
-		 */
-		template<typename T>
-		constexpr bool is_not_supported_char_v = std::is_same_v<T, wchar_t> || std::is_same_v<T, char16_t> || std::is_same_v<T, char32_t>;
-#else
 		/**
 		 * Not supported char types in generate_string.
 		 */
 		template <typename T>
-		constexpr bool is_not_supported_char_v = std::is_same_v<T, wchar_t> || std::is_same_v<T, char8_t> ||
-			std::is_same_v<T, char16_t> || std::is_same_v<T, char32_t>;
-#endif
+		constexpr bool is_not_supported_char_v = std::is_same_v<T, wchar_t> || std::is_same_v<T, char16_t> ||
+			std::is_same_v<T, char32_t>;
 
 		/**
 		 * Not supported char array types in generate_string.
@@ -84,6 +78,11 @@ namespace minimal_serializer {
 		};
 
 		auto const w_str_size = MultiByteToWideChar(CP_UTF8, 0u, u8_str, -1, nullptr, 0u);
+		// return empty string immediately for empty string because WideCharToMultiByte occurs error for empty strnig. 
+		if (w_str_size == 0 || w_str_size == 1 && u8_str[0] == '\0') {
+			return "";
+		}
+
 		std::vector<wchar_t> w_str(w_str_size, L'\0');
 		if (MultiByteToWideChar(CP_UTF8, 0u, u8_str, -1, w_str.data(), static_cast<int>(w_str.size())) == 0) {
 			throw std::runtime_error(get_win32_error_message());
@@ -100,7 +99,7 @@ namespace minimal_serializer {
 
 		sys_str.resize(std::char_traits<char>::length(sys_str.data()));
 		sys_str.shrink_to_fit();
-		return std::string(sys_str.begin(), sys_str.end());
+		return {sys_str.begin(), sys_str.end()};
 #else
 		// In linux, default strings (char*) are treated as UTF-8, so conversion is not required.
 		// How about MacOS X ???
@@ -115,6 +114,7 @@ namespace minimal_serializer {
 		static_assert(!is_not_supported_char_v<non_cv_ref_t>, "Not supported character type.");
 		static_assert(!is_not_supported_char_array_v<non_cv_ref_t>, "Not supported character array type.");
 
+		// integer by char types support
 		// char types are recognized as character in ostringstream, so '0' means 'end of string' and '0' in char types will not displayed.
 		// To avoid these, cast char types assigned to uint8_t and int8_t to int before pass them to ostringstream
 		if constexpr (is_char_as_integer_v<non_cv_ref_t>) {
@@ -125,20 +125,42 @@ namespace minimal_serializer {
 				oss << static_cast<uint32_t>(value);
 			}
 		}
-#if __cpp_char8_t
-		// char8_t support
+#ifdef __cpp_char8_t
+		// char8_t character support
+		else if constexpr (std::is_same_v<non_cv_ref_t, char8_t>) {
+			const std::array<char, 2> chars{static_cast<char>(value)};
+			oss << convert_utf8_to_system_encode(chars.data());
+		}
+		// char8_t raw pointer support
 		else if constexpr (std::is_pointer_v<non_cv_ref_t> && std::is_same_v<
 			std::remove_const_t<std::remove_pointer_t<non_cv_ref_t>>, char8_t>) {
 			oss << convert_utf8_to_system_encode(reinterpret_cast<char*>(const_cast<char8_t*>(value)));
 		}
+		// char8_t array support
 		else if constexpr (std::is_array_v<non_cv_ref_t> && std::is_same_v<
 			std::remove_extent_t<non_cv_ref_t>, char8_t>) {
 			oss << convert_utf8_to_system_encode(reinterpret_cast<char*>(const_cast<char8_t*>(&value[0])));
 		}
+		// std::u8string support
 		else if constexpr (std::is_same_v<non_cv_ref_t, std::u8string>) {
-			oss << convert_utf8_to_system_encode(reinterpret_cast<const char*>(const_cast<char8_t*>(value.c_str())));
+			oss << convert_utf8_to_system_encode(reinterpret_cast<char*>(const_cast<char8_t*>(value.c_str())));
 		}
 #endif
+		// char raw pointer support
+		else if constexpr (std::is_pointer_v<non_cv_ref_t> && std::is_same_v<
+			std::remove_const_t<std::remove_pointer_t<non_cv_ref_t>>, char>) {
+			oss << value;
+		}
+		// char array support
+		else if constexpr (std::is_array_v<non_cv_ref_t> && std::is_same_v<
+			std::remove_extent_t<non_cv_ref_t>, char>) {
+			oss << value;
+		}
+		// std::string support
+		else if constexpr (std::is_same_v<non_cv_ref_t, std::string>) {
+			oss << value;
+		}
+		// enum support
 		else if constexpr (std::is_enum_v<non_cv_ref_t>) {
 			if constexpr (is_generate_enum_string_supported) {
 				oss << nameof::nameof_enum(value);
@@ -147,30 +169,47 @@ namespace minimal_serializer {
 				oss << static_cast<std::underlying_type_t<non_cv_ref_t>>(value);
 			}
 		}
+		// std::type_info support
+		else if constexpr (std::is_same_v<non_cv_ref_t, std::type_info>) {
+			oss << value.name();
+		}
+		else if constexpr (is_serializable_boost_static_string_v<non_cv_ref_t>) {
+			// boost::static_strings::static_string support
+			if constexpr (std::is_same_v<typename non_cv_ref_t::value_type, char>) {
+				oss << value;
+			}
+#ifdef BOOST_STATIC_STRING_CPP20
+			// boost::static_strings::static_u8string support
+			else if constexpr (std::is_same_v<typename non_cv_ref_t::value_type, char8_t>) {
+				oss << convert_utf8_to_system_encode(
+					reinterpret_cast<char*>(const_cast<char8_t*>(value.c_str())));
+			}
+#endif
+			else {
+				oss << value;
+			}
+		}
 		else {
 			oss << value;
 		}
 	}
 
-	template <>
-	inline void generate_string_converter(std::ostringstream& oss, const std::type_info& value) {
-		oss << value.name();
-	}
-
 	inline void generate_string_impl(std::ostringstream&) {}
 
-	template <typename First, typename ... Rest>
-	void generate_string_impl(std::ostringstream& oss, First&& first, Rest&& ... rest) {
+	template <typename First, typename... Rest>
+	void generate_string_impl(std::ostringstream& oss, First&& first, Rest&&... rest) {
 		generate_string_converter(oss, std::forward<First>(first));
 		generate_string_impl(oss, std::forward<Rest>(rest)...);
 	}
 
 	/**
 	 * Convert parameters to string and concatenate them to one string. This is thread safe.
+	 * Strings which is no guaranteed as UTF-8 are treated as system encoded string.
+	 * u8 strings will be converted to system encoding in C++20.
 	 * @note Main use case of this function is log string generation which is outputted to std::ostream. So we dont implement the version to return std::u8string because std::u8string is not supported as std::ostream input in current C++ version (C++20).
 	 */
-	template <typename ... Params>
-	std::string generate_string(Params&& ... params) {
+	template <typename... Params>
+	std::string generate_string(Params&&... params) {
 		std::ostringstream oss;
 		oss << std::boolalpha;
 		generate_string_impl(oss, std::forward<Params>(params)...);
