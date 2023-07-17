@@ -7,6 +7,8 @@
 #include "minimal_serializer/string_utility.hpp"
 
 #include "server/server_setting.hpp"
+
+#include "authentication/game.hpp"
 #include "utilities/env_var.hpp"
 
 using namespace boost;
@@ -40,6 +42,15 @@ namespace pgl {
 		std::string value(reinterpret_cast<const char*>(default_value.c_str()));
 		value = extract_with_default<std::string>(obj, key, value);
 		return {reinterpret_cast<const char8_t*>(value.c_str())};
+	}
+
+	// std::filesystem::path is not available in ptree, so use std::string then convert to std::filesystem::path (boost library in 1.78.0).
+	template <>
+	std::filesystem::path extract_with_default<std::filesystem::path>(const json::object& obj, const std::string& key,
+		const std::filesystem::path& default_value) {
+		std::string value(default_value.string());
+		value = extract_with_default<std::string>(obj, key, value);
+		return value;
 	}
 
 #define EXTRACT_WITH_DEFAULT(obj, setting, type, key) setting.key = extract_with_default<type>(obj, #key, (setting.key))
@@ -155,7 +166,7 @@ namespace pgl {
 		EXTRACT_WITH_DEFAULT(*obj, s, log_level, console_log_level);
 		EXTRACT_WITH_DEFAULT(*obj, s, bool, enable_file_log);
 		EXTRACT_WITH_DEFAULT(*obj, s, log_level, file_log_level);
-		EXTRACT_WITH_DEFAULT(*obj, s, std::string, file_log_path);
+		EXTRACT_WITH_DEFAULT(*obj, s, std::filesystem::path, file_log_path);
 		return s;
 	}
 

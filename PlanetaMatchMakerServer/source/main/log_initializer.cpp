@@ -19,7 +19,7 @@ namespace pgl {
 		else { add_logger(std::make_unique<console_logger>(level_threshold)); }
 	}
 
-	void enable_file_log(log_level level_threshold, const std::string& file_path, const bool use_boost_log) {
+	void enable_file_log(log_level level_threshold, const std::filesystem::path& file_path, const bool use_boost_log) {
 		filesystem::path actual_file_path(file_path);
 
 		// use default path if indicated path is empty.
@@ -34,9 +34,9 @@ namespace pgl {
 			}
 
 			if (use_boost_log) {
-				add_logger(std::make_unique<boost_file_logger>(level_threshold, actual_file_path.string()));
+				add_logger(std::make_unique<boost_file_logger>(level_threshold, actual_file_path));
 			}
-			else { add_logger(std::make_unique<file_logger>(level_threshold, actual_file_path.string())); }
+			else { add_logger(std::make_unique<file_logger>(level_threshold, actual_file_path)); }
 		}
 		catch (exception& e) { cerr << "Failed to open a log file " << actual_file_path << ": " << e.what() << endl; }
 	}

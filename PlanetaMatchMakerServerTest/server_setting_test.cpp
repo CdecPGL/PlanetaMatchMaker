@@ -26,6 +26,52 @@ bool unset_env_var(const std::string& var_name) {
 #endif
 }
 
+const json::value required_setting = {
+	{
+		"authentication", {
+			{"game_id", "test"},
+		}
+	}
+};
+
+json::value merge_setting(const json::value& base, const json::value& extra) {
+	auto merged = base;
+	for (auto&& extra_section_pair : extra.as_object()) {
+		auto& merged_object = merged.as_object();
+		auto merged_section_object = merged_object.contains(extra_section_pair.key())
+			                             ? merged_object[extra_section_pair.key()].as_object()
+			                             : json::object();
+		for (auto&& extra_item_pair : extra_section_pair.value().as_object()) {
+			merged_section_object.insert_or_assign(extra_item_pair.key(), extra_item_pair.value());
+		}
+		merged_object.insert_or_assign(extra_section_pair.key(), std::move(merged_section_object));
+	}
+	return merged;
+}
+
+/**
+ * @brief create setting with required setting and extra setting
+ * @param extra extra setting. setting exists in both required setting and extra setting is overwritten by extra setting.
+ * @return setting
+ */
+json::value create_setting(const json::value& extra) { return merge_setting(required_setting, extra); }
+
+template <typename T>
+void set_typed_env_var(const std::string& name, const T& value) {
+	if (!set_env_var(name, lexical_cast<std::string>(value))) { BOOST_FAIL("Failed to set envionment variable"); }
+}
+
+template <>
+void set_typed_env_var<bool>(const std::string& name, const bool& value) {
+	set_typed_env_var(name, value ? "true" : "false");
+}
+
+/**
+ * @brief set required setting to environment variable
+ */
+void set_required_setting_env_var() {
+	set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
+}
 
 struct setting_file_fixture {
 	setting_file_fixture(): setting_path(std::filesystem::temp_directory_path() / "pmms_test_setting.json") { }
@@ -75,6 +121,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 				}
 			},
 			{
+				"authentication", {
+					{"game_id", "test"},
+					{"enable_game_version_check", true},
+					{"game_version", "1.0.0"},
+				}
+			},
+			{
 				"log", {
 					{"enable_console_log", false},
 					{"console_log_level", "warning"},
@@ -98,7 +151,6 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		setting.load_from_json_file(setting_path);
 
 		// verify
-		BOOST_CHECK_EQUAL(setting.common.enable_session_key_check, false);
 		BOOST_CHECK_EQUAL(setting.common.time_out_seconds, 100);
 		BOOST_CHECK(setting.common.ip_version == ip_version::v6);
 		BOOST_CHECK_EQUAL(setting.common.port, 12345);
@@ -106,6 +158,11 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.common.thread, 400);
 		BOOST_CHECK_EQUAL(setting.common.max_room_count, 300);
 		BOOST_CHECK_EQUAL(setting.common.max_player_per_room, 200);
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_id == u8"test");
+		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, true);
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);
@@ -116,9 +173,9 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_try_count, 30);
 	}
 
-	BOOST_FIXTURE_TEST_CASE(load_from_json_file_empty, setting_file_fixture) {
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_minimal, setting_file_fixture) {
 		// set up
-		const json::value test_data = json::object();
+		const auto test_data = required_setting;
 		create_setting_file(test_data);
 
 		// exercise
@@ -126,7 +183,6 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		setting.load_from_json_file(setting_path);
 
 		// verify
-		BOOST_CHECK_EQUAL(setting.common.enable_session_key_check, true);
 		BOOST_CHECK_EQUAL(setting.common.time_out_seconds, 300);
 		BOOST_CHECK(setting.common.ip_version == ip_version::v4);
 		BOOST_CHECK_EQUAL(setting.common.port, 57000);
@@ -134,6 +190,10 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.common.thread, 1);
 		BOOST_CHECK_EQUAL(setting.common.max_room_count, 1000);
 		BOOST_CHECK_EQUAL(setting.common.max_player_per_room, 16);
+		// Skip check setting.authentication.enable_game_version_check because it it required setting
+		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, false);
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_version == u8""); // NOLINT(readability-container-size-empty)
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, true);
 		BOOST_CHECK(setting.log.console_log_level == log_level::info);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, true);
@@ -147,13 +207,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_time_out_seconds_valid,
 		unit_test::data::make({ 1,3600 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"common", {
 					{"time_out_seconds", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -167,13 +227,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_ip_version_valid,
 		unit_test::data::make({ "v4", "v6"})) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"common", {
 					{"ip_version", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -187,13 +247,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_port_valid,
 		unit_test::data::make({ 0,65535 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"common", {
 					{"port", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -207,13 +267,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_max_connection_per_thread_valid,
 		unit_test::data::make({ 1,65535 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"common", {
 					{"max_connection_per_thread", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -227,13 +287,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_thread_valid,
 		unit_test::data::make({ 1,65535 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"common", {
 					{"thread", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -247,13 +307,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_max_room_count_valid,
 		unit_test::data::make({ 1,65535 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"common", {
 					{"max_room_count", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -267,13 +327,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_max_player_per_room_valid,
 		unit_test::data::make({ 1,255 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"common", {
 					{"max_player_per_room", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -284,16 +344,64 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.common.max_player_per_room, sample);
 	}
 
+	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_game_id_valid,
+		unit_test::data::make({ "1","---------24bytes--------"})) {
+		// set up
+		const auto test_data = create_setting({
+			{
+				"authentication", {
+					{"game_id", sample},
+				}
+			}
+		});
+		create_setting_file(test_data);
+
+		// exercise
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		// verify
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_id == reinterpret_cast<const char8_t*>(sample));
+	}
+
+	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_game_version_valid,
+		unit_test::data::make({
+			std::tuple(false, ""),
+			std::tuple(false, "---------24bytes--------"),
+			std::tuple(true, "1"),
+			std::tuple(true, "---------24bytes--------")
+			}), enable_game_version_check, game_version) {
+		// set up
+		const auto test_data = create_setting({
+			{
+				"authentication", {
+					{"enable_game_version_check", enable_game_version_check},
+					{"game_version", game_version},
+				}
+			}
+		});
+		create_setting_file(test_data);
+
+		// exercise
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		// verify
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_version == reinterpret_cast<const char8_t*>(game_version));
+	}
+
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_console_log_level_valid,
 		unit_test::data::make({ "debug", "info", "warning", "error", "fatal"})) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"log", {
 					{"console_log_level", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -307,13 +415,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, load_from_json_file_log_level_valid,
 		unit_test::data::make({ "debug", "info", "warning", "error", "fatal" })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"log", {
 					{"file_log_level", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -327,13 +435,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_connection_check_tcp_time_out_seconds_valid,
 		unit_test::data::make({ 1,3600})) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"connection_test", {
 					{"connection_check_tcp_time_out_seconds", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -347,13 +455,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_connection_check_udp_time_out_seconds_valid,
 		unit_test::data::make({ 1,3600 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"connection_test", {
 					{"connection_check_udp_time_out_seconds", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -367,13 +475,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_connection_check_udp_try_count_valid,
 		unit_test::data::make({ 1,100 })) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				"connection_test", {
 					{"connection_check_udp_try_count", sample},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise
@@ -406,13 +514,13 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			std::tuple{"connection_test", "connection_check_udp_try_count", 101},
 			}), section, key, value) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				section, {
 					{key, value},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise and verify
@@ -425,17 +533,19 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			std::tuple{"common", "ip_version", "v5"},
 			std::tuple{"common", "ip_version", "4"},
 			std::tuple{"common", "ip_version", "6"},
+			std::tuple{"authentication", "game_id", ""},
+			std::tuple{"authentication", "game_id", "---------25bytes---------"},
 			std::tuple{"log", "console_log_level", "inf"},
 			std::tuple{"log", "file_log_level", "inf"},
 			}), section, key, value) {
 		// set up
-		const json::value test_data = {
+		const auto test_data = create_setting({
 			{
 				section, {
 					{key, value},
 				}
 			}
-		};
+		});
 		create_setting_file(test_data);
 
 		// exercise and verify
@@ -443,14 +553,25 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
 	}
 
-	template <typename T>
-	void set_typed_env_var(const std::string& name, const T& value) {
-		if (!set_env_var(name, lexical_cast<std::string>(value))) { BOOST_FAIL("Failed to set envionment variable"); }
-	}
+	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_invalid_game_version_when_check_enabled,
+		unit_test::data::make({
+			"",
+			"---------25bytes---------",
+			})) {
+		// set up
+		const auto test_data = create_setting({
+			{
+				"authentication", {
+					{"enable_game_version_check", true},
+					{"game_version", sample},
+				}
+			}
+		});
+		create_setting_file(test_data);
 
-	template <>
-	void set_typed_env_var<bool>(const std::string& name, const bool& value) {
-		set_typed_env_var(name, value ? "true" : "false");
+		// exercise and verify
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
 	}
 
 
@@ -464,6 +585,9 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		set_typed_env_var("PMMS_COMMON_MAX_THREAD", 400);
 		set_typed_env_var("PMMS_COMMON_MAX_ROOM_COUNT", 300);
 		set_typed_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", 200);
+		set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
+		set_typed_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", true);
+		set_typed_env_var("PMMS_AUTHENTICATION_GAME_VERSION", "1.0.0");
 		set_typed_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", false);
 		set_typed_env_var("PMMS_LOG_CONSOLE_LOG_LEVEL", "warning");
 		set_typed_env_var("PMMS_LOG_ENABLE_FILE_LOG", false);
@@ -478,7 +602,6 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		setting.load_from_env_var();
 
 		// verify
-		BOOST_CHECK_EQUAL(setting.common.enable_session_key_check, false);
 		BOOST_CHECK_EQUAL(setting.common.time_out_seconds, 100);
 		BOOST_CHECK(setting.common.ip_version == ip_version::v6);
 		BOOST_CHECK_EQUAL(setting.common.port, 12345);
@@ -486,6 +609,11 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.common.thread, 400);
 		BOOST_CHECK_EQUAL(setting.common.max_room_count, 300);
 		BOOST_CHECK_EQUAL(setting.common.max_player_per_room, 200);
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_id == u8"test");
+		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, true);
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);
@@ -499,11 +627,11 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_FIXTURE_TEST_CASE(load_from_env_var_empty, env_var_fixture) {
 		// set up
 		// exercise
+		set_required_setting_env_var();
 		server_setting setting;
 		setting.load_from_env_var();
 
 		// verify
-		BOOST_CHECK_EQUAL(setting.common.enable_session_key_check, true);
 		BOOST_CHECK_EQUAL(setting.common.time_out_seconds, 300);
 		BOOST_CHECK(setting.common.ip_version == ip_version::v4);
 		BOOST_CHECK_EQUAL(setting.common.port, 57000);
@@ -511,6 +639,10 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.common.thread, 1);
 		BOOST_CHECK_EQUAL(setting.common.max_room_count, 1000);
 		BOOST_CHECK_EQUAL(setting.common.max_player_per_room, 16);
+		// Skip check setting.authentication.enable_game_version_check because it it required setting
+		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, false);
+		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
+		BOOST_CHECK(setting.authentication.game_version == u8""); // NOLINT(readability-container-size-empty)
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, true);
 		BOOST_CHECK(setting.log.console_log_level == log_level::info);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, true);
@@ -525,10 +657,12 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_env_var_validation_error,
 		unit_test::data::make({
 			std::tuple{"PMMS_COMMON_TIME_OUT_SECONDS", "0"},
+			std::tuple{"PMMS_AUTHENTICATION_GAME_ID", ""},
 			std::tuple{"PMMS_LOG_CONSOLE_LOG_LEVEL", "none"},
 			std::tuple{"PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS", "0"},
 			}), key, value) {
 		// set up
+		set_required_setting_env_var();
 		set_typed_env_var(key, value);
 
 		// exercise and verify

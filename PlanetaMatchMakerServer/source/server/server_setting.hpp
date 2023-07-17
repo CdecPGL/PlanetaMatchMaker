@@ -5,7 +5,6 @@
 
 #include "logger/log.hpp"
 #include "network/network_layer.hpp"
-#include "authentication/game.hpp"
 
 namespace pgl {
 	class server_setting_error final : public std::runtime_error {
@@ -37,7 +36,7 @@ namespace pgl {
 		log_level console_log_level = log_level::info;
 		bool enable_file_log = true;
 		log_level file_log_level = log_level::info;
-		std::string file_log_path;
+		std::filesystem::path file_log_path;
 	};
 
 	struct server_connection_test_setting final {

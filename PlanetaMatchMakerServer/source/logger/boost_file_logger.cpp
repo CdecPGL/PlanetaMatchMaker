@@ -7,7 +7,7 @@ using namespace boost;
 
 namespace pgl {
 	boost_file_logger::
-	boost_file_logger(const log_level level_threshold, const std::string& file_path) : logger(level_threshold) {
+	boost_file_logger(const log_level level_threshold, const std::filesystem::path& file_path) : logger(level_threshold) {
 		add_file_log(
 			log::keywords::auto_flush = true,
 			log::keywords::filter = log_level_attribute >= this->level_threshold(),
