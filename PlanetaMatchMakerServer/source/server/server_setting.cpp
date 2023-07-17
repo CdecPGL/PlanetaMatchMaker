@@ -33,6 +33,15 @@ namespace pgl {
 		return json::value_to<T>(*value);
 	}
 
+	// std::u8string is not available in ptree with error "array required", so use std::string then convert to std::u8string.
+	template <>
+	std::u8string extract_with_default<std::u8string>(const json::object& obj, const std::string& key,
+		const std::u8string& default_value) {
+		std::string value(reinterpret_cast<const char*>(default_value.c_str()));
+		value = extract_with_default<std::string>(obj, key, value);
+		return {reinterpret_cast<const char8_t*>(value.c_str())};
+	}
+
 #define EXTRACT_WITH_DEFAULT(obj, setting, type, key) setting.key = extract_with_default<type>(obj, #key, (setting.key))
 
 	template <std::totally_ordered T, std::convertible_to<T> R>
@@ -108,6 +117,7 @@ namespace pgl {
 		if (obj == nullptr) {
 			throw server_setting_error(generate_string("\"", authentication_section_key, "\" must be object."));
 		}
+
 		server_authentication_setting s;
 		EXTRACT_WITH_DEFAULT(*obj, s, std::u8string, game_id);
 		EXTRACT_WITH_DEFAULT(*obj, s, bool, enable_game_version_check);
@@ -126,11 +136,9 @@ namespace pgl {
 
 	void output_authentication_setting_to_log(const server_authentication_setting& setting) {
 		log(log_level::info, "--------Authentication--------");
-		log(log_level::info, NAMEOF(setting.game_id), ": ",
-			convert_utf8_to_system_encode(reinterpret_cast<const char*>(setting.game_id.c_str())));
+		log(log_level::info, NAMEOF(setting.game_id), ": ", setting.game_id);
 		log(log_level::info, NAMEOF(setting.enable_game_version_check), ": ", setting.enable_game_version_check);
-		log(log_level::info, NAMEOF(setting.game_version), ": ",
-			convert_utf8_to_system_encode(reinterpret_cast<const char*>(setting.game_version.c_str())));
+		log(log_level::info, NAMEOF(setting.game_version), ": ", setting.game_version);
 	}
 
 	log_level tag_invoke(json::value_to_tag<log_level>, const json::value& jv) {
@@ -278,7 +286,6 @@ namespace pgl {
 		get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
 		get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
 		validate_authentication_setting(authentication);
-
 
 		get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);
 		get_env_var<log_level>("PMMS_LOG_CONSOLE_LOG_LEVEL", log.console_log_level);
