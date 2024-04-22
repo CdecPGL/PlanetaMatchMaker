@@ -1,0 +1,12 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+    "dependencies": [
+        "boost"
+    ],
+    "overrides": [
+        {
+            "name": "boost",
+            "version": "1.83.0#1"
+        }
+    ]
+}

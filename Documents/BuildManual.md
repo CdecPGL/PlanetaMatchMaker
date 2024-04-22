@@ -72,9 +72,9 @@ The server project is compatible with gcc so specify clang++ to cmake.
 
 1. Install a compiler (VC++ or clang) which is compatible with C++20
 1. Install vcpkg
-1. Install Boost Library 1.77 or higher by vcpkg
 1. Open `PlanetaMatchMaker.sln`
-1. Build `PlanetaMatchMakerServer` project
+1. Build `PlanetaMatchMakerServer` project\
+    Required packaged will be installed by vcpkg automatically
 1. Build and run `PlanetaMatchMakerServerTest` project if need
 
 ## Client
