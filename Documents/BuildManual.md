@@ -33,8 +33,8 @@ Following compilers and platforms are tested.
 1. Run test with ctest command if need
 
 ```bash
-docker build -t planeta-match-maker-dev PlanetaMatchMaker/Docker/dev
-docker run -it planeta-match-maker-dev /bin/ash
+docker build -t planeta-match-maker-dev Docker/dev
+docker run -v ./:/planeta-match-maker -it planeta-match-maker-dev /bin/bash
 # In the docker container
 mkdir build
 cd build
@@ -42,6 +42,8 @@ cmake .. -DCMAKE_CXX_COMPILER=clang++
 make -j4
 # Run test if need
 ctest
+# Calculate covarage if need
+../tools/coverage.sh
 ```
 
 The server project is not compatible with gcc so specify clang++ to cmake.

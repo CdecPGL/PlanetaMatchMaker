@@ -16,7 +16,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4834")
 elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
   # Suppress unused-result warning because ignoring return value of functions is common case in test code
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-result")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-result --coverage")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif()
 
 target_link_libraries(PlanetaMatchMakerServerTest PlanetaMatchMakerServerLib)
