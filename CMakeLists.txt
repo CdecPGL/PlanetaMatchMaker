@@ -3,6 +3,12 @@ enable_testing()
 
 project ("PlanetaMatchMaker" CXX)
 
+# Force to build only static library
+set(BUILD_SHARED_LIBS OFF)
+# Link dependencies statically by default
+# If you want to link dependencies with shared libraries, add "-DSTATIC_LINK_DEPENDENCIES=OFF" as cmake option.
+option (STATIC_LINK_DEPENDENCIES "Link dependencies statically." ON)
+
 # Set build type
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

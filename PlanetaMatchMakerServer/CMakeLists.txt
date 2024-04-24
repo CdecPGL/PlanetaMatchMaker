@@ -6,6 +6,21 @@ file(GLOB_RECURSE source_files "*.cpp")
 list(REMOVE_ITEM source_files ${main_source})
 add_library (PlanetaMatchMakerServerLib ${source_files})
 
+if (STATIC_LINK_DEPENDENCIES)
+	if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+		message(FATAL_ERROR "Static link dependencies is only supported for GNU and Clang")
+	endif()
+
+	# Link libraries statically
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+	# Link executables statically
+	set(CMAKE_EXE_LINKER_FLAGS "-static")
+	# Link boost libraries statically
+	set(Boost_USE_STATIC_LIBS ON)
+	# to avoid linker error "undefined reference to `__atomic_load'"
+	target_link_libraries(PlanetaMatchMakerServerLib atomic)
+endif()
+
 # to avoid linker error "undefined reference to `std::filesystem::__cxx11::**"
 # http://nanapro.org/en-us/forum/index.php?u=/topic/266/ggcompiling-with-std-filesystem
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
