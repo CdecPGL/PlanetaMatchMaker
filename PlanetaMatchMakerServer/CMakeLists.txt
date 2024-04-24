@@ -14,17 +14,15 @@ if (STATIC_LINK_DEPENDENCIES)
 	# Link libraries statically
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 	# Link executables statically
-	set(CMAKE_EXE_LINKER_FLAGS "-static")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 	# Link boost libraries statically
 	set(Boost_USE_STATIC_LIBS ON)
-	# to avoid linker error "undefined reference to `__atomic_load'"
-	target_link_libraries(PlanetaMatchMakerServerLib atomic)
-endif()
-
-# to avoid linker error "undefined reference to `std::filesystem::__cxx11::**"
-# http://nanapro.org/en-us/forum/index.php?u=/topic/266/ggcompiling-with-std-filesystem
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	target_link_libraries(PlanetaMatchMakerServerLib stdc++fs)
+else()
+	# to avoid linker error "undefined reference to `std::filesystem::__cxx11::**"
+	# http://nanapro.org/en-us/forum/index.php?u=/topic/266/ggcompiling-with-std-filesystem
+	if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+		target_link_libraries(PlanetaMatchMakerServerLib stdc++fs)
+	endif()
 endif()
 
 # Headers in this project
@@ -46,7 +44,7 @@ endif()
 
 # Main executable
 add_executable (PlanetaMatchMakerServer ${main_source})
-target_link_libraries(PlanetaMatchMakerServer PlanetaMatchMakerServerLib)
+target_link_libraries(PlanetaMatchMakerServer PlanetaMatchMakerServerLib -static)
 # Install binary
 install (TARGETS PlanetaMatchMakerServer DESTINATION bin)
 # Create symbolic link to binary
