@@ -18,7 +18,7 @@ RUN git clone https://github.com/boostorg/boost.git \
   && git checkout boost-1.84.0 \
   && git submodule update --init \
   && ./bootstrap.sh \
-  && ./b2 install toolset=clang --prefix=/usr/local -j24 \
+  && ./b2 install toolset=clang link=static,shared --prefix=/usr/local -j"$(nproc)" \
   && cd .. \
   && rm -rf boost
 

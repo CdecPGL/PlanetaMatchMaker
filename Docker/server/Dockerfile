@@ -18,28 +18,23 @@ RUN git clone https://github.com/boostorg/boost.git \
   && git checkout boost-1.84.0 \
   && git submodule update --init \
   && ./bootstrap.sh \
-  && ./b2 install toolset=clang --prefix=/usr/local -j24 \
+  && ./b2 install toolset=clang link=static --prefix=/usr/local -j"$(nproc)" \
   && cd .. \
   && rm -rf boost
 
 # Clone PlanetaMatchMakerServer repository
 RUN git clone https://github.com/CdecPGL/PlanetaMatchMaker.git
 
-# Build PlanetaMatchMakerServer
+# Build PlanetaMatchMakerServer with static link
 RUN \
   cd PlanetaMatchMaker && \
   mkdir build && \
   cd build && \
-  cmake -DCMAKE_CXX_COMPILER=clang++ .. && \
-  make -j4
+  cmake -DCMAKE_CXX_COMPILER=clang++ -DSTATIC_LINK_DEPENDENCIES=ON .. && \
+  make -j"$(nproc)"
 
-FROM gcr.io/distroless/cc-debian12
+FROM gcr.io/distroless/static-debian12
 LABEL maintainer="Cdec <cdecrement@gmail.com>"
-
-# Copy dependencies from base stage
-COPY --from=base /usr/lib/x86_64-linux-gnu/libatomic* /usr/lib/x86_64-linux-gnu/
-COPY --from=base /usr/local/lib/libboost* /usr/local/lib/
-COPY --from=base /usr/local/lib/cmake/boost_* /usr/local/lib/cmake/
 
 # Copy PlanetaMatchMakerServer binary (same location of make install result)
 COPY --from=base --chmod=755 ./PlanetaMatchMaker/build/PlanetaMatchMakerServer/PlanetaMatchMakerServer /usr/local/bin/pmms

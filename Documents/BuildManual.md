@@ -39,7 +39,7 @@ docker run -v ./:/planeta-match-maker -it planeta-match-maker-dev /bin/bash
 mkdir build
 cd build
 cmake .. -DCMAKE_CXX_COMPILER=clang++
-make -j4
+make -j"$(nproc)"
 # Run test if need
 ctest
 # Calculate covarage if need
@@ -63,7 +63,7 @@ Following commands are example.
 mkdir build
 cd build
 cmake .. -DCMAKE_CXX_COMPILER=clang++
-make -j4
+make -j"$(nproc)"
 # Run test if need
 ctest
 ```
