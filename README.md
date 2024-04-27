@@ -27,6 +27,8 @@ A binary which is executable in below platforms.
 - Windows
 - Linux
 
+For linux, extremely small docker image is also provided in [DockerHub](https://hub.docker.com/repository/docker/cdec/planeta-match-maker-server/general).
+
 ### Client
 
 A library by below languages and platforms.
