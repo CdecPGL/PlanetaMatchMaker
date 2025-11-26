@@ -27,7 +27,7 @@ namespace pgl {
 
 	void server::run() {
 		// prevent to stop server when all request are processed
-		asio::io_service::work work(io_service_);
+        auto work = asio::make_work_guard(io_service_);
 
 		log(log_level::info, "Start ", server_setting_->common.thread, " threads.");
 

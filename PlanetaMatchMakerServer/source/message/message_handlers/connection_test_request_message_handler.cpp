@@ -32,7 +32,8 @@ namespace pgl {
 			[&param, &socket, &test_text, &result_text]() {
 				asio::streambuf buffer;
 				async_read(socket, buffer, asio::transfer_exactly(test_text.length()), param.yield);
-				result_text = asio::buffer_cast<const char*>(buffer.data());
+				auto buffer_sequence = buffer.data();
+                result_text.assign(asio::buffers_begin(buffer_sequence), asio::buffers_end(buffer_sequence));
 			});
 		socket.close();
 

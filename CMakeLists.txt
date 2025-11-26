@@ -3,6 +3,14 @@ enable_testing()
 
 project ("PlanetaMatchMaker" CXX)
 
+# Reject x86/Win32 platforms
+# - CMAKE_GENERATOR_PLATFORM: Visual Studio generators (Win32, x64, ARM, etc.)
+# - CMAKE_SYSTEM_PROCESSOR: Makefile/Ninja generators with Clang
+if(CMAKE_GENERATOR_PLATFORM STREQUAL "Win32" OR
+   CMAKE_SYSTEM_PROCESSOR MATCHES "^(i[3-6]86|x86)$")
+  message(FATAL_ERROR "x86 (32-bit) platform is not supported. Please use x64 (64-bit) platform.")
+endif()
+
 # Force to build only static library
 set(BUILD_SHARED_LIBS OFF)
 # Link dependencies statically by default

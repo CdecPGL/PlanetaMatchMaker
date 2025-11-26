@@ -14,7 +14,7 @@ namespace pgl {
 		explicit server(std::unique_ptr<server_setting>&& setting);
 		void run();
 	private:
-		boost::asio::io_service io_service_;
+		boost::asio::io_context io_service_;
 		boost::asio::ip::tcp::acceptor acceptor_;
 		std::unique_ptr<server_data> server_data_;
 		std::unique_ptr<server_setting> server_setting_;

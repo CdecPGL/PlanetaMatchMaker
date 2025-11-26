@@ -7,6 +7,20 @@
 #include "room_data.hpp"
 
 namespace pgl {
+	template <class T>
+	concept room_data_repository = requires(T t)
+	{
+		{ t.contains(room_id_t()) } -> std::convertible_to<bool>;
+		{ t.get(room_id_t()) } -> std::convertible_to<room_data>;
+		{ t.size() } -> std::convertible_to<size_t>;
+		{ t.assign_id_and_add(room_data()) } -> std::convertible_to<room_id_t>;
+		{ t.assign_id_and_add(std::declval<room_data>()) } -> std::convertible_to<room_id_t>;
+		{
+			t.search(room_data_sort_kind(), room_search_target_flag(), player_full_name())
+		} -> std::convertible_to<std::vector<room_data>>;
+		{ t.remove(room_id_t()) } -> std::convertible_to<void>;
+	};
+
 	/**
 	 * A thread safe container of room data.
 	 */

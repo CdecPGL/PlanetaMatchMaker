@@ -1,4 +1,4 @@
-FROM debian:bookworm-20240408-slim
+FROM debian:bookworm-20251117-slim
 LABEL maintainer="Cdec <cdecrement@gmail.com>"
 
 # Install basic requirements
@@ -15,7 +15,7 @@ RUN apt update && apt install -y \
 # Install boost library
 RUN git clone https://github.com/boostorg/boost.git \
   && cd boost \
-  && git checkout boost-1.84.0 \
+  && git checkout boost-1.89.0 \
   && git submodule update --init \
   && ./bootstrap.sh \
   && ./b2 install toolset=clang link=static,shared --prefix=/usr/local -j"$(nproc)" \

@@ -35,11 +35,11 @@ target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCL
 target_link_libraries(PlanetaMatchMakerServerLib ${Boost_LIBRARIES})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-	# -D_WIN32_WINNT=0x0601: To avoid error of Boost Library 1.77 for MSVC
+	# -D_WIN32_WINNT=0x0A00: To avoid error of Boost Library 1.89 for MSVC
 	# _CRT_SECURE_NO_WARNINGS: To avoid error for getenv
-  add_definitions(-D_WIN32_WINNT=0x0601 _CRT_SECURE_NO_WARNINGS)
+	add_definitions(-D_WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
 elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 endif()
 
 # Main executable

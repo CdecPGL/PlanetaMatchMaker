@@ -6,7 +6,7 @@
     "overrides": [
         {
             "name": "boost",
-            "version": "1.83.0#1"
+            "version": "1.89.0"
         }
     ]
 }

@@ -12,17 +12,17 @@ gcc is not supported.
 
 Following compilers and platforms are tested.
 
-- MSVC 14.34 (VS 17.4.5) (Windows)
-- clang 12.0.1 (Alpine)
+- MSVC 14.50 (Windows)
+- clang 12.0.1 (Debian)
 
 ### Dependencies
 
-- Boost Library 1.77 or higher
+- Boost Library 1.89.0
 - CMake 3.21.3 or higher
 - minimal-serializer v0.2.4 (included in this repogitory)
 - nameof C++ 0.10.1 (included in this repogitory)
 
-### Build by CMake with Docker (Linux)
+### Build by CMake with Docker
 
 1. Install docker
 1. Build a docker image
@@ -34,8 +34,15 @@ Following compilers and platforms are tested.
 
 ```bash
 docker build -t planeta-match-maker-dev Docker/dev
+
+# For Linux
 docker run -v ./:/planeta-match-maker -it planeta-match-maker-dev /bin/bash
+
+# For Windows PowerShell
+docker run -v "${PWD}:/planeta-match-maker" -it planeta-match-maker-dev /bin/bash
+
 # In the docker container
+cd planeta-match-maker
 mkdir build
 cd build
 cmake .. -DCMAKE_CXX_COMPILER=clang++
@@ -48,7 +55,7 @@ ctest
 
 The server project is not compatible with gcc so specify clang++ to cmake.
 
-### Bulild by CMake Manually (Linux)
+### Build by CMake Manually (Linux)
 
 1. Install cmake 3.21.3 or higher
 1. Install clang++ 3.8 or higher
@@ -186,15 +193,6 @@ UNITY_EXECUTABLE='A path of Unity executable'
 ## Supplement
 
 ### Compile Error
-
-#### MSVC: `error C2039: 'value': is not a member of 'boost::proto'`
-
-- Target: Server
-- Library: Boost Library 1.70.0-1.71.0
-- Platform: MSVC
-- Reference: https://github.com/boostorg/proto/issues/20
-
-Replace `#if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1700))` to `#if BOOST_WORKAROUND(BOOST_MSVC, < 1800)` around line 230 of `boost/proto/generate.hpp`.
 
 #### MSVC: `fatal  error C1189: #error:  WinSock.h has already been included`
 
