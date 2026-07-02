@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "data/thread_safe_data_container.hpp"
 #include "client/player_full_name.hpp"
 
@@ -12,9 +14,11 @@ namespace pgl {
 	{
 		{ t.contains(room_id_t()) } -> std::convertible_to<bool>;
 		{ t.get(room_id_t()) } -> std::convertible_to<room_data>;
+		{ t.try_get(room_id_t()) } -> std::convertible_to<std::optional<room_data>>;
 		{ t.size() } -> std::convertible_to<size_t>;
 		{ t.assign_id_and_add(room_data()) } -> std::convertible_to<room_id_t>;
 		{ t.assign_id_and_add(std::declval<room_data>()) } -> std::convertible_to<room_id_t>;
+		{ t.try_assign_id_and_add(room_data(), size_t()) } -> std::convertible_to<std::optional<room_id_t>>;
 		{
 			t.search(room_data_sort_kind(), room_search_target_flag(), player_full_name())
 		} -> std::convertible_to<std::vector<room_data>>;
@@ -48,6 +52,14 @@ namespace pgl {
 		[[nodiscard]] room_data get(id_param_type id) const { return container_.get(id); }
 
 		/**
+		 * Get a room data with specific ID if it exists.
+		 *
+		 * @param id An ID to get room data.
+		 * @return A room data. std::nullopt if the room does not exist.
+		 */
+		[[nodiscard]] std::optional<room_data> try_get(id_param_type id) const { return container_.try_get(id); }
+
+		/**
 		 * Get the number of room data.
 		 *
 		 * @return The number of room data.
@@ -71,6 +83,30 @@ namespace pgl {
 		 * @throw unique_variable_duplication_error Unique member variable is duplicate.
 		 */
 		room_id_t assign_id_and_add(const room_data& data) { return container_.assign_id_and_add(data); }
+
+		/**
+		 * Add new room data with ID assigned automatically only if the current room count is below max_size.
+		 *
+		 * @param data New room data rvalue reference.
+		 * @param max_size Maximum number of rooms allowed.
+		 * @return An ID assigned to new room data. std::nullopt if room count already reached max_size.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicate.
+		 */
+		std::optional<room_id_t> try_assign_id_and_add(room_data&& data, const size_t max_size) {
+			return container_.try_assign_id_and_add(std::forward<room_data>(data), max_size);
+		}
+
+		/**
+		 * Add new room data with ID assigned automatically only if the current room count is below max_size.
+		 *
+		 * @param data New room data.
+		 * @param max_size Maximum number of rooms allowed.
+		 * @return An ID assigned to new room data. std::nullopt if room count already reached max_size.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicate.
+		 */
+		std::optional<room_id_t> try_assign_id_and_add(const room_data& data, const size_t max_size) {
+			return container_.try_assign_id_and_add(data, max_size);
+		}
 
 		/**
 		 * Search room data which matches conditions.
@@ -126,12 +162,37 @@ namespace pgl {
 		bool add_or_update(const room_data& data) { return container_.add_or_update(data); }
 
 		/**
+		 * Update an existing room under one exclusive lock.
+		 *
+		 * @param id An ID of room data to update.
+		 * @param update_function A function to update copied room data.
+		 * @return Updated room data. std::nullopt if the room does not exist.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		*/
+		template <typename UpdateFunction>
+		std::optional<room_data> try_update(id_param_type id, UpdateFunction&& update_function) {
+			return container_.try_update(id, std::forward<UpdateFunction>(update_function));
+		}
+
+		/**
 		 * Remove room data with an ID.
 		 *
 		 * @param id An ID of room data to remove.
 		 * @return true if removed.
 		 */
 		bool try_remove(id_param_type id) { return container_.try_remove(id); }
+
+		/**
+		 * Remove room data with an ID under one exclusive lock if remove_function allows it.
+		 *
+		 * @param id An ID of room data to remove.
+		 * @param remove_function A function to check copied room data.
+		 * @return Removed room data. std::nullopt if the room does not exist or remove_function returns false.
+		 */
+		template <typename RemoveFunction>
+		std::optional<room_data> try_remove_if(id_param_type id, RemoveFunction&& remove_function) {
+			return container_.try_remove_if(id, std::forward<RemoveFunction>(remove_function));
+		}
 
 	private:
 		container_type container_;

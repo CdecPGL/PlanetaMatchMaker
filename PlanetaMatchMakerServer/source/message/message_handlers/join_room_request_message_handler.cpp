@@ -11,9 +11,8 @@ namespace pgl {
 
 		const auto& room_data_container = param->server_data.get_room_data_container();
 
-		// Check room existence
-		parameter_validator.validate_room_existence(room_data_container, message.room_id);
-		const auto room_data = room_data_container.get(message.room_id);
+		// Check room existence and get the same snapshot.
+		const auto room_data = parameter_validator.get_existing_room(room_data_container, message.room_id);
 
 		// Check if connection establish mode matches
 		if (room_data.game_host_connection_establish_mode != message.connection_establish_mode) {

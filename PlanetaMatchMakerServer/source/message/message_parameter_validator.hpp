@@ -13,6 +13,13 @@ namespace pgl {
 		void validate_room_existence(const room_data_container& room_data_container, room_id_t room_id,
 			bool is_continuable = true) const;
 
+		// Get a room data if the room exists. If it doesn't exist, throw client error.
+		[[nodiscard]] room_data get_existing_room(const room_data_container& room_data_container, room_id_t room_id,
+			bool is_continuable = true) const;
+
+		// Throw a room not found client error.
+		[[noreturn]] void throw_room_not_found_error(room_id_t room_id, bool is_continuable = true) const;
+
 		// Check a port number is valid. If it is not valid, throw client error.
 		void validate_port_number(port_number_type port_number, bool is_continuable = true) const;
 

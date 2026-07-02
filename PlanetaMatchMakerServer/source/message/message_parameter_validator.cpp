@@ -1,6 +1,7 @@
 #include "message_parameter_validator.hpp"
 
 #include "client/client_errors.hpp"
+#include "logger/log.hpp"
 #include "server/server_setting.hpp"
 
 namespace pgl {
@@ -9,10 +10,24 @@ namespace pgl {
 
 	void message_parameter_validator::validate_room_existence(const room_data_container& room_data_container,
 		const room_id_t room_id, const bool is_continuable) const {
-		// Check room existence
-		if (does_room_exist(param_, room_data_container, room_id)) { return; }
+		static_cast<void>(get_existing_room(room_data_container, room_id, is_continuable));
+	}
 
-		// Throw room doesn't exist error
+	room_data message_parameter_validator::get_existing_room(const room_data_container& room_data_container,
+		const room_id_t room_id, const bool is_continuable) const {
+		if (const auto room_data = room_data_container.try_get(room_id)) {
+			log_with_endpoint(log_level::debug, param_->socket.remote_endpoint(), "The room whose id is \"", room_id,
+				"\" exists.");
+			return *room_data;
+		}
+
+		log_with_endpoint(log_level::error, param_->socket.remote_endpoint(), "The room whose id is \"", room_id,
+			"\" doesn't exist.");
+		throw_room_not_found_error(room_id, is_continuable);
+	}
+
+	void message_parameter_validator::throw_room_not_found_error(const room_id_t room_id,
+		const bool is_continuable) const {
 		const auto error_message = minimal_serializer::generate_string("The room with id \"", room_id,
 			"\" does not exist.");
 		throw client_error(client_error_code::room_not_found, !is_continuable, error_message);
