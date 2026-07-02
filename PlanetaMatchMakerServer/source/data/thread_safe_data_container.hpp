@@ -6,6 +6,7 @@
 #include <shared_mutex>
 #include <functional>
 #include <optional>
+#include <utility>
 #include <vector>
 #include <algorithm>
 
@@ -123,6 +124,11 @@ namespace pgl {
 		using id_type = member_variable_pointer_variable_t<IdMemberVariable>;
 		using id_param_type = typename boost::call_traits<id_type>::param_type;
 		using data_param_type = typename boost::call_traits<Data>::param_type;
+
+		struct search_result final {
+			std::vector<Data> data;
+			size_t total_count;
+		};
 
 		/**
 		 * Add or update data.
@@ -288,18 +294,33 @@ namespace pgl {
 		[[nodiscard]] std::vector<Data> search(
 			std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
-			std::vector<Data> data;
+			auto result = search_with_total(std::move(compare_function), std::move(filter_function));
+			return std::move(result.data);
+		}
+
+		/**
+		 * Search data by filter and return sorted result with total count from the same locked snapshot.
+		 *
+		 * @param compare_function A function used to sort.
+		 * @param filter_function A function used to filter.
+		 * @return A list of data and the total number of data at the time the list was collected.
+		 */
+		[[nodiscard]] search_result search_with_total(
+			std::function<bool(data_param_type, data_param_type)>&& compare_function,
+			std::function<bool(data_param_type)>&& filter_function) const {
+			search_result result;
 			{
 				std::shared_lock lock(mutex_);
-				data.reserve(data_map_.size());
+				result.total_count = data_map_.size();
+				result.data.reserve(result.total_count);
 				for (auto&& pair : data_map_) {
 					if (const auto data_elem = pair.second.load(); filter_function(data_elem)) {
-						data.push_back(data_elem);
+						result.data.push_back(data_elem);
 					}
 				}
 			}
-			std::sort(data.begin(), data.end(), compare_function);
-			return data;
+			std::sort(result.data.begin(), result.data.end(), compare_function);
+			return result;
 		}
 
 		/**

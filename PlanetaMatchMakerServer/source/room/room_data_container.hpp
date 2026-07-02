@@ -1,6 +1,8 @@
 #pragma once
 
 #include <optional>
+#include <utility>
+#include <vector>
 
 #include "data/thread_safe_data_container.hpp"
 #include "client/player_full_name.hpp"
@@ -34,6 +36,25 @@ namespace pgl {
 			room_data::host_player_full_name>;
 		using id_param_type = container_type::id_param_type;
 		using data_param_type = container_type::data_param_type;
+
+		enum class join_room_result {
+			accepted,
+			room_not_found,
+			connection_establish_mode_mismatch,
+			room_closed,
+			password_wrong,
+			room_full
+		};
+
+		struct join_room_result_data final {
+			join_room_result result;
+			std::optional<room_data> room;
+		};
+
+		struct search_result final {
+			std::vector<room_data> data;
+			size_t total_room_count;
+		};
 
 		/**
 		 * Check if the room data exists with specific ID.
@@ -125,6 +146,23 @@ namespace pgl {
 		}
 
 		/**
+		 * Search room data and return the total room count from the same locked snapshot.
+		 *
+		 * @param sort_kind A kind of sort for the result list. A room data which exactly matches search_full_name is always located top whatever sort kind is.
+		 * @param search_target_flags A flags of condition to search rooms. Rooms whose status matches some more than or equals one flag will be returned.
+		 * @param search_full_name A room full name to search. Not only full name ("Bill#123") but also tag ("#123"), name ("Bill") or empty string are available.
+		 * @return A list of result room data and the total room count at the time the list was collected.
+		 * @throw std::out_of_range room_data_sort_kind is invalid.
+		 */
+		search_result search_with_total(const room_data_sort_kind sort_kind,
+			const room_search_target_flag search_target_flags,
+			const player_full_name& search_full_name) const {
+			auto result = container_.search_with_total(get_room_data_compare_function(sort_kind, search_full_name),
+				get_room_data_filter_function(search_target_flags, search_full_name));
+			return { std::move(result.data), result.total_count };
+		}
+
+		/**
 		 * Search room data which matches conditions with range.
 		 *
 		 * @param start_idx A start index of range.
@@ -172,6 +210,50 @@ namespace pgl {
 		template <typename UpdateFunction>
 		std::optional<room_data> try_update(id_param_type id, UpdateFunction&& update_function) {
 			return container_.try_update(id, std::forward<UpdateFunction>(update_function));
+		}
+
+		/**
+		 * Reserve one player slot for joining a room under one exclusive lock.
+		 *
+		 * @param id An ID of room data to join.
+		 * @param connection_establish_mode An expected way how to establish P2P connection.
+		 * @param password A password of the room. This is only referred when indicated room is private.
+		 * @return Join result and a room snapshot. Accepted result contains the updated snapshot.
+		 */
+		join_room_result_data try_reserve_player_for_join(id_param_type id,
+			const game_host_connection_establish_mode connection_establish_mode,
+			const room_password_t& password) {
+			auto result = join_room_result_data{ join_room_result::room_not_found, std::nullopt };
+			const auto updated_room_data = container_.try_update(id, [&](auto& target_room_data) {
+				if (target_room_data.game_host_connection_establish_mode != connection_establish_mode) {
+					result = { join_room_result::connection_establish_mode_mismatch, target_room_data };
+					return;
+				}
+
+				if ((target_room_data.setting_flags & room_setting_flag::open_room) != room_setting_flag::open_room) {
+					result = { join_room_result::room_closed, target_room_data };
+					return;
+				}
+
+				if ((target_room_data.setting_flags & room_setting_flag::public_room) != room_setting_flag::public_room &&
+					target_room_data.password != password) {
+					result = { join_room_result::password_wrong, target_room_data };
+					return;
+				}
+
+				if (target_room_data.current_player_count >= target_room_data.max_player_count) {
+					result = { join_room_result::room_full, target_room_data };
+					return;
+				}
+
+				// Reserve capacity immediately. A later host status notice may overwrite this with the actual count.
+				++target_room_data.current_player_count;
+				result = { join_room_result::accepted, target_room_data };
+			});
+
+			if (!updated_room_data.has_value()) { return result; }
+			if (result.result == join_room_result::accepted) { result.room = updated_room_data; }
+			return result;
 		}
 
 		/**
