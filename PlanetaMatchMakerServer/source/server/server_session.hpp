@@ -18,7 +18,7 @@ namespace pgl {
 	public:
 		server_session(boost::asio::ip::tcp::acceptor& acceptor,
 			std::mutex& acceptor_mutex, server_data& server_data, const server_setting& server_setting,
-			message_handler_invoker& message_handler_invoker);
+			std::shared_ptr<const message_handler_invoker> message_handler_invoker);
 		void start();
 		void stop();
 	private:
@@ -26,7 +26,7 @@ namespace pgl {
 		std::mutex& acceptor_mutex_;
 		server_data& server_data_;
 		const server_setting& server_setting_;
-		message_handler_invoker& message_handler_invoker_;
+		std::shared_ptr<const message_handler_invoker> message_handler_invoker_;
 
 		// Socket operations and timeout timers share this strand through socket.get_executor().
 		boost::asio::strand<boost::asio::any_io_executor> strand_;
@@ -37,9 +37,9 @@ namespace pgl {
 		void start_impl();
 		void stop_impl();
 		void handle_accepted_connection(const boost::system::error_code& accept_error);
-		void finalize() const;
+		void finalize(const session_data& session_data) const;
 		void restart();
-		void remove_hosting_room_if_need()const;
-		void remove_player_full_name_if_need()const;
+		void remove_hosting_room_if_need(const session_data& session_data)const;
+		void remove_player_full_name_if_need(const session_data& session_data)const;
 	};
 }

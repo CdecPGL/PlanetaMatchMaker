@@ -210,19 +210,6 @@ namespace pgl {
 		bool add_or_update(const room_data& data) { return add_or_update(room_data{data}); }
 
 		/**
-		 * Update an existing room under one exclusive lock.
-		 *
-		 * @param id An ID of room data to update.
-		 * @param update_function A function to update copied room data.
-		 * @return Updated room data. std::nullopt if the room does not exist.
-		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
-		*/
-		template <typename UpdateFunction>
-		std::optional<room_data> try_update(id_param_type id, UpdateFunction&& update_function) {
-			return container_.try_update(id, std::forward<UpdateFunction>(update_function));
-		}
-
-		/**
 		 * Reserve one player slot for joining a room under one exclusive lock.
 		 *
 		 * @param id An ID of room data to join.
@@ -291,6 +278,8 @@ namespace pgl {
 
 		/**
 		 * Update a room and apply a player count reported by the host without dropping in-flight join reservations.
+		 *
+		 * Use this for room status changes so host reports and pending join reservations stay consistent.
 		 *
 		 * The server increments current_player_count before the joining client reaches the host. A host status notice
 		 * generated from an older snapshot must not erase that reservation, otherwise concurrent join requests can be

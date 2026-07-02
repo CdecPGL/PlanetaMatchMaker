@@ -10,7 +10,7 @@
 #include "message_handle_parameter.hpp"
 
 namespace pgl {
-	// A container of message handler. This is not thread safe
+	// Registration is not thread safe. Message handling is read-only after registration.
 	class message_handler_invoker final : boost::noncopyable {
 	public:
 		using message_handler_generator_type = std::function<std::unique_ptr<message_handler>()>;

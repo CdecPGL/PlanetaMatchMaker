@@ -25,7 +25,7 @@ namespace pgl {
 		server_data& server_data_;
 		const server_setting& server_setting_;
 
-		std::unique_ptr<message_handler_invoker> message_handler_invoker_;
+		std::shared_ptr<const message_handler_invoker> message_handler_invoker_;
 		std::vector<std::shared_ptr<server_session>> server_sessions_;
 	};
 }
