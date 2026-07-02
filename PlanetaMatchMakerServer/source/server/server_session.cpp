@@ -25,9 +25,16 @@ namespace pgl {
 		server_data_(server_data),
 		server_setting_(server_setting),
 		message_handler_invoker_(message_handler_invoker),
-		socket_(acceptor.get_executor()) { }
+		strand_(asio::make_strand(acceptor.get_executor())),
+		socket_(strand_) { }
 
 	void server_session::start() {
+		asio::dispatch(strand_, [shared_this = shared_from_this()] {
+			shared_this->start_impl();
+		});
+	}
+
+	void server_session::start_impl() {
 		// Reset session
 		session_data_ = std::make_unique<session_data>();
 
@@ -35,16 +42,17 @@ namespace pgl {
 		const auto shared_this = shared_from_this();
 		log(log_level::debug, "Start to accept.");
 		{
-			// basic_socket_acceptor is unsafe for concurrent shared-object access, so serialize only accept initiation.
+			// Serialize accept initiation on the shared acceptor, then bind completion to this session strand.
 			std::lock_guard lock(acceptor_mutex_);
-			acceptor_.async_accept(socket_, [shared_this](const system::error_code& accept_error) {
-				shared_this->handle_accepted_connection(accept_error);
-			});
+			acceptor_.async_accept(socket_,
+				asio::bind_executor(strand_, [shared_this](const system::error_code& accept_error) {
+					shared_this->handle_accepted_connection(accept_error);
+				}));
 		}
 	}
 
 	void server_session::handle_accepted_connection(const system::error_code& accept_error) {
-		spawn(socket_.get_executor(), [shared_this=shared_from_this(), accept_error](asio::yield_context yield) {
+		spawn(strand_, [shared_this=shared_from_this(), accept_error](asio::yield_context yield) {
 			try {
 				try {
 					if (accept_error) {
@@ -112,6 +120,13 @@ namespace pgl {
 	}
 
 	void server_session::stop() {
+		// dispatch runs inline when already on this strand, preserving restart ordering.
+		asio::dispatch(strand_, [shared_this = shared_from_this()] {
+			shared_this->stop_impl();
+		});
+	}
+
+	void server_session::stop_impl() {
 		finalize();
 		socket_.close();
 	}
@@ -130,8 +145,10 @@ namespace pgl {
 
 	void server_session::restart() {
 		log(log_level::info, "Server session handler is restarted.");
-		stop();
-		start();
+		asio::dispatch(strand_, [shared_this = shared_from_this()] {
+			shared_this->stop_impl();
+			shared_this->start_impl();
+		});
 	}
 
 	void server_session::remove_hosting_room_if_need() const {

@@ -27,9 +27,13 @@ namespace pgl {
 		const server_setting& server_setting_;
 		message_handler_invoker& message_handler_invoker_;
 
+		// Socket operations and timeout timers share this strand through socket.get_executor().
+		boost::asio::strand<boost::asio::any_io_executor> strand_;
 		boost::asio::ip::tcp::socket socket_;
 		std::unique_ptr<session_data> session_data_;
 
+		void start_impl();
+		void stop_impl();
 		void handle_accepted_connection(const boost::system::error_code& accept_error);
 		void finalize() const;
 		void restart();
