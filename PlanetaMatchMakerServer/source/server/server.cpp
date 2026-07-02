@@ -34,7 +34,7 @@ namespace pgl {
 		thread_group thread_group;
 		for (auto i = 0u; i < server_setting_->common.thread; ++i) {
 			thread_group.create_thread([&]() {
-				server_thread server_thread(acceptor_, *server_data_, *server_setting_);
+				server_thread server_thread(acceptor_, acceptor_mutex_, *server_data_, *server_setting_);
 				server_thread.start();
 				io_service_.run();
 			});

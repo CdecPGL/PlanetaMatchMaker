@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
@@ -16,6 +17,7 @@ namespace pgl {
 	private:
 		boost::asio::io_context io_service_;
 		boost::asio::ip::tcp::acceptor acceptor_;
+		std::mutex acceptor_mutex_;
 		std::unique_ptr<server_data> server_data_;
 		std::unique_ptr<server_setting> server_setting_;
 	};

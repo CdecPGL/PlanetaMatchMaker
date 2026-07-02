@@ -1,4 +1,7 @@
 #include <array>
+#include <atomic>
+#include <thread>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -62,6 +65,24 @@ const auto data4 = test_struct1{
 	100, 1.2f, true, {6, 7, 8}, u8"test4", 4
 };
 
+struct concurrent_test_struct final {
+	uint32_t id;
+	uint32_t unique;
+	uint32_t value;
+
+	bool operator==(const concurrent_test_struct& other) const {
+		return id == other.id && unique == other.unique && value == other.value;
+	}
+};
+
+std::ostream& operator<<(std::ostream& os, const concurrent_test_struct& d) {
+	os << nameof::nameof_type<concurrent_test_struct>() << "{" << d.id << "," << d.unique << "," << d.value << "}";
+	return os;
+}
+
+using concurrent_container_t = thread_safe_data_container<concurrent_test_struct, &concurrent_test_struct::id, &
+	concurrent_test_struct::unique>;
+
 BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	////////////////////////////////
 	// add_or_update, get 
@@ -111,6 +132,25 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		BOOST_CHECK_EQUAL(actual2, updated_data2);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_update_releases_previous_unique_variable) {
+		// set up
+		auto container = container_t();
+		auto updated_data1 = data3;
+		updated_data1.id = data1.id;
+		auto data_using_old_unique1 = test_struct1{19, -13.2f, false, {64, 47, 84}, data1.unique1, 10};
+		container.add_or_update(data1);
+		container.add_or_update(data2);
+		container.add_or_update(updated_data1);
+
+		// exercise
+		const auto result = container.add_or_update(data_using_old_unique1);
+		const auto actual = container.get(data_using_old_unique1.id);
+
+		// verify
+		BOOST_CHECK_EQUAL(result, true);
+		BOOST_CHECK_EQUAL(actual, data_using_old_unique1);
+	}
+
 	BOOST_DATA_TEST_CASE(test_add_already_exist_unique_variable, unit_test::data::make({
 		// id is different but unique variable1 is duplicated
 		test_struct1{19, -13.2f, false, {64, 47, 84}, u8"test1", 0},
@@ -137,6 +177,46 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 
 		// verify
 		BOOST_CHECK_EQUAL(actual1, data1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_concurrent_add_or_update_and_search) {
+		// set up
+		auto container = concurrent_container_t();
+		constexpr auto thread_count = 8u;
+		constexpr auto data_count_per_thread = 500u;
+		std::atomic<bool> can_start = false;
+		std::atomic<unsigned> exception_count = 0;
+		std::vector<std::thread> threads;
+		threads.reserve(thread_count);
+
+		// exercise
+		for (auto thread_index = 0u; thread_index < thread_count; ++thread_index) {
+			threads.emplace_back([&, thread_index] {
+				while (!can_start.load(std::memory_order_acquire)) { std::this_thread::yield(); }
+
+				try {
+					for (auto data_index = 0u; data_index < data_count_per_thread; ++data_index) {
+						const auto id = thread_index * data_count_per_thread + data_index + 1u;
+						container.add_or_update(concurrent_test_struct{id, id, id * 2u});
+
+						if (data_index % 16u == 0u) {
+							[[maybe_unused]] const auto _ = container.search(
+								[](const auto& l, const auto& r) { return l.id < r.id; },
+								[](const auto&) { return true; }
+							);
+						}
+					}
+				}
+				catch (...) { ++exception_count; }
+			});
+		}
+
+		can_start.store(true, std::memory_order_release);
+		for (auto& thread : threads) { thread.join(); }
+
+		// verify
+		BOOST_CHECK_EQUAL(exception_count.load(), 0u);
+		BOOST_CHECK_EQUAL(container.size(), thread_count * data_count_per_thread);
 	}
 
 	////////////////////////////////

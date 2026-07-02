@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <atomic>
+#include <mutex>
 #include <shared_mutex>
 #include <functional>
 #include <vector>
@@ -52,7 +53,16 @@ namespace pgl {
 		 *
 		 * @param data A data to add or update.
 		 */
-		void add_or_update_variables(const Data& data) { data_.emplace(data); }
+		void add_or_update_variables(const Data& data) {
+			auto& id_index = data_.template get<0>();
+			const auto it = id_index.find(data.*IdMemberVariable);
+			if (it == id_index.end()) {
+				data_.emplace(data);
+				return;
+			}
+
+			id_index.replace(it, data);
+		}
 
 		/**
 		 * Remove data with ID.
@@ -122,12 +132,12 @@ namespace pgl {
 		 */
 		bool add_or_update(Data&& data) {
 			const auto id = get_id(data);
-			std::shared_lock lock(mutex_);
+			std::lock_guard lock(mutex_);
 
 			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
 
 			auto&& [it, is_added] = data_map_.insert_or_assign(id, data);
-			unique_variables_.add_or_update_variables(it->second);
+			unique_variables_.add_or_update_variables(it->second.load());
 			return is_added;
 		}
 
@@ -262,7 +272,11 @@ namespace pgl {
 		 *
 		 * @return The number of data.
 		 */
-		[[nodiscard]] size_t size() const { return data_map_.size(); }
+		[[nodiscard]] size_t size() const {
+			// Reading unordered_map::size can race with writers, so protect it like other read operations.
+			std::shared_lock lock(mutex_);
+			return data_map_.size();
+		}
 
 	private:
 		std::unordered_map<id_type, std::atomic<Data>> data_map_;

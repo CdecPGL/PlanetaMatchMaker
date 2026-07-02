@@ -1,4 +1,5 @@
 #include <boost/asio/spawn.hpp>
+#include <mutex>
 
 #include "message/message_handler_invoker.hpp"
 #include "message/messages.hpp"
@@ -17,9 +18,10 @@ using namespace boost;
 using namespace minimal_serializer;
 
 namespace pgl {
-	server_session::server_session(asio::ip::tcp::acceptor& acceptor, server_data& server_data,
-		const server_setting& server_setting, message_handler_invoker& message_handler_invoker):
+	server_session::server_session(asio::ip::tcp::acceptor& acceptor, std::mutex& acceptor_mutex,
+		server_data& server_data, const server_setting& server_setting, message_handler_invoker& message_handler_invoker):
 		acceptor_(acceptor),
+		acceptor_mutex_(acceptor_mutex),
 		server_data_(server_data),
 		server_setting_(server_setting),
 		message_handler_invoker_(message_handler_invoker),
@@ -30,11 +32,26 @@ namespace pgl {
 		session_data_ = std::make_unique<session_data>();
 
 		// Start connection
-		spawn(acceptor_.get_executor(), [shared_this=shared_from_this()](asio::yield_context yield) {
+		const auto shared_this = shared_from_this();
+		log(log_level::debug, "Start to accept.");
+		{
+			// basic_socket_acceptor is unsafe for concurrent shared-object access, so serialize only accept initiation.
+			std::lock_guard lock(acceptor_mutex_);
+			acceptor_.async_accept(socket_, [shared_this](const system::error_code& accept_error) {
+				shared_this->handle_accepted_connection(accept_error);
+			});
+		}
+	}
+
+	void server_session::handle_accepted_connection(const system::error_code& accept_error) {
+		spawn(socket_.get_executor(), [shared_this=shared_from_this(), accept_error](asio::yield_context yield) {
 			try {
-				log(log_level::debug, "Start to accept.");
 				try {
-					shared_this->acceptor_.async_accept(shared_this->socket_, yield);
+					if (accept_error) {
+						const auto extra_message = generate_string("Acception failed: ", accept_error.message());
+						throw server_session_error(extra_message);
+					}
+
 					shared_this->session_data_->set_remote_endpoint(
 						endpoint::make_from_boost_endpoint(
 							shared_this->socket_.remote_endpoint()));
