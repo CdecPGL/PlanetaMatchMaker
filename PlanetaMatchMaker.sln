@@ -1,7 +1,6 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29001.49
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlanetaMatchMakerServer", "PlanetaMatchMakerServer\PlanetaMatchMakerServer.vcxproj", "{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}"
 EndProject
@@ -26,12 +25,20 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|Any CPU.Build.0 = Debug|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|x64.ActiveCfg = Debug|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Debug|x64.Build.0 = Debug|x64
+		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|Any CPU.ActiveCfg = Release|x64
+		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|Any CPU.Build.0 = Release|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|x64.ActiveCfg = Release|x64
 		{F5FD998A-B02A-4A21-9D5E-3B6392A8C88E}.Release|x64.Build.0 = Release|x64
+		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|Any CPU.Build.0 = Debug|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|x64.ActiveCfg = Debug|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Debug|x64.Build.0 = Debug|x64
+		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|Any CPU.ActiveCfg = Release|x64
+		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|Any CPU.Build.0 = Release|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|x64.ActiveCfg = Release|x64
 		{FF307272-C5B8-45F7-AE59-80EAD61D7DCA}.Release|x64.Build.0 = Release|x64
 		{A574E9BA-5C01-43E7-A665-9C49DC55B439}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
