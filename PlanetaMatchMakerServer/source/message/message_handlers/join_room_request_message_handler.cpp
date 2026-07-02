@@ -63,6 +63,12 @@ namespace pgl {
 			room_data.game_host_endpoint,
 			room_data.game_host_external_id
 		};
-		return {{reply}, true};
+		return {
+			{reply},
+			true,
+			[param, room_id = message.room_id] {
+				param->server_data.get_room_data_container().try_release_player_join_reservation(room_id);
+			}
+		};
 	}
 }

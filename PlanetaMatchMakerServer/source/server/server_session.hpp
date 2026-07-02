@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 
@@ -31,6 +32,7 @@ namespace pgl {
 		boost::asio::strand<boost::asio::any_io_executor> strand_;
 		boost::asio::ip::tcp::socket socket_;
 		std::unique_ptr<session_data> session_data_;
+		std::atomic_bool is_stopping_{false};
 
 		void start_impl();
 		void stop_impl();

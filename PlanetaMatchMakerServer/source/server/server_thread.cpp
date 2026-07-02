@@ -28,6 +28,11 @@ namespace pgl {
 
 	void server_thread::stop() {
 		for (auto&& session : server_sessions_) { session->stop(); }
+		{
+			std::lock_guard lock(acceptor_mutex_);
+			boost::system::error_code ignored_error;
+			acceptor_.cancel(ignored_error);
+		}
 		server_sessions_.clear();
 	}
 }

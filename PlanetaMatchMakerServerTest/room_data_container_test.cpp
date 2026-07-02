@@ -88,6 +88,25 @@ BOOST_AUTO_TEST_SUITE(room_data_container_test)
 		BOOST_CHECK(next_join_result.result == room_data_container::join_room_result::room_full);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_try_release_player_join_reservation_restores_reserved_slot) {
+		// set up
+		auto container = room_data_container();
+		container.add_or_update(make_room(1, 1, 2, 1));
+		const auto reserve_result = container.try_reserve_player_for_join(1,
+			game_host_connection_establish_mode::builtin, {});
+		BOOST_REQUIRE(reserve_result.result == room_data_container::join_room_result::accepted);
+
+		// exercise
+		const auto release_result = container.try_release_player_join_reservation(1);
+		const auto next_join_result = container.try_reserve_player_for_join(1,
+			game_host_connection_establish_mode::builtin, {});
+
+		// verify
+		BOOST_CHECK(release_result);
+		BOOST_CHECK_EQUAL(container.get(1).current_player_count, 2);
+		BOOST_CHECK(next_join_result.result == room_data_container::join_room_result::accepted);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_host_report_confirms_in_flight_join_reservation) {
 		// set up
 		auto container = room_data_container();

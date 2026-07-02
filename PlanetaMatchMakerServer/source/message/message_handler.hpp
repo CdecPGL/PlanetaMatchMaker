@@ -1,5 +1,9 @@
 #pragma once
 
+#include <exception>
+#include <functional>
+#include <utility>
+
 #include <boost/asio/spawn.hpp>
 
 #include "minimal_serializer/serializer.hpp"
@@ -25,6 +29,7 @@ namespace pgl {
 	struct message_handling_result {
 		std::vector<ReplyMessage> reply_bodies;
 		bool is_disconnect_required;
+		std::function<void()> on_reply_failure = {};
 	};
 
 	class no_reply final { };
@@ -59,13 +64,15 @@ namespace pgl {
 				message_error_code::ok,
 			};
 			std::vector<ReplyMessage> reply_bodies;
+			std::function<void()> on_reply_failure;
 			try {
 				// handle message
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Handle ",
 					header.message_type, " message.");
-				const auto result = handle_message(message, param);
+				auto result = handle_message(message, param);
 				is_disconnect_required = result.is_disconnect_required;
 				reply_bodies = std::move(result.reply_bodies);
+				on_reply_failure = std::move(result.on_reply_failure);
 				reply_header.error_code = message_error_code::ok;
 				disconnect_reason = "Disconnect due to message handling result.";
 			}
@@ -92,19 +99,31 @@ namespace pgl {
 
 			// reply message if required
 			if constexpr (!std::is_same_v<ReplyMessage, no_reply>) {
-				if (reply_bodies.empty()) {
-					log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
-						header.message_type, " message without body (", get_packed_size<reply_message_header>(),
-						" bytes).");
-					send(param, reply_header);
-				}
-				else {
-					for (auto&& reply_body : reply_bodies) {
+				try {
+					if (reply_bodies.empty()) {
 						log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
-							header.message_type, " message (", get_packed_size<reply_message_header, ReplyMessage>(),
+							header.message_type, " message without body (", get_packed_size<reply_message_header>(),
 							" bytes).");
-						send(param, reply_header, reply_body);
+						send(param, reply_header);
 					}
+					else {
+						for (auto&& reply_body : reply_bodies) {
+							log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
+								header.message_type, " message (", get_packed_size<reply_message_header, ReplyMessage>(),
+								" bytes).");
+							send(param, reply_header, reply_body);
+						}
+					}
+				}
+				catch (...) {
+					if (on_reply_failure) {
+						try { on_reply_failure(); }
+						catch (const std::exception& e) {
+							log(log_level::error, "Failed to run reply failure cleanup: ", e.what());
+						}
+						catch (...) { log(log_level::error, "Failed to run reply failure cleanup."); }
+					}
+					throw;
 				}
 			}
 

@@ -35,6 +35,8 @@ namespace pgl {
 	}
 
 	void server_session::start_impl() {
+		if (is_stopping_.load(std::memory_order_acquire)) { return; }
+
 		// Reset session
 		session_data_ = std::make_unique<session_data>();
 
@@ -52,9 +54,12 @@ namespace pgl {
 	}
 
 	void server_session::handle_accepted_connection(const system::error_code& accept_error) {
+		if (is_stopping_.load(std::memory_order_acquire)) { return; }
+
 		spawn(strand_, [shared_this=shared_from_this(), accept_error](asio::yield_context yield) {
 			try {
 				try {
+					if (shared_this->is_stopping_.load(std::memory_order_acquire)) { return; }
 					if (accept_error) {
 						const auto extra_message = generate_string("Acception failed: ", accept_error.message());
 						throw server_session_error(extra_message);
@@ -120,6 +125,7 @@ namespace pgl {
 	}
 
 	void server_session::stop() {
+		is_stopping_.store(true, std::memory_order_release);
 		// dispatch runs inline when already on this strand, preserving restart ordering.
 		asio::dispatch(strand_, [shared_this = shared_from_this()] {
 			shared_this->stop_impl();
@@ -127,8 +133,10 @@ namespace pgl {
 	}
 
 	void server_session::stop_impl() {
-		finalize();
-		socket_.close();
+		if (session_data_) { finalize(); }
+
+		boost::system::error_code ignored_error;
+		socket_.close(ignored_error);
 	}
 
 	void server_session::finalize() const {
@@ -144,6 +152,7 @@ namespace pgl {
 	}
 
 	void server_session::restart() {
+		if (is_stopping_.load(std::memory_order_acquire)) { return; }
 		log(log_level::info, "Server session handler is restarted.");
 		asio::dispatch(strand_, [shared_this = shared_from_this()] {
 			shared_this->stop_impl();

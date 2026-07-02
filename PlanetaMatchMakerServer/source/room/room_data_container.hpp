@@ -269,6 +269,27 @@ namespace pgl {
 		}
 
 		/**
+		 * Release one in-flight join reservation if the join reply cannot be delivered to the joining client.
+		 *
+		 * A successful join reply transfers the reservation to the host confirmation flow, so this must only be called
+		 * when the server knows the join client did not receive the host endpoint.
+		 */
+		bool try_release_player_join_reservation(id_param_type id) {
+			std::lock_guard lock(reservation_mutex_);
+			auto is_released = false;
+			const auto updated_room_data = container_.try_update(id, [&](auto& target_room_data) {
+				const auto reservation_it = reserved_player_count_map_.find(id);
+				if (reservation_it == reserved_player_count_map_.end() || reservation_it->second == 0) { return; }
+
+				--reservation_it->second;
+				if (target_room_data.current_player_count > 0) { --target_room_data.current_player_count; }
+				if (reservation_it->second == 0) { reserved_player_count_map_.erase(reservation_it); }
+				is_released = true;
+			});
+			return updated_room_data.has_value() && is_released;
+		}
+
+		/**
 		 * Update a room and apply a player count reported by the host without dropping in-flight join reservations.
 		 *
 		 * The server increments current_player_count before the joining client reaches the host. A host status notice
