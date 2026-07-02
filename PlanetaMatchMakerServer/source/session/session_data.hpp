@@ -5,7 +5,8 @@
 #include "client/player_full_name.hpp"
 
 namespace pgl {
-	// This class need not be thread safe because one session is processed in one thread.
+	// This class need not be thread safe because one session is processed serially through its session strand.
+	// Do not access it from outside the owning session strand.
 	// Each method may throw std::runtime_exception if errors occur.
 	class session_data final {
 	public:

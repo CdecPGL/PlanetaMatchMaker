@@ -67,6 +67,49 @@ BOOST_AUTO_TEST_SUITE(room_data_container_test)
 		BOOST_CHECK_EQUAL(container.get(1).current_player_count, 2);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_host_report_does_not_drop_in_flight_join_reservation) {
+		// set up
+		auto container = room_data_container();
+		container.add_or_update(make_room(1, 1, 2, 1));
+		const auto reserve_result = container.try_reserve_player_for_join(1,
+			game_host_connection_establish_mode::builtin, {});
+		BOOST_REQUIRE(reserve_result.result == room_data_container::join_room_result::accepted);
+
+		// exercise
+		const auto update_result = container.try_update_with_host_reported_current_player_count(1, true, 1,
+			[](auto&) {});
+		const auto next_join_result = container.try_reserve_player_for_join(1,
+			game_host_connection_establish_mode::builtin, {});
+
+		// verify
+		BOOST_REQUIRE(update_result.has_value());
+		BOOST_CHECK_EQUAL(update_result->current_player_count, 2);
+		BOOST_CHECK_EQUAL(container.get(1).current_player_count, 2);
+		BOOST_CHECK(next_join_result.result == room_data_container::join_room_result::room_full);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_host_report_confirms_in_flight_join_reservation) {
+		// set up
+		auto container = room_data_container();
+		container.add_or_update(make_room(1, 1, 4, 1));
+		const auto reserve_result = container.try_reserve_player_for_join(1,
+			game_host_connection_establish_mode::builtin, {});
+		BOOST_REQUIRE(reserve_result.result == room_data_container::join_room_result::accepted);
+
+		// exercise
+		const auto confirmed_result = container.try_update_with_host_reported_current_player_count(1, true, 2,
+			[](auto&) {});
+		const auto reduced_result = container.try_update_with_host_reported_current_player_count(1, true, 1,
+			[](auto&) {});
+
+		// verify
+		BOOST_REQUIRE(confirmed_result.has_value());
+		BOOST_CHECK_EQUAL(confirmed_result->current_player_count, 2);
+		BOOST_REQUIRE(reduced_result.has_value());
+		BOOST_CHECK_EQUAL(reduced_result->current_player_count, 1);
+		BOOST_CHECK_EQUAL(container.get(1).current_player_count, 1);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_concurrent_try_reserve_player_for_join_does_not_exceed_max_player_count) {
 		// set up
 		auto container = room_data_container();

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <mutex>
 #include <optional>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -34,6 +37,7 @@ namespace pgl {
 	public:
 		using container_type = thread_safe_data_container<room_data, &room_data::room_id, &
 			room_data::host_player_full_name>;
+		using id_type = container_type::id_type;
 		using id_param_type = container_type::id_param_type;
 		using data_param_type = container_type::data_param_type;
 
@@ -188,7 +192,13 @@ namespace pgl {
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
 		 * @return true if added.
 		*/
-		bool add_or_update(room_data&& data) { return container_.add_or_update(std::forward<room_data>(data)); }
+		bool add_or_update(room_data&& data) {
+			const auto id = data.room_id;
+			std::lock_guard lock(reservation_mutex_);
+			const auto result = container_.add_or_update(std::forward<room_data>(data));
+			reserved_player_count_map_.erase(id);
+			return result;
+		}
 
 		/**
 		 * Add or update room.
@@ -197,7 +207,7 @@ namespace pgl {
 		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
 		 * @return true if added.
 		*/
-		bool add_or_update(const room_data& data) { return container_.add_or_update(data); }
+		bool add_or_update(const room_data& data) { return add_or_update(room_data{data}); }
 
 		/**
 		 * Update an existing room under one exclusive lock.
@@ -223,6 +233,7 @@ namespace pgl {
 		join_room_result_data try_reserve_player_for_join(id_param_type id,
 			const game_host_connection_establish_mode connection_establish_mode,
 			const room_password_t& password) {
+			std::lock_guard lock(reservation_mutex_);
 			auto result = join_room_result_data{ join_room_result::room_not_found, std::nullopt };
 			const auto updated_room_data = container_.try_update(id, [&](auto& target_room_data) {
 				if (target_room_data.game_host_connection_establish_mode != connection_establish_mode) {
@@ -246,8 +257,9 @@ namespace pgl {
 					return;
 				}
 
-				// Reserve capacity immediately. A later host status notice may overwrite this with the actual count.
+				// Reserve capacity immediately until a later host status notice confirms the joining player.
 				++target_room_data.current_player_count;
+				++reserved_player_count_map_[id];
 				result = { join_room_result::accepted, target_room_data };
 			});
 
@@ -257,12 +269,37 @@ namespace pgl {
 		}
 
 		/**
+		 * Update a room and apply a player count reported by the host without dropping in-flight join reservations.
+		 *
+		 * The server increments current_player_count before the joining client reaches the host. A host status notice
+		 * generated from an older snapshot must not erase that reservation, otherwise concurrent join requests can be
+		 * over-accepted.
+		 */
+		template <typename UpdateFunction>
+		std::optional<room_data> try_update_with_host_reported_current_player_count(id_param_type id,
+			const bool is_current_player_count_changed, const uint8_t host_current_player_count,
+			UpdateFunction&& update_function) {
+			std::lock_guard lock(reservation_mutex_);
+			return container_.try_update(id, [&](auto& target_room_data) {
+				update_function(target_room_data);
+				if (is_current_player_count_changed) {
+					apply_host_reported_current_player_count(id, target_room_data, host_current_player_count);
+				}
+			});
+		}
+
+		/**
 		 * Remove room data with an ID.
 		 *
 		 * @param id An ID of room data to remove.
 		 * @return true if removed.
 		 */
-		bool try_remove(id_param_type id) { return container_.try_remove(id); }
+		bool try_remove(id_param_type id) {
+			std::lock_guard lock(reservation_mutex_);
+			const auto result = container_.try_remove(id);
+			if (result) { reserved_player_count_map_.erase(id); }
+			return result;
+		}
 
 		/**
 		 * Remove room data with an ID under one exclusive lock if remove_function allows it.
@@ -273,10 +310,39 @@ namespace pgl {
 		 */
 		template <typename RemoveFunction>
 		std::optional<room_data> try_remove_if(id_param_type id, RemoveFunction&& remove_function) {
-			return container_.try_remove_if(id, std::forward<RemoveFunction>(remove_function));
+			std::lock_guard lock(reservation_mutex_);
+			auto result = container_.try_remove_if(id, std::forward<RemoveFunction>(remove_function));
+			if (result.has_value()) { reserved_player_count_map_.erase(id); }
+			return result;
 		}
 
 	private:
 		container_type container_;
+		std::unordered_map<id_type, uint8_t> reserved_player_count_map_;
+		mutable std::mutex reservation_mutex_;
+
+		void apply_host_reported_current_player_count(id_param_type id, room_data& target_room_data,
+			const uint8_t host_current_player_count) {
+			const auto reported_player_count = std::min<uint16_t>(host_current_player_count,
+				target_room_data.max_player_count);
+			auto& stored_reservation_count = reserved_player_count_map_[id];
+			const auto reservation_count = std::min<uint16_t>(stored_reservation_count,
+				target_room_data.current_player_count);
+			stored_reservation_count = static_cast<uint8_t>(reservation_count);
+			const auto previous_host_count = static_cast<uint16_t>(target_room_data.current_player_count) -
+				reservation_count;
+
+			if (reported_player_count > previous_host_count) {
+				const auto confirmed_count = std::min<uint16_t>(
+					reservation_count, reported_player_count - previous_host_count);
+				stored_reservation_count -= static_cast<uint8_t>(confirmed_count);
+			}
+
+			const auto effective_player_count = std::min<uint16_t>(
+				target_room_data.max_player_count,
+				reported_player_count + stored_reservation_count);
+			target_room_data.current_player_count = static_cast<uint8_t>(effective_player_count);
+			if (stored_reservation_count == 0) { reserved_player_count_map_.erase(id); }
+		}
 	};
 }

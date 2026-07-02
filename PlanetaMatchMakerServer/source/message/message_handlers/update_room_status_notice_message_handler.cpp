@@ -32,32 +32,29 @@ namespace pgl {
 				throw client_error(client_error_code::request_parameter_wrong, false, error_message);
 			}
 		};
-		const auto update_current_player_count_if_need = [&](room_data& target_room_data) {
-			validate_current_player_count(target_room_data);
-			if (message.is_current_player_count_changed) {
-				target_room_data.current_player_count = message.current_player_count;
-			}
-		};
-
 		auto updated_room_data = std::optional<room_data>();
 
 		// Change status of requested room
 		switch (message.status) {
 			case update_room_status_notice_message::status::open:
-				updated_room_data = room_data_container.try_update(message.room_id, [&](auto& target_room_data) {
-					validate_host(target_room_data);
-					update_current_player_count_if_need(target_room_data);
-					target_room_data.setting_flags |= room_setting_flag::open_room;
-				});
+				updated_room_data = room_data_container.try_update_with_host_reported_current_player_count(message.room_id,
+					message.is_current_player_count_changed, message.current_player_count,
+					[&](auto& target_room_data) {
+						validate_host(target_room_data);
+						validate_current_player_count(target_room_data);
+						target_room_data.setting_flags |= room_setting_flag::open_room;
+					});
 				if (!updated_room_data.has_value()) { parameter_validator.throw_room_not_found_error(message.room_id); }
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Open ", *updated_room_data, ".");
 				break;
 			case update_room_status_notice_message::status::close:
-				updated_room_data = room_data_container.try_update(message.room_id, [&](auto& target_room_data) {
-					validate_host(target_room_data);
-					update_current_player_count_if_need(target_room_data);
-					target_room_data.setting_flags &= ~room_setting_flag::open_room;
-				});
+				updated_room_data = room_data_container.try_update_with_host_reported_current_player_count(message.room_id,
+					message.is_current_player_count_changed, message.current_player_count,
+					[&](auto& target_room_data) {
+						validate_host(target_room_data);
+						validate_current_player_count(target_room_data);
+						target_room_data.setting_flags &= ~room_setting_flag::open_room;
+					});
 				if (!updated_room_data.has_value()) { parameter_validator.throw_room_not_found_error(message.room_id); }
 				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Close ", *updated_room_data, ".");
 				break;
