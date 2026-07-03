@@ -32,7 +32,7 @@ namespace pgl {
 
 		// Check if the client api version matches the server api version. If not, reply authentication failure and disconnect the client
 		if (message.api_version != api_version) {
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(),
+			log_with_session(log_level::info, param,
 				"Authentication failed. The client api version doesn't match to the server api version. (server api version: ",
 				api_version, ", client api version: ", message.api_version, ")");
 			return {
@@ -48,7 +48,7 @@ namespace pgl {
 		// Check if the client game id matches the server game id. If not, reply authentication failure and disconnect the client
 		if (const auto server_game_id = game_id_t(param->server_setting.authentication.game_id); message.game_id !=
 			server_game_id) {
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(),
+			log_with_session(log_level::info, param,
 				"Authentication failed. The client game id doesn't match to the server id version. (server game version: ",
 				server_game_id, ", client game version: ", message.game_id, ")");
 			return {
@@ -64,7 +64,7 @@ namespace pgl {
 		// Check if the client game version matches the server game version if game version check is enabled. If not, reply authentication failure and disconnect the client
 		if (param->server_setting.authentication.enable_game_version_check && message.game_version !=
 			server_game_version) {
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(),
+			log_with_session(log_level::info, param,
 				"Authentication failed. The client game version doesn't match to the server game version. (server game version: ",
 				server_game_version, ", client game version: ", message.game_version, ")");
 			return {
@@ -77,12 +77,12 @@ namespace pgl {
 			};
 		}
 
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Authentication succeeded.");
+		log_with_session(log_level::info, param, "Authentication succeeded.");
 
 		// Generate player full name
 		const auto player_full_name = param->server_data.get_player_name_container().assign_player_name(
 			message.player_name);
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "A player \"", player_full_name.name,
+		log_with_session(log_level::info, param, "A player \"", player_full_name.name,
 			"\" is registered with tag \"", player_full_name.tag, "\"");
 		param->session_data.set_client_player_name(player_full_name);
 

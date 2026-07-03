@@ -11,7 +11,7 @@ namespace pgl {
 	}
 
 	log::formatter get_boost_logger_default_formatter() {
-		return log::expressions::format("[%1%] [%2%] %3%%4%: %5%")
+		return log::expressions::format("[%1%] [thread:%2%] %3%%4%: %5%")
 			% log::expressions::format_date_time<posix_time::ptime>(
 				"TimeStamp", "%Y-%m-%d %H:%M:%S.%f")
 			% log::expressions::attr<log::attributes::current_thread_id::value_type>("ThreadID")

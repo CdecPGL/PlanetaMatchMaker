@@ -45,7 +45,7 @@ namespace pgl {
 						target_room_data.setting_flags |= room_setting_flag::open_room;
 					});
 				if (!updated_room_data.has_value()) { parameter_validator.throw_room_not_found_error(message.room_id); }
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Open ", *updated_room_data, ".");
+				log_with_session(log_level::info, param, "Open ", *updated_room_data, ".");
 				break;
 			case update_room_status_notice_message::status::close:
 				updated_room_data = room_data_container.try_update_with_host_reported_current_player_count(message.room_id,
@@ -56,7 +56,7 @@ namespace pgl {
 						target_room_data.setting_flags &= ~room_setting_flag::open_room;
 					});
 				if (!updated_room_data.has_value()) { parameter_validator.throw_room_not_found_error(message.room_id); }
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Close ", *updated_room_data, ".");
+				log_with_session(log_level::info, param, "Close ", *updated_room_data, ".");
 				break;
 			case update_room_status_notice_message::status::remove:
 				updated_room_data = room_data_container.try_remove_if(message.room_id, [&](const auto& target_room_data) {
@@ -65,7 +65,7 @@ namespace pgl {
 					return true;
 				});
 				if (!updated_room_data.has_value()) { parameter_validator.throw_room_not_found_error(message.room_id); }
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Remove ", *updated_room_data, ".");
+				log_with_session(log_level::info, param, "Remove ", *updated_room_data, ".");
 				param->session_data.delete_hosting_room_id(updated_room_data->room_id);
 				break;
 			default:
