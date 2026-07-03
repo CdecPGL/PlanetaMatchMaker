@@ -53,6 +53,8 @@ Detail of each `game_version_check_mode` options is below.
 |file_log_level|string ("debug", "info", "warning", "error", "fatal")|"info"|PMMS_LOG_FILE_LOG_LEVEL|A threshold of file log by level.|
 |file_log_path|string (path)|""|PMMS_LOG_FILE_LOG_PATH|A path of file to ouput log. `/var/log/pmms.log` (Linux) or `C:\log\pmms.log` (Windows) are used if this setting is empty.|
 
+Log lines include the current thread ID as `[thread:<id>]`. Logs emitted while processing an accepted connection also include `[session:<number>]` before the client endpoint. Session numbers are process-local connection numbers that start from `1`.
+
 ### `connection_test` Section
 
 |Name|Type|Default|Env Var|Explanation|

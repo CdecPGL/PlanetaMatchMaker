@@ -27,7 +27,7 @@ namespace pgl {
 				message.search_full_name);
 			matched_data_list = std::move(search_result.data);
 			total_room_count = search_result.total_room_count;
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
+			log_with_session(log_level::info, param, matched_data_list.size(),
 				" rooms are matched in ", total_room_count, " rooms.");
 		}
 		catch (out_of_range&) {
@@ -43,7 +43,7 @@ namespace pgl {
 		reply.reply_room_count = std::min(range_checked_static_cast<uint16_t>(
 				reply.matched_room_count <= message.start_index ? 0 : reply.matched_room_count - message.start_index),
 			message.count);
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
+		log_with_session(log_level::info, param, matched_data_list.size(),
 			" rooms are replied from index ", message.start_index, ".");
 
 		// Generate reply bodies separately
@@ -68,21 +68,21 @@ namespace pgl {
 				else { reply.room_info_list[j] = {}; }
 			}
 
-			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Generate reply body ", i + 1, "/",
+			log_with_session(log_level::debug, param, "Generate reply body ", i + 1, "/",
 				separation,
 				" message.");
 			reply_bodies.push_back(reply);
 		}
 
 		if (separation == 0) {
-			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(),
+			log_with_session(log_level::debug, param,
 				"There are no room which matches request.");
 			reply.reply_room_count = 0;
 			reply.room_info_list = {};
 			reply_bodies.push_back(reply);
 		}
 
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Finished generating reply bodies ",
+		log_with_session(log_level::info, param, "Finished generating reply bodies ",
 			message_type::list_room, " message by ", separation, " messages.");
 
 		return {reply_bodies, false};

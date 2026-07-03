@@ -52,7 +52,7 @@ namespace pgl {
 
 		void operator()(const request_message_header& header, std::shared_ptr<message_handle_parameter> param) final {
 			// receive message
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Receive ", header.message_type,
+			log_with_session(log_level::info, param, "Receive ", header.message_type,
 				" message.");
 			RequestMessage message{};
 			receive(param, message);
@@ -67,7 +67,7 @@ namespace pgl {
 			std::function<void()> on_reply_failure;
 			try {
 				// handle message
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Handle ",
+				log_with_session(log_level::info, param, "Handle ",
 					header.message_type, " message.");
 				auto result = handle_message(message, param);
 				is_disconnect_required = result.is_disconnect_required;
@@ -77,7 +77,7 @@ namespace pgl {
 				disconnect_reason = "Disconnect due to message handling result.";
 			}
 			catch (const client_error& e) {
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(),
+				log_with_session(log_level::info, param,
 					"Client error occurred while handling ", header.message_type,
 					" message: ", e.message());
 				is_disconnect_required = e.is_disconnect_required();
@@ -87,7 +87,7 @@ namespace pgl {
 				disconnect_reason = "Disconnect due to not continuable client error.";
 			}
 			catch (const server_error& e) {
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(),
+				log_with_session(log_level::info, param,
 					"Server error occurred while handling ", header.message_type,
 					" message: ", e.message());
 				is_disconnect_required = e.is_disconnect_required();
@@ -101,14 +101,14 @@ namespace pgl {
 			if constexpr (!std::is_same_v<ReplyMessage, no_reply>) {
 				try {
 					if (reply_bodies.empty()) {
-						log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
+						log_with_session(log_level::info, param, "Reply ",
 							header.message_type, " message without body (", get_packed_size<reply_message_header>(),
 							" bytes).");
 						send(param, reply_header);
 					}
 					else {
 						for (auto&& reply_body : reply_bodies) {
-							log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Reply ",
+							log_with_session(log_level::info, param, "Reply ",
 								header.message_type, " message (", get_packed_size<reply_message_header, ReplyMessage>(),
 								" bytes).");
 							send(param, reply_header, reply_body);
@@ -119,9 +119,9 @@ namespace pgl {
 					if (on_reply_failure) {
 						try { on_reply_failure(); }
 						catch (const std::exception& e) {
-							log(log_level::error, "Failed to run reply failure cleanup: ", e.what());
+							log_with_session(log_level::error, param, "Failed to run reply failure cleanup: ", e.what());
 						}
-						catch (...) { log(log_level::error, "Failed to run reply failure cleanup."); }
+						catch (...) { log_with_session(log_level::error, param, "Failed to run reply failure cleanup."); }
 					}
 					throw;
 				}

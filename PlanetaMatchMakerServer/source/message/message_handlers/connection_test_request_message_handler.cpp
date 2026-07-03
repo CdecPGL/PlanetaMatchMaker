@@ -39,13 +39,13 @@ namespace pgl {
 
 		// Check the reply matches test text
 		if (result_text != test_text) {
-			log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Connect to ", target_endpoint,
+			log_with_session(log_level::info, param, "Connect to ", target_endpoint,
 				" successfully, but target endpoint replied reply wrong message:\n expected message is \"", test_text,
 				"\", but received \"", result_text, "\".");
 			return false;
 		}
 
-		log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Connect to ",
+		log_with_session(log_level::info, param, "Connect to ",
 			target_endpoint, " successfully");
 		return true;
 	}
@@ -94,7 +94,7 @@ namespace pgl {
 
 				// Check the reply matches test text
 				if (result_text != test_text) {
-					log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Connect to ", target_endpoint,
+					log_with_session(log_level::info, param, "Connect to ", target_endpoint,
 						" successfully, but target endpoint replied reply wrong message:\n expected message is \"",
 						test_text, "\", but received \"", result_text, "\". (", i + 1, "/", try_count, " attempts)");
 					is_succeeded = false;
@@ -107,18 +107,18 @@ namespace pgl {
 			catch (const system::system_error& e) {
 				if (e.code() != asio::error::operation_aborted) { throw; }
 				is_succeeded = false;
-				log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Timed out to connect to ",
+				log_with_session(log_level::info, param, "Timed out to connect to ",
 					target_endpoint, ". (", i + 1, "/", try_count, " attempts)");
 			}
 		}
 		socket.close();
 
 		if (is_succeeded) {
-			log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Connect to ",
+			log_with_session(log_level::info, param, "Connect to ",
 				target_endpoint, " successfully");
 		}
 		else {
-			log_with_endpoint(log_level::info, param.socket.remote_endpoint(), "Failed to connect to ",
+			log_with_session(log_level::info, param, "Failed to connect to ",
 				target_endpoint, ".");
 		}
 
@@ -135,7 +135,7 @@ namespace pgl {
 
 		const auto target_endpoint = asio::ip::tcp::endpoint(
 			param->session_data.remote_endpoint().to_boost_endpoint().address(), message.port_number);
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Start ", message.protocol,
+		log_with_session(log_level::info, param, "Start ", message.protocol,
 			" connectable test to ", target_endpoint, " with setting timeout ",
 			message.protocol == transport_protocol::tcp
 				? param->server_setting.connection_test.connection_check_tcp_time_out_seconds
@@ -163,7 +163,7 @@ namespace pgl {
 			// disconnection by client is expected behavior (asio::error::eof)
 			if (e.code() != asio::error::eof) {
 				reply.succeed = false;
-				log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Failed to connect to ",
+				log_with_session(log_level::info, param, "Failed to connect to ",
 					target_endpoint, ": ", e, "");
 			}
 		}

@@ -1,6 +1,12 @@
 #include "session/session_data.hpp"
 
 namespace pgl {
+	void session_data::set_session_number(const session_number_t session_number) {
+		if (session_number_.has_value()) { throw std::runtime_error("A session number is already set."); }
+
+		session_number_ = session_number;
+	}
+
 	void session_data::set_hosting_room_id(const room_id_t room_id) {
 		if (is_hosting_room_) { throw std::runtime_error("A hosting room is already set."); }
 
@@ -30,7 +36,7 @@ namespace pgl {
 		is_authenticated_ = true;
 	}
 
-
+	std::optional<session_number_t> session_data::session_number() const { return session_number_; }
 	room_id_t session_data::hosting_room_id() const {
 		if (!is_hosting_room_) { throw std::runtime_error("A hosting room is not set."); }
 

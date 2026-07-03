@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <utility>
+
 #include "async/timer.hpp"
 #include "async/read_write.hpp"
 #include "server/server_errors.hpp"
@@ -7,8 +10,26 @@
 #include "logger/log.hpp"
 #include "messages.hpp"
 #include "message_handle_parameter.hpp"
+#include "session/session_data.hpp"
 
 namespace pgl {
+	template <typename ... Params>
+	void log_with_session(const log_level level, const message_handle_parameter& param, Params&& ... params) {
+		if (const auto session_number = param.session_data.session_number(); session_number.has_value()) {
+			log_with_session_and_endpoint(level, *session_number, param.socket.remote_endpoint(),
+				std::forward<Params>(params)...);
+		}
+		else {
+			log_with_endpoint(level, param.socket.remote_endpoint(), std::forward<Params>(params)...);
+		}
+	}
+
+	template <typename ... Params>
+	void log_with_session(const log_level level, const std::shared_ptr<message_handle_parameter>& param,
+		Params&& ... params) {
+		log_with_session(level, *param, std::forward<Params>(params)...);
+	}
+
 	// Send data to remote endpoint. server_session_error will be thrown when send error occurred.
 	template <serializable FirstData, serializable... RestData>
 	void send(std::shared_ptr<message_handle_parameter> param, FirstData&& first_data, RestData&&... rest_data) {
@@ -21,7 +42,7 @@ namespace pgl {
 					packed_async_write(
 						param->socket, param->yield, first_data, rest_data...);
 				});
-			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Send ", data_summary,
+			log_with_session(log_level::debug, param, "Send ", data_summary,
 				" to the client.");
 		}
 		catch (const boost::system::system_error& e) {
@@ -51,7 +72,7 @@ namespace pgl {
 				[param, &first_data, &rest_data...]()mutable {
 					unpacked_async_read(param->socket, param->yield, first_data, rest_data...);
 				});
-			log_with_endpoint(log_level::debug, param->socket.remote_endpoint(), "Receive ", data_summary,
+			log_with_session(log_level::debug, param, "Receive ", data_summary,
 				" from the client.");
 		}
 		catch (const boost::system::system_error& e) {

@@ -41,13 +41,13 @@ namespace pgl {
 		const auto message_handler = make_message_handler(header.message_type);
 		constexpr auto header_size = minimal_serializer::serialized_size_v<request_message_header>;
 		const auto message_size = message_handler->get_message_size();
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message header received. (type: ",
+		log_with_session(log_level::info, param, "Message header received. (type: ",
 			header.message_type, ", size: ", header_size, ")");
 
 		// Receive and process a body of message
 		(*message_handler)(header, param);
 
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Message processed. (type: ",
+		log_with_session(log_level::info, param, "Message processed. (type: ",
 			header.message_type, ", size: ", message_size, ")");
 	}
 }

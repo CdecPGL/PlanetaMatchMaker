@@ -69,7 +69,7 @@ namespace pgl {
 
 			create_room_reply_message reply{*room_id};
 
-			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New ",
+			log_with_session(log_level::info, param, "New ",
 				is_public ? "public" : "private", " room for player \"",
 				param->session_data.client_player_name().generate_full_name(), "\" is created with id: ",
 				reply.room_id);

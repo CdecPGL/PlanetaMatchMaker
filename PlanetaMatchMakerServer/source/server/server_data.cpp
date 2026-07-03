@@ -11,4 +11,8 @@ namespace pgl {
 	get_room_data_container() { return room_data_container_; }
 
 	player_name_container& server_data::get_player_name_container() { return player_name_container_; }
+
+	session_number_t server_data::issue_session_number() {
+		return next_session_number_.fetch_add(1, std::memory_order_relaxed);
+	}
 }

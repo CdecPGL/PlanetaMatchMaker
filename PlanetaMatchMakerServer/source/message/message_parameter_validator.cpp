@@ -16,12 +16,12 @@ namespace pgl {
 	room_data message_parameter_validator::get_existing_room(const room_data_container& room_data_container,
 		const room_id_t room_id, const bool is_continuable) const {
 		if (const auto room_data = room_data_container.try_get(room_id)) {
-			log_with_endpoint(log_level::debug, param_->socket.remote_endpoint(), "The room whose id is \"", room_id,
+			log_with_session(log_level::debug, param_, "The room whose id is \"", room_id,
 				"\" exists.");
 			return *room_data;
 		}
 
-		log_with_endpoint(log_level::error, param_->socket.remote_endpoint(), "The room whose id is \"", room_id,
+		log_with_session(log_level::error, param_, "The room whose id is \"", room_id,
 			"\" doesn't exist.");
 		throw_room_not_found_error(room_id, is_continuable);
 	}

@@ -20,6 +20,18 @@ using namespace boost;
 using namespace minimal_serializer;
 
 namespace pgl {
+	template <typename ... Params>
+	void log_with_session_data_endpoint(const log_level level, const session_data& session_data, Params&& ... params) {
+		if (const auto session_number = session_data.session_number(); session_number.has_value()) {
+			log_with_session_and_endpoint(level, *session_number, session_data.remote_endpoint().to_boost_endpoint(),
+				std::forward<Params>(params)...);
+		}
+		else {
+			log_with_endpoint(level, session_data.remote_endpoint().to_boost_endpoint(),
+				std::forward<Params>(params)...);
+		}
+	}
+
 	server_session::server_session(asio::ip::tcp::acceptor& acceptor, std::mutex& acceptor_mutex,
 		server_data& server_data, const server_setting& server_setting,
 		std::shared_ptr<const message_handler_invoker> message_handler_invoker):
@@ -71,6 +83,7 @@ namespace pgl {
 					shared_this->session_data_->set_remote_endpoint(
 						endpoint::make_from_boost_endpoint(
 							shared_this->socket_.remote_endpoint()));
+					shared_this->session_data_->set_session_number(shared_this->server_data_.issue_session_number());
 				}
 				catch (system::system_error& e) {
 					const auto extra_message = generate_string("Acception failed: ", e, " @",
@@ -78,7 +91,7 @@ namespace pgl {
 					throw server_session_error(extra_message);
 				}
 
-				log_with_endpoint(log_level::info, shared_this->socket_.remote_endpoint(),
+				log_with_session_data_endpoint(log_level::info, *shared_this->session_data_,
 					"Accepted new connection. Start to receive message.");
 
 				// Prepare data
@@ -98,33 +111,32 @@ namespace pgl {
 			}
 			catch (const server_session_intended_disconnect_error& e) {
 				if (shared_this->is_stopping_.load(std::memory_order_acquire)) { return; }
-				log_with_endpoint(log_level::info,
-					shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+				log_with_session_data_endpoint(log_level::info, *shared_this->session_data_,
 					"Intended disconnect: ", e);
 				shared_this->restart();
 			}
 			catch (const server_session_error& e) {
 				if (shared_this->is_stopping_.load(std::memory_order_acquire)) { return; }
 				// output log as info for session error because it is caused by external factors like disconnection by client and network error.
-				log_with_endpoint(log_level::info, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+				log_with_session_data_endpoint(log_level::info, *shared_this->session_data_,
 					e, " Disconnect the connection.");
 				shared_this->restart();
 			}
 			catch (const system::system_error& e) {
 				if (shared_this->is_stopping_.load(std::memory_order_acquire)) { return; }
-				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+				log_with_session_data_endpoint(log_level::error, *shared_this->session_data_,
 					"Unhandled error: ", e, " Disconnect the connection: ");
 				shared_this->restart();
 			}
 			catch (const std::exception& e) {
 				if (shared_this->is_stopping_.load(std::memory_order_acquire)) { return; }
-				log_with_endpoint(log_level::error, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+				log_with_session_data_endpoint(log_level::error, *shared_this->session_data_,
 					typeid(e), ": ", e.what(), " Disconnect the connection.");
 				shared_this->restart();
 			}
 			catch (...) {
 				if (shared_this->is_stopping_.load(std::memory_order_acquire)) { return; }
-				log_with_endpoint(log_level::fatal, shared_this->session_data_->remote_endpoint().to_boost_endpoint(),
+				log_with_session_data_endpoint(log_level::fatal, *shared_this->session_data_,
 					"Unknown error. Stop the server.");
 				shared_this->stop();
 				throw;
@@ -168,7 +180,10 @@ namespace pgl {
 
 	void server_session::restart() {
 		if (is_stopping_.load(std::memory_order_acquire)) { return; }
-		log(log_level::info, "Server session handler is restarted.");
+		if (session_data_) {
+			log_with_session_data_endpoint(log_level::info, *session_data_, "Server session handler is restarted.");
+		}
+		else { log(log_level::info, "Server session handler is restarted."); }
 		asio::dispatch(strand_, [shared_this = shared_from_this()] {
 			shared_this->stop_impl();
 			shared_this->start_impl();
@@ -178,7 +193,7 @@ namespace pgl {
 	void server_session::remove_hosting_room_if_need(const session_data& session_data) const {
 		if (session_data.is_hosting_room()) {
 			server_data_.get_room_data_container().try_remove(session_data.hosting_room_id());
-			log_with_endpoint(log_level::info, session_data.remote_endpoint().to_boost_endpoint(),
+			log_with_session_data_endpoint(log_level::info, session_data,
 				"Hosting room(ID: ", session_data.hosting_room_id(), ") is removed.");
 		}
 	}
@@ -187,7 +202,7 @@ namespace pgl {
 		if (const auto& player_name_container = server_data_.get_player_name_container(); player_name_container.
 			is_player_exist(session_data.client_player_name())) {
 			server_data_.get_player_name_container().remove_player_name(session_data.client_player_name());
-			log_with_endpoint(log_level::info, session_data.remote_endpoint().to_boost_endpoint(),
+			log_with_session_data_endpoint(log_level::info, session_data,
 				"Player full name(name: ", session_data.client_player_name().name, ", Tag: ",
 				session_data.client_player_name().tag, ") is removed.");
 		}

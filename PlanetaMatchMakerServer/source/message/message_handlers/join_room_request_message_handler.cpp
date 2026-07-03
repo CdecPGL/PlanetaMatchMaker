@@ -55,7 +55,7 @@ namespace pgl {
 				parameter_validator.throw_room_not_found_error(message.room_id);
 		}
 
-		log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "Requested room \"", message.room_id,
+		log_with_session(log_level::info, param, "Requested room \"", message.room_id,
 			"\" accepted new player. (", room_data.current_player_count, ").");
 
 		// Reply to the client and Disconnect
