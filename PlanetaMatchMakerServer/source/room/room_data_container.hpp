@@ -339,12 +339,14 @@ namespace pgl {
 			const auto reservation_count = std::min<uint16_t>(stored_reservation_count,
 				target_room_data.current_player_count);
 			stored_reservation_count = static_cast<uint8_t>(reservation_count);
-			const auto previous_host_count = static_cast<uint16_t>(target_room_data.current_player_count) -
-				reservation_count;
+			const auto previous_host_count = static_cast<uint16_t>(
+				target_room_data.current_player_count - reservation_count);
 
 			if (reported_player_count > previous_host_count) {
+				const auto increased_host_count = static_cast<uint16_t>(
+					reported_player_count - previous_host_count);
 				const auto confirmed_count = std::min<uint16_t>(
-					reservation_count, reported_player_count - previous_host_count);
+					reservation_count, increased_host_count);
 				stored_reservation_count -= static_cast<uint8_t>(confirmed_count);
 			}
 
