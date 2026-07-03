@@ -2,14 +2,22 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="checked_static_cast_test.cpp" />
-    <ClCompile Include="datetime_test.cpp" />
-    <ClCompile Include="logger_common_test.cpp" />
-    <ClCompile Include="room_data_container_test.cpp" />
-    <ClCompile Include="serialize_pack_test.cpp" />
-    <ClCompile Include="server_data_test.cpp" />
-    <ClCompile Include="server_setting_test.cpp" />
-    <ClCompile Include="session_data_test.cpp" />
-    <ClCompile Include="thread_safe_data_container_test.cpp" />
+    <ClCompile Include="protocol_tests\message_handlers_protocol_test.cpp" />
+    <ClCompile Include="unit_tests\checked_static_cast_test.cpp" />
+    <ClCompile Include="unit_tests\datetime_test.cpp" />
+    <ClCompile Include="unit_tests\errors_test.cpp" />
+    <ClCompile Include="unit_tests\logger_common_test.cpp" />
+    <ClCompile Include="unit_tests\message_handler_invoker_factory_test.cpp" />
+    <ClCompile Include="unit_tests\network_test.cpp" />
+    <ClCompile Include="unit_tests\player_full_name_test.cpp" />
+    <ClCompile Include="unit_tests\player_name_container_test.cpp" />
+    <ClCompile Include="unit_tests\room_data_container_test.cpp" />
+    <ClCompile Include="unit_tests\room_data_test.cpp" />
+    <ClCompile Include="unit_tests\serialize_pack_test.cpp" />
+    <ClCompile Include="unit_tests\server_data_test.cpp" />
+    <ClCompile Include="unit_tests\server_setting_test.cpp" />
+    <ClCompile Include="unit_tests\session_data_test.cpp" />
+    <ClCompile Include="unit_tests\thread_safe_data_container_test.cpp" />
+    <ClCompile Include="unit_tests\utilities_test.cpp" />
   </ItemGroup>
 </Project>

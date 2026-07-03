@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../PlanetaMatchMakerServer/source/utilities/checked_static_cast.hpp"
+#include "../../PlanetaMatchMakerServer/source/utilities/checked_static_cast.hpp"
 
 BOOST_AUTO_TEST_SUITE(checked_static_cast_test)
 	BOOST_AUTO_TEST_CASE(test_range_checked_static_cast_no_error) {
