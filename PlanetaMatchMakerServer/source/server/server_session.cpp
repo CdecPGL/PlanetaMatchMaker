@@ -59,7 +59,7 @@ namespace pgl {
 	void server_session::handle_accepted_connection(const system::error_code& accept_error) {
 		if (is_stopping_.load(std::memory_order_acquire)) { return; }
 
-		spawn(strand_, [shared_this=shared_from_this(), accept_error](asio::yield_context yield) {
+		static_cast<void>(spawn(strand_, [shared_this=shared_from_this(), accept_error](asio::yield_context yield) {
 			try {
 				try {
 					if (shared_this->is_stopping_.load(std::memory_order_acquire)) { return; }
@@ -129,7 +129,7 @@ namespace pgl {
 				shared_this->stop();
 				throw;
 			}
-		});
+		}));
 	}
 
 	void server_session::stop() {
