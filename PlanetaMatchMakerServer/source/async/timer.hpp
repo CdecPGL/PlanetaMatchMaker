@@ -25,8 +25,12 @@ namespace pgl {
 
 		const auto finish_timer = [&timer, is_operation_finished] {
 			if (!is_operation_finished->exchange(true, std::memory_order_acq_rel)) {
-				boost::system::error_code ignored_error;
-				timer.cancel(ignored_error);
+				try {
+					static_cast<void>(timer.cancel());
+				}
+				catch (const boost::system::system_error&) {
+					// Match the old cancel(error_code) behavior by ignoring cancellation errors.
+				}
 			}
 		};
 
