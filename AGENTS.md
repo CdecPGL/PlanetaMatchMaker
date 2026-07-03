@@ -20,11 +20,20 @@ Follow `.editorconfig`. Files use UTF-8 and LF endings. Default indentation is t
 
 ## Testing Guidelines
 
-Add C++ tests beside related coverage in `PlanetaMatchMakerServerTest`, naming files like `server_setting_test.cpp`. Add C# tests in `PlanetaMatchMakerClientTest/Source`, using MSTest classes and methods with clear behavior names. Run the relevant test command before submitting changes; use `../tools/coverage.sh` from a Linux build directory when coverage data is needed.
+Add C++ tests beside related coverage in `PlanetaMatchMakerServerTest`, naming files like `server_setting_test.cpp`. Add C# tests in `PlanetaMatchMakerClientTest/Source`, using MSTest classes and methods with clear behavior names. Run the relevant test command before submitting changes, and treat any build or test warnings as issues to fix before considering validation complete. Resolve all build warnings; do not leave warning output in accepted changes. Use `../tools/coverage.sh` from a Linux build directory when coverage data is needed.
 
 ## Commit & Pull Request Guidelines
 
-Recent commits use bracketed categories such as `[add]`, `[fix]`, and `[update]`, often followed by an issue number, for example `[fix] #25 fix server test errors`. Keep subjects imperative and scoped. Pull requests should describe the change, list validation commands, link related issues, and include screenshots or Unity package notes when Unity-visible behavior changes.
+Follow the repository commit message convention below for all future non-merge commits:
+
+- Format: `[category] [#issue] imperative subject`
+- Use the issue number immediately after the category when one exists, for example `[fix] #25 fix server test errors`. Omit the issue segment when there is no related issue.
+- Valid categories are `[add]` for new features, files, or tests; `[fix]` for bug, build, or test fixes; `[update]` for behavior, dependency, configuration, documentation, or version changes; `[remove]` for deleting code, settings, or documentation; and `[refactor]` for internal restructuring without intended behavior changes.
+- Write the subject in English, keep it concise and scoped, and prefer the imperative style used in the history: `add`, `fix`, `update`, `change`, `remove`, or `refactor`.
+- Do not add a trailing period to a one-line subject. Put longer rationale or migration notes in the commit body instead of making the subject long.
+- Merge commits may keep the default Git-generated merge message.
+
+Pull requests should describe the change, list validation commands, link related issues, and include screenshots or Unity package notes when Unity-visible behavior changes.
 
 ## Security & Configuration Tips
 
