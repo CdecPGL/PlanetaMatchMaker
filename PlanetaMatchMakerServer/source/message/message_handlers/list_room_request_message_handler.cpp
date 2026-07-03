@@ -1,5 +1,7 @@
 #include "list_room_request_message_handler.hpp"
 
+#include <utility>
+
 #include "server/server_data.hpp"
 #include "utilities/checked_static_cast.hpp"
 #include "../message_parameter_validator.hpp"
@@ -19,11 +21,14 @@ namespace pgl {
 
 		// Generate room data list to send
 		std::vector<room_data> matched_data_list;
+		size_t total_room_count = 0;
 		try {
-			matched_data_list = room_data_container.search(message.sort_kind, message.search_target_flags,
+			auto search_result = room_data_container.search_with_total(message.sort_kind, message.search_target_flags,
 				message.search_full_name);
+			matched_data_list = std::move(search_result.data);
+			total_room_count = search_result.total_room_count;
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), matched_data_list.size(),
-				" rooms are matched in ", room_data_container.size(), " rooms.");
+				" rooms are matched in ", total_room_count, " rooms.");
 		}
 		catch (out_of_range&) {
 			const auto error_message = generate_string("Indicated sort_kind \"",
@@ -33,7 +38,7 @@ namespace pgl {
 
 		// Prepare reply header
 		list_room_reply_message reply{};
-		reply.total_room_count = range_checked_static_cast<uint16_t>(room_data_container.size());
+		reply.total_room_count = range_checked_static_cast<uint16_t>(total_room_count);
 		reply.matched_room_count = range_checked_static_cast<uint16_t>(matched_data_list.size());
 		reply.reply_room_count = std::min(range_checked_static_cast<uint16_t>(
 				reply.matched_room_count <= message.start_index ? 0 : reply.matched_room_count - message.start_index),

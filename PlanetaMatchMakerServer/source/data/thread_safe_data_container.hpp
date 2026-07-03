@@ -2,8 +2,11 @@
 
 #include <unordered_map>
 #include <atomic>
+#include <mutex>
 #include <shared_mutex>
 #include <functional>
+#include <optional>
+#include <utility>
 #include <vector>
 #include <algorithm>
 
@@ -52,7 +55,16 @@ namespace pgl {
 		 *
 		 * @param data A data to add or update.
 		 */
-		void add_or_update_variables(const Data& data) { data_.emplace(data); }
+		void add_or_update_variables(const Data& data) {
+			auto& id_index = data_.template get<0>();
+			const auto it = id_index.find(data.*IdMemberVariable);
+			if (it == id_index.end()) {
+				data_.emplace(data);
+				return;
+			}
+
+			id_index.replace(it, data);
+		}
 
 		/**
 		 * Remove data with ID.
@@ -113,6 +125,11 @@ namespace pgl {
 		using id_param_type = typename boost::call_traits<id_type>::param_type;
 		using data_param_type = typename boost::call_traits<Data>::param_type;
 
+		struct search_result final {
+			std::vector<Data> data;
+			size_t total_count;
+		};
+
 		/**
 		 * Add or update data.
 		 *
@@ -122,12 +139,12 @@ namespace pgl {
 		 */
 		bool add_or_update(Data&& data) {
 			const auto id = get_id(data);
-			std::shared_lock lock(mutex_);
+			std::lock_guard lock(mutex_);
 
 			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
 
 			auto&& [it, is_added] = data_map_.insert_or_assign(id, data);
-			unique_variables_.add_or_update_variables(it->second);
+			unique_variables_.add_or_update_variables(it->second.load());
 			return is_added;
 		}
 
@@ -151,18 +168,7 @@ namespace pgl {
 		id_type assign_id_and_add(Data&& data,
 			std::function<id_type()>&& random_id_generator = generate_random_id<id_type>) {
 			std::lock_guard lock(mutex_);
-
-			id_type id{};
-			do { id = random_id_generator(); }
-			while (data_map_.contains(id));
-			data.*IdMemberVariable = id;
-
-			// Check if unique because ensure id of passed data is not duplicate existing id
-			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
-
-			auto&& [it,_] = data_map_.emplace(id, data);
-			unique_variables_.add_or_update_variables(it->second);
-			return id;
+			return assign_id_and_add_impl(data, random_id_generator);
 		}
 
 		/**
@@ -179,6 +185,36 @@ namespace pgl {
 		}
 
 		/**
+		 * Add new data with automatically assigned ID only if the current size is below max_size.
+		 *
+		 * @param data Data of rvalue reference
+		 * @param max_size Maximum number of data allowed in this container.
+		 * @param random_id_generator (optional) A functions to generate new ID. In default, built-in random value generator will be used.
+		 * @return An ID assigned to new data. std::nullopt if the container already reached max_size.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 */
+		std::optional<id_type> try_assign_id_and_add(Data&& data, const size_t max_size,
+			std::function<id_type()>&& random_id_generator = generate_random_id<id_type>) {
+			std::lock_guard lock(mutex_);
+			if (data_map_.size() >= max_size) { return std::nullopt; }
+			return assign_id_and_add_impl(data, random_id_generator);
+		}
+
+		/**
+		 * Add new data with automatically assigned ID only if the current size is below max_size.
+		 *
+		 * @param data Data to add.
+		 * @param max_size Maximum number of data allowed in this container.
+		 * @param random_id_generator (optional) A functions to generate new ID. In default, built-in random value generator will be used.
+		 * @return An ID assigned to new data. std::nullopt if the container already reached max_size.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 */
+		std::optional<id_type> try_assign_id_and_add(const Data& data, const size_t max_size,
+			std::function<id_type()>&& random_id_generator = generate_random_id<id_type>) {
+			return try_assign_id_and_add(Data{data}, max_size, std::move(random_id_generator));
+		}
+
+		/**
 		 * Get data by ID.
 		 * 
 		 * @param id ID to get data.
@@ -191,6 +227,64 @@ namespace pgl {
 		}
 
 		/**
+		 * Get data by ID if it exists.
+		 *
+		 * @param id ID to get data.
+		 * @return Data which has passed ID. std::nullopt if a data with passed ID does not exist.
+		 */
+		[[nodiscard]] std::optional<Data> try_get(id_param_type id) const {
+			std::shared_lock lock(mutex_);
+			const auto it = data_map_.find(id);
+			if (it == data_map_.end()) { return std::nullopt; }
+			return it->second.load();
+		}
+
+		/**
+		 * Update existing data under one exclusive lock.
+		 *
+		 * @param id ID to update data.
+		 * @param update_function A function to update the copied data. Do not call this container from it.
+		 * @return Updated data. std::nullopt if a data with passed ID does not exist.
+		 * @throw unique_variable_duplication_error Unique member variable is duplicated.
+		 */
+		template <typename UpdateFunction>
+		std::optional<Data> try_update(id_param_type id, UpdateFunction&& update_function) {
+			std::lock_guard lock(mutex_);
+			const auto it = data_map_.find(id);
+			if (it == data_map_.end()) { return std::nullopt; }
+
+			auto data = it->second.load();
+			update_function(data);
+			data.*IdMemberVariable = id;
+			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
+
+			it->second.store(data);
+			unique_variables_.add_or_update_variables(data);
+			return data;
+		}
+
+		/**
+		 * Remove existing data under one exclusive lock if remove_function allows it.
+		 *
+		 * @param id ID to remove data.
+		 * @param remove_function A function to check the copied data. Do not call this container from it.
+		 * @return Removed data. std::nullopt if a data with passed ID does not exist or remove_function returns false.
+		 */
+		template <typename RemoveFunction>
+		std::optional<Data> try_remove_if(id_param_type id, RemoveFunction&& remove_function) {
+			std::lock_guard lock(mutex_);
+			const auto it = data_map_.find(id);
+			if (it == data_map_.end()) { return std::nullopt; }
+
+			const auto data = it->second.load();
+			if (!remove_function(data)) { return std::nullopt; }
+
+			unique_variables_.remove_variables(id);
+			data_map_.erase(it);
+			return data;
+		}
+
+		/**
 		 * Search data by filter and return sorted result.
 		 *
 		 * @param compare_function A function used to sort.
@@ -200,18 +294,33 @@ namespace pgl {
 		[[nodiscard]] std::vector<Data> search(
 			std::function<bool(data_param_type, data_param_type)>&& compare_function,
 			std::function<bool(data_param_type)>&& filter_function) const {
-			std::vector<Data> data;
+			auto result = search_with_total(std::move(compare_function), std::move(filter_function));
+			return std::move(result.data);
+		}
+
+		/**
+		 * Search data by filter and return sorted result with total count from the same locked snapshot.
+		 *
+		 * @param compare_function A function used to sort.
+		 * @param filter_function A function used to filter.
+		 * @return A list of data and the total number of data at the time the list was collected.
+		 */
+		[[nodiscard]] search_result search_with_total(
+			std::function<bool(data_param_type, data_param_type)>&& compare_function,
+			std::function<bool(data_param_type)>&& filter_function) const {
+			search_result result;
 			{
 				std::shared_lock lock(mutex_);
-				data.reserve(data_map_.size());
+				result.total_count = data_map_.size();
+				result.data.reserve(result.total_count);
 				for (auto&& pair : data_map_) {
 					if (const auto data_elem = pair.second.load(); filter_function(data_elem)) {
-						data.push_back(data_elem);
+						result.data.push_back(data_elem);
 					}
 				}
 			}
-			std::sort(data.begin(), data.end(), compare_function);
-			return data;
+			std::sort(result.data.begin(), result.data.end(), compare_function);
+			return result;
 		}
 
 		/**
@@ -262,7 +371,11 @@ namespace pgl {
 		 *
 		 * @return The number of data.
 		 */
-		[[nodiscard]] size_t size() const { return data_map_.size(); }
+		[[nodiscard]] size_t size() const {
+			// Reading unordered_map::size can race with writers, so protect it like other read operations.
+			std::shared_lock lock(mutex_);
+			return data_map_.size();
+		}
 
 	private:
 		std::unordered_map<id_type, std::atomic<Data>> data_map_;
@@ -270,5 +383,19 @@ namespace pgl {
 		mutable std::shared_mutex mutex_;
 
 		static id_type get_id(const data_param_type data) { return data.*IdMemberVariable; }
+
+		id_type assign_id_and_add_impl(Data& data, const std::function<id_type()>& random_id_generator) {
+			id_type id{};
+			do { id = random_id_generator(); }
+			while (data_map_.contains(id));
+			data.*IdMemberVariable = id;
+
+			// Check if unique because ensure id of passed data is not duplicate existing id
+			if (!unique_variables_.is_unique(data)) { throw unique_variable_duplication_error(); }
+
+			auto&& [it,_] = data_map_.emplace(id, data);
+			unique_variables_.add_or_update_variables(it->second);
+			return id;
+		}
 	};
 }

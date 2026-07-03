@@ -37,14 +37,6 @@ namespace pgl {
 			throw client_error(client_error_code::client_already_hosting_room, false, error_message);
 		}
 
-		// Check if room count reached limit
-		if (room_data_container.size() == param->server_setting.common.max_room_count) {
-			const auto error_message = generate_string("Failed to create new room with player\"",
-				param->session_data.client_player_name().generate_full_name(),
-				"\" because room count reaches max.");
-			throw client_error(client_error_code::room_count_exceeds_limit, false, error_message);
-		}
-
 		try {
 			// Create requested room
 			const auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
@@ -52,7 +44,7 @@ namespace pgl {
 			game_host_endpoint.port_number = message.port_number;
 			const auto is_public = message.password.length() == 0;
 			const room_data room_data{
-				{}, // assign in room_data_container.assign_id_and_add(room_data)
+				{}, // assign in room_data_container.try_assign_id_and_add(room_data, max_room_count)
 				param->session_data.client_player_name(),
 				(is_public ? room_setting_flag::public_room : room_setting_flag::none) |
 				room_setting_flag::open_room,
@@ -66,9 +58,16 @@ namespace pgl {
 				1
 			};
 
-			create_room_reply_message reply{
-				room_data_container.assign_id_and_add(room_data)
-			};
+			const auto room_id = room_data_container.try_assign_id_and_add(room_data,
+				param->server_setting.common.max_room_count);
+			if (!room_id.has_value()) {
+				const auto error_message = generate_string("Failed to create new room with player\"",
+					param->session_data.client_player_name().generate_full_name(),
+					"\" because room count reaches max.");
+				throw client_error(client_error_code::room_count_exceeds_limit, false, error_message);
+			}
+
+			create_room_reply_message reply{*room_id};
 
 			log_with_endpoint(log_level::info, param->socket.remote_endpoint(), "New ",
 				is_public ? "public" : "private", " room for player \"",

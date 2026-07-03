@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include <boost/asio.hpp>
@@ -15,15 +16,16 @@ namespace pgl {
 	class server_thread final : boost::noncopyable {
 	public:
 		server_thread(boost::asio::ip::tcp::acceptor& acceptor,
-			server_data& server_data, const server_setting& server_setting);
+			std::mutex& acceptor_mutex, server_data& server_data, const server_setting& server_setting);
 		void start();
 		void stop();
 	private:
 		boost::asio::ip::tcp::acceptor& acceptor_;
+		std::mutex& acceptor_mutex_;
 		server_data& server_data_;
 		const server_setting& server_setting_;
 
-		std::unique_ptr<message_handler_invoker> message_handler_invoker_;
+		std::shared_ptr<const message_handler_invoker> message_handler_invoker_;
 		std::vector<std::shared_ptr<server_session>> server_sessions_;
 	};
 }

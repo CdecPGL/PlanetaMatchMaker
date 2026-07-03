@@ -1,4 +1,7 @@
 #include <array>
+#include <atomic>
+#include <thread>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -62,6 +65,24 @@ const auto data4 = test_struct1{
 	100, 1.2f, true, {6, 7, 8}, u8"test4", 4
 };
 
+struct concurrent_test_struct final {
+	uint32_t id;
+	uint32_t unique;
+	uint32_t value;
+
+	bool operator==(const concurrent_test_struct& other) const {
+		return id == other.id && unique == other.unique && value == other.value;
+	}
+};
+
+std::ostream& operator<<(std::ostream& os, const concurrent_test_struct& d) {
+	os << nameof::nameof_type<concurrent_test_struct>() << "{" << d.id << "," << d.unique << "," << d.value << "}";
+	return os;
+}
+
+using concurrent_container_t = thread_safe_data_container<concurrent_test_struct, &concurrent_test_struct::id, &
+	concurrent_test_struct::unique>;
+
 BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 	////////////////////////////////
 	// add_or_update, get 
@@ -111,6 +132,25 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		BOOST_CHECK_EQUAL(actual2, updated_data2);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_update_releases_previous_unique_variable) {
+		// set up
+		auto container = container_t();
+		auto updated_data1 = data3;
+		updated_data1.id = data1.id;
+		auto data_using_old_unique1 = test_struct1{19, -13.2f, false, {64, 47, 84}, data1.unique1, 10};
+		container.add_or_update(data1);
+		container.add_or_update(data2);
+		container.add_or_update(updated_data1);
+
+		// exercise
+		const auto result = container.add_or_update(data_using_old_unique1);
+		const auto actual = container.get(data_using_old_unique1.id);
+
+		// verify
+		BOOST_CHECK_EQUAL(result, true);
+		BOOST_CHECK_EQUAL(actual, data_using_old_unique1);
+	}
+
 	BOOST_DATA_TEST_CASE(test_add_already_exist_unique_variable, unit_test::data::make({
 		// id is different but unique variable1 is duplicated
 		test_struct1{19, -13.2f, false, {64, 47, 84}, u8"test1", 0},
@@ -137,6 +177,81 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 
 		// verify
 		BOOST_CHECK_EQUAL(actual1, data1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_try_update_for_exist_data) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		const auto result = container.try_update(data1.id, [](auto& data) {
+			data.value1 = data3.value1;
+			data.unique1 = data3.unique1;
+			data.unique2 = data3.unique2;
+		});
+		auto expected = data1;
+		expected.value1 = data3.value1;
+		expected.unique1 = data3.unique1;
+		expected.unique2 = data3.unique2;
+
+		// verify
+		BOOST_REQUIRE(result.has_value());
+		BOOST_CHECK_EQUAL(*result, expected);
+		BOOST_CHECK_EQUAL(container.get(data1.id), expected);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_try_update_for_not_exist_data) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		const auto result = container.try_update(data2.id, [](auto& data) { data.value1 = 9.8f; });
+
+		// verify
+		BOOST_CHECK(!result.has_value());
+		BOOST_CHECK(!container.contains(data2.id));
+	}
+
+	BOOST_AUTO_TEST_CASE(test_concurrent_add_or_update_and_search) {
+		// set up
+		auto container = concurrent_container_t();
+		constexpr auto thread_count = 8u;
+		constexpr auto data_count_per_thread = 500u;
+		std::atomic<bool> can_start = false;
+		std::atomic<unsigned> exception_count = 0;
+		std::vector<std::thread> threads;
+		threads.reserve(thread_count);
+
+		// exercise
+		for (auto thread_index = 0u; thread_index < thread_count; ++thread_index) {
+			threads.emplace_back([&, thread_index] {
+				while (!can_start.load(std::memory_order_acquire)) { std::this_thread::yield(); }
+
+				try {
+					for (auto data_index = 0u; data_index < data_count_per_thread; ++data_index) {
+						const auto id = thread_index * data_count_per_thread + data_index + 1u;
+						container.add_or_update(concurrent_test_struct{id, id, id * 2u});
+
+						if (data_index % 16u == 0u) {
+							[[maybe_unused]] const auto _ = container.search(
+								[](const auto& l, const auto& r) { return l.id < r.id; },
+								[](const auto&) { return true; }
+							);
+						}
+					}
+				}
+				catch (...) { ++exception_count; }
+			});
+		}
+
+		can_start.store(true, std::memory_order_release);
+		for (auto& thread : threads) { thread.join(); }
+
+		// verify
+		BOOST_CHECK_EQUAL(exception_count.load(), 0u);
+		BOOST_CHECK_EQUAL(container.size(), thread_count * data_count_per_thread);
 	}
 
 	////////////////////////////////
@@ -181,6 +296,77 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 			unique_variable_duplication_error);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_try_assign_id_and_add_under_limit) {
+		// set up
+		auto container = container_t();
+		auto non_const_data1 = data1;
+
+		// exercise
+		const auto result = container.try_assign_id_and_add(non_const_data1, 1,
+			[] { return static_cast<uint8_t>(1); });
+
+		// verify
+		BOOST_REQUIRE(result.has_value());
+		BOOST_CHECK_EQUAL(*result, 1);
+		non_const_data1.id = *result;
+		BOOST_CHECK_EQUAL(container.get(*result), non_const_data1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_try_assign_id_and_add_reached_limit) {
+		// set up
+		auto container = container_t();
+		auto non_const_data1 = data1;
+		auto non_const_data2 = data2;
+		container.try_assign_id_and_add(non_const_data1, 1, [] { return static_cast<uint8_t>(1); });
+
+		// exercise
+		const auto result = container.try_assign_id_and_add(non_const_data2, 1,
+			[] { return static_cast<uint8_t>(2); });
+
+		// verify
+		BOOST_CHECK(!result.has_value());
+		BOOST_CHECK_EQUAL(container.size(), 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_concurrent_try_assign_id_and_add_does_not_exceed_limit) {
+		// set up
+		auto container = concurrent_container_t();
+		constexpr auto thread_count = 8u;
+		constexpr auto data_count_per_thread = 100u;
+		constexpr auto max_count = 250u;
+		std::atomic<bool> can_start = false;
+		std::atomic<unsigned> success_count = 0;
+		std::atomic<unsigned> exception_count = 0;
+		std::atomic<uint32_t> next_value = 1;
+		std::vector<std::thread> threads;
+		threads.reserve(thread_count);
+
+		// exercise
+		for (auto thread_index = 0u; thread_index < thread_count; ++thread_index) {
+			threads.emplace_back([&] {
+				while (!can_start.load(std::memory_order_acquire)) { std::this_thread::yield(); }
+
+				try {
+					for (auto data_index = 0u; data_index < data_count_per_thread; ++data_index) {
+						const auto value = next_value.fetch_add(1, std::memory_order_relaxed);
+						auto data = concurrent_test_struct{0, value, value * 2u};
+						const auto result = container.try_assign_id_and_add(data, max_count, [value] { return value; });
+						if (result.has_value()) { success_count.fetch_add(1, std::memory_order_relaxed); }
+					}
+				}
+				catch (...) { exception_count.fetch_add(1, std::memory_order_relaxed); }
+			});
+		}
+
+		can_start.store(true, std::memory_order_release);
+		for (auto& thread : threads) { thread.join(); }
+
+		// verify
+		BOOST_CHECK_EQUAL(exception_count.load(), 0u);
+		BOOST_CHECK_EQUAL(success_count.load(), max_count);
+		BOOST_CHECK_EQUAL(container.size(), max_count);
+	}
+
 	////////////////////////////////
 	// get 
 	////////////////////////////////
@@ -193,6 +379,35 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 		// exercise and verify
 		// ReSharper disable once CppNoDiscardExpression
 		BOOST_CHECK_THROW(container.get(9), std::out_of_range); // NOLINT(clang-diagnostic-unused-result)
+	}
+
+	////////////////////////////////
+	// try_get
+	////////////////////////////////
+
+	BOOST_AUTO_TEST_CASE(test_try_get_for_exist_data) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		const auto result = container.try_get(data1.id);
+
+		// verify
+		BOOST_REQUIRE(result.has_value());
+		BOOST_CHECK_EQUAL(*result, data1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_try_get_for_not_exist_data) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		const auto result = container.try_get(data2.id);
+
+		// verify
+		BOOST_CHECK(!result.has_value());
 	}
 
 	////////////////////////////////
@@ -321,6 +536,46 @@ BOOST_AUTO_TEST_SUITE(thread_safe_data_container_test)
 
 		// verify
 		BOOST_CHECK_EQUAL(result, false);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_try_remove_if_for_exist_data) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		const auto result = container.try_remove_if(data1.id, [](const auto&) { return true; });
+
+		// verify
+		BOOST_REQUIRE(result.has_value());
+		BOOST_CHECK_EQUAL(*result, data1);
+		BOOST_CHECK(!container.contains(data1.id));
+	}
+
+	BOOST_AUTO_TEST_CASE(test_try_remove_if_for_not_exist_data) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		const auto result = container.try_remove_if(data2.id, [](const auto&) { return true; });
+
+		// verify
+		BOOST_CHECK(!result.has_value());
+		BOOST_CHECK(container.contains(data1.id));
+	}
+
+	BOOST_AUTO_TEST_CASE(test_try_remove_if_when_rejected) {
+		// set up
+		auto container = container_t();
+		container.add_or_update(data1);
+
+		// exercise
+		const auto result = container.try_remove_if(data1.id, [](const auto&) { return false; });
+
+		// verify
+		BOOST_CHECK(!result.has_value());
+		BOOST_CHECK(container.contains(data1.id));
 	}
 
 	////////////////////////////////

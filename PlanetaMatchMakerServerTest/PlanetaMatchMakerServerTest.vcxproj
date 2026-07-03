@@ -74,7 +74,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)obj\$(Platform)\$(Configuration)\PlanetaMatchMakerServer\;$(SolutionDir)obj\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>datetime.obj;server_setting.obj;log.obj;network_layer.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>datetime.obj;server_setting.obj;log.obj;network_layer.obj;player_full_name.obj;room_data.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -100,13 +100,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)obj\$(Platform)\$(Configuration)\PlanetaMatchMakerServer\;$(SolutionDir)obj\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>datetime.obj;server_setting.obj;log.obj;network_layer.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>datetime.obj;server_setting.obj;log.obj;network_layer.obj;player_full_name.obj;room_data.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="checked_static_cast_test.cpp" />
     <ClCompile Include="datetime_test.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="room_data_container_test.cpp" />
     <ClCompile Include="serialize_pack_test.cpp" />
     <ClCompile Include="server_setting_test.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

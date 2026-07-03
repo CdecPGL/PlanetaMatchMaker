@@ -9,7 +9,8 @@ namespace pgl {
 	// convert string to log level thead safely. If str is invalid, throws std::out_of_range.
 	log_level string_to_log_level(const std::string& str);
 
-	// Add logger. (not thread safe)
+	// Add logger. This is safe to call while log functions may run.
+	// Added loggers are retained for the process lifetime.
 	void add_logger(std::unique_ptr<logger>&& logger);
 
 	// Implementation of thread safe log function.

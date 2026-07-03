@@ -1,4 +1,6 @@
 #include <boost/thread.hpp>
+#include <exception>
+#include <mutex>
 
 #include "server.hpp"
 
@@ -31,15 +33,27 @@ namespace pgl {
 
 		log(log_level::info, "Start ", server_setting_->common.thread, " threads.");
 
+		std::mutex exception_mutex;
+		std::exception_ptr first_exception;
 		thread_group thread_group;
 		for (auto i = 0u; i < server_setting_->common.thread; ++i) {
 			thread_group.create_thread([&]() {
-				server_thread server_thread(acceptor_, *server_data_, *server_setting_);
-				server_thread.start();
-				io_service_.run();
+				try {
+					server_thread server_thread(acceptor_, acceptor_mutex_, *server_data_, *server_setting_);
+					server_thread.start();
+					io_service_.run();
+				}
+				catch (...) {
+					{
+						std::lock_guard lock(exception_mutex);
+						if (!first_exception) { first_exception = std::current_exception(); }
+					}
+					io_service_.stop();
+				}
 			});
 		}
 
 		thread_group.join_all();
+		if (first_exception) { std::rethrow_exception(first_exception); }
 	}
 }
