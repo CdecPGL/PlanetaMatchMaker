@@ -31,6 +31,7 @@ namespace pgl::test {
 	using tcp = boost::asio::ip::tcp;
 
 	constexpr auto public_open_room = pgl::room_setting_flag::public_room | pgl::room_setting_flag::open_room;
+	constexpr auto packed_read_timeout = std::chrono::seconds(5);
 
 	void write_packed(tcp::socket& socket, const auto&... data) {
 		auto buffer = pgl::pack_data(data...);
@@ -40,6 +41,13 @@ namespace pgl::test {
 	template <typename T>
 	T read_packed(tcp::socket& socket) {
 		std::vector<uint8_t> buffer(pgl::get_packed_size<T>());
+		const auto deadline = std::chrono::steady_clock::now() + packed_read_timeout;
+		while (socket.available() < buffer.size()) {
+			if (std::chrono::steady_clock::now() >= deadline) {
+				throw std::runtime_error("Timed out waiting for packed test reply data.");
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
 		boost::asio::read(socket, boost::asio::buffer(buffer), boost::asio::transfer_exactly(buffer.size()));
 		T data{};
 		pgl::unpack_data(buffer, data);
@@ -273,6 +281,37 @@ namespace pgl::test {
 		std::array<char, 64> buffer_{};
 		pgl::port_number_type port_{};
 		std::thread thread_;
+	};
+
+	class udp_port_guard final {
+	public:
+		udp_port_guard():
+			socket_(io) {
+			for (auto port = pgl::port_number_type{49152}; port < 65535; ++port) {
+				boost::system::error_code error;
+				socket_.open(boost::asio::ip::udp::v4(), error);
+				if (error) { continue; }
+				socket_.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::loopback(), port), error);
+				if (!error) {
+					port_ = port;
+					break;
+				}
+				socket_.close();
+			}
+			if (port_ == 0) { throw std::runtime_error("No available dynamic/private UDP port."); }
+		}
+
+		~udp_port_guard() {
+			boost::system::error_code ignored_error;
+			socket_.close(ignored_error);
+		}
+
+		[[nodiscard]] pgl::port_number_type port() const { return port_; }
+
+	private:
+		boost::asio::io_context io;
+		boost::asio::ip::udp::socket socket_;
+		pgl::port_number_type port_{};
 	};
 
 	inline pgl::port_number_type find_unused_dynamic_private_tcp_port() {

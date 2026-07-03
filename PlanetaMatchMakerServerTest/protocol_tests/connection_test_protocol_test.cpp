@@ -81,12 +81,13 @@ BOOST_AUTO_TEST_SUITE(connection_test_protocol_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_connection_test_request_replies_failure_for_unreachable_udp_endpoint) {
+		udp_port_guard port_guard;
 		protocol_context context;
 		context.setting.connection_test.connection_check_udp_time_out_seconds = 1;
 		context.setting.connection_test.connection_check_udp_try_count = 1;
 		const pgl::connection_test_request_message request{
 			pgl::transport_protocol::udp,
-			find_unused_dynamic_private_tcp_port()
+			port_guard.port()
 		};
 		protocol_handler_run handler(context, pgl::message_type::connection_test);
 
