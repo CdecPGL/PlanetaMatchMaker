@@ -20,7 +20,7 @@ Follow `.editorconfig`. Files use UTF-8 and LF endings. Default indentation is t
 
 ## Testing Guidelines
 
-Add C++ tests beside related coverage in `PlanetaMatchMakerServerTest`, naming files like `server_setting_test.cpp`. Add C# tests in `PlanetaMatchMakerClientTest/Source`, using MSTest classes and methods with clear behavior names. Run the relevant test command before submitting changes, and treat any build or test warnings as issues to fix before considering validation complete. Resolve all build warnings; do not leave warning output in accepted changes. Use `../tools/coverage.sh` from a Linux build directory when coverage data is needed.
+Add C++ tests beside related coverage in `PlanetaMatchMakerServerTest`, naming files like `server_setting_test.cpp`. Keep pure C++ unit tests under `PlanetaMatchMakerServerTest/unit_tests`, and keep protocol compliance tests under `PlanetaMatchMakerServerTest/protocol_tests`. For `protocol_tests`, treat specification coverage as the quality gate: tests should cover 100% of the documented protocol specification, including success cases, error codes, disconnect behavior, and no-reply notice behavior. Add C# tests in `PlanetaMatchMakerClientTest/Source`, using MSTest classes and methods with clear behavior names. Run the relevant test command before submitting changes, and treat any build or test warnings as issues to fix before considering validation complete. Resolve all build warnings; do not leave warning output in accepted changes. Use `../tools/coverage.sh` from a Linux build directory when coverage data is needed.
 
 ## Commit & Pull Request Guidelines
 

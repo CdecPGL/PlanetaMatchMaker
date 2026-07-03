@@ -4,7 +4,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "../PlanetaMatchMakerServer/source/room/room_data_container.hpp"
+#include "../../PlanetaMatchMakerServer/source/room/room_data_container.hpp"
 
 using namespace pgl;
 
