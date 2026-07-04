@@ -25,11 +25,11 @@ Before build image, push changes to master branch.
 In repogitory root, run following command.
 
 ```bash
-docker build -t cdec/planeta-match-maker-server:0.3.1 Docker/server/ --no-cache
+docker build -t cdec/planeta-match-maker-server:1.0.0 Docker/server/ --no-cache
 ```
 
 ### Push
 
 ```bash
-docker push cdec/planeta-match-maker-server:0.3.1
+docker push cdec/planeta-match-maker-server:1.0.0
 ```
