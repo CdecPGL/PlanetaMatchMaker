@@ -17,7 +17,7 @@ namespace PlanetaGameLabo.MatchMaker
             StandardCommandOptions options,
             CancellationToken cancellationToken)
         {
-            NatPortMappingCreator.ReleaseCreatedPortMappings();
+            await NatPortMappingCreator.ReleaseCreatedPortMappingsAsync();
             OutputStream.WriteLine("Port mappings are released.");
             OutputStream.WriteLine("Note: this command doesn't check errors.");
         }

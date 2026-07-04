@@ -264,9 +264,9 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Release created port mappings if exist.
         /// </summary>
-        public static void ReleaseCreatedPortMappings()
+        public static async Task ReleaseCreatedPortMappingsAsync()
         {
-            NatDiscoverer.ReleaseSessionMappings();
+            await NatDiscoverer.ReleaseSessionMappingsAsync().ConfigureAwait(false);
         }
 
         private NatDevice natDevice;

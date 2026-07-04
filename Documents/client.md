@@ -7,5 +7,11 @@ In .Net Framework, port mappings created in the aplication are released automati
 But, in .Net Core, port mappings are not released due to [Open.NAT behavior](https://github.com/lontivero/Open.NAT/issues/94).
 ([This page](https://stackoverflow.com/questions/44732234/why-does-the-finalize-destructor-example-not-work-in-net-core) is also helphul)
 
-Call NatPortMappingCreator.ReleaseCreatedPortMappings method manually to ensure to release port mappings created in the application which uses .Net Core.
+Call NatPortMappingCreator.ReleaseCreatedPortMappingsAsync method manually to ensure to release port mappings created in the application which uses .Net Core.
 (Even if you don'y release them manually, port mappings will be released affer 10 minuites if NAT device suports lifetime of port mapping.)
+
+Unity PlanetaMatchMakerClient releases created port mappings automatically when the component receives OnDestroy if releaseCreatedPortMappingsOnDestroy is true. This option is enabled by default.
+
+The OnDestroy release waits up to 5 seconds. If NAT device doesn't respond in 5 seconds, application quit continues without waiting for the release to finish.
+
+Unity may be unable to call OnDestroy on some platforms or lifecycle paths, such as mobile process kill after suspend or Web platform tab close. Call PlanetaMatchMakerClient.ReleaseCreatedPortMappingsAsync or PlanetaMatchMakerClient.ReleaseCreatedPortMappings manually before those platform-specific exits if required.
