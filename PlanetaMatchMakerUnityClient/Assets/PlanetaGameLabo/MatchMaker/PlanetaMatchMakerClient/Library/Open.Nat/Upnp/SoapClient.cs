@@ -30,6 +30,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -83,14 +84,7 @@ namespace Open.Nat
 			{
 				using (WebResponse response = task.Result)
 				{
-					var stream = response.GetResponseStream();
-					var contentLength = response.ContentLength;
-
-					var reader = new StreamReader(stream, Encoding.UTF8);
-
-					var responseBody = contentLength != -1
-						? reader.ReadAsMany((int)contentLength)
-						: reader.ReadToEnd();
+					var responseBody = response.ReadXmlResponseBody();
 
 					var responseXml = GetXmlDocument(responseBody);
 
@@ -117,14 +111,7 @@ namespace Open.Nat
 
 			using(var response = await GetWebResponse(request))
 			{
-				var stream = response.GetResponseStream();
-				var contentLength = response.ContentLength;
-
-				var reader = new StreamReader(stream, Encoding.UTF8);
-
-				var responseBody = contentLength != -1
-									? reader.ReadAsMany((int) contentLength)
-									: reader.ReadToEnd();
+				var responseBody = response.ReadXmlResponseBody();
 
 				var responseXml = GetXmlDocument(responseBody);
 
@@ -197,6 +184,7 @@ namespace Open.Nat
 #else
 			var request = WebRequest.CreateHttp(_url);
 #endif
+			request.AllowAutoRedirect = false;
 			request.KeepAlive = false;
 			request.Method = "POST";
 			request.ContentType = "text/xml; charset=\"utf-8\"";
@@ -215,7 +203,7 @@ namespace Open.Nat
 			sb.AppendLine("	  <u:" + operationName + " xmlns:u=\"" + _serviceType + "\">");
 			foreach (var a in args)
 			{
-				sb.AppendLine("		 <" + a.Key + ">" + Convert.ToString(a.Value, CultureInfo.InvariantCulture) +
+				sb.AppendLine("		 <" + a.Key + ">" + SecurityElement.Escape(Convert.ToString(a.Value, CultureInfo.InvariantCulture)) +
 							  "</" + a.Key + ">");
 			}
 			sb.AppendLine("	  </u:" + operationName + ">");
@@ -227,11 +215,10 @@ namespace Open.Nat
 			return messageBody;
 		}
 
-		private XmlDocument GetXmlDocument(string response)
+		private static XmlDocument GetXmlDocument(string response)
 		{
 			XmlNode node;
-			var doc = new XmlDocument();
-			doc.LoadXml(response);
+			var doc = StreamExtensions.GetXmlDocument(response);
 
 			var nsm = new XmlNamespaceManager(doc.NameTable);
 

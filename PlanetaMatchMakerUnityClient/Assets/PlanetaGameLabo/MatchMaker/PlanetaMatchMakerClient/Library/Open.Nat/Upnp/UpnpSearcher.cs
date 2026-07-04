@@ -28,6 +28,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -153,17 +154,22 @@ namespace Open.Nat
 				dataString = Encoding.UTF8.GetString(response);
 				var message = new DiscoveryResponseMessage(dataString);
 				var serviceType = message["ST"];
+				string validatedServiceType;
 
-				if (!IsValidControllerService(serviceType))
+				if (!TryGetValidControllerService(serviceType, out validatedServiceType))
 				{
 					NatDiscoverer.TraceSource.LogWarn("Invalid controller service. Ignoring.");
 
 					return null;
 				}
+				serviceType = validatedServiceType;
 				NatDiscoverer.TraceSource.LogInfo("UPnP Response: Router advertised a '{0}' service!!!", serviceType);
 
-				var location = message["Location"] ?? message["AL"];
-				var locationUri = new Uri(location);
+				var locationUri = GetValidatedLocationUri(message, endpoint);
+				if (locationUri == null)
+				{
+					return null;
+				}
 				NatDiscoverer.TraceSource.LogInfo("Found device at: {0}", locationUri.ToString());
 
 				if (_devices.ContainsKey(locationUri))
@@ -212,14 +218,208 @@ namespace Open.Nat
 			return null;
 		}
 
-		private static bool IsValidControllerService(string serviceType)
+		private static bool TryGetValidControllerService(string serviceType, out string serviceUrn)
 		{
-			var services = from serviceName in ServiceTypes
-						   let serviceUrn = string.Format("urn:schemas-upnp-org:service:{0}", serviceName)
-						   where serviceType.ContainsIgnoreCase(serviceUrn)
-						   select new {ServiceName = serviceName, ServiceUrn = serviceUrn};
+			serviceUrn = null;
+			if (serviceType == null)
+			{
+				return false;
+			}
 
-			return services.Any();
+			var normalizedServiceType = serviceType.Trim();
+			var services = from serviceName in ServiceTypes
+						   let candidateServiceUrn = "urn:schemas-upnp-org:service:" + serviceName
+						   where string.Equals(normalizedServiceType, candidateServiceUrn, StringComparison.OrdinalIgnoreCase)
+						   select candidateServiceUrn;
+
+			serviceUrn = services.FirstOrDefault();
+			return serviceUrn != null;
+		}
+
+		private static Uri GetValidatedLocationUri(DiscoveryResponseMessage message, IPEndPoint endpoint)
+		{
+			string location;
+			if (!message.TryGetValue("Location", out location) && !message.TryGetValue("AL", out location))
+			{
+				NatDiscoverer.TraceSource.LogWarn("UPnP response did not include a location. Ignoring.");
+				return null;
+			}
+
+			Uri locationUri;
+			if (!Uri.TryCreate(location, UriKind.Absolute, out locationUri))
+			{
+				NatDiscoverer.TraceSource.LogWarn("UPnP location is not an absolute URI. Ignoring: {0}", location);
+				return null;
+			}
+
+			if (!string.Equals(locationUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+			{
+				NatDiscoverer.TraceSource.LogWarn("UPnP location scheme is not supported. Ignoring: {0}", locationUri.Scheme);
+				return null;
+			}
+
+			IPAddress locationAddress;
+			if (!TryGetCanonicalLocationHostAddress(location, out locationAddress))
+			{
+				NatDiscoverer.TraceSource.LogWarn("UPnP location host is not an IP address. Ignoring: {0}", locationUri.Host);
+				return null;
+			}
+
+			if (!AreSameDeviceAddress(locationAddress, endpoint.Address))
+			{
+				NatDiscoverer.TraceSource.LogWarn(
+					"UPnP location host does not match the SSDP response address. Ignoring: {0} != {1}",
+					locationAddress, endpoint.Address);
+				return null;
+			}
+
+			return locationUri;
+		}
+
+		private static bool TryGetCanonicalLocationHostAddress(string location, out IPAddress address)
+		{
+			address = null;
+
+			if (location == null)
+			{
+				return false;
+			}
+
+			var trimmedLocation = location.Trim();
+			var schemeSeparatorIndex = trimmedLocation.IndexOf("://", StringComparison.Ordinal);
+			if (schemeSeparatorIndex < 0)
+			{
+				return false;
+			}
+
+			var authorityStartIndex = schemeSeparatorIndex + 3;
+			var authorityEndIndex = trimmedLocation.IndexOfAny(new[] {'/', '?', '#'}, authorityStartIndex);
+			if (authorityEndIndex < 0)
+			{
+				authorityEndIndex = trimmedLocation.Length;
+			}
+
+			var authority = trimmedLocation.Substring(authorityStartIndex, authorityEndIndex - authorityStartIndex);
+			if (authority.Length == 0 || authority.IndexOf('@') >= 0)
+			{
+				return false;
+			}
+
+			string host;
+			if (authority[0] == '[')
+			{
+				var hostEndIndex = authority.IndexOf(']');
+				if (hostEndIndex < 0)
+				{
+					return false;
+				}
+
+				host = authority.Substring(1, hostEndIndex - 1);
+				var remainder = authority.Substring(hostEndIndex + 1);
+				if (!IsValidPortSuffix(remainder) || host.IndexOf('%') >= 0)
+				{
+					return false;
+				}
+
+				if (!IPAddress.TryParse(host, out address) || address.AddressFamily != AddressFamily.InterNetworkV6 ||
+					address.IsIPv4MappedToIPv6)
+				{
+					return false;
+				}
+
+				return true;
+			}
+
+			var colonIndex = authority.IndexOf(':');
+			if (colonIndex >= 0)
+			{
+				if (authority.IndexOf(':', colonIndex + 1) >= 0)
+				{
+					return false;
+				}
+
+				host = authority.Substring(0, colonIndex);
+				if (!IsValidPortSuffix(authority.Substring(colonIndex)))
+				{
+					return false;
+				}
+			}
+			else
+			{
+				host = authority;
+			}
+
+			return TryParseCanonicalIPv4Host(host, out address);
+		}
+
+		private static bool IsValidPortSuffix(string portSuffix)
+		{
+			if (portSuffix.Length == 0)
+			{
+				return true;
+			}
+
+			if (portSuffix[0] != ':' || portSuffix.Length == 1)
+			{
+				return false;
+			}
+
+			var portText = portSuffix.Substring(1);
+			if (portText.Any(c => c < '0' || c > '9'))
+			{
+				return false;
+			}
+
+			int port;
+			return int.TryParse(portText, NumberStyles.None, CultureInfo.InvariantCulture, out port) &&
+				port >= IPEndPoint.MinPort &&
+				port <= IPEndPoint.MaxPort;
+		}
+
+		private static bool TryParseCanonicalIPv4Host(string host, out IPAddress address)
+		{
+			address = null;
+			var parts = host.Split('.');
+			if (parts.Length != 4)
+			{
+				return false;
+			}
+
+			var bytes = new byte[4];
+			for (var index = 0; index < parts.Length; ++index)
+			{
+				var part = parts[index];
+				if (part.Length == 0 || (part.Length > 1 && part[0] == '0') || part.Any(c => c < '0' || c > '9'))
+				{
+					return false;
+				}
+
+				int value;
+				if (!int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out value) ||
+					value < byte.MinValue ||
+					value > byte.MaxValue)
+				{
+					return false;
+				}
+
+				bytes[index] = (byte)value;
+			}
+
+			address = new IPAddress(bytes);
+			return string.Equals(address.ToString(), host, StringComparison.Ordinal);
+		}
+
+		private static bool AreSameDeviceAddress(IPAddress left, IPAddress right)
+		{
+			left = NormalizeAddress(left);
+			right = NormalizeAddress(right);
+
+			return left.AddressFamily == right.AddressFamily && left.GetAddressBytes().SequenceEqual(right.GetAddressBytes());
+		}
+
+		private static IPAddress NormalizeAddress(IPAddress address)
+		{
+			return address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
 		}
 
 		private UpnpNatDeviceInfo BuildUpnpNatDeviceInfo(IPAddress localAddress, Uri location)
@@ -232,10 +432,11 @@ namespace Open.Nat
 			try
 			{
 #if NET35
-				var request = WebRequest.Create(location);
+				var request = (HttpWebRequest)WebRequest.Create(location);
 #else
 				var request = WebRequest.CreateHttp(location);
 #endif
+				request.AllowAutoRedirect = false;
 				request.Headers.Add("ACCEPT-LANGUAGE", "en");
 				request.Method = "GET";
 
@@ -260,7 +461,9 @@ namespace Open.Nat
 				foreach (XmlNode service in services)
 				{
 					var serviceType = service.GetXmlElementText("serviceType");
-					if (!IsValidControllerService(serviceType)) continue;
+					string validatedServiceType;
+					if (!TryGetValidControllerService(serviceType, out validatedServiceType)) continue;
+					serviceType = validatedServiceType;
 
 					NatDiscoverer.TraceSource.LogInfo("{0}: Found service: {1}", hostEndPoint, serviceType);
 
@@ -295,13 +498,7 @@ namespace Open.Nat
 
 		private static XmlDocument ReadXmlResponse(WebResponse response)
 		{
-			using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
-			{
-				var servicesXml = reader.ReadToEnd();
-				var xmldoc = new XmlDocument();
-				xmldoc.LoadXml(servicesXml);
-				return xmldoc;
-			}
+			return StreamExtensions.GetXmlDocument(response.ReadXmlResponseBody());
 		}
 	}
 }

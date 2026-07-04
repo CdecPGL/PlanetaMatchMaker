@@ -27,6 +27,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,11 +37,89 @@ namespace Open.Nat
 {
 	internal static class StreamExtensions
 	{
+		internal const int MaxXmlResponseCharacters = 1024 * 1024;
+
 		internal static string ReadAsMany(this StreamReader stream, int bytesToRead)
 		{
 			var buffer = new char[bytesToRead];
 			stream.ReadBlock(buffer, 0, bytesToRead);
 			return new string(buffer);
+		}
+
+		internal static string ReadXmlResponseBody(this WebResponse response)
+		{
+			if (response == null)
+			{
+				throw new ArgumentNullException(nameof(response));
+			}
+
+			if (response.ContentLength > MaxXmlResponseCharacters)
+			{
+				throw new InvalidDataException("UPnP XML response is too large.");
+			}
+
+			var responseStream = response.GetResponseStream();
+			if (responseStream == null)
+			{
+				return string.Empty;
+			}
+
+			using (var reader = new StreamReader(responseStream, Encoding.UTF8))
+			{
+				var buffer = new char[4096];
+				var responseBody = new StringBuilder();
+				while (true)
+				{
+					var remainingCharacters = MaxXmlResponseCharacters - responseBody.Length;
+					if (remainingCharacters == 0)
+					{
+						if (reader.Peek() >= 0)
+						{
+							throw new InvalidDataException("UPnP XML response is too large.");
+						}
+
+						break;
+					}
+
+					var readLength = Math.Min(buffer.Length, remainingCharacters);
+					var readCharacters = reader.Read(buffer, 0, readLength);
+					if (readCharacters == 0)
+					{
+						break;
+					}
+
+					responseBody.Append(buffer, 0, readCharacters);
+				}
+
+				return responseBody.ToString();
+			}
+		}
+
+		internal static XmlDocument GetXmlDocument(string xml)
+		{
+			if (xml == null)
+			{
+				throw new ArgumentNullException(nameof(xml));
+			}
+
+			var settings = new XmlReaderSettings
+			{
+				DtdProcessing = DtdProcessing.Prohibit,
+				MaxCharactersInDocument = MaxXmlResponseCharacters,
+				XmlResolver = null
+			};
+			var document = new XmlDocument
+			{
+				XmlResolver = null
+			};
+
+			using (var stringReader = new StringReader(xml))
+			using (var xmlReader = XmlReader.Create(stringReader, settings))
+			{
+				document.Load(xmlReader);
+			}
+
+			return document;
 		}
 
 		internal static string GetXmlElementText(this XmlNode node, string elementName)

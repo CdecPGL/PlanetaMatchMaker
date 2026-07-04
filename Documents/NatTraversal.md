@@ -10,6 +10,14 @@ This works well for clients which satisfy below conditions.
 - The NAT device of private network which clients belongs to supports UPnP
 - Client are in NOT multiple NAT environment
 
+## Security Notes
+
+The match-making server does not expose a UPnP service. UPnP is used only by clients that explicitly call `MatchMakerClient.CreateRoomWithCreatingPortMappingAsync()` or `NatPortMappingCreator`.
+
+[CVE-2020-12695](https://nvd.nist.gov/vuln/detail/CVE-2020-12695), also known as CallStranger, is a UPnP event subscription issue. This client does not implement UPnP event subscription or callback handling, so that vulnerability does not directly apply to this codebase.
+
+UPnP and NAT-PMP port mapping still depend on trusting the local network and the NAT device. Use this feature only on trusted networks. The bundled Open.NAT code validates SSDP response locations, prevents service control URLs from changing host, disables HTTP redirects for UPnP control requests, parses UPnP XML with DTD disabled, and rejects oversized XML responses. NAT-PMP is attempted only for private IPv4 local addresses, uses explicit request/response only, and does not process unsolicited gratuitous address announcements. NAT-PMP responses are accepted only from the selected gateway endpoint and are matched to the requested operation and private port before applying a mapping result. For NAT-PMP create responses, the mapped external port returned by the gateway is used even if it differs from the requested public port.
+
 ## Protocol
 
 `MatchMakerClient.CreateRoomWithCreatingPortMappingAsync()` receives default game port, private port candidate and public port candidate as its parameter.

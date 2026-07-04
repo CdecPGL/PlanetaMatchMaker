@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -56,6 +57,7 @@ namespace Open.Nat
 			try
 			{
 				List<IPEndPoint> gatewayList = _ipprovider.GatewayAddresses()
+					.Where(IsIPv4Address)
 					.Select(ip => new IPEndPoint(ip, PmpConstants.ServerPort))
 					.ToList();
 
@@ -63,33 +65,52 @@ namespace Open.Nat
 				{
 					gatewayList.AddRange(
 						_ipprovider.DnsAddresses()
+							.Where(IsIPv4Address)
 							.Select(ip => new IPEndPoint(ip, PmpConstants.ServerPort)));
 				}
 
 				if (!gatewayList.Any()) return;
 
-				foreach (IPAddress address in _ipprovider.UnicastAddresses())
+				foreach (IPAddress address in _ipprovider.UnicastAddresses().Where(IsRfc1918PrivateIPv4Address))
 				{
-					UdpClient client;
+					UdpClient client = null;
 
 					try
 					{
 						client = new UdpClient(new IPEndPoint(address, 0));
+						_gatewayLists.Add(client, gatewayList);
+						UdpClients.Add(client);
+						client = null;
 					}
 					catch (SocketException)
 					{
 						continue; // Move on to the next address.
 					}
-
-					_gatewayLists.Add(client, gatewayList);
-					UdpClients.Add(client);
+					finally
+					{
+						if (client != null)
+							client.Close();
+					}
 				}
 			}
-			catch (Exception e)
+			catch (NetworkInformationException e)
 			{
-				NatDiscoverer.TraceSource.LogError("There was a problem finding gateways: " + e);
-				// NAT-PMP does not use multicast, so there isn't really a good fallback.
+				LogGatewaySearchError(e);
 			}
+			catch (SocketException e)
+			{
+				LogGatewaySearchError(e);
+			}
+			catch (InvalidOperationException e)
+			{
+				LogGatewaySearchError(e);
+			}
+		}
+
+		private static void LogGatewaySearchError(Exception e)
+		{
+			NatDiscoverer.TraceSource.LogError("There was a problem finding gateways: " + e);
+			// NAT-PMP does not use multicast, so there isn't really a good fallback.
 		}
 
 		protected override void Discover(UdpClient client, CancellationToken cancelationToken)
@@ -117,15 +138,19 @@ namespace Open.Nat
 			}
 		}
 
-		private bool IsSearchAddress(IPAddress address)
+		private bool IsSearchEndpoint(IPEndPoint endpoint)
 		{
+			if (!IsIPv4Address(endpoint.Address))
+				return false;
+
 			return _gatewayLists.Values.SelectMany(x => x)
-				.Any(x => x.Address.Equals(address));
+				.Any(x => x.Address.Equals(endpoint.Address) && x.Port == endpoint.Port);
 		}
 
 		public override NatDevice AnalyseReceivedResponse(IPAddress localAddress, byte[] response, IPEndPoint endpoint)
 		{
-			if (!IsSearchAddress(endpoint.Address)
+			if (!IsRfc1918PrivateIPv4Address(localAddress)
+				|| !IsSearchEndpoint(endpoint)
 				|| response.Length != 12
 				|| response[0] != PmpConstants.Version
 				|| response[1] != PmpConstants.ServerNoop)
@@ -133,13 +158,32 @@ namespace Open.Nat
 
 			int errorcode = IPAddress.NetworkToHostOrder(BitConverter.ToInt16(response, 2));
 			if (errorcode != 0)
+			{
 				NatDiscoverer.TraceSource.LogError("Non zero error: {0}", errorcode);
+				return null;
+			}
 
 			var publicIp = new IPAddress(new[] {response[8], response[9], response[10], response[11]});
 			//NextSearch = DateTime.Now.AddMinutes(5);
 
 			_timeout = 250;
 			return new PmpNatDevice(localAddress, endpoint.Address, publicIp);
+		}
+
+		private static bool IsIPv4Address(IPAddress address)
+		{
+			return address.AddressFamily == AddressFamily.InterNetwork;
+		}
+
+		private static bool IsRfc1918PrivateIPv4Address(IPAddress address)
+		{
+			if (!IsIPv4Address(address))
+				return false;
+
+			byte[] bytes = address.GetAddressBytes();
+			return bytes[0] == 10
+				|| (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+				|| (bytes[0] == 192 && bytes[1] == 168);
 		}
 	}
 }
