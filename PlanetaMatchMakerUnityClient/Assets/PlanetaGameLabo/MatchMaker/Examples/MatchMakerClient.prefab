@@ -58,6 +58,7 @@ MonoBehaviour:
   - _startPort: 50000
     _endPort: 56000
   _natDiscoverTimeOutSeconds: 5
+  _releaseCreatedPortMappingsOnDestroy: 1
   _enableDebugLog: 1
   _debugLogLevel: 0
 --- !u!114 &4546133711901321005

@@ -53,6 +53,7 @@ namespace Open.Nat
 		public abstract IPAddress LocalAddress { get; }
 
 		private readonly HashSet<Mapping> _openedMapping = new HashSet<Mapping>();
+		private readonly object _openedMappingLock = new object();
 		protected DateTime LastSeen { get; private set; }
 
 		internal void Touch()
@@ -120,49 +121,65 @@ namespace Open.Nat
 
 		protected void RegisterMapping(Mapping mapping)
 		{
-			_openedMapping.Remove(mapping);
-			_openedMapping.Add(mapping);
+			lock (_openedMappingLock)
+			{
+				_openedMapping.Remove(mapping);
+				_openedMapping.Add(mapping);
+			}
 		}
 
 		protected void UnregisterMapping(Mapping mapping)
 		{
-			_openedMapping.RemoveWhere(x => x.Equals(mapping));
+			lock (_openedMappingLock)
+			{
+				_openedMapping.RemoveWhere(x => x.Equals(mapping));
+			}
 		}
 
 
-		internal void ReleaseMapping(IEnumerable<Mapping> mappings)
+		internal async Task ReleaseMappingAsync(IEnumerable<Mapping> mappings)
 		{
 			var maparr = mappings.ToArray();
 			var mapCount = maparr.Length;
 			NatDiscoverer.TraceSource.LogInfo("{0} ports to close", mapCount);
-			for (var i = 0; i < mapCount; i++)
+			var tasks = maparr.Select(mapping => Task.Run(async () =>
 			{
-				var mapping = _openedMapping.ElementAt(i);
-
 				try
 				{
-					DeletePortMapAsync(mapping);
+					await DeletePortMapAsync(mapping).ConfigureAwait(false);
 					NatDiscoverer.TraceSource.LogInfo(mapping + " port successfully closed");
 				}
 				catch (Exception)
 				{
 					NatDiscoverer.TraceSource.LogError(mapping + " port couldn't be close");
 				}
+			})).ToArray();
+			await Task.WhenAll(tasks).ConfigureAwait(false);
+		}
+
+		internal async Task ReleaseAllAsync()
+		{
+			Mapping[] mappings;
+			lock (_openedMappingLock)
+			{
+				mappings = _openedMapping.ToArray();
 			}
+
+			await ReleaseMappingAsync(mappings).ConfigureAwait(false);
 		}
 
-		internal void ReleaseAll()
+		internal async Task ReleaseSessionMappingsAsync()
 		{
-			ReleaseMapping(_openedMapping);
-		}
+			Mapping[] mappings;
+			lock (_openedMappingLock)
+			{
+				mappings = (from m in _openedMapping
+							where m.LifetimeType == MappingLifetime.Session ||
+								  m.LifetimeType == MappingLifetime.ForcedSession
+							select m).ToArray();
+			}
 
-		internal void ReleaseSessionMappings()
-		{
-			var mappings = from m in _openedMapping
-						   where m.LifetimeType == MappingLifetime.Session
-						   select m;
-
-			ReleaseMapping(mappings);
+			await ReleaseMappingAsync(mappings).ConfigureAwait(false);
 		}
 
 		internal async Task RenewMappings()

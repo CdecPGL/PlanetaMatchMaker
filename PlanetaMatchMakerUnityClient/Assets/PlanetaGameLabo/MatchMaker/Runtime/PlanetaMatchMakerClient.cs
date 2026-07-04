@@ -158,6 +158,15 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
+        /// true if port mappings created by this application are released when this component is destroyed.
+        /// </summary>
+        public bool releaseCreatedPortMappingsOnDestroy
+        {
+            get => _releaseCreatedPortMappingsOnDestroy;
+            set => _releaseCreatedPortMappingsOnDestroy = value;
+        }
+
+        /// <summary>
         /// A hosting room information.
         /// This is valid when the client is hosting room.
         /// </summary>
@@ -616,6 +625,25 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
+        /// <summary>
+        /// Release port mappings created by this application.
+        /// </summary>
+        /// <param name="callback"></param>
+        public void ReleaseCreatedPortMappings(Action<ErrorInfo> callback = null)
+        {
+            RunTask(ReleaseCreatedPortMappingsAsync, callback);
+        }
+
+        /// <summary>
+        /// Release port mappings created by this application.
+        /// </summary>
+        public async Task<ErrorInfo> ReleaseCreatedPortMappingsAsync()
+        {
+            return await RunTaskWithErrorHandlingAsync(
+                async () => await NatPortMappingCreator.ReleaseCreatedPortMappingsAsync(),
+                () => { });
+        }
+
         #endregion
 
         #region OtherPublicMethods
@@ -647,6 +675,8 @@ namespace PlanetaGameLabo.MatchMaker
         #endregion
 
         #region PrivateFields
+
+        private const int ReleaseCreatedPortMappingsOnDestroyTimeoutMilliSeconds = 5000;
 
         [SerializeField, Tooltip("Don't destroy the game object which is attached this component on load if true")]
         private bool _dontDestroyOnLoad;
@@ -684,6 +714,9 @@ namespace PlanetaGameLabo.MatchMaker
 
         [SerializeField, Tooltip("Timeout seconds to discover NAT device")]
         private float _natDiscoverTimeOutSeconds = 5;
+
+        [SerializeField, Tooltip("Release port mappings created by this application when this component is destroyed if true")]
+        private bool _releaseCreatedPortMappingsOnDestroy = true;
 
         private MatchMakerClient _client;
         private Status _status = Status.Disconnected;
@@ -726,6 +759,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void OnDestroy()
         {
+            ReleaseCreatedPortMappingsOnDestroy();
             _client.Dispose();
 
             if (!_isSingleton)
@@ -929,6 +963,37 @@ namespace PlanetaGameLabo.MatchMaker
         {
             status = Status.Disconnected;
             _hostingRoomInfo = null;
+        }
+
+        private void ReleaseCreatedPortMappingsOnDestroy()
+        {
+            if (!_releaseCreatedPortMappingsOnDestroy)
+            {
+                return;
+            }
+
+            if (_isSingleton && singleton != this)
+            {
+                return;
+            }
+
+            try
+            {
+                var releaseTask = Task.Run(async () =>
+                    await NatPortMappingCreator.ReleaseCreatedPortMappingsAsync().ConfigureAwait(false));
+                if (!releaseTask.Wait(ReleaseCreatedPortMappingsOnDestroyTimeoutMilliSeconds))
+                {
+                    Debug.LogWarning("Timed out releasing port mappings created by this application.");
+                }
+            }
+            catch (AggregateException e)
+            {
+                Debug.LogException(e.InnerException ?? e);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         #endregion

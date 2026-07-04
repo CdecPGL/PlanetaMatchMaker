@@ -29,6 +29,20 @@ The vendored code is maintained only for the current Planeta Match Maker client 
 - Removed legacy .NET 3.5 compatibility branches and helper types.
 - Removed NAT-PMP discovery and port mapping support. NAT-PMP-capable home routers are uncommon enough that the maintenance and security review cost is larger than the expected benefit for this project.
 
+### Port mapping release reliability
+
+Open.NAT's original shutdown release path did not await `DeletePortMapAsync` and could release the wrong mapping because it iterated a filtered snapshot but deleted by indexing into the live opened-mapping set.
+
+The following release fixes are maintained locally:
+
+- Release APIs are task-based so callers can wait for port mapping deletion to finish.
+- Release uses a snapshot of the target mappings and deletes those exact mappings.
+- Multiple mappings are deleted in parallel to avoid shutdown time increasing linearly with mapping count.
+- Opened mapping registration and removal are guarded by a lock.
+- Forced session mappings are included in session release, because they are created only as a fallback for routers that accept permanent leases but still need application-session cleanup.
+
+Related tests are in `PlanetaMatchMakerClientTest/Source/OpenNatReleaseTest.cs`.
+
 ### UPnP response and request hardening
 
 UPnP is used only by clients that explicitly create NAT port mappings. The match-making server does not expose a UPnP service.

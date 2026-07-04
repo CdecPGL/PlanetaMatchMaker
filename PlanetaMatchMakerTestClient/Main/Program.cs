@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using CommandLine.Text;
 
 namespace PlanetaGameLabo.MatchMaker
 {
     internal static class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var versionInfo =
                 FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
@@ -79,7 +80,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
             finally
             {
-                NatPortMappingCreator.ReleaseCreatedPortMappings();
+                await NatPortMappingCreator.ReleaseCreatedPortMappingsAsync();
             }
         }
 

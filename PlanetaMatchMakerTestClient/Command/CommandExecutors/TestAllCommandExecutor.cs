@@ -114,10 +114,7 @@ namespace PlanetaGameLabo.MatchMaker
         private async Task RemovePortMappings(MatchMakerClient sharedClient, TestAllCommandOptions options,
             CancellationToken cancellationToken)
         {
-            NatPortMappingCreator.ReleaseCreatedPortMappings();
-            // We wait 1 second because it is possible that removing port mappings is not finished just after the operation.
-            OutputStream.WriteLine("Wait 1 second.");
-            await Task.Delay(1000, cancellationToken);
+            await NatPortMappingCreator.ReleaseCreatedPortMappingsAsync();
         }
 
         private async Task ListPortMappingsAndCheckRemoved(MatchMakerClient sharedClient, TestAllCommandOptions options,

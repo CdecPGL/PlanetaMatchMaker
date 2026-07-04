@@ -126,20 +126,20 @@ namespace Open.Nat
 		/// <remarks>
 		/// If ReleaseOnShutdown value is true, it release all the mappings created through the library.
 		/// </remarks>
-		public static void ReleaseAll()
+		public static async Task ReleaseAllAsync()
 		{
-			foreach (var device in Devices.Values)
-			{
-				device.ReleaseAll();
-			}
+			var tasks = Devices.Values.ToArray()
+				.Select(device => device.ReleaseAllAsync())
+				.ToArray();
+			await Task.WhenAll(tasks).ConfigureAwait(false);
 		}
 
-		internal static void ReleaseSessionMappings()
+		internal static async Task ReleaseSessionMappingsAsync()
 		{
-			foreach (var device in Devices.Values)
-			{
-				device.ReleaseSessionMappings();
-			}
+			var tasks = Devices.Values.ToArray()
+				.Select(device => device.ReleaseSessionMappingsAsync())
+				.ToArray();
+			await Task.WhenAll(tasks).ConfigureAwait(false);
 		}
 
 		private static void RenewMappings(object state)
