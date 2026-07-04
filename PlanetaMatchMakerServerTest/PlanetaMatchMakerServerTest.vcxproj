@@ -74,7 +74,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)obj\$(Platform)\$(Configuration)\PlanetaMatchMakerServer\;$(SolutionDir)obj\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>datetime.obj;server_setting.obj;log.obj;logger_common.obj;network_layer.obj;player_full_name.obj;room_data.obj;server_data.obj;session_data.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asio_stream_compatibility.obj;authentication_request_message_handler.obj;client_error_code.obj;client_errors.obj;connection_test_request_message_handler.obj;create_room_request_message_handler.obj;datetime.obj;endpoint.obj;file_utilities.obj;join_room_request_message_handler.obj;keep_alive_notice_message_handler.obj;log.obj;logger_common.obj;message_error_code.obj;message_handle_utilities.obj;message_handler.obj;message_handler_invoker.obj;message_handler_invoker_factory.obj;message_parameter_validator.obj;network_layer.obj;player_full_name.obj;player_name_container.obj;room_data.obj;server_data.obj;server_errors.obj;server_setting.obj;session_data.obj;transport_layer.obj;update_room_status_notice_message_handler.obj;list_room_request_message_handler.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -100,23 +100,40 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)obj\$(Platform)\$(Configuration)\PlanetaMatchMakerServer\;$(SolutionDir)obj\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>datetime.obj;server_setting.obj;log.obj;logger_common.obj;network_layer.obj;player_full_name.obj;room_data.obj;server_data.obj;session_data.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asio_stream_compatibility.obj;authentication_request_message_handler.obj;client_error_code.obj;client_errors.obj;connection_test_request_message_handler.obj;create_room_request_message_handler.obj;datetime.obj;endpoint.obj;file_utilities.obj;join_room_request_message_handler.obj;keep_alive_notice_message_handler.obj;log.obj;logger_common.obj;message_error_code.obj;message_handle_utilities.obj;message_handler.obj;message_handler_invoker.obj;message_handler_invoker_factory.obj;message_parameter_validator.obj;network_layer.obj;player_full_name.obj;player_name_container.obj;room_data.obj;server_data.obj;server_errors.obj;server_setting.obj;session_data.obj;transport_layer.obj;update_room_status_notice_message_handler.obj;list_room_request_message_handler.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="checked_static_cast_test.cpp" />
-    <ClCompile Include="datetime_test.cpp" />
-    <ClCompile Include="logger_common_test.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="room_data_container_test.cpp" />
-    <ClCompile Include="serialize_pack_test.cpp" />
-    <ClCompile Include="server_data_test.cpp" />
-    <ClCompile Include="server_setting_test.cpp">
+    <ClCompile Include="protocol_tests\authentication_protocol_test.cpp" />
+    <ClCompile Include="protocol_tests\connection_test_protocol_test.cpp" />
+    <ClCompile Include="protocol_tests\create_room_protocol_test.cpp" />
+    <ClCompile Include="protocol_tests\join_room_protocol_test.cpp" />
+    <ClCompile Include="protocol_tests\list_room_protocol_test.cpp" />
+    <ClCompile Include="protocol_tests\message_flow_protocol_test.cpp" />
+    <ClCompile Include="protocol_tests\update_room_status_protocol_test.cpp" />
+    <ClCompile Include="unit_tests\checked_static_cast_test.cpp" />
+    <ClCompile Include="unit_tests\datetime_test.cpp" />
+    <ClCompile Include="unit_tests\errors_test.cpp" />
+    <ClCompile Include="unit_tests\logger_common_test.cpp" />
+    <ClCompile Include="unit_tests\message_handler_invoker_factory_test.cpp" />
+    <ClCompile Include="unit_tests\network_test.cpp" />
+    <ClCompile Include="unit_tests\player_full_name_test.cpp" />
+    <ClCompile Include="unit_tests\player_name_container_test.cpp" />
+    <ClCompile Include="unit_tests\room_data_container_test.cpp" />
+    <ClCompile Include="unit_tests\room_data_test.cpp" />
+    <ClCompile Include="unit_tests\serialize_pack_test.cpp" />
+    <ClCompile Include="unit_tests\server_data_test.cpp" />
+    <ClCompile Include="unit_tests\server_setting_test.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="session_data_test.cpp" />
-    <ClCompile Include="thread_safe_data_container_test.cpp" />
+    <ClCompile Include="unit_tests\session_data_test.cpp" />
+    <ClCompile Include="unit_tests\thread_safe_data_container_test.cpp" />
+    <ClCompile Include="unit_tests\utilities_test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="protocol_tests\protocol_test_support.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PlanetaMatchMakerServer\PlanetaMatchMakerServer.vcxproj">
