@@ -142,7 +142,7 @@ namespace Open.Nat
 			var maparr = mappings.ToArray();
 			var mapCount = maparr.Length;
 			NatDiscoverer.TraceSource.LogInfo("{0} ports to close", mapCount);
-			var tasks = maparr.Select(mapping => Task.Run(async () =>
+			var tasks = maparr.Select(async mapping =>
 			{
 				try
 				{
@@ -153,7 +153,7 @@ namespace Open.Nat
 				{
 					NatDiscoverer.TraceSource.LogError(mapping + " port couldn't be close");
 				}
-			})).ToArray();
+			}).ToArray();
 			await Task.WhenAll(tasks).ConfigureAwait(false);
 		}
 
@@ -184,8 +184,13 @@ namespace Open.Nat
 
 		internal async Task RenewMappings()
 		{
-			var mappings = _openedMapping.Where(x => x.ShoundRenew());
-			foreach (var mapping in mappings.ToArray())
+			Mapping[] mappings;
+			lock (_openedMappingLock)
+			{
+				mappings = _openedMapping.Where(x => x.ShoundRenew()).ToArray();
+			}
+
+			foreach (var mapping in mappings)
 			{
 				var m = mapping;
 				await RenewMapping(m);

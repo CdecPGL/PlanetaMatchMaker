@@ -38,7 +38,7 @@ The following release fixes are maintained locally:
 - Release APIs are task-based so callers can wait for port mapping deletion to finish.
 - Release uses a snapshot of the target mappings and deletes those exact mappings.
 - Multiple mappings are deleted in parallel to avoid shutdown time increasing linearly with mapping count.
-- Opened mapping registration and removal are guarded by a lock.
+- Opened mapping registration, removal, release snapshots, and renewal snapshots are guarded by a lock.
 - Forced session mappings are included in session release, because they are created only as a fallback for routers that accept permanent leases but still need application-session cleanup.
 
 Related tests are in `PlanetaMatchMakerClientTest/Source/OpenNatReleaseTest.cs`.
