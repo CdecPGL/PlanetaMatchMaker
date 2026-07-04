@@ -11,7 +11,7 @@ using Open.Nat;
 namespace PlanetaGameLabo.MatchMaker
 {
     /// <summary>
-    /// A class to create port mapping to NAT device which is compatible with UPnP or PMP.
+    /// A class to create port mapping to NAT device which is compatible with UPnP.
     /// </summary>
     public sealed class NatPortMappingCreator
     {
@@ -231,9 +231,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
-        /// Discover NAT with UPnP or PMP.
+        /// Discover NAT with UPnP.
         /// </summary>
-        /// <param name="timeoutMilliSeconds">Time to consider available NAT device doesn't exist in one method. Discover time is up to timeoutMilliSeconds*2 milli seconds by two methods.</param>
+        /// <param name="timeoutMilliSeconds">Time to consider available NAT device doesn't exist.</param>
         /// <returns>true if NAT device is found</returns>
         public async Task<bool> DiscoverNatAsync(int timeoutMilliSeconds = 5000)
         {
@@ -252,23 +252,8 @@ namespace PlanetaGameLabo.MatchMaker
             }
             catch (NatDeviceNotFoundException)
             {
-                try
-                {
-                    using (var cancellationTokenSource = new CancellationTokenSource(timeoutMilliSeconds))
-                    {
-                        Logger.Log(LogLevel.Info, "A NAT device is not found by UPnP");
-                        natDevice = await discoverer.DiscoverDeviceAsync(PortMapper.Pmp, cancellationTokenSource)
-                            .ConfigureAwait(false);
-                        Logger.Log(LogLevel.Info, $"A NAT device ({natDevice}) is found by PMP");
-                        IsNatDeviceAvailable = true;
-                        return true;
-                    }
-                }
-                catch (NatDeviceNotFoundException)
-                {
-                    Logger.Log(LogLevel.Info, "A NAT device is not found by PMP");
-                    return false;
-                }
+                Logger.Log(LogLevel.Info, "A NAT device is not found by UPnP");
+                return false;
             }
             finally
             {

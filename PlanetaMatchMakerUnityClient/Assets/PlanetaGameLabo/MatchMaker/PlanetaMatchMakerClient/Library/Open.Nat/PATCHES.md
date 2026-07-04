@@ -27,7 +27,7 @@ Keep the two copies synchronized when changing Open.NAT code. The Unity copy mus
 The vendored code is maintained only for the current Planeta Match Maker client targets.
 
 - Removed legacy .NET 3.5 compatibility branches and helper types.
-- NAT-PMP discovery uses configured IPv4 gateways only. It does not fall back to DNS server addresses as NAT-PMP targets.
+- Removed NAT-PMP discovery and port mapping support. NAT-PMP-capable home routers are uncommon enough that the maintenance and security review cost is larger than the expected benefit for this project.
 
 ### UPnP response and request hardening
 
@@ -51,26 +51,5 @@ The following hardening is maintained locally:
 - Parse UPnP XML through `XmlReaderSettings` with DTD processing disabled and `XmlResolver = null`.
 - Reject UPnP XML responses larger than 1 MiB while reading from the HTTP response stream.
 - Escape SOAP XML values before writing request bodies.
-
-### NAT-PMP response hardening
-
-NAT-PMP is also used by clients when Open.NAT attempts PMP discovery or port mapping.
-
-The following hardening is maintained locally:
-
-- Accept NAT-PMP external address discovery responses only from a searched gateway endpoint on UDP port 5351.
-- Ignore NAT-PMP external address discovery responses with non-success result codes.
-- Attempt NAT-PMP only from RFC1918 private IPv4 local addresses and only toward IPv4 gateway endpoints.
-- Do not process unsolicited NAT-PMP gratuitous address announcements; clients use explicit request/response only.
-- Store the discovered gateway address as `PmpNatDevice.HostEndPoint`.
-- Accept NAT-PMP port mapping responses only when all of the following match:
-  - The response source is the selected gateway endpoint on UDP port 5351.
-  - The packet is exactly the 16-byte NAT-PMP port mapping response format.
-  - The version and response opcode match the requested protocol.
-  - The private port matches the requested mapping.
-- For create responses, use the mapped external port returned by the gateway, even when it differs from the requested/suggested public port.
-- For delete responses, accept the NAT-PMP success format with mapped external port `0` and lifetime `0`.
-- Parse response ports as unsigned 16-bit values.
-- Handle unknown NAT-PMP result codes without indexing outside the known error table.
 
 Related tests are in `PlanetaMatchMakerClientTest/Source/OpenNatSecurityTest.cs`.

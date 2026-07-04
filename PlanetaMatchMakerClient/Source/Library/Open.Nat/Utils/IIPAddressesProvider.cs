@@ -31,7 +31,6 @@ namespace Open.Nat
 {
 	internal interface IIPAddressesProvider
 	{
-		IEnumerable<IPAddress> GatewayAddresses();
 		IEnumerable<IPAddress> UnicastAddresses();
 	}
 }

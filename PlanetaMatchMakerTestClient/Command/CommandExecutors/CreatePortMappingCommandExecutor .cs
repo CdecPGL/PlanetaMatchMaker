@@ -8,7 +8,7 @@ namespace PlanetaGameLabo.MatchMaker
 {
     internal class CreatePortMappingCommandExecutor : StandardCommandExecutorBase<CreatePortMappingCommandOptions>
     {
-        public override string Explanation => "Create port mapping to NAT which supports UPnP or PMP.";
+        public override string Explanation => "Create port mapping to NAT which supports UPnP.";
         public override Command command => Command.CreatePortMapping;
 
         public CreatePortMappingCommandExecutor(StreamWriter outputStream) : base(outputStream)
@@ -28,7 +28,7 @@ namespace PlanetaGameLabo.MatchMaker
             if (!sharedClient.PortMappingCreator.IsNatDeviceAvailable)
             {
                 throw new CommandExecutionErrorException(
-                    "There are no available NAT device found which supports UPnp or PMP.");
+                    "There are no available NAT device found which supports UPnP.");
             }
 
             if (!options.PrivatePortCandidates.Any() && !options.PublicPortCandidates.Any())
