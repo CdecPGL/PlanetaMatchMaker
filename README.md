@@ -46,14 +46,24 @@ You can easily install and use server and client.
 
 You can very easily install server by using docker by following steps.
 
-1. Pull docker image with tag `cdec/plaenta-match-maker:server-alpine`
+1. Pull docker image with tag `cdec/planeta-match-maker-server:latest`
 2. Run a container with the image
 
-Following commands are example to run a server with port 57000 by using docker.
+Following commands are examples to run a server with port 57000 by using docker.
 
 ```bash
-docker pull cdec/plaenta-match-maker-server:latest
-docker run -p 57000:57000 cdec/planeta-match-maker-server:latest
+docker pull cdec/planeta-match-maker-server:latest
+
+# Production TLS. Mount an existing certificate chain and private key to the default paths.
+docker run -p 57000:57000 \
+  -v /etc/letsencrypt/live/match.example.com/fullchain.pem:/etc/pmms/tls/server.crt:ro \
+  -v /etc/letsencrypt/live/match.example.com/privkey.pem:/etc/pmms/tls/server.key:ro \
+  cdec/planeta-match-maker-server:latest
+
+# Local plain TCP test.
+docker run -p 57000:57000 \
+  -e PMMS_TLS_MODE=plain \
+  cdec/planeta-match-maker-server:latest
 ```
 
 You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.

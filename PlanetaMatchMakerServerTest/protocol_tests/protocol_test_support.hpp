@@ -129,7 +129,8 @@ namespace pgl::test {
 			server_connection(strand, ssl_context),
 			setting(make_protocol_test_setting()) {
 			server_connection.reset(pgl::server_tls_mode::plain);
-			client_socket.connect(acceptor.local_endpoint());
+			client_socket.connect(tcp::endpoint(boost::asio::ip::address_v4::loopback(),
+				acceptor.local_endpoint().port()));
 			acceptor.accept(server_connection.socket());
 			session_data.set_remote_endpoint(
 				pgl::endpoint::make_from_boost_endpoint(server_connection.remote_endpoint()));
