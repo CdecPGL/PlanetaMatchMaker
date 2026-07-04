@@ -128,11 +128,6 @@ namespace Open.Nat
 			return element != null ? element.InnerText : string.Empty;
 		}
 
-		internal static bool ContainsIgnoreCase(this string s, string pattern)
-		{
-			return s.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0;
-		}
-
 		internal static void LogInfo(this TraceSource source, string format, params object[] args)
 		{
 			try
