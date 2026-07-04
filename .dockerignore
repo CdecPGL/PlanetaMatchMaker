@@ -3,6 +3,7 @@
 .idea
 
 build*/
+vcpkg_installed/
 
 **/bin/
 **/obj/

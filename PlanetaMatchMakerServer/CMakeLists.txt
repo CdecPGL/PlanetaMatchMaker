@@ -31,6 +31,9 @@ target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCL
 target_link_libraries(PlanetaMatchMakerServerLib ${Boost_LIBRARIES})
 
 # OpenSSL Library
+if (STATIC_LINK_DEPENDENCIES)
+	set(OPENSSL_USE_STATIC_LIBS ON)
+endif()
 find_package(OpenSSL REQUIRED)
 target_link_libraries(PlanetaMatchMakerServerLib OpenSSL::SSL OpenSSL::Crypto)
 
@@ -39,7 +42,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	# _CRT_SECURE_NO_WARNINGS: To avoid error for getenv
 	add_definitions(-D_WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
 elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+	if (ENABLE_COVERAGE)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+	endif()
 endif()
 
 # Main executable
