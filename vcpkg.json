@@ -8,6 +8,10 @@
         {
             "name": "boost",
             "version": "1.89.0"
+        },
+        {
+            "name": "openssl",
+            "version": "3.6.2"
         }
     ]
 }
