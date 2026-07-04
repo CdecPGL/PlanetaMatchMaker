@@ -42,11 +42,6 @@ namespace Open.Nat
 			return IPAddresses(p => p.UnicastAddresses.Select(x => x.Address));
 		}
 
-		public IEnumerable<IPAddress> DnsAddresses()
-		{
-			return IPAddresses(p => p.DnsAddresses);
-		}
-
 		public IEnumerable<IPAddress> GatewayAddresses()
 		{
 			return IPAddresses(p => p.GatewayAddresses.Select(x => x.Address));

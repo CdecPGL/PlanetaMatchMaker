@@ -22,6 +22,13 @@ Keep the two copies synchronized when changing Open.NAT code. The Unity copy mus
 
 ## Local Changes
 
+### Scope reduction
+
+The vendored code is maintained only for the current Planeta Match Maker client targets.
+
+- Removed legacy .NET 3.5 compatibility branches and helper types.
+- NAT-PMP discovery uses configured IPv4 gateways only. It does not fall back to DNS server addresses as NAT-PMP targets.
+
 ### UPnP response and request hardening
 
 UPnP is used only by clients that explicitly create NAT port mappings. The match-making server does not expose a UPnP service.

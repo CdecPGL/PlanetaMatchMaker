@@ -59,14 +59,6 @@ namespace Open.Nat
 			_publicAddress = publicAddress;
 		}
 
-#if NET35
-		public override Task CreatePortMapAsync(Mapping mapping)
-		{
-			return InternalCreatePortMapAsync(mapping, true)
-				.TimeoutAfter(TimeSpan.FromSeconds(4))
-				.ContinueWith(t => RegisterMapping(mapping));
-		}
-#else
 		public override async Task CreatePortMapAsync(Mapping mapping)
 		{
 			await InternalCreatePortMapAsync(mapping, true)
@@ -74,16 +66,7 @@ namespace Open.Nat
 				.ConfigureAwait(false);
 			RegisterMapping(mapping);
 		}
-#endif
 
-#if NET35
-		public override Task DeletePortMapAsync(Mapping mapping)
-		{
-			return InternalCreatePortMapAsync(mapping, false)
-				.TimeoutAfter(TimeSpan.FromSeconds(4))
-				.ContinueWith(t => UnregisterMapping(mapping));
-		}
-#else
 		public override async Task DeletePortMapAsync(Mapping mapping)
 		{
 			await InternalCreatePortMapAsync(mapping, false)
@@ -91,7 +74,6 @@ namespace Open.Nat
 				.ConfigureAwait(false);
 			UnregisterMapping(mapping);
 		}
-#endif
 
 		public override Task<IEnumerable<Mapping>> GetAllMappingsAsync()
 		{
@@ -100,11 +82,7 @@ namespace Open.Nat
 
 		public override Task<IPAddress> GetExternalIPAsync()
 		{
-#if NET35
-			return Task.Factory.StartNew(() => _publicAddress)
-#else
 			return Task.Run(() => _publicAddress)
-#endif
 				.TimeoutAfter(TimeSpan.FromSeconds(4));
 		}
 
@@ -113,47 +91,6 @@ namespace Open.Nat
 			throw new NotSupportedException("NAT-PMP does not specify a way to get a specific port map");
 		}
 
-#if NET35
-		private Task<Mapping> InternalCreatePortMapAsync(Mapping mapping, bool create)
-		{
-			return Task.Factory.StartNew(() =>
-			{
-				try
-				{
-					byte[] buffer = BuildPortMapRequestPackage(mapping, create);
-					int delay = PmpConstants.RetryDelay;
-					DateTime deadline = DateTime.UtcNow.Add(PortMapTimeout);
-
-					using (var udpClient = new UdpClient())
-					{
-						for (int attempt = 0; attempt < PmpConstants.RetryAttempts; attempt++)
-						{
-							int receiveTimeout = GetReceiveTimeout(delay, deadline);
-							if (receiveTimeout <= 0)
-								break;
-
-							udpClient.Send(buffer, buffer.Length, HostEndPoint);
-
-							if (TryReceivePortMapResponse(udpClient, mapping, create, receiveTimeout))
-								return mapping;
-
-							delay *= 2;
-						}
-					}
-				}
-				catch (MappingException)
-				{
-					throw;
-				}
-				catch (Exception e)
-				{
-					throw CreateMappingException(mapping, create, e);
-				}
-
-				throw CreateMappingException(mapping, create, null);
-			});
-		}
-#else
 		private Task<Mapping> InternalCreatePortMapAsync(Mapping mapping, bool create)
 		{
 			return Task.Run(() =>
@@ -193,7 +130,6 @@ namespace Open.Nat
 				throw CreateMappingException(mapping, create, null);
 			});
 		}
-#endif
 
 		private static byte[] BuildPortMapRequestPackage(Mapping mapping, bool create)
 		{

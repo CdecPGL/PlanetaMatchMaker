@@ -431,11 +431,7 @@ namespace Open.Nat
 			WebResponse response = null;
 			try
 			{
-#if NET35
-				var request = (HttpWebRequest)WebRequest.Create(location);
-#else
 				var request = WebRequest.CreateHttp(location);
-#endif
 				request.AllowAutoRedirect = false;
 				request.Headers.Add("ACCEPT-LANGUAGE", "en");
 				request.Method = "GET";

@@ -61,14 +61,6 @@ namespace Open.Nat
 					.Select(ip => new IPEndPoint(ip, PmpConstants.ServerPort))
 					.ToList();
 
-				if (!gatewayList.Any())
-				{
-					gatewayList.AddRange(
-						_ipprovider.DnsAddresses()
-							.Where(IsIPv4Address)
-							.Select(ip => new IPEndPoint(ip, PmpConstants.ServerPort)));
-				}
-
 				if (!gatewayList.Any()) return;
 
 				foreach (IPAddress address in _ipprovider.UnicastAddresses().Where(IsRfc1918PrivateIPv4Address))

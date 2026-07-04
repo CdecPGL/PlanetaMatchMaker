@@ -43,22 +43,6 @@ namespace Open.Nat
 		public EventHandler<DeviceEventArgs> DeviceFound;
 		internal DateTime NextSearch = DateTime.UtcNow;
 
-#if NET35
-		public Task<IEnumerable<NatDevice>> Search(CancellationToken cancelationToken)
-		{
-			return Task.Factory.StartNew(_ =>
-			{
-				NatDiscoverer.TraceSource.LogInfo("Searching for: {0}", GetType().Name);
-				while (!cancelationToken.IsCancellationRequested)
-				{
-					Discover(cancelationToken);
-					Receive(cancelationToken);
-				}
-				CloseUdpClients();
-			}, cancelationToken)
-			.ContinueWith<IEnumerable<NatDevice>>((Task task) => _devices);
-		}
-#else
 		public async Task<IEnumerable<NatDevice>> Search(CancellationToken cancelationToken)
 		{
 			await Task.Factory.StartNew(_ =>
@@ -73,7 +57,6 @@ namespace Open.Nat
 				}, null, cancelationToken);
 			return _devices;
 		}
-#endif
 
 		private void Discover(CancellationToken cancelationToken)
 		{

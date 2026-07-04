@@ -684,11 +684,6 @@ namespace PlanetaMatchMakerClientTest
 
         private sealed class EmptyIpAddressesProvider : IIPAddressesProvider
         {
-            public IEnumerable<IPAddress> DnsAddresses()
-            {
-                return Array.Empty<IPAddress>();
-            }
-
             public IEnumerable<IPAddress> GatewayAddresses()
             {
                 return Array.Empty<IPAddress>();
