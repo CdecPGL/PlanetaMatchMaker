@@ -152,7 +152,7 @@ namespace pgl {
 				shared_this->stop();
 				throw;
 			}
-		}));
+		}, asio::detached));
 	}
 
 	void server_session::stop() {

@@ -20,6 +20,7 @@
 #include "../../PlanetaMatchMakerServer/source/message/message_handler_invoker_factory.hpp"
 #include "../../PlanetaMatchMakerServer/source/message/message_handle_parameter.hpp"
 #include "../../PlanetaMatchMakerServer/source/message/messages.hpp"
+#include "../../PlanetaMatchMakerServer/source/network/client_connection.hpp"
 #include "../../PlanetaMatchMakerServer/source/server/server_constants.hpp"
 #include "../../PlanetaMatchMakerServer/source/server/server_data.hpp"
 #include "../../PlanetaMatchMakerServer/source/server/server_errors.hpp"
@@ -77,6 +78,7 @@ namespace pgl::test {
 		setting.connection_test.connection_check_tcp_time_out_seconds = 2;
 		setting.connection_test.connection_check_udp_time_out_seconds = 2;
 		setting.connection_test.connection_check_udp_try_count = 1;
+		setting.tls.mode = pgl::server_tls_mode::plain;
 		return setting;
 	}
 
@@ -112,7 +114,9 @@ namespace pgl::test {
 		boost::asio::io_context io;
 		tcp::acceptor acceptor;
 		tcp::socket client_socket;
-		tcp::socket server_socket;
+		boost::asio::strand<boost::asio::any_io_executor> strand;
+		boost::asio::ssl::context ssl_context;
+		pgl::client_connection server_connection;
 		pgl::server_data server_data;
 		pgl::server_setting setting;
 		pgl::session_data session_data;
@@ -120,11 +124,15 @@ namespace pgl::test {
 		protocol_context():
 			acceptor(io, tcp::endpoint(tcp::v4(), 0)),
 			client_socket(io),
-			server_socket(io),
+			strand(boost::asio::make_strand(io)),
+			ssl_context(boost::asio::ssl::context::tls_server),
+			server_connection(strand, ssl_context),
 			setting(make_protocol_test_setting()) {
+			server_connection.reset(pgl::server_tls_mode::plain);
 			client_socket.connect(acceptor.local_endpoint());
-			acceptor.accept(server_socket);
-			session_data.set_remote_endpoint(pgl::endpoint::make_from_boost_endpoint(server_socket.remote_endpoint()));
+			acceptor.accept(server_connection.socket());
+			session_data.set_remote_endpoint(
+				pgl::endpoint::make_from_boost_endpoint(server_connection.remote_endpoint()));
 		}
 	};
 
@@ -141,12 +149,14 @@ namespace pgl::test {
 			promise_(std::make_shared<std::promise<std::exception_ptr>>()),
 			future_(promise_->get_future()) {
 			const auto invoker = pgl::message_handler_invoker_factory::make_shared_standard();
-			boost::asio::spawn(context_.io, [this, invoker, message_type](
+			context_.io.restart();
+			work_guard_.emplace(context_.io.get_executor());
+			boost::asio::spawn(context_.strand, [this, invoker, message_type](
 				boost::asio::yield_context yield) {
 				std::exception_ptr exception;
 				try {
 					auto param = std::make_shared<pgl::message_handle_parameter>(pgl::message_handle_parameter{
-						context_.server_socket,
+						context_.server_connection,
 						context_.server_data,
 						yield,
 						std::chrono::seconds(context_.setting.common.time_out_seconds),
@@ -159,11 +169,12 @@ namespace pgl::test {
 				catch (...) { exception = std::current_exception(); }
 
 				promise_->set_value(exception);
-			});
+			}, boost::asio::detached);
 			thread_ = std::thread([this] { context_.io.run(); });
 		}
 
 		~protocol_handler_run() {
+			work_guard_.reset();
 			context_.io.stop();
 			if (thread_.joinable()) { thread_.join(); }
 		}
@@ -173,6 +184,7 @@ namespace pgl::test {
 				throw std::runtime_error("Timed out waiting for protocol handler.");
 			}
 			auto exception = future_.get();
+			work_guard_.reset();
 			context_.io.stop();
 			if (thread_.joinable()) { thread_.join(); }
 			return exception;
@@ -182,6 +194,7 @@ namespace pgl::test {
 		protocol_context& context_;
 		std::shared_ptr<std::promise<std::exception_ptr>> promise_;
 		std::future<std::exception_ptr> future_;
+		std::optional<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> work_guard_;
 		std::thread thread_;
 	};
 
@@ -335,7 +348,7 @@ namespace pgl::test {
 	}
 
 	inline void make_room_hosted_by_client(protocol_context& context, pgl::room_data& room) {
-		room.host_endpoint = pgl::endpoint::make_from_boost_endpoint(context.server_socket.remote_endpoint());
+		room.host_endpoint = pgl::endpoint::make_from_boost_endpoint(context.server_connection.remote_endpoint());
 		context.server_data.get_room_data_container().add_or_update(room);
 	}
 }
