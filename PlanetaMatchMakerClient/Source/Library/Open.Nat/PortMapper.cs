@@ -9,13 +9,8 @@ namespace Open.Nat
 	public enum PortMapper
 	{
 		/// <summary>
-		/// Use only Port Mapping Protocol
-		/// </summary>
-		Pmp = 1,
-
-		/// <summary>
 		/// Use only Universal Plug and Play
 		/// </summary>
-		Upnp = 2
+		Upnp = 1
 	}
 }

@@ -1,4 +1,4 @@
-﻿//
+//
 // Authors:
 //   Lucas Ontivero lucasontivero@gmail.com 
 //
@@ -30,6 +30,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -47,59 +48,6 @@ namespace Open.Nat
 			_serviceType = serviceType;
 		}
 
-#if NET35
-		public Task<XmlDocument> InvokeAsync(string operationName, IDictionary<string, object> args)
-		{
-			NatDiscoverer.TraceSource.TraceEvent(TraceEventType.Verbose, 0, "SOAPACTION: **{0}** url:{1}", operationName,
-												 _url);
-			byte[] messageBody = BuildMessageBody(operationName, args);
-			HttpWebRequest request = BuildHttpWebRequest(operationName, messageBody);
-
-			Task<WebResponse> responseTask;
-			if (messageBody.Length > 0)
-			{
-				Stream requestStream = null;
-				responseTask = Task.Factory.FromAsync<Stream>(request.BeginGetRequestStream, request.EndGetRequestStream, null)
-					.ContinueWith(requestSteamTask =>
-					{
-						requestStream = requestSteamTask.Result;
-						return Task.Factory.FromAsync<byte[], int, int>(requestStream.BeginWrite,
-							requestStream.EndWrite, messageBody, 0, messageBody.Length, null);
-					})
-					.Unwrap()
-					.ContinueWith(streamWriteTask =>
-					{
-						requestStream.Close();
-						return GetWebResponse(request);
-					})
-					.Unwrap();
-			}
-			else
-			{
-				responseTask = GetWebResponse(request);
-			}
-
-			return responseTask.ContinueWith(task =>
-			{
-				using (WebResponse response = task.Result)
-				{
-					var stream = response.GetResponseStream();
-					var contentLength = response.ContentLength;
-
-					var reader = new StreamReader(stream, Encoding.UTF8);
-
-					var responseBody = contentLength != -1
-						? reader.ReadAsMany((int)contentLength)
-						: reader.ReadToEnd();
-
-					var responseXml = GetXmlDocument(responseBody);
-
-					response.Close();
-					return responseXml;
-				}
-			});
-		}
-#else
 		public async Task<XmlDocument> InvokeAsync(string operationName, IDictionary<string, object> args)
 		{
 			NatDiscoverer.TraceSource.TraceEvent(TraceEventType.Verbose, 0, "SOAPACTION: **{0}** url:{1}", operationName,
@@ -117,14 +65,7 @@ namespace Open.Nat
 
 			using(var response = await GetWebResponse(request))
 			{
-				var stream = response.GetResponseStream();
-				var contentLength = response.ContentLength;
-
-				var reader = new StreamReader(stream, Encoding.UTF8);
-
-				var responseBody = contentLength != -1
-									? reader.ReadAsMany((int) contentLength)
-									: reader.ReadToEnd();
+				var responseBody = response.ReadXmlResponseBody();
 
 				var responseXml = GetXmlDocument(responseBody);
 
@@ -132,43 +73,7 @@ namespace Open.Nat
 				return responseXml;
 			}
 		}
-#endif
 
-#if NET35
-		private static Task<WebResponse> GetWebResponse(WebRequest request)
-		{
-			return Task.Factory
-				.FromAsync<WebResponse>(request.BeginGetResponse, request.EndGetResponse, null)
-				.ContinueWith(task =>
-				{
-					WebResponse response;
-					if (!task.IsFaulted)
-					{
-						response = task.Result;
-					}
-					else
-					{
-						WebException ex = task.Exception.InnerException as WebException;
-						if (ex == null)
-						{
-							throw task.Exception;
-						}
-
-						NatDiscoverer.TraceSource.TraceEvent(TraceEventType.Verbose, 0, "WebException status: {0}", ex.Status);
-
-						// Even if the request "failed" we need to continue reading the response from the router
-						response = ex.Response as HttpWebResponse;
-
-						if (response == null)
-						{
-							throw task.Exception;
-						}
-					}
-
-					return response;
-				});
-		}
-#else
 		private static async Task<WebResponse> GetWebResponse(WebRequest request)
 		{
 			WebResponse response;
@@ -188,15 +93,11 @@ namespace Open.Nat
 			}
 			return response;
 		}
-#endif
 
 		private HttpWebRequest BuildHttpWebRequest(string operationName, byte[] messageBody)
 		{
-#if NET35
-			var request = (HttpWebRequest)WebRequest.Create(_url);
-#else
 			var request = WebRequest.CreateHttp(_url);
-#endif
+			request.AllowAutoRedirect = false;
 			request.KeepAlive = false;
 			request.Method = "POST";
 			request.ContentType = "text/xml; charset=\"utf-8\"";
@@ -215,7 +116,7 @@ namespace Open.Nat
 			sb.AppendLine("	  <u:" + operationName + " xmlns:u=\"" + _serviceType + "\">");
 			foreach (var a in args)
 			{
-				sb.AppendLine("		 <" + a.Key + ">" + Convert.ToString(a.Value, CultureInfo.InvariantCulture) +
+				sb.AppendLine("		 <" + a.Key + ">" + SecurityElement.Escape(Convert.ToString(a.Value, CultureInfo.InvariantCulture)) +
 							  "</" + a.Key + ">");
 			}
 			sb.AppendLine("	  </u:" + operationName + ">");
@@ -227,11 +128,10 @@ namespace Open.Nat
 			return messageBody;
 		}
 
-		private XmlDocument GetXmlDocument(string response)
+		private static XmlDocument GetXmlDocument(string response)
 		{
 			XmlNode node;
-			var doc = new XmlDocument();
-			doc.LoadXml(response);
+			var doc = StreamExtensions.GetXmlDocument(response);
 
 			var nsm = new XmlNamespaceManager(doc.NameTable);
 
