@@ -17,6 +17,7 @@ There are three types of message.
 To communicate with the server, you should follow below flow.
 
 1. [Client] Connect to the server by TCP
+1. [Client/Server] Complete TLS handshake if the server and client connection mode is TLS
 1. [Client] Send authentication request
 1. Message roop
     1. [Client] Send requests or notices
@@ -28,6 +29,8 @@ In below situation, the server forces to close the connection immediately withou
 - Send invalid message type
 - Send not authentication request at first time after connection
 - Server internal error occured
+
+TLS is enabled by default in the official server and client settings. Plain TCP is available only when both sides explicitly use plain connection mode.
 
 ## Message Structure
 

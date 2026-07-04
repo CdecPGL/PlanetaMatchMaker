@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using CdecPGL.MinimalSerializer;
@@ -117,8 +120,12 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task<PlayerFullName> ConnectAsync(string serverAddress, ushort serverPort, string playerName)
+        public async Task<PlayerFullName> ConnectAsync(string serverAddress, ushort serverPort, string playerName,
+            MatchMakerConnectionOptions connectionOptions = null)
         {
+            connectionOptions = connectionOptions ?? new MatchMakerConnectionOptions();
+            ValidateConnectionOptions(connectionOptions);
+
             if (!Validator.ValidateServerAddress(serverAddress))
             {
                 throw new ArgumentException("IPv4, IPv6 or URL is available.", nameof(serverAddress));
@@ -144,19 +151,42 @@ namespace PlanetaGameLabo.MatchMaker
                     throw new ClientErrorException(ClientErrorCode.AlreadyConnected);
                 }
 
-                // Establish TCP connection
+                // Establish connection
                 try
                 {
                     tcpClient = CreateTcpClient();
                     await tcpClient.ConnectAsync(serverAddress, serverPort).ConfigureAwait(false);
                     Logger.Log(LogLevel.Info, $"Connect to {serverAddress}:{serverPort} successfully.");
+                    communicationStream = tcpClient.GetStream();
+                    if (connectionOptions.Mode == MatchMakerConnectionMode.Tls)
+                    {
+                        var sslStream = CreateSslStream(communicationStream, connectionOptions);
+                        var targetHost = string.IsNullOrEmpty(connectionOptions.TlsTargetHost)
+                            ? serverAddress
+                            : connectionOptions.TlsTargetHost;
+                        await sslStream.AuthenticateAsClientAsync(targetHost).ConfigureAwait(false);
+                        communicationStream = sslStream;
+                        Logger.Log(LogLevel.Info, $"TLS handshake with {targetHost} successfully.");
+                    }
                 }
                 catch (SocketException e)
                 {
+                    CloseConnection();
                     throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
                 }
                 catch (ObjectDisposedException e)
                 {
+                    CloseConnection();
+                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+                }
+                catch (AuthenticationException e)
+                {
+                    CloseConnection();
+                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+                }
+                catch (IOException e)
+                {
+                    CloseConnection();
                     throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
                 }
 
@@ -209,10 +239,7 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             keepAliveSenderNotificator.StopKeepAliveProc();
-            tcpClient.GetStream().Close();
-            tcpClient.Close();
-            tcpClient.Dispose();
-            tcpClient = null;
+            CloseConnection();
             Logger.Log(LogLevel.Info, $"Close connection to the server.");
             OnConnectionClosed();
         }
@@ -815,11 +842,13 @@ namespace PlanetaGameLabo.MatchMaker
 
         public void Dispose()
         {
+            communicationStream?.Dispose();
             tcpClient?.Dispose();
             semaphore.Dispose();
         }
 
         private TcpClient tcpClient;
+        private Stream communicationStream;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private readonly KeepAliveSenderNotificator keepAliveSenderNotificator;
 
@@ -835,7 +864,7 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 keepAliveSenderNotificator.UpdateLastRequestTime();
-                await tcpClient.SendRequestMessage(messageBody).ConfigureAwait(false);
+                await communicationStream.SendRequestMessage(messageBody).ConfigureAwait(false);
             }
             catch (MessageErrorException e)
             {
@@ -860,6 +889,15 @@ namespace PlanetaGameLabo.MatchMaker
 
                 throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
             }
+            catch (IOException e)
+            {
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
+            }
         }
 
         /// <summary>
@@ -872,7 +910,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                var (errorCode, replyBody) = await tcpClient.ReceiveReplyMessage<T>().ConfigureAwait(false);
+                var (errorCode, replyBody) = await communicationStream.ReceiveReplyMessage<T>().ConfigureAwait(false);
                 if (errorCode != MessageErrorCode.Ok || replyBody == null)
                 {
                     throw new ClientErrorException(ClientErrorCode.RequestError, errorCode.ToString());
@@ -895,6 +933,15 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ClientErrorException(ClientErrorCode.ConnectionClosed, e.Message);
             }
             catch (SocketException e)
+            {
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
+            }
+            catch (IOException e)
             {
                 if (Connected)
                 {
@@ -1129,6 +1176,35 @@ namespace PlanetaGameLabo.MatchMaker
                 udpClient?.Dispose();
                 cancelTokenSource.Dispose();
             }
+        }
+
+        private static void ValidateConnectionOptions(MatchMakerConnectionOptions connectionOptions)
+        {
+            switch (connectionOptions.Mode)
+            {
+                case MatchMakerConnectionMode.Plain:
+                case MatchMakerConnectionMode.Tls:
+                    return;
+                default:
+                    throw new ArgumentException("Unsupported connection mode.", nameof(connectionOptions));
+            }
+        }
+
+        private static SslStream CreateSslStream(Stream innerStream, MatchMakerConnectionOptions connectionOptions)
+        {
+            return connectionOptions.RemoteCertificateValidationCallback == null
+                ? new SslStream(innerStream, false)
+                : new SslStream(innerStream, false, connectionOptions.RemoteCertificateValidationCallback);
+        }
+
+        private void CloseConnection()
+        {
+            communicationStream?.Close();
+            communicationStream?.Dispose();
+            communicationStream = null;
+            tcpClient?.Close();
+            tcpClient?.Dispose();
+            tcpClient = null;
         }
 
         private TcpClient CreateTcpClient()

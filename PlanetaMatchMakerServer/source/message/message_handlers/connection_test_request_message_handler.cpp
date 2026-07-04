@@ -18,7 +18,7 @@ namespace pgl {
 			param.server_setting.connection_test.connection_check_tcp_time_out_seconds);
 
 		// Try to establish TCP connection
-		asio::ip::tcp::socket socket(param.socket.get_executor());
+		asio::ip::tcp::socket socket(param.connection.get_executor());
 		execute_socket_timed_async_operation(socket, time_out_seconds,
 			[&param, &socket, &target_endpoint]() { socket.async_connect(target_endpoint, param.yield); });
 
@@ -57,8 +57,8 @@ namespace pgl {
 		const auto try_count = param.server_setting.connection_test.connection_check_udp_try_count;
 
 		// Try to send data by UDP and check if the reply is returned
-		asio::ip::udp::socket socket(param.socket.get_executor());
-		socket.open(param.socket.local_endpoint().protocol() == asio::ip::tcp::v4()
+		asio::ip::udp::socket socket(param.connection.get_executor());
+		socket.open(param.connection.local_endpoint().protocol() == asio::ip::tcp::v4()
 			            ? asio::ip::udp::v4()
 			            : asio::ip::udp::v6());
 

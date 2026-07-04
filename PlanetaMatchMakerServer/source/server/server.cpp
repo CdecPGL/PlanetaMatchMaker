@@ -11,10 +11,23 @@ using namespace boost;
 
 namespace pgl {
 
-	server::server(std::unique_ptr<server_setting>&& setting): acceptor_(io_service_),
+	server::server(std::unique_ptr<server_setting>&& setting): ssl_context_(asio::ssl::context::tls_server),
+		acceptor_(io_service_),
 		server_setting_(std::move(setting)) {
 		// Setup server data
 		server_data_ = std::make_unique<server_data>();
+
+		if (server_setting_->tls.mode == server_tls_mode::tls) {
+			ssl_context_.set_options(
+				asio::ssl::context::default_workarounds |
+				asio::ssl::context::no_sslv2 |
+				asio::ssl::context::no_sslv3 |
+				asio::ssl::context::no_tlsv1 |
+				asio::ssl::context::no_tlsv1_1);
+			ssl_context_.use_certificate_chain_file(server_setting_->tls.certificate_path.string());
+			ssl_context_.use_private_key_file(server_setting_->tls.private_key_path.string(),
+				asio::ssl::context::pem);
+		}
 
 		// Setup acceptor
 		const auto tcp = get_tcp(server_setting_->common.ip_version);
@@ -39,7 +52,8 @@ namespace pgl {
 		for (auto i = 0u; i < server_setting_->common.thread; ++i) {
 			thread_group.create_thread([&]() {
 				try {
-					server_thread server_thread(acceptor_, acceptor_mutex_, *server_data_, *server_setting_);
+					server_thread server_thread(acceptor_, acceptor_mutex_, ssl_context_, *server_data_,
+						*server_setting_);
 					server_thread.start();
 					io_service_.run();
 				}

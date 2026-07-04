@@ -4,6 +4,7 @@
 #include <mutex>
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/noncopyable.hpp>
 
 #include "./server_setting.hpp"
@@ -16,6 +17,7 @@ namespace pgl {
 		void run();
 	private:
 		boost::asio::io_context io_service_;
+		boost::asio::ssl::context ssl_context_;
 		boost::asio::ip::tcp::acceptor acceptor_;
 		std::mutex acceptor_mutex_;
 		std::unique_ptr<server_data> server_data_;

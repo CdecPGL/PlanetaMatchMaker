@@ -1,4 +1,4 @@
-FROM debian:bookworm-20251117-slim as base
+FROM debian:bookworm-20251117-slim AS base
 LABEL maintainer="Cdec <cdecrement@gmail.com>"
 
 # Install basic requirements
@@ -9,6 +9,8 @@ RUN apt update && apt install -y \
   clang \
   lcov \
   llvm \
+  libssl-dev \
+  openssl \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -22,25 +24,27 @@ RUN git clone https://github.com/boostorg/boost.git \
   && cd .. \
   && rm -rf boost
 
-# Clone PlanetaMatchMakerServer repository
-RUN git clone https://github.com/CdecPGL/PlanetaMatchMaker.git
+# Copy PlanetaMatchMakerServer repository
+COPY . /PlanetaMatchMaker
 
-# Build PlanetaMatchMakerServer with static link
+# Build PlanetaMatchMakerServer with static Boost dependencies
 RUN \
   cd PlanetaMatchMaker && \
-  mkdir build && \
-  cd build && \
-  cmake -DCMAKE_CXX_COMPILER=clang++ -DSTATIC_LINK_DEPENDENCIES=ON .. && \
-  make -j"$(nproc)"
+  cmake -S . -B build -DCMAKE_CXX_COMPILER=clang++ -DSTATIC_LINK_DEPENDENCIES=ON && \
+  cmake --build build --target PlanetaMatchMakerServer --config Release -j"$(nproc)"
 
-FROM gcr.io/distroless/static-debian12
+FROM gcr.io/distroless/cc-debian12
 LABEL maintainer="Cdec <cdecrement@gmail.com>"
 
+# Copy OpenSSL runtime libraries
+COPY --from=base /usr/lib/x86_64-linux-gnu/libssl.so.3 /usr/lib/x86_64-linux-gnu/
+COPY --from=base /usr/lib/x86_64-linux-gnu/libcrypto.so.3 /usr/lib/x86_64-linux-gnu/
+
 # Copy PlanetaMatchMakerServer binary (same location of make install result)
-COPY --from=base --chmod=755 ./PlanetaMatchMaker/build/PlanetaMatchMakerServer/PlanetaMatchMakerServer /usr/local/bin/pmms
+COPY --from=base --chmod=755 /PlanetaMatchMaker/build/PlanetaMatchMakerServer/PlanetaMatchMakerServer /usr/local/bin/pmms
 
 # Copy pmms setting
-COPY pmms/setting.json /etc/pmms/
+COPY Docker/server/pmms/setting.json /etc/pmms/
 
 # Start server
 CMD ["pmms"]

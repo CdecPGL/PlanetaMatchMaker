@@ -1,5 +1,25 @@
 # Client
 
+## Connection Security
+
+`MatchMakerClient.ConnectAsync` uses TLS by default. To connect to a server with a certificate whose host name is different from the address you dial, pass `MatchMakerConnectionOptions.TlsTargetHost`.
+
+```csharp
+await client.ConnectAsync(
+    "127.0.0.1",
+    57000,
+    "player",
+    new MatchMakerConnectionOptions
+    {
+        Mode = MatchMakerConnectionMode.Tls,
+        TlsTargetHost = "match.example.com"
+    });
+```
+
+Use `MatchMakerConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
+
+`RemoteCertificateValidationCallback` can be set for development with self-signed certificates. Do not disable certificate validation in production.
+
 ## Port Mapping Auto Release
 
 In .Net Framework, port mappings created in the aplication are released automatically when the application exits.

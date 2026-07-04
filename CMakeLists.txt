@@ -13,9 +13,9 @@ endif()
 
 # Force to build only static library
 set(BUILD_SHARED_LIBS OFF)
-# Link dependencies statically by default
+# Prefer static dependency libraries by default
 # If you want to link dependencies with shared libraries, add "-DSTATIC_LINK_DEPENDENCIES=OFF" as cmake option.
-option (STATIC_LINK_DEPENDENCIES "Link dependencies statically." ON)
+option (STATIC_LINK_DEPENDENCIES "Prefer static dependency libraries where supported." ON)
 
 # Set build type
 set(default_build_type "Release")

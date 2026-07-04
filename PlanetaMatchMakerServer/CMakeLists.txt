@@ -11,10 +11,6 @@ if (STATIC_LINK_DEPENDENCIES)
 		message(FATAL_ERROR "Static link dependencies is only supported for GNU and Clang")
 	endif()
 
-	# Link libraries statically
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-	# Link executables statically
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 	# Link boost libraries statically
 	set(Boost_USE_STATIC_LIBS ON)
 else()
@@ -34,6 +30,10 @@ find_package(Boost 1.77.0 REQUIRED COMPONENTS thread coroutine date_time filesys
 target_include_directories(PlanetaMatchMakerServerLib SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(PlanetaMatchMakerServerLib ${Boost_LIBRARIES})
 
+# OpenSSL Library
+find_package(OpenSSL REQUIRED)
+target_link_libraries(PlanetaMatchMakerServerLib OpenSSL::SSL OpenSSL::Crypto)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	# -D_WIN32_WINNT=0x0A00: To avoid error of Boost Library 1.89 for MSVC
 	# _CRT_SECURE_NO_WARNINGS: To avoid error for getenv
@@ -44,7 +44,7 @@ endif()
 
 # Main executable
 add_executable (PlanetaMatchMakerServer ${main_source})
-target_link_libraries(PlanetaMatchMakerServer PlanetaMatchMakerServerLib -static)
+target_link_libraries(PlanetaMatchMakerServer PlanetaMatchMakerServerLib)
 # Install binary
 install (TARGETS PlanetaMatchMakerServer DESTINATION bin)
 # Create symbolic link to binary

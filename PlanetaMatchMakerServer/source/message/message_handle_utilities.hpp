@@ -16,11 +16,12 @@ namespace pgl {
 	template <typename ... Params>
 	void log_with_session(const log_level level, const message_handle_parameter& param, Params&& ... params) {
 		if (const auto session_number = param.session_data.session_number(); session_number.has_value()) {
-			log_with_session_and_endpoint(level, *session_number, param.socket.remote_endpoint(),
+			log_with_session_and_endpoint(level, *session_number, param.session_data.remote_endpoint().to_boost_endpoint(),
 				std::forward<Params>(params)...);
 		}
 		else {
-			log_with_endpoint(level, param.socket.remote_endpoint(), std::forward<Params>(params)...);
+			log_with_endpoint(level, param.session_data.remote_endpoint().to_boost_endpoint(),
+				std::forward<Params>(params)...);
 		}
 	}
 
@@ -37,10 +38,10 @@ namespace pgl {
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			execute_socket_timed_async_operation(param->socket, param->timeout_seconds,
+			execute_socket_timed_async_operation(param->connection, param->timeout_seconds,
 				[param, first_data, rest_data...]() {
 					packed_async_write(
-						param->socket, param->yield, first_data, rest_data...);
+						param->connection, param->yield, first_data, rest_data...);
 				});
 			log_with_session(log_level::debug, param, "Send ", data_summary,
 				" to the client.");
@@ -68,9 +69,9 @@ namespace pgl {
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			execute_socket_timed_async_operation(param->socket, param->timeout_seconds,
+			execute_socket_timed_async_operation(param->connection, param->timeout_seconds,
 				[param, &first_data, &rest_data...]()mutable {
-					unpacked_async_read(param->socket, param->yield, first_data, rest_data...);
+					unpacked_async_read(param->connection, param->yield, first_data, rest_data...);
 				});
 			log_with_session(log_level::debug, param, "Receive ", data_summary,
 				" from the client.");

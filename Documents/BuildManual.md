@@ -18,6 +18,7 @@ Following compilers and platforms are tested.
 ### Dependencies
 
 - Boost Library 1.89.0
+- OpenSSL
 - CMake 3.21.3 or higher
 - minimal-serializer v0.2.4 (included in this repogitory)
 - nameof C++ 0.10.1 (included in this repogitory)
@@ -55,6 +56,8 @@ ctest
 
 The server project is not compatible with gcc so specify clang++ to cmake.
 
+The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing.
+
 ### Build by CMake Manually (Linux)
 
 1. Install cmake 3.21.3 or higher
@@ -76,6 +79,8 @@ ctest
 ```
 
 The server project is compatible with gcc so specify clang++ to cmake.
+
+The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing.
 
 ### Build by Visual Studio (Windows)
 

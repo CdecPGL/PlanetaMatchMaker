@@ -1,0 +1,14 @@
+.git
+.vs
+.idea
+
+build*/
+
+**/bin/
+**/obj/
+**/TestResults/
+
+PlanetaMatchMakerUnityClient/Library/
+PlanetaMatchMakerUnityClient/Logs/
+PlanetaMatchMakerUnityClient/Temp/
+PlanetaMatchMakerUnityClient/UserSettings/

@@ -17,8 +17,11 @@ namespace PlanetaGameLabo.MatchMaker
             ConnectCommandOptions options,
             CancellationToken cancellationToken)
         {
+            var connectionOptions = ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
+                options.AcceptInvalidTlsCertificate);
             var playerFullName =
-                await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort, options.PlayerName);
+                await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort, options.PlayerName,
+                    connectionOptions);
             OutputStream.WriteLine($"Player Full Name: {playerFullName.GenerateFullName()}");
             OutputStream.WriteLine("Connect to the server successfully.");
         }

@@ -58,6 +58,8 @@ docker run -p 57000:57000 cdec/planeta-match-maker-server:latest
 
 You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.
 
+The default server setting uses TLS. Mount certificate and private key files to the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing.
+
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
 #### Mannual

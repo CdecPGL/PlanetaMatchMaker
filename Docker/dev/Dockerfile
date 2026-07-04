@@ -9,6 +9,8 @@ RUN apt update && apt install -y \
   clang \
   lcov \
   llvm \
+  libssl-dev \
+  openssl \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 

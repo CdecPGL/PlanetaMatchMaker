@@ -109,6 +109,33 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
+        /// A connection mode to the matching server.
+        /// </summary>
+        public MatchMakerConnectionMode connectionMode
+        {
+            get => _connectionMode;
+            set => _connectionMode = value;
+        }
+
+        /// <summary>
+        /// A TLS target host used for server certificate validation.
+        /// </summary>
+        public string tlsTargetHost
+        {
+            get => _tlsTargetHost;
+            set => _tlsTargetHost = value;
+        }
+
+        /// <summary>
+        /// Accept invalid TLS certificates. Use only for development with self-signed certificates.
+        /// </summary>
+        public bool acceptInvalidTlsCertificate
+        {
+            get => _acceptInvalidTlsCertificate;
+            set => _acceptInvalidTlsCertificate = value;
+        }
+
+        /// <summary>
         /// A transport protocol your game is using.
         /// </summary>
         public TransportProtocol gameTransportProtocol
@@ -666,6 +693,14 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("Port of Match Making Server")]
         private ushort _serverPort = 57000;
 
+        [SerializeField, Tooltip("Connection mode to Match Making Server")]
+        private MatchMakerConnectionMode _connectionMode = MatchMakerConnectionMode.Tls;
+
+        [SerializeField, Tooltip("TLS target host used for server certificate validation")]
+        private string _tlsTargetHost = "";
+
+        [SerializeField, Tooltip("Accept invalid TLS certificates. Use only for development.")]
+        private bool _acceptInvalidTlsCertificate;
 
         [SerializeField, Tooltip("Timeout seconds to send and receive data between match making server")]
         private float _serverCommunicationTimeOutSeconds = 10;
@@ -824,7 +859,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private async Task<PlayerFullName> ConnectImplAsync(string playerName)
         {
-            return await _client.ConnectAsync(_serverAddress, _serverPort, playerName);
+            return await _client.ConnectAsync(_serverAddress, _serverPort, playerName, CreateConnectionOptions());
         }
 
         private async Task<HostRoomResult> CreateRoomImplAsync(byte maxPlayerCount,
@@ -923,6 +958,18 @@ namespace PlanetaGameLabo.MatchMaker
             }
 
             return list;
+        }
+
+        private MatchMakerConnectionOptions CreateConnectionOptions()
+        {
+            return new MatchMakerConnectionOptions
+            {
+                Mode = _connectionMode,
+                TlsTargetHost = string.IsNullOrEmpty(_tlsTargetHost) ? null : _tlsTargetHost,
+                RemoteCertificateValidationCallback = _acceptInvalidTlsCertificate
+                    ? (sender, certificate, chain, sslPolicyErrors) => true
+                    : null
+            };
         }
 
         private void Reset()

@@ -15,7 +15,7 @@ namespace pgl {
 		// Check room group existence
 		auto& room_data_container = param->server_data.get_room_data_container();
 
-		const auto client_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
+		const auto client_endpoint = param->session_data.remote_endpoint();
 		const auto validate_host = [&](const room_data& target_room_data) {
 			if (target_room_data.host_endpoint == client_endpoint) { return; }
 

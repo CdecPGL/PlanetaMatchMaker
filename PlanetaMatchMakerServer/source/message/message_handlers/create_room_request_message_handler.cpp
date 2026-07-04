@@ -39,7 +39,7 @@ namespace pgl {
 
 		try {
 			// Create requested room
-			const auto host_endpoint = endpoint::make_from_boost_endpoint(param->socket.remote_endpoint());
+			const auto host_endpoint = param->session_data.remote_endpoint();
 			auto game_host_endpoint = host_endpoint;
 			game_host_endpoint.port_number = message.port_number;
 			const auto is_public = message.password.length() == 0;

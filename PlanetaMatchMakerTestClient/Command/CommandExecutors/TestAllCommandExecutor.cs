@@ -149,7 +149,8 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var playerFullName =
-                    await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
+                    await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName,
+                        CreateConnectionOptions(options));
                 if (playerFullName.Name != playerName)
                 {
                     throw new TestFailedException(false,
@@ -260,7 +261,8 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 secondClient = new MatchMakerClient(sharedClient.GameId, sharedClient.GameVersion,
                     sharedClient.TimeoutMilliSeconds, logger: sharedClient.Logger);
-                await secondClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
+                await secondClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName,
+                    CreateConnectionOptions(options));
             }
             catch (ClientErrorException e)
             {
@@ -308,6 +310,12 @@ namespace PlanetaGameLabo.MatchMaker
         private MatchMakerClient secondClient;
         private ushort lastCreatedPrivatePort;
         private ushort lastCreatedPublicPort;
+
+        private static MatchMakerConnectionOptions CreateConnectionOptions(TestAllCommandOptions options)
+        {
+            return ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
+                options.AcceptInvalidTlsCertificate);
+        }
     }
 
     internal class TestAllCommandOptions : TestCommandOptions
