@@ -49,10 +49,13 @@ RUN \
     -DOPENSSL_ROOT_DIR=/usr/local/openssl && \
   cmake --build build --target PlanetaMatchMakerServer --config Release -j"$(nproc)"
 
-FROM gcr.io/distroless/base-nossl-debian12
+FROM gcr.io/distroless/static-debian12
 LABEL maintainer="Cdec <cdecrement@gmail.com>"
 
 # Copy C++ runtime libraries required by the PMMS binary.
+COPY --from=base /lib64/ld-linux-x86-64.so.2 /lib64/
+COPY --from=base /lib/x86_64-linux-gnu/libc.so.6 /lib/x86_64-linux-gnu/
+COPY --from=base /lib/x86_64-linux-gnu/libm.so.6 /lib/x86_64-linux-gnu/
 COPY --from=base /lib/x86_64-linux-gnu/libstdc++.so.6* /lib/x86_64-linux-gnu/
 COPY --from=base /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/x86_64-linux-gnu/
 
