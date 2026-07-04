@@ -71,6 +71,8 @@ Log lines include the current thread ID as `[thread:<id>]`. Logs emitted while p
 |certificate_path|string (path)|""|PMMS_TLS_CERTIFICATE_PATH|TLS server certificate chain path. Required when `mode` is "tls".|
 |private_key_path|string (path)|""|PMMS_TLS_PRIVATE_KEY_PATH|TLS server private key path. Required when `mode` is "tls".|
 
+See [TLS Certificate Setup](TLSCertificate.md) for production certificate paths, Certbot examples, Docker mounts, renewal, and development self-signed certificates.
+
 `external_tls_termination` is reserved for future design but is not supported now. The server also does not support PROXY protocol, so it does not accept PROXY protocol headers and cannot restore the original client IP from a TLS terminator.
 
 In Builtin mode, PMMS uses the accepted TCP connection source IP to create the game host endpoint. If TLS is terminated by an external proxy without preserving the original source IP, Builtin mode can return the proxy IP instead of the host client IP.

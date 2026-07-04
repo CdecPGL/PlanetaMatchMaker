@@ -56,7 +56,7 @@ ctest
 
 The server project is not compatible with gcc so specify clang++ to cmake.
 
-The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing.
+The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing. See [TLS Certificate Setup](TLSCertificate.md) for certificate examples.
 
 ### Build by CMake Manually (Linux)
 
@@ -80,7 +80,7 @@ ctest
 
 The server project is compatible with gcc so specify clang++ to cmake.
 
-The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing.
+The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing. See [TLS Certificate Setup](TLSCertificate.md) for certificate examples.
 
 ### Build by Visual Studio (Windows)
 
