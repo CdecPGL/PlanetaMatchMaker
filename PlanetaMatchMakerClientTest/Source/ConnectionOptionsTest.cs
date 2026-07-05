@@ -4,15 +4,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace PlanetaGameLabo.MatchMaker.Test
 {
     [TestClass]
-    [TestCategory("MatchMakerConnectionOptions")]
-    public class MatchMakerConnectionOptionsTest
+    [TestCategory("ConnectionOptions")]
+    public class ConnectionOptionsTest
     {
         [TestMethod]
         public void DefaultModeIsTls()
         {
-            var options = new MatchMakerConnectionOptions();
+            var options = new ConnectionOptions();
 
-            Assert.AreEqual(MatchMakerConnectionMode.Tls, options.Mode);
+            Assert.AreEqual(ConnectionMode.Tls, options.Mode);
             Assert.IsNull(options.TlsTargetHost);
             Assert.IsNull(options.RemoteCertificateValidationCallback);
         }
@@ -20,16 +20,16 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [TestMethod]
         public void ModeCanBePlain()
         {
-            var options = new MatchMakerConnectionOptions(MatchMakerConnectionMode.Plain);
+            var options = new ConnectionOptions(ConnectionMode.Plain);
 
-            Assert.AreEqual(MatchMakerConnectionMode.Plain, options.Mode);
+            Assert.AreEqual(ConnectionMode.Plain, options.Mode);
         }
 
         [TestMethod]
         public void TlsTargetHostIsValidated()
         {
-            var options = new MatchMakerConnectionOptions(
-                MatchMakerConnectionMode.Tls,
+            var options = new ConnectionOptions(
+                ConnectionMode.Tls,
                 "match.example.com");
 
             Assert.AreEqual("match.example.com", options.TlsTargetHost);
@@ -39,8 +39,8 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void InvalidTlsTargetHostThrowsArgumentException()
         {
             Assert.ThrowsException<ArgumentException>(() =>
-                new MatchMakerConnectionOptions(
-                    MatchMakerConnectionMode.Tls,
+                new ConnectionOptions(
+                    ConnectionMode.Tls,
                     "example..com"));
         }
 
@@ -48,7 +48,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void UndefinedModeThrowsArgumentOutOfRangeException()
         {
             Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-                new MatchMakerConnectionOptions((MatchMakerConnectionMode)255));
+                new ConnectionOptions((ConnectionMode)255));
         }
     }
 }

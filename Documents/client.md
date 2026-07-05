@@ -2,23 +2,23 @@
 
 ## Connection Security
 
-`MatchMakerClient.ConnectAsync` uses TLS by default. `MatchMakerAddress` is an immutable value object for host or IP address values and validates IPv4, IPv6, or host names when constructed. The existing `string` overload remains available for compatibility.
+`MatchMakerClient.ConnectAsync` uses TLS by default. `NetworkAddress` is an immutable value object for host or IP address values and validates IPv4, IPv6, or host names when constructed. The existing `string` overload remains available for compatibility.
 
-To connect to a server with a certificate whose host name is different from the address you dial, pass the TLS target host to `MatchMakerConnectionOptions`.
+To connect to a server with a certificate whose host name is different from the address you dial, pass the TLS target host to `ConnectionOptions`.
 
 ```csharp
 await client.ConnectAsync(
-    new MatchMakerAddress("127.0.0.1"),
-    new MatchMakerServerPort(57000),
-    new MatchMakerPlayerName("player"),
-    new MatchMakerConnectionOptions(
-        MatchMakerConnectionMode.Tls,
+    new NetworkAddress("127.0.0.1"),
+    new NetworkPort(57000),
+    new PlayerName("player"),
+    new ConnectionOptions(
+        ConnectionMode.Tls,
         "match.example.com"));
 ```
 
-Other user-provided values also have immutable value object overloads: `MatchMakerGameId`, `MatchMakerGameVersion`, `MatchMakerRoomPassword`, `MatchMakerGameHostPort`, `MatchMakerGameHostExternalId`, and `MatchMakerSearchName`.
+User-provided values have immutable value object overloads: `GameId`, `GameVersion`, `NetworkAddress`, `NetworkPort`, `PlayerName`, `RoomPassword`, `GameHostPort`, `GameHostExternalId`, and `SearchName`.
 
-Use `MatchMakerConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
+Use `ConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
 
 `RemoteCertificateValidationCallback` can be set for development with self-signed certificates. Do not disable certificate validation in production.
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -111,7 +111,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// A connection mode to the matching server.
         /// </summary>
-        public MatchMakerConnectionMode connectionMode
+        public ConnectionMode connectionMode
         {
             get => _connectionMode;
             set => _connectionMode = value;
@@ -694,7 +694,7 @@ namespace PlanetaGameLabo.MatchMaker
         private ushort _serverPort = 57000;
 
         [SerializeField, Tooltip("Connection mode to Match Making Server")]
-        private MatchMakerConnectionMode _connectionMode = MatchMakerConnectionMode.Tls;
+        private ConnectionMode _connectionMode = ConnectionMode.Tls;
 
         [SerializeField, Tooltip("TLS target host used for server certificate validation")]
         private string _tlsTargetHost = "";
@@ -960,9 +960,9 @@ namespace PlanetaGameLabo.MatchMaker
             return list;
         }
 
-        private MatchMakerConnectionOptions CreateConnectionOptions()
+        private ConnectionOptions CreateConnectionOptions()
         {
-            return new MatchMakerConnectionOptions(
+            return new ConnectionOptions(
                 _connectionMode,
                 string.IsNullOrEmpty(_tlsTargetHost) ? null : _tlsTargetHost,
                 _acceptInvalidTlsCertificate

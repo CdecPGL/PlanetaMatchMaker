@@ -311,7 +311,7 @@ namespace PlanetaGameLabo.MatchMaker
         private ushort lastCreatedPrivatePort;
         private ushort lastCreatedPublicPort;
 
-        private static MatchMakerConnectionOptions CreateConnectionOptions(TestAllCommandOptions options)
+        private static ConnectionOptions CreateConnectionOptions(TestAllCommandOptions options)
         {
             return ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
                 options.AcceptInvalidTlsCertificate);

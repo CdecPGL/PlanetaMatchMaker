@@ -2,10 +2,10 @@ namespace PlanetaGameLabo.MatchMaker
 {
     internal static class ConnectionOptionsFactory
     {
-        public static MatchMakerConnectionOptions Create(string connectionMode,
+        public static ConnectionOptions Create(string connectionMode,
             string tlsTargetHost, bool acceptInvalidTlsCertificate)
         {
-            return new MatchMakerConnectionOptions(
+            return new ConnectionOptions(
                 ParseConnectionMode(connectionMode),
                 string.IsNullOrEmpty(tlsTargetHost) ? null : tlsTargetHost,
                 acceptInvalidTlsCertificate
@@ -13,14 +13,14 @@ namespace PlanetaGameLabo.MatchMaker
                     : null);
         }
 
-        private static MatchMakerConnectionMode ParseConnectionMode(string connectionMode)
+        private static ConnectionMode ParseConnectionMode(string connectionMode)
         {
             switch (connectionMode?.Trim().ToLowerInvariant())
             {
                 case "plain":
-                    return MatchMakerConnectionMode.Plain;
+                    return ConnectionMode.Plain;
                 case "tls":
-                    return MatchMakerConnectionMode.Tls;
+                    return ConnectionMode.Tls;
                 default:
                     throw new CommandExecutionErrorException(
                         $"{nameof(connectionMode)} must be plain or tls. ({nameof(connectionMode)}: {connectionMode})");

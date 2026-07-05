@@ -8,9 +8,9 @@ using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    public sealed class MatchMakerGameId : IEquatable<MatchMakerGameId>
+    public sealed class GameId : IEquatable<GameId>
     {
-        public MatchMakerGameId(string value)
+        public GameId(string value)
         {
             if (value == null)
             {
@@ -29,12 +29,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public string Value { get; }
 
-        public static MatchMakerGameId Parse(string value)
+        public static GameId Parse(string value)
         {
-            return new MatchMakerGameId(value);
+            return new GameId(value);
         }
 
-        public static bool TryParse(string value, out MatchMakerGameId gameId)
+        public static bool TryParse(string value, out GameId gameId)
         {
             if (!IsValid(value))
             {
@@ -42,18 +42,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            gameId = new MatchMakerGameId(value);
+            gameId = new GameId(value);
             return true;
         }
 
-        public bool Equals(MatchMakerGameId other)
+        public bool Equals(GameId other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerGameId);
+            return Equals(obj as GameId);
         }
 
         public override int GetHashCode()
@@ -72,9 +72,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class MatchMakerGameVersion : IEquatable<MatchMakerGameVersion>
+    public sealed class GameVersion : IEquatable<GameVersion>
     {
-        public MatchMakerGameVersion(string value)
+        public GameVersion(string value)
         {
             if (value == null)
             {
@@ -91,16 +91,16 @@ namespace PlanetaGameLabo.MatchMaker
             Value = value;
         }
 
-        public static MatchMakerGameVersion Empty { get; } = new MatchMakerGameVersion("");
+        public static GameVersion Empty { get; } = new GameVersion("");
 
         public string Value { get; }
 
-        public static MatchMakerGameVersion Parse(string value)
+        public static GameVersion Parse(string value)
         {
-            return new MatchMakerGameVersion(value);
+            return new GameVersion(value);
         }
 
-        public static bool TryParse(string value, out MatchMakerGameVersion gameVersion)
+        public static bool TryParse(string value, out GameVersion gameVersion)
         {
             if (!IsValid(value))
             {
@@ -108,18 +108,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            gameVersion = new MatchMakerGameVersion(value);
+            gameVersion = new GameVersion(value);
             return true;
         }
 
-        public bool Equals(MatchMakerGameVersion other)
+        public bool Equals(GameVersion other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerGameVersion);
+            return Equals(obj as GameVersion);
         }
 
         public override int GetHashCode()
@@ -142,9 +142,9 @@ namespace PlanetaGameLabo.MatchMaker
     /// Immutable host or IP address for PMMS connections.
     /// IPv4, IPv6 or host name is valid.
     /// </summary>
-    public class MatchMakerAddress : IEquatable<MatchMakerAddress>
+    public class NetworkAddress : IEquatable<NetworkAddress>
     {
-        public MatchMakerAddress(string value)
+        public NetworkAddress(string value)
         {
             if (value == null)
             {
@@ -161,12 +161,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public string Value { get; }
 
-        public static MatchMakerAddress Parse(string value)
+        public static NetworkAddress Parse(string value)
         {
-            return new MatchMakerAddress(value);
+            return new NetworkAddress(value);
         }
 
-        public static bool TryParse(string value, out MatchMakerAddress address)
+        public static bool TryParse(string value, out NetworkAddress address)
         {
             if (!TryNormalize(value, out var normalizedValue))
             {
@@ -174,18 +174,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            address = new MatchMakerAddress(normalizedValue);
+            address = new NetworkAddress(normalizedValue);
             return true;
         }
 
-        public bool Equals(MatchMakerAddress other)
+        public bool Equals(NetworkAddress other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerAddress);
+            return Equals(obj as NetworkAddress);
         }
 
         public override int GetHashCode()
@@ -231,9 +231,9 @@ namespace PlanetaGameLabo.MatchMaker
             new Regex(@"^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$", RegexOptions.CultureInvariant);
     }
 
-    public sealed class MatchMakerServerPort : IEquatable<MatchMakerServerPort>
+    public sealed class NetworkPort : IEquatable<NetworkPort>
     {
-        public MatchMakerServerPort(ushort value)
+        public NetworkPort(ushort value)
         {
             if (!IsValid(value))
             {
@@ -245,12 +245,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public ushort Value { get; }
 
-        public static MatchMakerServerPort Parse(ushort value)
+        public static NetworkPort Parse(ushort value)
         {
-            return new MatchMakerServerPort(value);
+            return new NetworkPort(value);
         }
 
-        public static bool TryParse(ushort value, out MatchMakerServerPort port)
+        public static bool TryParse(ushort value, out NetworkPort port)
         {
             if (!IsValid(value))
             {
@@ -258,18 +258,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            port = new MatchMakerServerPort(value);
+            port = new NetworkPort(value);
             return true;
         }
 
-        public bool Equals(MatchMakerServerPort other)
+        public bool Equals(NetworkPort other)
         {
             return other != null && Value == other.Value;
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerServerPort);
+            return Equals(obj as NetworkPort);
         }
 
         public override int GetHashCode()
@@ -288,9 +288,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class MatchMakerPlayerName : IEquatable<MatchMakerPlayerName>
+    public sealed class PlayerName : IEquatable<PlayerName>
     {
-        public MatchMakerPlayerName(string value)
+        public PlayerName(string value)
         {
             if (value == null)
             {
@@ -309,12 +309,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public string Value { get; }
 
-        public static MatchMakerPlayerName Parse(string value)
+        public static PlayerName Parse(string value)
         {
-            return new MatchMakerPlayerName(value);
+            return new PlayerName(value);
         }
 
-        public static bool TryParse(string value, out MatchMakerPlayerName playerName)
+        public static bool TryParse(string value, out PlayerName playerName)
         {
             if (!IsValid(value))
             {
@@ -322,18 +322,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            playerName = new MatchMakerPlayerName(value);
+            playerName = new PlayerName(value);
             return true;
         }
 
-        public bool Equals(MatchMakerPlayerName other)
+        public bool Equals(PlayerName other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerPlayerName);
+            return Equals(obj as PlayerName);
         }
 
         public override int GetHashCode()
@@ -353,9 +353,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class MatchMakerGameHostPort : IEquatable<MatchMakerGameHostPort>
+    public sealed class GameHostPort : IEquatable<GameHostPort>
     {
-        public MatchMakerGameHostPort(ushort value)
+        public GameHostPort(ushort value)
         {
             if (!IsValid(value))
             {
@@ -367,12 +367,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public ushort Value { get; }
 
-        public static MatchMakerGameHostPort Parse(ushort value)
+        public static GameHostPort Parse(ushort value)
         {
-            return new MatchMakerGameHostPort(value);
+            return new GameHostPort(value);
         }
 
-        public static bool TryParse(ushort value, out MatchMakerGameHostPort port)
+        public static bool TryParse(ushort value, out GameHostPort port)
         {
             if (!IsValid(value))
             {
@@ -380,18 +380,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            port = new MatchMakerGameHostPort(value);
+            port = new GameHostPort(value);
             return true;
         }
 
-        public bool Equals(MatchMakerGameHostPort other)
+        public bool Equals(GameHostPort other)
         {
             return other != null && Value == other.Value;
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerGameHostPort);
+            return Equals(obj as GameHostPort);
         }
 
         public override int GetHashCode()
@@ -410,9 +410,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class MatchMakerGameHostExternalId : IEquatable<MatchMakerGameHostExternalId>
+    public sealed class GameHostExternalId : IEquatable<GameHostExternalId>
     {
-        public MatchMakerGameHostExternalId(byte[] value)
+        public GameHostExternalId(byte[] value)
         {
             if (value == null)
             {
@@ -429,35 +429,35 @@ namespace PlanetaGameLabo.MatchMaker
             this.value = value.ToArray();
         }
 
-        public static MatchMakerGameHostExternalId Empty { get; } =
-            new MatchMakerGameHostExternalId(Array.Empty<byte>());
+        public static GameHostExternalId Empty { get; } =
+            new GameHostExternalId(Array.Empty<byte>());
 
         private readonly byte[] value;
 
-        public static MatchMakerGameHostExternalId Parse(byte[] value)
+        public static GameHostExternalId Parse(byte[] value)
         {
-            return new MatchMakerGameHostExternalId(value);
+            return new GameHostExternalId(value);
         }
 
-        public static MatchMakerGameHostExternalId From<T>(T externalId)
+        public static GameHostExternalId From<T>(T externalId)
         {
             switch (externalId)
             {
                 case string s:
-                    return new MatchMakerGameHostExternalId(
+                    return new GameHostExternalId(
                         Utility.ConvertStringToFixedLengthArray(s, RoomConstants.GameHostExternalIdLength));
                 case ulong v:
-                    return new MatchMakerGameHostExternalId(Serializer.Serialize(v));
+                    return new GameHostExternalId(Serializer.Serialize(v));
                 case uint v:
-                    return new MatchMakerGameHostExternalId(Serializer.Serialize(v));
+                    return new GameHostExternalId(Serializer.Serialize(v));
                 case ushort v:
-                    return new MatchMakerGameHostExternalId(Serializer.Serialize(v));
+                    return new GameHostExternalId(Serializer.Serialize(v));
                 default:
                     throw new ArgumentException("Unsupported type.", nameof(externalId));
             }
         }
 
-        public static bool TryParse(byte[] value, out MatchMakerGameHostExternalId externalId)
+        public static bool TryParse(byte[] value, out GameHostExternalId externalId)
         {
             if (!IsValid(value))
             {
@@ -465,7 +465,7 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            externalId = new MatchMakerGameHostExternalId(value);
+            externalId = new GameHostExternalId(value);
             return true;
         }
 
@@ -474,14 +474,14 @@ namespace PlanetaGameLabo.MatchMaker
             return value.ToArray();
         }
 
-        public bool Equals(MatchMakerGameHostExternalId other)
+        public bool Equals(GameHostExternalId other)
         {
             return other != null && value.SequenceEqual(other.value);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerGameHostExternalId);
+            return Equals(obj as GameHostExternalId);
         }
 
         public override int GetHashCode()
@@ -509,9 +509,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class MatchMakerRoomPassword : IEquatable<MatchMakerRoomPassword>
+    public sealed class RoomPassword : IEquatable<RoomPassword>
     {
-        public MatchMakerRoomPassword(string value)
+        public RoomPassword(string value)
         {
             if (value == null)
             {
@@ -528,16 +528,16 @@ namespace PlanetaGameLabo.MatchMaker
             Value = value;
         }
 
-        public static MatchMakerRoomPassword Empty { get; } = new MatchMakerRoomPassword("");
+        public static RoomPassword Empty { get; } = new RoomPassword("");
 
         public string Value { get; }
 
-        public static MatchMakerRoomPassword Parse(string value)
+        public static RoomPassword Parse(string value)
         {
-            return new MatchMakerRoomPassword(value);
+            return new RoomPassword(value);
         }
 
-        public static bool TryParse(string value, out MatchMakerRoomPassword password)
+        public static bool TryParse(string value, out RoomPassword password)
         {
             if (!IsValid(value))
             {
@@ -545,18 +545,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            password = new MatchMakerRoomPassword(value);
+            password = new RoomPassword(value);
             return true;
         }
 
-        public bool Equals(MatchMakerRoomPassword other)
+        public bool Equals(RoomPassword other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerRoomPassword);
+            return Equals(obj as RoomPassword);
         }
 
         public override int GetHashCode()
@@ -575,9 +575,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class MatchMakerSearchName : IEquatable<MatchMakerSearchName>
+    public sealed class SearchName : IEquatable<SearchName>
     {
-        public MatchMakerSearchName(string value)
+        public SearchName(string value)
         {
             if (value == null)
             {
@@ -594,16 +594,16 @@ namespace PlanetaGameLabo.MatchMaker
             Value = value;
         }
 
-        public static MatchMakerSearchName Empty { get; } = new MatchMakerSearchName("");
+        public static SearchName Empty { get; } = new SearchName("");
 
         public string Value { get; }
 
-        public static MatchMakerSearchName Parse(string value)
+        public static SearchName Parse(string value)
         {
-            return new MatchMakerSearchName(value);
+            return new SearchName(value);
         }
 
-        public static bool TryParse(string value, out MatchMakerSearchName searchName)
+        public static bool TryParse(string value, out SearchName searchName)
         {
             if (!IsValid(value))
             {
@@ -611,18 +611,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            searchName = new MatchMakerSearchName(value);
+            searchName = new SearchName(value);
             return true;
         }
 
-        public bool Equals(MatchMakerSearchName other)
+        public bool Equals(SearchName other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerSearchName);
+            return Equals(obj as SearchName);
         }
 
         public override int GetHashCode()

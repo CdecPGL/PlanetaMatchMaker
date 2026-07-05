@@ -86,7 +86,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         public static async Task<CreateRoomResult> CreateRoomWithSteamAsync(this MatchMakerClient client,
             byte maxPlayerCount, string password = "")
         {
-            if (!MatchMakerRoomPassword.TryParse(password, out var parsedPassword))
+            if (!RoomPassword.TryParse(password, out var parsedPassword))
             {
                 throw new ArgumentException(
                     $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
@@ -105,7 +105,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         /// <exception cref="InvalidOperationException">Steam client is not ready.</exception>
         /// <returns></returns>
         public static async Task<CreateRoomResult> CreateRoomWithSteamAsync(this MatchMakerClient client,
-            byte maxPlayerCount, MatchMakerRoomPassword password)
+            byte maxPlayerCount, RoomPassword password)
         {
             if (password == null)
             {
@@ -129,7 +129,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         public static async Task<SteamIdentityType> JoinRoomWithSteamAsync(this MatchMakerClient client, uint roomId,
             string password = "")
         {
-            if (!MatchMakerRoomPassword.TryParse(password, out var parsedPassword))
+            if (!RoomPassword.TryParse(password, out var parsedPassword))
             {
                 throw new ArgumentException(
                     $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
@@ -148,7 +148,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         /// <exception cref="ArgumentException"></exception>
         /// <returns>Game host steam networking identity</returns>
         public static async Task<SteamIdentityType> JoinRoomWithSteamAsync(this MatchMakerClient client, uint roomId,
-            MatchMakerRoomPassword password)
+            RoomPassword password)
         {
             if (password == null)
             {

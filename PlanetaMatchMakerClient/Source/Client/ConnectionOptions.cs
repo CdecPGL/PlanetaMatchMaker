@@ -3,15 +3,15 @@ using System.Net.Security;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    public enum MatchMakerConnectionMode
+    public enum ConnectionMode
     {
         Plain,
         Tls
     }
 
-    public sealed class MatchMakerConnectionOptions
+    public sealed class ConnectionOptions
     {
-        public MatchMakerConnectionOptions(MatchMakerConnectionMode mode = MatchMakerConnectionMode.Tls,
+        public ConnectionOptions(ConnectionMode mode = ConnectionMode.Tls,
             string tlsTargetHost = null,
             RemoteCertificateValidationCallback remoteCertificateValidationCallback = null)
         {
@@ -21,18 +21,18 @@ namespace PlanetaGameLabo.MatchMaker
             RemoteCertificateValidationCallback = remoteCertificateValidationCallback;
         }
 
-        public MatchMakerConnectionMode Mode { get; }
+        public ConnectionMode Mode { get; }
 
         public string TlsTargetHost { get; }
 
         public RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; }
 
-        private static void ValidateMode(MatchMakerConnectionMode mode)
+        private static void ValidateMode(ConnectionMode mode)
         {
             switch (mode)
             {
-                case MatchMakerConnectionMode.Plain:
-                case MatchMakerConnectionMode.Tls:
+                case ConnectionMode.Plain:
+                case ConnectionMode.Tls:
                     return;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unsupported connection mode.");
@@ -46,7 +46,7 @@ namespace PlanetaGameLabo.MatchMaker
                 return null;
             }
 
-            if (!MatchMakerAddress.TryParse(tlsTargetHost, out var parsedTlsTargetHost))
+            if (!NetworkAddress.TryParse(tlsTargetHost, out var parsedTlsTargetHost))
             {
                 throw new ArgumentException("IPv4, IPv6 or host name is available.", nameof(tlsTargetHost));
             }

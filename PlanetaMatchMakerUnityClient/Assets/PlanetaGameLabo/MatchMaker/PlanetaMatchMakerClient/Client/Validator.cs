@@ -10,7 +10,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateServerAddress(string address)
         {
-            return MatchMakerAddress.IsValid(address);
+            return NetworkAddress.IsValid(address);
         }
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateServerPort(ushort port)
         {
-            return MatchMakerServerPort.IsValid(port);
+            return NetworkPort.IsValid(port);
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidatePlayerName(string name)
         {
-            return MatchMakerPlayerName.IsValid(name);
+            return PlayerName.IsValid(name);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateGameHostPort(ushort port)
         {
-            return MatchMakerGameHostPort.IsValid(port);
+            return GameHostPort.IsValid(port);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateGameHostExternalId(byte[] externalId)
         {
-            return MatchMakerGameHostExternalId.IsValid(externalId);
+            return GameHostExternalId.IsValid(externalId);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateRoomPassword(string password)
         {
-            return MatchMakerRoomPassword.IsValid(password);
+            return RoomPassword.IsValid(password);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateSearchName(string name)
         {
-            return MatchMakerSearchName.IsValid(name);
+            return SearchName.IsValid(name);
         }
 
     }
