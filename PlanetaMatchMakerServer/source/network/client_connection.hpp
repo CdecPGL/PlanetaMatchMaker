@@ -35,7 +35,7 @@ namespace pgl {
 				return;
 			}
 
-			boost::asio::async_write(*plain_socket_, buffers, yield);
+			boost::asio::async_write(socket_, buffers, yield);
 		}
 
 		template <typename MutableBufferSequence, typename CompletionCondition>
@@ -46,14 +46,14 @@ namespace pgl {
 				return;
 			}
 
-			boost::asio::async_read(*plain_socket_, buffers, completion_condition, yield);
+			boost::asio::async_read(socket_, buffers, completion_condition, yield);
 		}
 
 	private:
 		boost::asio::any_io_executor executor_;
 		boost::asio::ssl::context& ssl_context_;
 		server_tls_mode mode_ = server_tls_mode::tls;
-		std::optional<boost::asio::ip::tcp::socket> plain_socket_;
-		std::optional<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> tls_stream_;
+		boost::asio::ip::tcp::socket socket_;
+		std::optional<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> tls_stream_;
 	};
 }

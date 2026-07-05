@@ -142,9 +142,12 @@ namespace PlanetaGameLabo.MatchMaker
                     if (connectionOptions.Mode == ConnectionMode.Tls)
                     {
                         var sslStream = CreateSslStream(communicationStream, connectionOptions);
-                        var targetHost = connectionOptions.TlsTargetHost.HasValue
-                            ? connectionOptions.TlsTargetHost.Value.Value
-                            : serverAddress.Value;
+                        var targetHost = serverAddress.Value;
+                        if (connectionOptions.TlsTargetHost.HasValue)
+                        {
+                            targetHost = connectionOptions.TlsTargetHost.Value.Value;
+                        }
+
                         await sslStream.AuthenticateAsClientAsync(targetHost).ConfigureAwait(false);
                         communicationStream = sslStream;
                         Logger.Log(LogLevel.Info, $"TLS handshake with {targetHost} successfully.");

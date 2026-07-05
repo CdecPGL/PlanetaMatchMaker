@@ -17,7 +17,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         public async Task Execute(MatchMakerClient sharedClient, string[] args, CancellationToken cancellationToken)
         {
-            var parsedResult = CommandLine.Parser.Default.ParseArguments<TOptions>(args);
+            var parsedResult = CommandLineParserFactory.Create().ParseArguments<TOptions>(args);
             if (parsedResult.Tag != CommandLine.ParserResultType.Parsed)
             {
                 var helpText = HelpText.AutoBuild(parsedResult);

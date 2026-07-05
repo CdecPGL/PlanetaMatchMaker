@@ -65,9 +65,9 @@ namespace pgl {
 			// Serialize accept initiation on the shared acceptor, then bind completion to this session strand.
 			std::lock_guard lock(acceptor_mutex_);
 			acceptor_.async_accept(connection_.socket(),
-				[shared_this](const system::error_code& accept_error) {
+				asio::bind_executor(strand_, [shared_this](const system::error_code& accept_error) {
 					shared_this->handle_accepted_connection(accept_error);
-				});
+				}));
 		}
 	}
 
@@ -152,7 +152,7 @@ namespace pgl {
 				shared_this->stop();
 				throw;
 			}
-		}));
+		}, asio::detached));
 	}
 
 	void server_session::stop() {

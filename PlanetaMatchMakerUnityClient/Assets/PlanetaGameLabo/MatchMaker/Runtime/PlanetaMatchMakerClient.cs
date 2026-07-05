@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -957,12 +958,19 @@ namespace PlanetaGameLabo.MatchMaker
 
         private ConnectionOptions CreateConnectionOptions()
         {
-            return new ConnectionOptions(
-                _connectionMode,
-                string.IsNullOrEmpty(_tlsTargetHost) ? null : new Host(_tlsTargetHost),
-                _acceptInvalidTlsCertificate
-                    ? (sender, certificate, chain, sslPolicyErrors) => true
-                    : null);
+            Host? tlsTargetHost = null;
+            if (!string.IsNullOrEmpty(_tlsTargetHost))
+            {
+                tlsTargetHost = new Host(_tlsTargetHost);
+            }
+
+            RemoteCertificateValidationCallback remoteCertificateValidationCallback = null;
+            if (_acceptInvalidTlsCertificate)
+            {
+                remoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            }
+
+            return new ConnectionOptions(_connectionMode, tlsTargetHost, remoteCertificateValidationCallback);
         }
 
         private void Reset()

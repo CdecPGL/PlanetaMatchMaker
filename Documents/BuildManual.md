@@ -185,9 +185,8 @@ You can use client in Unity with .Net 4.0. as a backend.
 
 Following versions are tested.
 
-- Unity 2019.2.12f1 (Windows)
-- Unity 2019.3.13f1 (Windows)
-- Unity 2021.2.8f1 (Windows)
+- Unity 2019.3.17f1 (Windows)
+- Unity 2022.3.62f3 (Windows)
 
 ### Dependencies
 
