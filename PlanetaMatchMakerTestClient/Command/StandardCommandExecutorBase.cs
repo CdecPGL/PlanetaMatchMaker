@@ -34,9 +34,9 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Output detailed information if true.")]
         public bool Verbose { get; set; }
 
-        [CommandLine.Option("connection_mode", Default = "tls", Required = false,
-            HelpText = "Connection mode to the server. plain or tls.")]
-        public string ConnectionMode { get; set; }
+        [CommandLine.Option("connection_mode", Default = ConnectionMode.Tls, Required = false,
+            HelpText = "Connection mode to the server. Plain or Tls.")]
+        public ConnectionMode ConnectionMode { get; set; }
 
         [CommandLine.Option("tls_target_host", Default = "", Required = false,
             HelpText = "TLS target host used for server certificate validation.")]
