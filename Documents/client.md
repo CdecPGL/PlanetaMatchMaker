@@ -2,18 +2,18 @@
 
 ## Connection Security
 
-`MatchMakerClient.ConnectAsync` uses TLS by default. To connect to a server with a certificate whose host name is different from the address you dial, pass `MatchMakerConnectionOptions.TlsTargetHost`.
+`MatchMakerClient.ConnectAsync` uses TLS by default. `MatchMakerServerAddress` is an immutable value object for the dial address and validates IPv4, IPv6, or host names when constructed. The existing `string` overload remains available for compatibility.
+
+To connect to a server with a certificate whose host name is different from the address you dial, pass the TLS target host to `MatchMakerConnectionOptions`.
 
 ```csharp
 await client.ConnectAsync(
-    "127.0.0.1",
+    new MatchMakerServerAddress("127.0.0.1"),
     57000,
     "player",
-    new MatchMakerConnectionOptions
-    {
-        Mode = MatchMakerConnectionMode.Tls,
-        TlsTargetHost = "match.example.com"
-    });
+    new MatchMakerConnectionOptions(
+        MatchMakerConnectionMode.Tls,
+        "match.example.com"));
 ```
 
 Use `MatchMakerConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.

@@ -26,6 +26,25 @@ namespace PlanetaGameLabo.MatchMaker.Test
         }
 
         [TestMethod]
+        public void TlsTargetHostIsValidated()
+        {
+            var options = new MatchMakerConnectionOptions(
+                MatchMakerConnectionMode.Tls,
+                "match.example.com");
+
+            Assert.AreEqual("match.example.com", options.TlsTargetHost);
+        }
+
+        [TestMethod]
+        public void InvalidTlsTargetHostThrowsArgumentException()
+        {
+            Assert.ThrowsException<ArgumentException>(() =>
+                new MatchMakerConnectionOptions(
+                    MatchMakerConnectionMode.Tls,
+                    "example..com"));
+        }
+
+        [TestMethod]
         public void UndefinedModeThrowsArgumentOutOfRangeException()
         {
             Assert.ThrowsException<ArgumentOutOfRangeException>(() =>

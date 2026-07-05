@@ -120,14 +120,35 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task<PlayerFullName> ConnectAsync(string serverAddress, ushort serverPort, string playerName,
+        public Task<PlayerFullName> ConnectAsync(string serverAddress, ushort serverPort, string playerName,
             MatchMakerConnectionOptions connectionOptions = null)
+        {
+            if (!MatchMakerServerAddress.TryParse(serverAddress, out var parsedServerAddress))
+            {
+                throw new ArgumentException("IPv4, IPv6 or host name is available.", nameof(serverAddress));
+            }
+
+            return ConnectAsync(parsedServerAddress, serverPort, playerName, connectionOptions);
+        }
+
+        /// <summary>
+        /// Connect to matching server.
+        /// </summary>
+        /// <param name="serverAddress"></param>
+        /// <param name="serverPort"></param>
+        /// <param name="playerName"></param>
+        /// <exception cref="AuthenticationErrorException"></exception>
+        /// <exception cref="ClientErrorException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <returns></returns>
+        public async Task<PlayerFullName> ConnectAsync(MatchMakerServerAddress serverAddress, ushort serverPort,
+            string playerName, MatchMakerConnectionOptions connectionOptions = null)
         {
             connectionOptions = connectionOptions ?? new MatchMakerConnectionOptions();
 
-            if (!Validator.ValidateServerAddress(serverAddress))
+            if (serverAddress == null)
             {
-                throw new ArgumentException("IPv4, IPv6 or URL is available.", nameof(serverAddress));
+                throw new ArgumentNullException(nameof(serverAddress));
             }
 
             if (!Validator.ValidateServerPort(serverPort))
@@ -154,14 +175,14 @@ namespace PlanetaGameLabo.MatchMaker
                 try
                 {
                     tcpClient = CreateTcpClient();
-                    await tcpClient.ConnectAsync(serverAddress, serverPort).ConfigureAwait(false);
+                    await tcpClient.ConnectAsync(serverAddress.Value, serverPort).ConfigureAwait(false);
                     Logger.Log(LogLevel.Info, $"Connect to {serverAddress}:{serverPort} successfully.");
                     communicationStream = tcpClient.GetStream();
                     if (connectionOptions.Mode == MatchMakerConnectionMode.Tls)
                     {
                         var sslStream = CreateSslStream(communicationStream, connectionOptions);
                         var targetHost = string.IsNullOrEmpty(connectionOptions.TlsTargetHost)
-                            ? serverAddress
+                            ? serverAddress.Value
                             : connectionOptions.TlsTargetHost;
                         await sslStream.AuthenticateAsClientAsync(targetHost).ConfigureAwait(false);
                         communicationStream = sslStream;

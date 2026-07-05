@@ -17,7 +17,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             ValidateMode(mode);
             Mode = mode;
-            TlsTargetHost = tlsTargetHost;
+            TlsTargetHost = ParseTlsTargetHost(tlsTargetHost);
             RemoteCertificateValidationCallback = remoteCertificateValidationCallback;
         }
 
@@ -37,6 +37,21 @@ namespace PlanetaGameLabo.MatchMaker
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unsupported connection mode.");
             }
+        }
+
+        private static string ParseTlsTargetHost(string tlsTargetHost)
+        {
+            if (string.IsNullOrEmpty(tlsTargetHost))
+            {
+                return null;
+            }
+
+            if (!MatchMakerServerAddress.TryParse(tlsTargetHost, out var parsedTlsTargetHost))
+            {
+                throw new ArgumentException("IPv4, IPv6 or host name is available.", nameof(tlsTargetHost));
+            }
+
+            return parsedTlsTargetHost.Value;
         }
     }
 }
