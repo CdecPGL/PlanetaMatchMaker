@@ -86,11 +86,6 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         public static async Task<CreateRoomResult> CreateRoomWithSteamAsync(this MatchMakerClient client,
             byte maxPlayerCount, RoomPassword password)
         {
-            if (password == null)
-            {
-                throw new ArgumentNullException(nameof(password));
-            }
-
             var steamId64 = SteamLibraryHelpers.GetSteamId64();
             return await client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
                     GameHostConnectionEstablishMode.Steam, GameHostExternalId.FromUInt64(steamId64), password)
@@ -108,11 +103,6 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         public static async Task<SteamIdentityType> JoinRoomWithSteamAsync(this MatchMakerClient client, uint roomId,
             RoomPassword password)
         {
-            if (password == null)
-            {
-                throw new ArgumentNullException(nameof(password));
-            }
-
             var response = await client
                 .JoinRoomWithExternalServiceAsync(roomId, GameHostConnectionEstablishMode.Steam, password)
                 .ConfigureAwait(false);

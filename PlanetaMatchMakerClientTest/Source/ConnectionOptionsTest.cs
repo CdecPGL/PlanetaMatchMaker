@@ -32,7 +32,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
                 ConnectionMode.Tls,
                 new Host("match.example.com"));
 
-            Assert.AreEqual("match.example.com", options.TlsTargetHost.Value);
+            Assert.AreEqual("match.example.com", options.TlsTargetHost.Value.Value);
         }
 
         [TestMethod]

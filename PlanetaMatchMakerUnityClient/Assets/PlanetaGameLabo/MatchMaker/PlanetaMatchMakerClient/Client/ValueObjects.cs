@@ -8,7 +8,7 @@ using CdecPGL.MinimalSerializer;
 
 namespace PlanetaGameLabo.MatchMaker
 {
-    public sealed class GameId : IEquatable<GameId>
+    public readonly struct GameId : IEquatable<GameId>
     {
         public GameId(string value)
         {
@@ -24,10 +24,23 @@ namespace PlanetaGameLabo.MatchMaker
                     nameof(value));
             }
 
-            Value = value;
+            this.value = value;
         }
 
-        public string Value { get; }
+        private readonly string value;
+
+        public string Value
+        {
+            get
+            {
+                if (value == null)
+                {
+                    throw new InvalidOperationException("Default GameId is not valid.");
+                }
+
+                return value;
+            }
+        }
 
         public static GameId Parse(string value)
         {
@@ -38,7 +51,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                gameId = null;
+                gameId = default;
                 return false;
             }
 
@@ -48,17 +61,27 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(GameId other)
         {
-            return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
+            return string.Equals(value, other.value, StringComparison.Ordinal);
+        }
+
+        public static bool operator ==(GameId left, GameId right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(GameId left, GameId right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as GameId);
+            return obj is GameId other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return StringComparer.Ordinal.GetHashCode(Value);
+            return value == null ? 0 : StringComparer.Ordinal.GetHashCode(value);
         }
 
         public override string ToString()
@@ -72,7 +95,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class GameVersion : IEquatable<GameVersion>
+    public readonly struct GameVersion : IEquatable<GameVersion>
     {
         public GameVersion(string value)
         {
@@ -88,12 +111,14 @@ namespace PlanetaGameLabo.MatchMaker
                     nameof(value));
             }
 
-            Value = value;
+            this.value = value;
         }
 
         public static GameVersion Empty { get; } = new GameVersion("");
 
-        public string Value { get; }
+        private readonly string value;
+
+        public string Value => value ?? "";
 
         public static GameVersion Parse(string value)
         {
@@ -104,7 +129,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                gameVersion = null;
+                gameVersion = default;
                 return false;
             }
 
@@ -114,12 +139,22 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(GameVersion other)
         {
-            return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
+            return string.Equals(Value, other.Value, StringComparison.Ordinal);
+        }
+
+        public static bool operator ==(GameVersion left, GameVersion right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(GameVersion left, GameVersion right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as GameVersion);
+            return obj is GameVersion other && Equals(other);
         }
 
         public override int GetHashCode()
@@ -142,7 +177,7 @@ namespace PlanetaGameLabo.MatchMaker
     /// Immutable host or IP address for PMMS server connections.
     /// IPv4, IPv6 or host name is valid.
     /// </summary>
-    public sealed class Host : IEquatable<Host>
+    public readonly struct Host : IEquatable<Host>
     {
         public Host(string value)
         {
@@ -156,10 +191,23 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ArgumentException("IPv4, IPv6 or host name is available.", nameof(value));
             }
 
-            Value = normalizedValue;
+            this.value = normalizedValue;
         }
 
-        public string Value { get; }
+        private readonly string value;
+
+        public string Value
+        {
+            get
+            {
+                if (value == null)
+                {
+                    throw new InvalidOperationException("Default Host is not valid.");
+                }
+
+                return value;
+            }
+        }
 
         public static Host Parse(string value)
         {
@@ -170,7 +218,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!TryNormalize(value, out var normalizedValue))
             {
-                host = null;
+                host = default;
                 return false;
             }
 
@@ -180,17 +228,27 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(Host other)
         {
-            return other != null && string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(value, other.value, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool operator ==(Host left, Host right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Host left, Host right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as Host);
+            return obj is Host other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode(Value);
+            return value == null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(value);
         }
 
         public override string ToString()
@@ -231,7 +289,7 @@ namespace PlanetaGameLabo.MatchMaker
             new Regex(@"^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$", RegexOptions.CultureInvariant);
     }
 
-    public sealed class ServerPort : IEquatable<ServerPort>
+    public readonly struct ServerPort : IEquatable<ServerPort>
     {
         public ServerPort(ushort value)
         {
@@ -240,10 +298,23 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ArgumentException("0 is not available.", nameof(value));
             }
 
-            Value = value;
+            this.value = value;
         }
 
-        public ushort Value { get; }
+        private readonly ushort value;
+
+        public ushort Value
+        {
+            get
+            {
+                if (!IsValid(value))
+                {
+                    throw new InvalidOperationException("Default ServerPort is not valid.");
+                }
+
+                return value;
+            }
+        }
 
         public static ServerPort Parse(ushort value)
         {
@@ -254,7 +325,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                port = null;
+                port = default;
                 return false;
             }
 
@@ -264,17 +335,27 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(ServerPort other)
         {
-            return other != null && Value == other.Value;
+            return value == other.value;
+        }
+
+        public static bool operator ==(ServerPort left, ServerPort right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ServerPort left, ServerPort right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as ServerPort);
+            return obj is ServerPort other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return value.GetHashCode();
         }
 
         public override string ToString()
@@ -288,7 +369,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class PlayerName : IEquatable<PlayerName>
+    public readonly struct PlayerName : IEquatable<PlayerName>
     {
         public PlayerName(string value)
         {
@@ -304,10 +385,23 @@ namespace PlanetaGameLabo.MatchMaker
                     nameof(value));
             }
 
-            Value = value;
+            this.value = value;
         }
 
-        public string Value { get; }
+        private readonly string value;
+
+        public string Value
+        {
+            get
+            {
+                if (value == null)
+                {
+                    throw new InvalidOperationException("Default PlayerName is not valid.");
+                }
+
+                return value;
+            }
+        }
 
         public static PlayerName Parse(string value)
         {
@@ -318,7 +412,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                playerName = null;
+                playerName = default;
                 return false;
             }
 
@@ -328,17 +422,27 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(PlayerName other)
         {
-            return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
+            return string.Equals(value, other.value, StringComparison.Ordinal);
+        }
+
+        public static bool operator ==(PlayerName left, PlayerName right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PlayerName left, PlayerName right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as PlayerName);
+            return obj is PlayerName other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return StringComparer.Ordinal.GetHashCode(Value);
+            return value == null ? 0 : StringComparer.Ordinal.GetHashCode(value);
         }
 
         public override string ToString()
@@ -353,7 +457,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class GameHostPort : IEquatable<GameHostPort>
+    public readonly struct GameHostPort : IEquatable<GameHostPort>
     {
         public GameHostPort(ushort value)
         {
@@ -362,10 +466,23 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ArgumentException("Dynamic/private port is available.", nameof(value));
             }
 
-            Value = value;
+            this.value = value;
         }
 
-        public ushort Value { get; }
+        private readonly ushort value;
+
+        public ushort Value
+        {
+            get
+            {
+                if (!IsValid(value))
+                {
+                    throw new InvalidOperationException("Default GameHostPort is not valid.");
+                }
+
+                return value;
+            }
+        }
 
         public static GameHostPort Parse(ushort value)
         {
@@ -376,7 +493,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                port = null;
+                port = default;
                 return false;
             }
 
@@ -386,17 +503,27 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(GameHostPort other)
         {
-            return other != null && Value == other.Value;
+            return value == other.value;
+        }
+
+        public static bool operator ==(GameHostPort left, GameHostPort right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(GameHostPort left, GameHostPort right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as GameHostPort);
+            return obj is GameHostPort other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return value.GetHashCode();
         }
 
         public override string ToString()
@@ -410,7 +537,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class GameHostExternalId : IEquatable<GameHostExternalId>
+    public readonly struct GameHostExternalId : IEquatable<GameHostExternalId>
     {
         public GameHostExternalId(byte[] value)
         {
@@ -433,6 +560,8 @@ namespace PlanetaGameLabo.MatchMaker
             new GameHostExternalId(Array.Empty<byte>());
 
         private readonly byte[] value;
+
+        private byte[] ValueArray => value ?? Array.Empty<byte>();
 
         public static GameHostExternalId Parse(byte[] value)
         {
@@ -469,7 +598,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                externalId = null;
+                externalId = default;
                 return false;
             }
 
@@ -479,17 +608,27 @@ namespace PlanetaGameLabo.MatchMaker
 
         public byte[] ToArray()
         {
-            return value.ToArray();
+            return ValueArray.ToArray();
         }
 
         public bool Equals(GameHostExternalId other)
         {
-            return other != null && value.SequenceEqual(other.value);
+            return ValueArray.SequenceEqual(other.ValueArray);
+        }
+
+        public static bool operator ==(GameHostExternalId left, GameHostExternalId right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(GameHostExternalId left, GameHostExternalId right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as GameHostExternalId);
+            return obj is GameHostExternalId other && Equals(other);
         }
 
         public override int GetHashCode()
@@ -497,7 +636,7 @@ namespace PlanetaGameLabo.MatchMaker
             unchecked
             {
                 var hash = 17;
-                foreach (var item in value)
+                foreach (var item in ValueArray)
                 {
                     hash = hash * 31 + item;
                 }
@@ -508,7 +647,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         public override string ToString()
         {
-            return string.Join("", value.Select(b => $"{b:X2}"));
+            return string.Join("", ValueArray.Select(b => $"{b:X2}"));
         }
 
         internal static bool IsValid(byte[] value)
@@ -517,7 +656,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class RoomPassword : IEquatable<RoomPassword>
+    public readonly struct RoomPassword : IEquatable<RoomPassword>
     {
         public RoomPassword(string value)
         {
@@ -533,12 +672,14 @@ namespace PlanetaGameLabo.MatchMaker
                     nameof(value));
             }
 
-            Value = value;
+            this.value = value;
         }
 
         public static RoomPassword Empty { get; } = new RoomPassword("");
 
-        public string Value { get; }
+        private readonly string value;
+
+        public string Value => value ?? "";
 
         public static RoomPassword Parse(string value)
         {
@@ -549,7 +690,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                password = null;
+                password = default;
                 return false;
             }
 
@@ -559,12 +700,22 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(RoomPassword other)
         {
-            return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
+            return string.Equals(Value, other.Value, StringComparison.Ordinal);
+        }
+
+        public static bool operator ==(RoomPassword left, RoomPassword right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(RoomPassword left, RoomPassword right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as RoomPassword);
+            return obj is RoomPassword other && Equals(other);
         }
 
         public override int GetHashCode()
@@ -583,7 +734,7 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public sealed class SearchName : IEquatable<SearchName>
+    public readonly struct SearchName : IEquatable<SearchName>
     {
         public SearchName(string value)
         {
@@ -599,12 +750,14 @@ namespace PlanetaGameLabo.MatchMaker
                     nameof(value));
             }
 
-            Value = value;
+            this.value = value;
         }
 
         public static SearchName Empty { get; } = new SearchName("");
 
-        public string Value { get; }
+        private readonly string value;
+
+        public string Value => value ?? "";
 
         public static SearchName Parse(string value)
         {
@@ -615,7 +768,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             if (!IsValid(value))
             {
-                searchName = null;
+                searchName = default;
                 return false;
             }
 
@@ -625,12 +778,22 @@ namespace PlanetaGameLabo.MatchMaker
 
         public bool Equals(SearchName other)
         {
-            return other != null && string.Equals(Value, other.Value, StringComparison.Ordinal);
+            return string.Equals(Value, other.Value, StringComparison.Ordinal);
+        }
+
+        public static bool operator ==(SearchName left, SearchName right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(SearchName left, SearchName right)
+        {
+            return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as SearchName);
+            return obj is SearchName other && Equals(other);
         }
 
         public override int GetHashCode()

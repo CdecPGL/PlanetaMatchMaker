@@ -103,16 +103,6 @@ namespace PlanetaGameLabo.MatchMaker
                 logger = StreamLogger.CreateStandardOutputLogger();
             }
 
-            if (gameId == null)
-            {
-                throw new ArgumentNullException(nameof(gameId));
-            }
-
-            if (gameVersion == null)
-            {
-                throw new ArgumentNullException(nameof(gameVersion));
-            }
-
             GameId = gameId;
             GameVersion = gameVersion;
             TimeoutMilliSeconds = timeoutMilliSeconds;
@@ -136,21 +126,6 @@ namespace PlanetaGameLabo.MatchMaker
         {
             connectionOptions = connectionOptions ?? new ConnectionOptions();
 
-            if (serverAddress == null)
-            {
-                throw new ArgumentNullException(nameof(serverAddress));
-            }
-
-            if (serverPort == null)
-            {
-                throw new ArgumentNullException(nameof(serverPort));
-            }
-
-            if (playerName == null)
-            {
-                throw new ArgumentNullException(nameof(playerName));
-            }
-
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
@@ -169,9 +144,9 @@ namespace PlanetaGameLabo.MatchMaker
                     if (connectionOptions.Mode == ConnectionMode.Tls)
                     {
                         var sslStream = CreateSslStream(communicationStream, connectionOptions);
-                        var targetHost = connectionOptions.TlsTargetHost == null
-                            ? serverAddress.Value
-                            : connectionOptions.TlsTargetHost.Value;
+                        var targetHost = connectionOptions.TlsTargetHost.HasValue
+                            ? connectionOptions.TlsTargetHost.Value.Value
+                            : serverAddress.Value;
                         await sslStream.AuthenticateAsClientAsync(targetHost).ConfigureAwait(false);
                         communicationStream = sslStream;
                         Logger.Log(LogLevel.Info, $"TLS handshake with {targetHost} successfully.");
@@ -262,13 +237,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<CreateRoomResult> CreateRoomAsync(byte maxPlayerCount, GameHostPort portNumber,
-            RoomPassword password = null)
+            RoomPassword? password = null)
         {
-            if (portNumber == null)
-            {
-                throw new ArgumentNullException(nameof(portNumber));
-            }
-
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
@@ -305,13 +275,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task<CreateRoomResult> CreateRoomWithExternalServiceAsync(byte maxPlayerCount,
             GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId,
-            RoomPassword password = null)
+            RoomPassword? password = null)
         {
-            if (externalId == null)
-            {
-                throw new ArgumentNullException(nameof(externalId));
-            }
-
             if (connectionEstablishMode == GameHostConnectionEstablishMode.Builtin)
             {
                 throw new ArgumentException(
@@ -359,21 +324,15 @@ namespace PlanetaGameLabo.MatchMaker
         public async Task<CreateRoomWithCreatingPortMappingResult> CreateRoomWithCreatingPortMappingAsync(
             byte maxPlayerCount, TransportProtocol protocol, IEnumerable<GameHostPort> portNumberCandidates,
             GameHostPort defaultPortNumber, int discoverNatTimeoutMilliSeconds = 5000,
-            RoomPassword password = null, bool forceToDiscoverNatDevice = false)
+            RoomPassword? password = null, bool forceToDiscoverNatDevice = false)
         {
             if (portNumberCandidates == null)
             {
                 throw new ArgumentNullException(nameof(portNumberCandidates));
             }
 
-            if (defaultPortNumber == null)
-            {
-                throw new ArgumentNullException(nameof(defaultPortNumber));
-            }
-
             var portNumberCandidateArray = portNumberCandidates
-                .Select(portNumberCandidate => portNumberCandidate?.Value ??
-                                               throw new ArgumentNullException(nameof(portNumberCandidates)))
+                .Select(portNumberCandidate => portNumberCandidate.Value)
                 .ToList();
 
             return await CreateRoomWithCreatingPortMappingCoreAsync(
@@ -518,7 +477,7 @@ namespace PlanetaGameLabo.MatchMaker
         public async Task<(ushort totalRoomCount, ushort matchedRoomCount, ListRoomResultItem[] roomInfoList)>
             GetRoomListAsync(
                 ushort startIndex, ushort count, RoomDataSortKind sortKind,
-                RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All, SearchName searchName = null,
+                RoomSearchTargetFlag searchTargetFlags = RoomSearchTargetFlag.All, SearchName? searchName = null,
                 ushort searchTag = PlayerFullName.NotAssignedTag)
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
@@ -595,7 +554,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns>Game host endpoint</returns>
-        public async Task<IPEndPoint> JoinRoomAsync(uint roomId, RoomPassword password = null)
+        public async Task<IPEndPoint> JoinRoomAsync(uint roomId, RoomPassword? password = null)
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
@@ -621,7 +580,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ArgumentException"></exception>
         /// <returns>Game host info</returns>
         public async Task<JoinRoomWithExternalServiceResult> JoinRoomWithExternalServiceAsync(uint roomId,
-            GameHostConnectionEstablishMode connectionEstablishMode, RoomPassword password = null)
+            GameHostConnectionEstablishMode connectionEstablishMode, RoomPassword? password = null)
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
@@ -731,11 +690,6 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public async Task<bool> ConnectionTestAsync(TransportProtocol protocol, GameHostPort portNumber)
         {
-            if (portNumber == null)
-            {
-                throw new ArgumentNullException(nameof(portNumber));
-            }
-
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {

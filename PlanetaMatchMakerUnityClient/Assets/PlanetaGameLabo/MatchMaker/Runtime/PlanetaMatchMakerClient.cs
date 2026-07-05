@@ -892,11 +892,6 @@ namespace PlanetaGameLabo.MatchMaker
             GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId, byte maxPlayerCount,
             string password = "")
         {
-            if (externalId == null)
-            {
-                throw new ArgumentNullException(nameof(externalId));
-            }
-
             var createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
                 connectionEstablishMode, externalId, new RoomPassword(password));
             _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);

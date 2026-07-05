@@ -12,7 +12,7 @@ namespace PlanetaGameLabo.MatchMaker
     public sealed class ConnectionOptions
     {
         public ConnectionOptions(ConnectionMode mode = ConnectionMode.Tls,
-            Host tlsTargetHost = null,
+            Host? tlsTargetHost = null,
             RemoteCertificateValidationCallback remoteCertificateValidationCallback = null)
         {
             ValidateMode(mode);
@@ -23,7 +23,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         public ConnectionMode Mode { get; }
 
-        public Host TlsTargetHost { get; }
+        public Host? TlsTargetHost { get; }
 
         public RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; }
 

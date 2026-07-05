@@ -9,6 +9,20 @@ namespace PlanetaGameLabo.MatchMaker.Test
     public class ValueObjectsTest
     {
         [TestMethod]
+        public void ValueObjectsAreValueTypes()
+        {
+            Assert.IsTrue(typeof(GameId).IsValueType);
+            Assert.IsTrue(typeof(GameVersion).IsValueType);
+            Assert.IsTrue(typeof(Host).IsValueType);
+            Assert.IsTrue(typeof(ServerPort).IsValueType);
+            Assert.IsTrue(typeof(PlayerName).IsValueType);
+            Assert.IsTrue(typeof(GameHostPort).IsValueType);
+            Assert.IsTrue(typeof(GameHostExternalId).IsValueType);
+            Assert.IsTrue(typeof(RoomPassword).IsValueType);
+            Assert.IsTrue(typeof(SearchName).IsValueType);
+        }
+
+        [TestMethod]
         public void GameIdRejectsEmptyId()
         {
             Assert.AreEqual("game", new GameId("game").Value);
@@ -49,7 +63,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         {
             Assert.ThrowsException<ArgumentException>(() => new Host("example..com"));
             Assert.IsFalse(Host.TryParse("example..com", out var host));
-            Assert.IsNull(host);
+            Assert.AreEqual(default(Host), host);
         }
 
         [DataTestMethod]
@@ -64,7 +78,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void HostTryParseRejectsInvalidValues(string value)
         {
             Assert.IsFalse(Host.TryParse(value, out var host));
-            Assert.IsNull(host);
+            Assert.AreEqual(default(Host), host);
         }
 
         [TestMethod]
@@ -112,7 +126,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void PlayerNameRejectsInvalidValues(string value)
         {
             Assert.IsFalse(PlayerName.TryParse(value, out var playerName));
-            Assert.IsNull(playerName);
+            Assert.AreEqual(default(PlayerName), playerName);
         }
 
         [TestMethod]
@@ -138,7 +152,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void GameHostPortRejectsInvalidValues(ushort value)
         {
             Assert.IsFalse(GameHostPort.TryParse(value, out var port));
-            Assert.IsNull(port);
+            Assert.AreEqual(default(GameHostPort), port);
         }
 
         [TestMethod]
@@ -213,7 +227,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void RoomPasswordRejectsInvalidValues(string value)
         {
             Assert.IsFalse(RoomPassword.TryParse(value, out var password));
-            Assert.IsNull(password);
+            Assert.AreEqual(default(RoomPassword), password);
         }
 
         [TestMethod]
@@ -244,7 +258,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         public void SearchNameRejectsInvalidValues(string value)
         {
             Assert.IsFalse(SearchName.TryParse(value, out var searchName));
-            Assert.IsNull(searchName);
+            Assert.AreEqual(default(SearchName), searchName);
         }
 
         [TestMethod]
