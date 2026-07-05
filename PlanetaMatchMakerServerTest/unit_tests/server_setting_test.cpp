@@ -225,6 +225,34 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "server.key");
 	}
 
+#ifdef _WIN32
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_uses_setting_directory_as_default_tls_paths_on_windows,
+		setting_file_fixture) {
+		// set up
+		const json::value test_data = {
+			{
+				"authentication", {
+					{"game_id", "test"},
+				}
+			},
+			{
+				"tls", {
+					{"mode", "tls"},
+				}
+			}
+		};
+		create_setting_file(test_data);
+
+		// exercise
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		// verify
+		BOOST_CHECK_EQUAL(setting.tls.certificate_path, setting_path.parent_path() / "server.crt");
+		BOOST_CHECK_EQUAL(setting.tls.private_key_path, setting_path.parent_path() / "server.key");
+	}
+#endif
+
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_time_out_seconds_valid,
 		unit_test::data::make({ 1,3600 })) {
 		// set up

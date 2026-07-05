@@ -68,8 +68,10 @@ Log lines include the current thread ID as `[thread:<id>]`. Logs emitted while p
 |Name|Type|Default|Env Var|Explanation|
 |:---|:---|---:|:---|:---|
 |mode|string ("plain", "tls")|"tls"|PMMS_TLS_MODE|Connection security mode. Use "plain" only for backward compatibility or local development.|
-|certificate_path|string (path)|""|PMMS_TLS_CERTIFICATE_PATH|TLS server certificate chain path. Required when `mode` is "tls".|
-|private_key_path|string (path)|""|PMMS_TLS_PRIVATE_KEY_PATH|TLS server private key path. Required when `mode` is "tls".|
+|certificate_path|string (path)|Linux: "" / Windows: `setting.json` directory + `server.crt`|PMMS_TLS_CERTIFICATE_PATH|TLS server certificate chain path. Required when `mode` is "tls".|
+|private_key_path|string (path)|Linux: "" / Windows: `setting.json` directory + `server.key`|PMMS_TLS_PRIVATE_KEY_PATH|TLS server private key path. Required when `mode` is "tls".|
+
+On Windows, when `certificate_path` or `private_key_path` is omitted from the JSON setting file, the server uses files in the same directory as the loaded `setting.json`. For the standard setting path, the defaults are `C:\pmms\server.crt` and `C:\pmms\server.key`. Environment variables still override these values.
 
 See [TLS Certificate Setup](TLSCertificate.md) for production certificate paths, Certbot examples, Docker mounts, renewal, and development self-signed certificates.
 

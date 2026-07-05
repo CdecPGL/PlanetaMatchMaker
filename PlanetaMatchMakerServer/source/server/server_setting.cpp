@@ -4,6 +4,7 @@
 
 #include <boost/json.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/predef.h>
 #include "nameof.hpp"
 
 #include "minimal_serializer/string_utility.hpp"
@@ -22,6 +23,8 @@ namespace pgl {
 	const std::string log_section_key = "log";
 	const std::string connection_test_section_key = "connection_test";
 	const std::string tls_section_key = "tls";
+	const std::filesystem::path default_tls_certificate_file_name = "server.crt";
+	const std::filesystem::path default_tls_private_key_file_name = "server.key";
 
 	server_setting_error::server_setting_error(const std::string& message): std::runtime_error(message) {}
 	std::string server_setting_error::message() const { return what(); }
@@ -241,6 +244,41 @@ namespace pgl {
 		return s;
 	}
 
+	void apply_default_tls_file_paths_for_setting_file(server_tls_setting& setting,
+		const std::filesystem::path& setting_file_path) {
+#if BOOST_OS_WINDOWS
+		const auto setting_directory = setting_file_path.parent_path();
+		if (setting.certificate_path.empty()) {
+			setting.certificate_path = setting_directory / default_tls_certificate_file_name;
+		}
+		if (setting.private_key_path.empty()) {
+			setting.private_key_path = setting_directory / default_tls_private_key_file_name;
+		}
+#else
+		(void)setting;
+		(void)setting_file_path;
+#endif
+	}
+
+	server_tls_setting load_tls_setting_from_json_file(const json::object& obj,
+		const std::filesystem::path& setting_file_path, const server_tls_setting& default_setting) {
+		server_tls_setting s = default_setting;
+		apply_default_tls_file_paths_for_setting_file(s, setting_file_path);
+
+		const auto* tls_section = obj.if_contains(tls_section_key);
+		if (tls_section == nullptr) { return s; }
+
+		const auto* tls_obj = tls_section->if_object();
+		if (tls_obj == nullptr) {
+			throw server_setting_error(generate_string("\"", tls_section_key, "\" must be object."));
+		}
+
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, server_tls_mode, mode);
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, std::filesystem::path, certificate_path);
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, std::filesystem::path, private_key_path);
+		return s;
+	}
+
 	void validate_tls_setting(const server_tls_setting& setting) {
 		switch (setting.mode) {
 			case server_tls_mode::plain:
@@ -303,9 +341,7 @@ namespace pgl {
 			}
 			validate_connection_test_setting(connection_test);
 
-			if (const auto* tls_section = obj->if_contains(tls_section_key); tls_section != nullptr) {
-				tls = json::value_to<server_tls_setting>(*tls_section);
-			}
+			tls = load_tls_setting_from_json_file(*obj, file_path, tls);
 			validate_tls_setting(tls);
 		}
 		catch (const std::exception& e) {

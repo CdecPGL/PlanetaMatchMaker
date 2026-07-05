@@ -2,6 +2,8 @@
 
 PMMS does not issue TLS certificates and does not run an ACME client. When TLS is enabled, PMMS only reads an existing certificate chain file and private key file at startup, then accepts TLS connections with those files.
 
+On Windows, if `tls.certificate_path` or `tls.private_key_path` is omitted from the JSON setting file, PMMS uses the same directory as the loaded `setting.json`. With the standard `C:\pmms\setting.json`, the defaults are `C:\pmms\server.crt` and `C:\pmms\server.key`.
+
 Use this model for production:
 
 ```json
