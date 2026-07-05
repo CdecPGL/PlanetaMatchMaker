@@ -122,10 +122,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<PlayerFullName> ConnectAsync(Host serverAddress, ServerPort serverPort,
-            PlayerName playerName, ConnectionOptions connectionOptions = null)
+            PlayerName playerName, ConnectionOptions connectionOptions = default(ConnectionOptions))
         {
-            connectionOptions = connectionOptions ?? new ConnectionOptions();
-
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {

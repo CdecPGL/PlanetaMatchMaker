@@ -18,6 +18,22 @@ namespace PlanetaGameLabo.MatchMaker.Test
         }
 
         [TestMethod]
+        public void ConnectionOptionsIsValueType()
+        {
+            Assert.IsTrue(typeof(ConnectionOptions).IsValueType);
+        }
+
+        [TestMethod]
+        public void DefaultValueModeIsTls()
+        {
+            var options = default(ConnectionOptions);
+
+            Assert.AreEqual(ConnectionMode.Tls, options.Mode);
+            Assert.IsNull(options.TlsTargetHost);
+            Assert.IsNull(options.RemoteCertificateValidationCallback);
+        }
+
+        [TestMethod]
         public void ModeCanBePlain()
         {
             var options = new ConnectionOptions(ConnectionMode.Plain);
