@@ -142,9 +142,9 @@ namespace PlanetaGameLabo.MatchMaker
     /// Immutable host or IP address for PMMS server connections.
     /// IPv4, IPv6 or host name is valid.
     /// </summary>
-    public class MatchMakerServerAddress : IEquatable<MatchMakerServerAddress>
+    public sealed class Host : IEquatable<Host>
     {
-        public MatchMakerServerAddress(string value)
+        public Host(string value)
         {
             if (value == null)
             {
@@ -161,31 +161,31 @@ namespace PlanetaGameLabo.MatchMaker
 
         public string Value { get; }
 
-        public static MatchMakerServerAddress Parse(string value)
+        public static Host Parse(string value)
         {
-            return new MatchMakerServerAddress(value);
+            return new Host(value);
         }
 
-        public static bool TryParse(string value, out MatchMakerServerAddress address)
+        public static bool TryParse(string value, out Host host)
         {
             if (!TryNormalize(value, out var normalizedValue))
             {
-                address = null;
+                host = null;
                 return false;
             }
 
-            address = new MatchMakerServerAddress(normalizedValue);
+            host = new Host(normalizedValue);
             return true;
         }
 
-        public bool Equals(MatchMakerServerAddress other)
+        public bool Equals(Host other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerServerAddress);
+            return Equals(obj as Host);
         }
 
         public override int GetHashCode()
@@ -439,22 +439,30 @@ namespace PlanetaGameLabo.MatchMaker
             return new GameHostExternalId(value);
         }
 
-        public static GameHostExternalId From<T>(T externalId)
+        public static GameHostExternalId FromString(string value)
         {
-            switch (externalId)
+            if (value == null)
             {
-                case string s:
-                    return new GameHostExternalId(
-                        Utility.ConvertStringToFixedLengthArray(s, RoomConstants.GameHostExternalIdLength));
-                case ulong v:
-                    return new GameHostExternalId(Serializer.Serialize(v));
-                case uint v:
-                    return new GameHostExternalId(Serializer.Serialize(v));
-                case ushort v:
-                    return new GameHostExternalId(Serializer.Serialize(v));
-                default:
-                    throw new ArgumentException("Unsupported type.", nameof(externalId));
+                throw new ArgumentNullException(nameof(value));
             }
+
+            return new GameHostExternalId(
+                Utility.ConvertStringToFixedLengthArray(value, RoomConstants.GameHostExternalIdLength));
+        }
+
+        public static GameHostExternalId FromUInt64(ulong value)
+        {
+            return new GameHostExternalId(Serializer.Serialize(value));
+        }
+
+        public static GameHostExternalId FromUInt32(uint value)
+        {
+            return new GameHostExternalId(Serializer.Serialize(value));
+        }
+
+        public static GameHostExternalId FromUInt16(ushort value)
+        {
+            return new GameHostExternalId(Serializer.Serialize(value));
         }
 
         public static bool TryParse(byte[] value, out GameHostExternalId externalId)

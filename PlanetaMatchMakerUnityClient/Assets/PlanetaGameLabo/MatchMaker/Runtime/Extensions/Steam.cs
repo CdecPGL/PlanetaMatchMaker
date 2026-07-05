@@ -38,8 +38,8 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             Action<PlanetaMatchMakerClient.ErrorInfo, HostRoomResult> callback = null)
         {
             var steamId64 = SteamLibraryHelpers.GetSteamId64();
-            client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Steam, steamId64, maxPlayerCount,
-                password, callback);
+            client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Steam,
+                GameHostExternalId.FromUInt64(steamId64), maxPlayerCount, password, callback);
         }
 
         /// <summary>
@@ -63,8 +63,8 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
 		        return (new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation), default);
 	        }
 	        
-	        return await client.HostRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam, steamId64,
-			        maxPlayerCount, password);
+	        return await client.HostRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam,
+		        GameHostExternalId.FromUInt64(steamId64), maxPlayerCount, password);
 	        }
 
         /// <summary>

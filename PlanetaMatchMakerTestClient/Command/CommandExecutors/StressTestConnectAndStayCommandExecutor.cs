@@ -24,9 +24,9 @@ namespace PlanetaGameLabo.MatchMaker
                 benchmarkResults.GetOrAdd("connection", new ConcurrentQueue<(int, double)>());
             var playerName = Guid.NewGuid().ToString("N").Substring(0, 10);
             Stopwatch.Restart();
-            await client.ConnectAsync(options.ServerAddress, options.ServerPort, playerName,
-                ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
-                    options.AcceptInvalidTlsCertificate));
+            await client.ConnectAsync(new Host(options.ServerAddress), new MatchMakerServerPort(options.ServerPort),
+                new PlayerName(playerName), ConnectionOptionsFactory.Create(options.ConnectionMode,
+                    options.TlsTargetHost, options.AcceptInvalidTlsCertificate));
             Stopwatch.Stop();
             connectionResponseBenchmarkResults.Enqueue((1, Stopwatch.ElapsedMilliseconds));
         }

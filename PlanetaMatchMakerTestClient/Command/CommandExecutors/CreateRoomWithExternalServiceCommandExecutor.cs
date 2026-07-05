@@ -20,7 +20,8 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             await sharedClient.CreateRoomWithExternalServiceAsync(options.MaxPlayerCount,
-                options.ConnectionEstablishMode, options.ExternalId, options.Password);
+                options.ConnectionEstablishMode, GameHostExternalId.FromString(options.ExternalId),
+                new RoomPassword(options.Password));
             OutputStream.WriteLine($"Room created with id \"{sharedClient.HostingRoomId}\".");
         }
     }

@@ -7,7 +7,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             return new ConnectionOptions(
                 ParseConnectionMode(connectionMode),
-                string.IsNullOrEmpty(tlsTargetHost) ? null : tlsTargetHost,
+                string.IsNullOrEmpty(tlsTargetHost) ? null : new Host(tlsTargetHost),
                 acceptInvalidTlsCertificate
                     ? (sender, certificate, chain, sslPolicyErrors) => true
                     : null);

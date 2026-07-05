@@ -84,27 +84,6 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         /// <exception cref="InvalidOperationException">Steam client is not ready.</exception>
         /// <returns></returns>
         public static async Task<CreateRoomResult> CreateRoomWithSteamAsync(this MatchMakerClient client,
-            byte maxPlayerCount, string password = "")
-        {
-            if (!RoomPassword.TryParse(password, out var parsedPassword))
-            {
-                throw new ArgumentException(
-                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
-                    nameof(password));
-            }
-
-            return await CreateRoomWithSteamAsync(client, maxPlayerCount, parsedPassword).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Create room with SteamID64.
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="maxPlayerCount"></param>
-        /// <param name="password"></param>
-        /// <exception cref="InvalidOperationException">Steam client is not ready.</exception>
-        /// <returns></returns>
-        public static async Task<CreateRoomResult> CreateRoomWithSteamAsync(this MatchMakerClient client,
             byte maxPlayerCount, RoomPassword password)
         {
             if (password == null)
@@ -114,29 +93,8 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
 
             var steamId64 = SteamLibraryHelpers.GetSteamId64();
             return await client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
-                    GameHostConnectionEstablishMode.Steam, steamId64, password)
+                    GameHostConnectionEstablishMode.Steam, GameHostExternalId.FromUInt64(steamId64), password)
                 .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Join to a room on the server and get SteamIdentityType.
-        /// </summary>
-        /// <param name="roomId"></param>
-        /// <param name="password"></param>
-        /// <exception cref="ClientErrorException">Establish connection mode of the room is different from indicated one.</exception>
-        /// <exception cref="ArgumentException"></exception>
-        /// <returns>Game host steam networking identity</returns>
-        public static async Task<SteamIdentityType> JoinRoomWithSteamAsync(this MatchMakerClient client, uint roomId,
-            string password = "")
-        {
-            if (!RoomPassword.TryParse(password, out var parsedPassword))
-            {
-                throw new ArgumentException(
-                    $"A string whose length is more than {RoomConstants.RoomPasswordLength} is not available.",
-                    nameof(password));
-            }
-
-            return await JoinRoomWithSteamAsync(client, roomId, parsedPassword).ConfigureAwait(false);
         }
 
         /// <summary>

@@ -20,7 +20,8 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                var succeed = await sharedClient.ConnectionTestAsync(options.Protocol, options.PortNumber);
+                var succeed = await sharedClient.ConnectionTestAsync(options.Protocol,
+                    new GameHostPort(options.PortNumber));
                 var succeedText = succeed ? "succeed" : "failed";
                 OutputStream.WriteLine($"Connection test is {succeedText}.");
             }
