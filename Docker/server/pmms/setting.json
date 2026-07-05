@@ -27,8 +27,6 @@
         "connection_check_udp_try_count": 3
     },
     "tls":{
-        "mode": "tls",
-        "certificate_path": "/etc/pmms/tls/server.crt",
-        "private_key_path": "/etc/pmms/tls/server.key"
+        "mode": "tls"
     }
 }

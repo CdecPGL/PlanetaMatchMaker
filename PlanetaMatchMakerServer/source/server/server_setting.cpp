@@ -4,7 +4,6 @@
 
 #include <boost/json.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/predef.h>
 #include "nameof.hpp"
 
 #include "minimal_serializer/string_utility.hpp"
@@ -246,7 +245,6 @@ namespace pgl {
 
 	void apply_default_tls_file_paths_for_setting_file(server_tls_setting& setting,
 		const std::filesystem::path& setting_file_path) {
-#if BOOST_OS_WINDOWS
 		const auto setting_directory = setting_file_path.parent_path();
 		if (setting.certificate_path.empty()) {
 			setting.certificate_path = setting_directory / default_tls_certificate_file_name;
@@ -254,10 +252,6 @@ namespace pgl {
 		if (setting.private_key_path.empty()) {
 			setting.private_key_path = setting_directory / default_tls_private_key_file_name;
 		}
-#else
-		(void)setting;
-		(void)setting_file_path;
-#endif
 	}
 
 	server_tls_setting load_tls_setting_from_json_file(const json::object& obj,

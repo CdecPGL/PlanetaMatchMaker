@@ -2,7 +2,7 @@
 
 PMMS does not issue TLS certificates and does not run an ACME client. When TLS is enabled, PMMS only reads an existing certificate chain file and private key file at startup, then accepts TLS connections with those files.
 
-On Windows, if `tls.certificate_path` or `tls.private_key_path` is omitted from the JSON setting file, PMMS uses the same directory as the loaded `setting.json`. With the standard `C:\pmms\setting.json`, the defaults are `C:\pmms\server.crt` and `C:\pmms\server.key`.
+If `tls.certificate_path` or `tls.private_key_path` is omitted from the JSON setting file, PMMS uses the same directory as the loaded `setting.json`. With the standard setting path, the defaults are `/etc/pmms/server.crt` and `/etc/pmms/server.key` on Linux, or `C:\pmms\server.crt` and `C:\pmms\server.key` on Windows.
 
 Use this model for production:
 
@@ -56,8 +56,8 @@ The default server setting uses these paths:
 {
   "tls": {
     "mode": "tls",
-    "certificate_path": "/etc/pmms/tls/server.crt",
-    "private_key_path": "/etc/pmms/tls/server.key"
+    "certificate_path": "/etc/pmms/server.crt",
+    "private_key_path": "/etc/pmms/server.key"
   }
 }
 ```
@@ -74,13 +74,13 @@ docker run \
   cdec/planeta-match-maker-server:latest
 ```
 
-If you want to use the default paths in `setting.json`, mount certificate files to `/etc/pmms/tls/server.crt` and `/etc/pmms/tls/server.key`:
+If you want to use the default paths in `setting.json`, mount certificate files to `/etc/pmms/server.crt` and `/etc/pmms/server.key`:
 
 ```bash
 docker run \
   -p 57000:57000 \
-  -v /path/to/fullchain.pem:/etc/pmms/tls/server.crt:ro \
-  -v /path/to/privkey.pem:/etc/pmms/tls/server.key:ro \
+  -v /path/to/fullchain.pem:/etc/pmms/server.crt:ro \
+  -v /path/to/privkey.pem:/etc/pmms/server.key:ro \
   cdec/planeta-match-maker-server:latest
 ```
 

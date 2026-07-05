@@ -56,8 +56,8 @@ docker pull cdec/planeta-match-maker-server:latest
 
 # Production TLS. Mount an existing certificate chain and private key to the default paths.
 docker run -p 57000:57000 \
-  -v /etc/letsencrypt/live/match.example.com/fullchain.pem:/etc/pmms/tls/server.crt:ro \
-  -v /etc/letsencrypt/live/match.example.com/privkey.pem:/etc/pmms/tls/server.key:ro \
+  -v /etc/letsencrypt/live/match.example.com/fullchain.pem:/etc/pmms/server.crt:ro \
+  -v /etc/letsencrypt/live/match.example.com/privkey.pem:/etc/pmms/server.key:ro \
   cdec/planeta-match-maker-server:latest
 
 # Local plain TCP test.
