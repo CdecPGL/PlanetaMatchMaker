@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace PlanetaGameLabo.MatchMaker.Test
 {
     [TestClass]
-    [TestCategory("MatchMakerServerAddress")]
+    [TestCategory("MatchMakerAddress")]
     public class MatchMakerServerAddressTest
     {
         [DataTestMethod]

@@ -2,19 +2,21 @@
 
 ## Connection Security
 
-`MatchMakerClient.ConnectAsync` uses TLS by default. `MatchMakerServerAddress` is an immutable value object for the dial address and validates IPv4, IPv6, or host names when constructed. The existing `string` overload remains available for compatibility.
+`MatchMakerClient.ConnectAsync` uses TLS by default. `MatchMakerAddress` is an immutable value object for host or IP address values and validates IPv4, IPv6, or host names when constructed. The existing `string` overload remains available for compatibility.
 
 To connect to a server with a certificate whose host name is different from the address you dial, pass the TLS target host to `MatchMakerConnectionOptions`.
 
 ```csharp
 await client.ConnectAsync(
-    new MatchMakerServerAddress("127.0.0.1"),
-    57000,
-    "player",
+    new MatchMakerAddress("127.0.0.1"),
+    new MatchMakerServerPort(57000),
+    new MatchMakerPlayerName("player"),
     new MatchMakerConnectionOptions(
         MatchMakerConnectionMode.Tls,
         "match.example.com"));
 ```
+
+Other user-provided values also have immutable value object overloads: `MatchMakerGameId`, `MatchMakerGameVersion`, `MatchMakerRoomPassword`, `MatchMakerGameHostPort`, `MatchMakerGameHostExternalId`, and `MatchMakerSearchName`.
 
 Use `MatchMakerConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
 

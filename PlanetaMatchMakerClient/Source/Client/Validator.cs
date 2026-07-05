@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace PlanetaGameLabo.MatchMaker
 {
     public static class Validator
@@ -12,7 +10,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateServerAddress(string address)
         {
-            return MatchMakerServerAddress.IsValid(address);
+            return MatchMakerAddress.IsValid(address);
         }
 
         /// <summary>
@@ -23,7 +21,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateServerPort(ushort port)
         {
-            return port != 0;
+            return MatchMakerServerPort.IsValid(port);
         }
 
         /// <summary>
@@ -34,8 +32,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidatePlayerName(string name)
         {
-            return !string.IsNullOrWhiteSpace(name) &&
-                   Encoding.UTF8.GetByteCount(name) <= ClientConstants.PlayerNameLength;
+            return MatchMakerPlayerName.IsValid(name);
         }
 
         /// <summary>
@@ -46,7 +43,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateGameHostPort(ushort port)
         {
-            return 49152 <= port && port <= 65535;
+            return MatchMakerGameHostPort.IsValid(port);
         }
 
         /// <summary>
@@ -57,7 +54,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateGameHostExternalId(byte[] externalId)
         {
-            return externalId != null && externalId.Length <= RoomConstants.GameHostExternalIdLength;
+            return MatchMakerGameHostExternalId.IsValid(externalId);
         }
 
         /// <summary>
@@ -68,7 +65,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateRoomPassword(string password)
         {
-            return password != null && Encoding.UTF8.GetByteCount(password) <= RoomConstants.RoomPasswordLength;
+            return MatchMakerRoomPassword.IsValid(password);
         }
 
         /// <summary>
@@ -79,7 +76,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateSearchName(string name)
         {
-            return name != null && Encoding.UTF8.GetByteCount(name) <= ClientConstants.PlayerNameLength;
+            return MatchMakerSearchName.IsValid(name);
         }
 
     }
