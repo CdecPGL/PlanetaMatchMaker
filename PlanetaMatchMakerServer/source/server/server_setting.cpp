@@ -39,12 +39,6 @@ namespace pgl {
 		return map.at(str);
 	}
 
-	std::ostream& operator<<(std::ostream& os, const server_tls_mode mode) {
-		const auto mode_name = nameof::nameof_enum(mode);
-		os << (mode_name.empty() ? "invalid" : std::string(mode_name));
-		return os;
-	}
-
 	template <typename T>
 	T extract_with_default(const json::object& obj, const std::string& key, const T& default_value) {
 		const auto* value = obj.if_contains(key);

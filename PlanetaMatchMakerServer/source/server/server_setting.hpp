@@ -13,7 +13,6 @@ namespace pgl {
 	enum class server_tls_mode : uint8_t { plain, tls };
 
 	server_tls_mode string_to_server_tls_mode(const std::string& str);
-	std::ostream& operator <<(std::ostream& os, server_tls_mode mode);
 
 	class server_setting_error final : public std::runtime_error {
 	public:
