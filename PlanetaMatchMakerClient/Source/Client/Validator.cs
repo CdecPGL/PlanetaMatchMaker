@@ -10,7 +10,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateServerAddress(string address)
         {
-            return NetworkAddress.IsValid(address);
+            return NetworkServerAddress.IsValid(address);
         }
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateServerPort(ushort port)
         {
-            return NetworkPort.IsValid(port);
+            return MatchMakerServerPort.IsValid(port);
         }
 
         /// <summary>

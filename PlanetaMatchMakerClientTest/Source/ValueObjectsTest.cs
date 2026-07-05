@@ -25,24 +25,24 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [TestMethod]
         public void AddressAcceptsHostOrIp()
         {
-            Assert.AreEqual("match.example.com", new NetworkAddress("match.example.com").Value);
-            Assert.AreEqual("127.0.0.1", new NetworkAddress("127.0.0.1").Value);
-            Assert.AreEqual("2001:db8::9abc", new NetworkAddress("2001:db8::9abc").Value);
+            Assert.AreEqual("match.example.com", new NetworkServerAddress("match.example.com").Value);
+            Assert.AreEqual("127.0.0.1", new NetworkServerAddress("127.0.0.1").Value);
+            Assert.AreEqual("2001:db8::9abc", new NetworkServerAddress("2001:db8::9abc").Value);
         }
 
         [TestMethod]
         public void AddressRejectsInvalidHost()
         {
-            Assert.IsFalse(NetworkAddress.TryParse("example..com", out var address));
+            Assert.IsFalse(NetworkServerAddress.TryParse("example..com", out var address));
             Assert.IsNull(address);
         }
 
         [TestMethod]
         public void ServerPortRejectsZero()
         {
-            Assert.IsTrue(NetworkPort.TryParse(1, out var port));
+            Assert.IsTrue(MatchMakerServerPort.TryParse(1, out var port));
             Assert.AreEqual((ushort)1, port.Value);
-            Assert.IsFalse(NetworkPort.TryParse(0, out _));
+            Assert.IsFalse(MatchMakerServerPort.TryParse(0, out _));
         }
 
         [TestMethod]

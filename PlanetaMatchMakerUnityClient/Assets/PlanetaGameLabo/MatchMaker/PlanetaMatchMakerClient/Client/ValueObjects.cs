@@ -139,12 +139,12 @@ namespace PlanetaGameLabo.MatchMaker
     }
 
     /// <summary>
-    /// Immutable host or IP address for PMMS connections.
+    /// Immutable host or IP address for PMMS server connections.
     /// IPv4, IPv6 or host name is valid.
     /// </summary>
-    public class NetworkAddress : IEquatable<NetworkAddress>
+    public class NetworkServerAddress : IEquatable<NetworkServerAddress>
     {
-        public NetworkAddress(string value)
+        public NetworkServerAddress(string value)
         {
             if (value == null)
             {
@@ -161,12 +161,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public string Value { get; }
 
-        public static NetworkAddress Parse(string value)
+        public static NetworkServerAddress Parse(string value)
         {
-            return new NetworkAddress(value);
+            return new NetworkServerAddress(value);
         }
 
-        public static bool TryParse(string value, out NetworkAddress address)
+        public static bool TryParse(string value, out NetworkServerAddress address)
         {
             if (!TryNormalize(value, out var normalizedValue))
             {
@@ -174,18 +174,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            address = new NetworkAddress(normalizedValue);
+            address = new NetworkServerAddress(normalizedValue);
             return true;
         }
 
-        public bool Equals(NetworkAddress other)
+        public bool Equals(NetworkServerAddress other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as NetworkAddress);
+            return Equals(obj as NetworkServerAddress);
         }
 
         public override int GetHashCode()
@@ -231,9 +231,9 @@ namespace PlanetaGameLabo.MatchMaker
             new Regex(@"^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$", RegexOptions.CultureInvariant);
     }
 
-    public sealed class NetworkPort : IEquatable<NetworkPort>
+    public sealed class MatchMakerServerPort : IEquatable<MatchMakerServerPort>
     {
-        public NetworkPort(ushort value)
+        public MatchMakerServerPort(ushort value)
         {
             if (!IsValid(value))
             {
@@ -245,12 +245,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public ushort Value { get; }
 
-        public static NetworkPort Parse(ushort value)
+        public static MatchMakerServerPort Parse(ushort value)
         {
-            return new NetworkPort(value);
+            return new MatchMakerServerPort(value);
         }
 
-        public static bool TryParse(ushort value, out NetworkPort port)
+        public static bool TryParse(ushort value, out MatchMakerServerPort port)
         {
             if (!IsValid(value))
             {
@@ -258,18 +258,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            port = new NetworkPort(value);
+            port = new MatchMakerServerPort(value);
             return true;
         }
 
-        public bool Equals(NetworkPort other)
+        public bool Equals(MatchMakerServerPort other)
         {
             return other != null && Value == other.Value;
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as NetworkPort);
+            return Equals(obj as MatchMakerServerPort);
         }
 
         public override int GetHashCode()
