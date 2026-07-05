@@ -70,9 +70,9 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [TestMethod]
         public void ServerPortRejectsZero()
         {
-            Assert.IsTrue(MatchMakerServerPort.TryParse(1, out var port));
+            Assert.IsTrue(ServerPort.TryParse(1, out var port));
             Assert.AreEqual((ushort)1, port.Value);
-            Assert.IsFalse(MatchMakerServerPort.TryParse(0, out _));
+            Assert.IsFalse(ServerPort.TryParse(0, out _));
         }
 
         [DataTestMethod]
@@ -80,7 +80,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [DataRow((ushort)65535)]
         public void ServerPortAcceptsValidValues(ushort value)
         {
-            Assert.IsTrue(MatchMakerServerPort.TryParse(value, out var port));
+            Assert.IsTrue(ServerPort.TryParse(value, out var port));
             Assert.AreEqual(value, port.Value);
         }
 

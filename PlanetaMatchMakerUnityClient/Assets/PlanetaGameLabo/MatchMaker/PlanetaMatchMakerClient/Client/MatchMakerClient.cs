@@ -131,7 +131,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task<PlayerFullName> ConnectAsync(Host serverAddress, MatchMakerServerPort serverPort,
+        public async Task<PlayerFullName> ConnectAsync(Host serverAddress, ServerPort serverPort,
             PlayerName playerName, ConnectionOptions connectionOptions = null)
         {
             connectionOptions = connectionOptions ?? new ConnectionOptions();

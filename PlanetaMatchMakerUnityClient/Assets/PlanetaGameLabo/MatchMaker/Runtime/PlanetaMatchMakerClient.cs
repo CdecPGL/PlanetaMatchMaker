@@ -862,7 +862,7 @@ namespace PlanetaGameLabo.MatchMaker
 
         private async Task<PlayerFullName> ConnectImplAsync(string playerName)
         {
-            return await _client.ConnectAsync(new Host(_serverAddress), new MatchMakerServerPort(_serverPort),
+            return await _client.ConnectAsync(new Host(_serverAddress), new ServerPort(_serverPort),
                 new PlayerName(playerName), CreateConnectionOptions());
         }
 

@@ -21,7 +21,7 @@ namespace PlanetaGameLabo.MatchMaker
                 options.AcceptInvalidTlsCertificate);
             var playerFullName =
                 await sharedClient.ConnectAsync(new Host(options.ServerAddress),
-                    new MatchMakerServerPort(options.ServerPort), new PlayerName(options.PlayerName),
+                    new ServerPort(options.ServerPort), new PlayerName(options.PlayerName),
                     connectionOptions);
             OutputStream.WriteLine($"Player Full Name: {playerFullName.GenerateFullName()}");
             OutputStream.WriteLine("Connect to the server successfully.");

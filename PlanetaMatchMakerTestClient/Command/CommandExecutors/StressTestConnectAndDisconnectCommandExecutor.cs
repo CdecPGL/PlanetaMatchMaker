@@ -27,7 +27,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var playerName = Guid.NewGuid().ToString("N").Substring(0, 10);
                 Stopwatch.Restart();
                 await client.ConnectAsync(new Host(options.ServerAddress),
-                    new MatchMakerServerPort(options.ServerPort), new PlayerName(playerName),
+                    new ServerPort(options.ServerPort), new PlayerName(playerName),
                     ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
                         options.AcceptInvalidTlsCertificate));
                 Stopwatch.Stop();

@@ -231,9 +231,9 @@ namespace PlanetaGameLabo.MatchMaker
             new Regex(@"^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$", RegexOptions.CultureInvariant);
     }
 
-    public sealed class MatchMakerServerPort : IEquatable<MatchMakerServerPort>
+    public sealed class ServerPort : IEquatable<ServerPort>
     {
-        public MatchMakerServerPort(ushort value)
+        public ServerPort(ushort value)
         {
             if (!IsValid(value))
             {
@@ -245,12 +245,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public ushort Value { get; }
 
-        public static MatchMakerServerPort Parse(ushort value)
+        public static ServerPort Parse(ushort value)
         {
-            return new MatchMakerServerPort(value);
+            return new ServerPort(value);
         }
 
-        public static bool TryParse(ushort value, out MatchMakerServerPort port)
+        public static bool TryParse(ushort value, out ServerPort port)
         {
             if (!IsValid(value))
             {
@@ -258,18 +258,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            port = new MatchMakerServerPort(value);
+            port = new ServerPort(value);
             return true;
         }
 
-        public bool Equals(MatchMakerServerPort other)
+        public bool Equals(ServerPort other)
         {
             return other != null && Value == other.Value;
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as MatchMakerServerPort);
+            return Equals(obj as ServerPort);
         }
 
         public override int GetHashCode()

@@ -9,14 +9,14 @@ To connect to a server with a certificate whose host name is different from the 
 ```csharp
 await client.ConnectAsync(
     new Host("127.0.0.1"),
-    new MatchMakerServerPort(57000),
+    new ServerPort(57000),
     new PlayerName("player"),
     new ConnectionOptions(
         ConnectionMode.Tls,
         new Host("match.example.com")));
 ```
 
-User-provided values are represented by immutable value objects: `GameId`, `GameVersion`, `Host`, `MatchMakerServerPort`, `PlayerName`, `RoomPassword`, `GameHostPort`, `GameHostExternalId`, and `SearchName`.
+User-provided values are represented by immutable value objects: `GameId`, `GameVersion`, `Host`, `ServerPort`, `PlayerName`, `RoomPassword`, `GameHostPort`, `GameHostExternalId`, and `SearchName`.
 
 Use `ConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
 

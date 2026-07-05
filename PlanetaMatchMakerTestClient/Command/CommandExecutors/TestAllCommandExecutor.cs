@@ -150,7 +150,7 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 var playerFullName =
                     await sharedClient.ConnectAsync(new Host(options.ServerAddress),
-                        new MatchMakerServerPort(options.ServerPort), new PlayerName(playerName),
+                        new ServerPort(options.ServerPort), new PlayerName(playerName),
                         CreateConnectionOptions(options));
                 if (playerFullName.Name != playerName)
                 {
@@ -264,7 +264,7 @@ namespace PlanetaGameLabo.MatchMaker
                 secondClient = new MatchMakerClient(sharedClient.GameId, sharedClient.GameVersion,
                     sharedClient.TimeoutMilliSeconds, logger: sharedClient.Logger);
                 await secondClient.ConnectAsync(new Host(options.ServerAddress),
-                    new MatchMakerServerPort(options.ServerPort), new PlayerName(playerName),
+                    new ServerPort(options.ServerPort), new PlayerName(playerName),
                     CreateConnectionOptions(options));
             }
             catch (ClientErrorException e)

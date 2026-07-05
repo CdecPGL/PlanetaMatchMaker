@@ -24,7 +24,7 @@ namespace PlanetaGameLabo.MatchMaker
                 benchmarkResults.GetOrAdd("get_room_list", new ConcurrentQueue<(int, double)>());
 
             var playerName = Guid.NewGuid().ToString("N").Substring(0, 10);
-            await client.ConnectAsync(new Host(options.ServerAddress), new MatchMakerServerPort(options.ServerPort),
+            await client.ConnectAsync(new Host(options.ServerAddress), new ServerPort(options.ServerPort),
                 new PlayerName(playerName), ConnectionOptionsFactory.Create(options.ConnectionMode,
                     options.TlsTargetHost, options.AcceptInvalidTlsCertificate));
             while (true)
