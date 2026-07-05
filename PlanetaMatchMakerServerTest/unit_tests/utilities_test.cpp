@@ -5,11 +5,9 @@
 #include <sstream>
 
 #include "../../PlanetaMatchMakerServer/source/room/room_data.hpp"
-#include "../../PlanetaMatchMakerServer/source/network/transport_layer.hpp"
 #include "../../PlanetaMatchMakerServer/source/utilities/asio_stream_compatibility.hpp"
 #include "../../PlanetaMatchMakerServer/source/utilities/file_utilities.hpp"
 #include "../../PlanetaMatchMakerServer/source/data/random_id_generator.hpp"
-#include "../../PlanetaMatchMakerServer/library/minimal_serializer/string_utility.hpp"
 
 BOOST_AUTO_TEST_SUITE(utilities_test)
 	BOOST_AUTO_TEST_CASE(test_room_setting_flag_supports_bitwise_operators) {
@@ -46,12 +44,6 @@ BOOST_AUTO_TEST_SUITE(utilities_test)
 		[[maybe_unused]] const auto id8 = pgl::generate_random_id<uint8_t>();
 
 		BOOST_CHECK(true);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_generate_string_outputs_invalid_enum_as_underlying_value) {
-		const auto invalid_protocol = static_cast<pgl::transport_protocol>(255);
-
-		BOOST_CHECK_EQUAL(minimal_serializer::generate_string(invalid_protocol), "255");
 	}
 
 	BOOST_AUTO_TEST_CASE(test_get_home_directory_returns_non_empty_path) {

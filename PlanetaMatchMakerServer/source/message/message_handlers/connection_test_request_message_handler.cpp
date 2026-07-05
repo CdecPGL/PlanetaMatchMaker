@@ -133,6 +133,19 @@ namespace pgl {
 		// Check port number is valid
 		parameter_validator.validate_port_number(message.port_number);
 
+		const auto throw_invalid_protocol_error = [&message]() {
+			const auto error_message = minimal_serializer::generate_string("Indicated protocol \"",
+				static_cast<underlying_type_t<transport_protocol>>(message.protocol), "\" is invalid.");
+			throw client_error(client_error_code::request_parameter_wrong, false, error_message);
+		};
+		switch (message.protocol) {
+			case transport_protocol::tcp:
+			case transport_protocol::udp:
+				break;
+			default:
+				throw_invalid_protocol_error();
+		}
+
 		const auto target_endpoint = asio::ip::tcp::endpoint(
 			param->session_data.remote_endpoint().to_boost_endpoint().address(), message.port_number);
 		log_with_session(log_level::info, param, "Start ", message.protocol,
@@ -154,9 +167,7 @@ namespace pgl {
 					reply.succeed = test_connection_udp(*param, target_endpoint, test_text);
 					break;
 				default:
-					const auto error_message = minimal_serializer::generate_string("Indicated protocol \"",
-						static_cast<underlying_type_t<transport_protocol>>(message.protocol), "\" is invalid.");
-					throw client_error(client_error_code::request_parameter_wrong, false, error_message);
+					throw_invalid_protocol_error();
 			}
 		}
 		catch (const system::system_error& e) {

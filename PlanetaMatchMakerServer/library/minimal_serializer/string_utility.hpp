@@ -162,35 +162,11 @@ namespace minimal_serializer {
 		}
 		// enum support
 		else if constexpr (std::is_enum_v<non_cv_ref_t>) {
-			const auto enum_value = static_cast<non_cv_ref_t>(value);
-			const auto output_underlying_value = [&oss](const non_cv_ref_t value_to_convert) {
-				generate_string_converter(oss, static_cast<std::underlying_type_t<non_cv_ref_t>>(value_to_convert));
-			};
-
 			if constexpr (is_generate_enum_string_supported) {
-				if constexpr (nameof::detail::count_v<non_cv_ref_t> > 0) {
-					using underlying_type = std::underlying_type_t<non_cv_ref_t>;
-					const auto underlying_value = static_cast<underlying_type>(enum_value);
-					if (underlying_value >= static_cast<underlying_type>(nameof::detail::min_v<non_cv_ref_t>) &&
-						underlying_value <= static_cast<underlying_type>(nameof::detail::max_v<non_cv_ref_t>)) {
-						const auto enum_name = nameof::nameof_enum(enum_value);
-						if (!enum_name.empty()) {
-							oss << enum_name;
-						}
-						else {
-							output_underlying_value(enum_value);
-						}
-					}
-					else {
-						output_underlying_value(enum_value);
-					}
-				}
-				else {
-					output_underlying_value(enum_value);
-				}
+				oss << nameof::nameof_enum(value);
 			}
 			else {
-				output_underlying_value(enum_value);
+				oss << static_cast<std::underlying_type_t<non_cv_ref_t>>(value);
 			}
 		}
 		// std::type_info support
