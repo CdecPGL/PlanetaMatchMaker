@@ -174,7 +174,7 @@ namespace PlanetaGameLabo.MatchMaker
         public Task<PlayerFullName> ConnectAsync(string serverAddress, ushort serverPort, string playerName,
             ConnectionOptions connectionOptions = null)
         {
-            if (!NetworkServerAddress.TryParse(serverAddress, out var parsedServerAddress))
+            if (!MatchMakerServerAddress.TryParse(serverAddress, out var parsedServerAddress))
             {
                 throw new ArgumentException("IPv4, IPv6 or host name is available.", nameof(serverAddress));
             }
@@ -192,7 +192,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public Task<PlayerFullName> ConnectAsync(NetworkServerAddress serverAddress, ushort serverPort,
+        public Task<PlayerFullName> ConnectAsync(MatchMakerServerAddress serverAddress, ushort serverPort,
             string playerName, ConnectionOptions connectionOptions = null)
         {
             if (serverAddress == null)
@@ -225,7 +225,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ClientErrorException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
-        public async Task<PlayerFullName> ConnectAsync(NetworkServerAddress serverAddress, MatchMakerServerPort serverPort,
+        public async Task<PlayerFullName> ConnectAsync(MatchMakerServerAddress serverAddress, MatchMakerServerPort serverPort,
             PlayerName playerName, ConnectionOptions connectionOptions = null)
         {
             connectionOptions = connectionOptions ?? new ConnectionOptions();

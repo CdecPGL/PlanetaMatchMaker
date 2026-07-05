@@ -10,7 +10,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <returns></returns>
         public static bool ValidateServerAddress(string address)
         {
-            return NetworkServerAddress.IsValid(address);
+            return MatchMakerServerAddress.IsValid(address);
         }
 
         /// <summary>

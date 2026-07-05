@@ -46,7 +46,7 @@ namespace PlanetaGameLabo.MatchMaker
                 return null;
             }
 
-            if (!NetworkServerAddress.TryParse(tlsTargetHost, out var parsedTlsTargetHost))
+            if (!MatchMakerServerAddress.TryParse(tlsTargetHost, out var parsedTlsTargetHost))
             {
                 throw new ArgumentException("IPv4, IPv6 or host name is available.", nameof(tlsTargetHost));
             }

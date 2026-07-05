@@ -142,9 +142,9 @@ namespace PlanetaGameLabo.MatchMaker
     /// Immutable host or IP address for PMMS server connections.
     /// IPv4, IPv6 or host name is valid.
     /// </summary>
-    public class NetworkServerAddress : IEquatable<NetworkServerAddress>
+    public class MatchMakerServerAddress : IEquatable<MatchMakerServerAddress>
     {
-        public NetworkServerAddress(string value)
+        public MatchMakerServerAddress(string value)
         {
             if (value == null)
             {
@@ -161,12 +161,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         public string Value { get; }
 
-        public static NetworkServerAddress Parse(string value)
+        public static MatchMakerServerAddress Parse(string value)
         {
-            return new NetworkServerAddress(value);
+            return new MatchMakerServerAddress(value);
         }
 
-        public static bool TryParse(string value, out NetworkServerAddress address)
+        public static bool TryParse(string value, out MatchMakerServerAddress address)
         {
             if (!TryNormalize(value, out var normalizedValue))
             {
@@ -174,18 +174,18 @@ namespace PlanetaGameLabo.MatchMaker
                 return false;
             }
 
-            address = new NetworkServerAddress(normalizedValue);
+            address = new MatchMakerServerAddress(normalizedValue);
             return true;
         }
 
-        public bool Equals(NetworkServerAddress other)
+        public bool Equals(MatchMakerServerAddress other)
         {
             return other != null && string.Equals(Value, other.Value, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as NetworkServerAddress);
+            return Equals(obj as MatchMakerServerAddress);
         }
 
         public override int GetHashCode()
