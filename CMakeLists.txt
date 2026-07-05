@@ -16,7 +16,11 @@ set(BUILD_SHARED_LIBS OFF)
 # Prefer static dependency libraries by default
 # If you want to link dependencies with shared libraries, add "-DSTATIC_LINK_DEPENDENCIES=OFF" as cmake option.
 option (STATIC_LINK_DEPENDENCIES "Prefer static dependency libraries where supported." ON)
-option (ENABLE_COVERAGE "Enable coverage instrumentation for GNU and Clang builds." ON)
+set(default_enable_coverage OFF)
+if(DEFINED ENV{PMMS_ENABLE_COVERAGE})
+  set(default_enable_coverage "$ENV{PMMS_ENABLE_COVERAGE}")
+endif()
+option (ENABLE_COVERAGE "Enable coverage instrumentation for GNU and Clang builds." ${default_enable_coverage})
 
 # Set build type
 set(default_build_type "Release")

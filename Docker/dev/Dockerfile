@@ -7,6 +7,7 @@ RUN apt update && apt install -y --no-install-recommends \
   cmake \
   git \
   clang \
+  libclang-rt-14-dev \
   lcov \
   llvm \
   tar \
@@ -30,6 +31,7 @@ RUN echo "${OPENSSL_SHA256}  /tmp/openssl.tar.gz" | sha256sum -c - \
 
 ENV OPENSSL_ROOT_DIR=/usr/local/openssl
 ENV CMAKE_PREFIX_PATH=/usr/local/openssl
+ENV PMMS_ENABLE_COVERAGE=ON
 
 # Install boost library
 ARG BOOST_VERSION=1.89.0

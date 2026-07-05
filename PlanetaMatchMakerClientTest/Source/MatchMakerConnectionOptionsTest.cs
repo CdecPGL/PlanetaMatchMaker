@@ -1,3 +1,4 @@
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PlanetaGameLabo.MatchMaker.Test
@@ -19,9 +20,16 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [TestMethod]
         public void ModeCanBePlain()
         {
-            var options = new MatchMakerConnectionOptions { Mode = MatchMakerConnectionMode.Plain };
+            var options = new MatchMakerConnectionOptions(MatchMakerConnectionMode.Plain);
 
             Assert.AreEqual(MatchMakerConnectionMode.Plain, options.Mode);
+        }
+
+        [TestMethod]
+        public void UndefinedModeThrowsArgumentOutOfRangeException()
+        {
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+                new MatchMakerConnectionOptions((MatchMakerConnectionMode)255));
         }
     }
 }

@@ -50,11 +50,13 @@ cmake .. -DCMAKE_CXX_COMPILER=clang++
 make -j"$(nproc)"
 # Run test if need
 ctest
-# Calculate covarage if need
+# Calculate coverage if need
 ../tools/coverage.sh
 ```
 
 The server project is not compatible with gcc so specify clang++ to cmake.
+The development Docker image sets `PMMS_ENABLE_COVERAGE=ON`, so coverage instrumentation is enabled by default in this image.
+Run `../tools/coverage.sh` from the build directory after `ctest`; the HTML report is generated in `build/lcovHtml/index.html`.
 
 The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing. See [TLS Certificate Setup](TLSCertificate.md) for certificate examples.
 
@@ -79,6 +81,19 @@ ctest
 ```
 
 The server project is compatible with gcc so specify clang++ to cmake.
+Coverage instrumentation is disabled by default outside the development Docker image.
+To calculate coverage manually, install `lcov`, `llvm-cov`, and the Clang profile runtime package such as `libclang-rt-14-dev`, configure with `-DENABLE_COVERAGE=ON`, run tests, and then run `../tools/coverage.sh` from the build directory.
+
+```bash
+mkdir build
+cd build
+cmake .. -DCMAKE_CXX_COMPILER=clang++ -DENABLE_COVERAGE=ON
+make -j"$(nproc)"
+ctest
+../tools/coverage.sh
+```
+
+The coverage HTML report is generated in `build/lcovHtml/index.html`.
 
 The default server setting uses TLS. Place a certificate chain and private key at the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing. See [TLS Certificate Setup](TLSCertificate.md) for certificate examples.
 

@@ -5,14 +5,12 @@ namespace PlanetaGameLabo.MatchMaker
         public static MatchMakerConnectionOptions Create(string connectionMode,
             string tlsTargetHost, bool acceptInvalidTlsCertificate)
         {
-            return new MatchMakerConnectionOptions
-            {
-                Mode = ParseConnectionMode(connectionMode),
-                TlsTargetHost = string.IsNullOrEmpty(tlsTargetHost) ? null : tlsTargetHost,
-                RemoteCertificateValidationCallback = acceptInvalidTlsCertificate
+            return new MatchMakerConnectionOptions(
+                ParseConnectionMode(connectionMode),
+                string.IsNullOrEmpty(tlsTargetHost) ? null : tlsTargetHost,
+                acceptInvalidTlsCertificate
                     ? (sender, certificate, chain, sslPolicyErrors) => true
-                    : null
-            };
+                    : null);
         }
 
         private static MatchMakerConnectionMode ParseConnectionMode(string connectionMode)

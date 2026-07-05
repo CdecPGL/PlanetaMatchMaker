@@ -46,7 +46,7 @@ namespace pgl {
 		connection_(strand_, ssl_context_) { }
 
 	void server_session::start() {
-		asio::post(strand_, [shared_this = shared_from_this()] {
+		asio::dispatch(strand_, [shared_this = shared_from_this()] {
 			shared_this->start_impl();
 		});
 	}

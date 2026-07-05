@@ -962,14 +962,12 @@ namespace PlanetaGameLabo.MatchMaker
 
         private MatchMakerConnectionOptions CreateConnectionOptions()
         {
-            return new MatchMakerConnectionOptions
-            {
-                Mode = _connectionMode,
-                TlsTargetHost = string.IsNullOrEmpty(_tlsTargetHost) ? null : _tlsTargetHost,
-                RemoteCertificateValidationCallback = _acceptInvalidTlsCertificate
+            return new MatchMakerConnectionOptions(
+                _connectionMode,
+                string.IsNullOrEmpty(_tlsTargetHost) ? null : _tlsTargetHost,
+                _acceptInvalidTlsCertificate
                     ? (sender, certificate, chain, sslPolicyErrors) => true
-                    : null
-            };
+                    : null);
         }
 
         private void Reset()

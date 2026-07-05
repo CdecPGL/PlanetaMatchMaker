@@ -1,8 +1,10 @@
 #include <fstream>
 #include <concepts>
+#include <unordered_map>
 
 #include <boost/json.hpp>
 #include <boost/lexical_cast.hpp>
+#include "nameof.hpp"
 
 #include "minimal_serializer/string_utility.hpp"
 
@@ -30,23 +32,17 @@ namespace pgl {
 	}
 
 	server_tls_mode string_to_server_tls_mode(const std::string& str) {
-		if (str == "plain") { return server_tls_mode::plain; }
-		if (str == "tls") { return server_tls_mode::tls; }
-		throw std::out_of_range(generate_string("Unsupported tls mode: ", str));
+		const static std::unordered_map<std::string, server_tls_mode> map{
+			{std::string(nameof::nameof_enum(server_tls_mode::plain)), server_tls_mode::plain},
+			{std::string(nameof::nameof_enum(server_tls_mode::tls)), server_tls_mode::tls},
+		};
+		return map.at(str);
 	}
 
 	std::ostream& operator<<(std::ostream& os, const server_tls_mode mode) {
-		switch (mode) {
-			case server_tls_mode::plain:
-				os << "plain";
-				return os;
-			case server_tls_mode::tls:
-				os << "tls";
-				return os;
-			default:
-				os << "invalid";
-				return os;
-		}
+		const auto mode_name = nameof::nameof_enum(mode);
+		os << (mode_name.empty() ? "invalid" : std::string(mode_name));
+		return os;
 	}
 
 	template <typename T>

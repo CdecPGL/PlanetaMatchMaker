@@ -124,7 +124,6 @@ namespace PlanetaGameLabo.MatchMaker
             MatchMakerConnectionOptions connectionOptions = null)
         {
             connectionOptions = connectionOptions ?? new MatchMakerConnectionOptions();
-            ValidateConnectionOptions(connectionOptions);
 
             if (!Validator.ValidateServerAddress(serverAddress))
             {
@@ -1175,18 +1174,6 @@ namespace PlanetaGameLabo.MatchMaker
                 task?.Dispose();
                 udpClient?.Dispose();
                 cancelTokenSource.Dispose();
-            }
-        }
-
-        private static void ValidateConnectionOptions(MatchMakerConnectionOptions connectionOptions)
-        {
-            switch (connectionOptions.Mode)
-            {
-                case MatchMakerConnectionMode.Plain:
-                case MatchMakerConnectionMode.Tls:
-                    return;
-                default:
-                    throw new ArgumentException("Unsupported connection mode.", nameof(connectionOptions));
             }
         }
 
