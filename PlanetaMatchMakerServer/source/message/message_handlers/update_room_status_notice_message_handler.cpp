@@ -1,5 +1,4 @@
 #include <optional>
-#include <type_traits>
 
 #include "update_room_status_notice_message_handler.hpp"
 #include "session/session_data.hpp"
@@ -70,9 +69,8 @@ namespace pgl {
 				param->session_data.delete_hosting_room_id(updated_room_data->room_id);
 				break;
 			default:
-				const auto error_message = generate_string("The new status \"",
-					static_cast<std::underlying_type_t<decltype(message.status)>>(message.status),
-					"\" for room \"", message.room_id, "\" is invalid.");
+				const auto error_message = generate_string("The new status \"", message.status, "\" for room \"",
+					message.room_id, "\" is invalid.");
 				throw client_error(client_error_code::request_parameter_wrong, false, error_message);
 		}
 
