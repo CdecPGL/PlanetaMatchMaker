@@ -51,5 +51,10 @@ namespace Open.Nat
 		{
 			get { return _headers[key.ToUpperInvariant()]; }
 		}
+
+		public bool TryGetValue(string key, out string value)
+		{
+			return _headers.TryGetValue(key.ToUpperInvariant(), out value);
+		}
 	}
 }

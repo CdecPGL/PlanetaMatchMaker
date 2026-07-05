@@ -14,8 +14,8 @@ namespace PlanetaGameLabo.MatchMaker
 {
     /// <summary>
     /// Match maker client.
-    /// Call NatPortMappingCreator.ReleaseCreatedPortMappings method manually to ensure to release port mappings created in the application.
-    /// <see cref="NatPortMappingCreator.ReleaseCreatedPortMappings"/>
+    /// Call NatPortMappingCreator.ReleaseCreatedPortMappingsAsync method manually to ensure to release port mappings created in the application.
+    /// <see cref="NatPortMappingCreator.ReleaseCreatedPortMappingsAsync"/>
     /// </summary>
     public sealed class MatchMakerClient : IDisposable
     {

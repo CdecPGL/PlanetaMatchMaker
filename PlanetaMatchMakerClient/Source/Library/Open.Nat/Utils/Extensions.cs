@@ -1,4 +1,4 @@
-﻿//
+//
 // Authors:
 //   Lucas Ontivero lucasontivero@gmail.com 
 //
@@ -27,6 +27,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,6 +37,8 @@ namespace Open.Nat
 {
 	internal static class StreamExtensions
 	{
+		internal const int MaxXmlResponseCharacters = 1024 * 1024;
+
 		internal static string ReadAsMany(this StreamReader stream, int bytesToRead)
 		{
 			var buffer = new char[bytesToRead];
@@ -43,15 +46,86 @@ namespace Open.Nat
 			return new string(buffer);
 		}
 
+		internal static string ReadXmlResponseBody(this WebResponse response)
+		{
+			if (response == null)
+			{
+				throw new ArgumentNullException(nameof(response));
+			}
+
+			if (response.ContentLength > MaxXmlResponseCharacters)
+			{
+				throw new InvalidDataException("UPnP XML response is too large.");
+			}
+
+			var responseStream = response.GetResponseStream();
+			if (responseStream == null)
+			{
+				return string.Empty;
+			}
+
+			using (var reader = new StreamReader(responseStream, Encoding.UTF8))
+			{
+				var buffer = new char[4096];
+				var responseBody = new StringBuilder();
+				while (true)
+				{
+					var remainingCharacters = MaxXmlResponseCharacters - responseBody.Length;
+					if (remainingCharacters == 0)
+					{
+						if (reader.Peek() >= 0)
+						{
+							throw new InvalidDataException("UPnP XML response is too large.");
+						}
+
+						break;
+					}
+
+					var readLength = Math.Min(buffer.Length, remainingCharacters);
+					var readCharacters = reader.Read(buffer, 0, readLength);
+					if (readCharacters == 0)
+					{
+						break;
+					}
+
+					responseBody.Append(buffer, 0, readCharacters);
+				}
+
+				return responseBody.ToString();
+			}
+		}
+
+		internal static XmlDocument GetXmlDocument(string xml)
+		{
+			if (xml == null)
+			{
+				throw new ArgumentNullException(nameof(xml));
+			}
+
+			var settings = new XmlReaderSettings
+			{
+				DtdProcessing = DtdProcessing.Prohibit,
+				MaxCharactersInDocument = MaxXmlResponseCharacters,
+				XmlResolver = null
+			};
+			var document = new XmlDocument
+			{
+				XmlResolver = null
+			};
+
+			using (var stringReader = new StringReader(xml))
+			using (var xmlReader = XmlReader.Create(stringReader, settings))
+			{
+				document.Load(xmlReader);
+			}
+
+			return document;
+		}
+
 		internal static string GetXmlElementText(this XmlNode node, string elementName)
 		{
 			XmlElement element = node[elementName];
 			return element != null ? element.InnerText : string.Empty;
-		}
-
-		internal static bool ContainsIgnoreCase(this string s, string pattern)
-		{
-			return s.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		internal static void LogInfo(this TraceSource source, string format, params object[] args)
@@ -123,29 +197,6 @@ namespace Open.Nat
 			}
 		}
 
-#if NET35
-		public static Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
-		{
-#if DEBUG
-			return task;
-#endif
-			var timeoutCancellationTokenSource = new CancellationTokenSource();
-
-			return TaskExtension.WhenAny(task, TaskExtension.Delay(timeout, timeoutCancellationTokenSource.Token))
-				.ContinueWith(t =>
-				{
-					Task completedTask = t.Result;
-
-					if (completedTask == task)
-					{
-						timeoutCancellationTokenSource.Cancel();
-						return task;
-					}
-					throw new TimeoutException(
-						"The operation has timed out. The network is broken, router has gone or is too busy.");
-				}).Unwrap();
-		}
-#else
 		public static async Task<TResult> TimeoutAfter<TResult>(this Task<TResult> task, TimeSpan timeout)
 		{
 #if DEBUG
@@ -162,75 +213,6 @@ namespace Open.Nat
 			throw new TimeoutException(
 				"The operation has timed out. The network is broken, router has gone or is too busy.");
 		}
-#endif //NET35
 	}
 
-#if NET35
-	internal static class EnumExtension
-	{
-		public static bool HasFlag(this Enum value, Enum flag)
-		{
-			int intValue = (int)(ValueType)value;
-			int intFlag = (int)(ValueType)flag;
-
-			return (intValue & intFlag) == intFlag;
-		}
-	}
-
-	public static class CancellationTokenSourceExtension
-	{
-		public static void CancelAfter(this CancellationTokenSource source, int millisecondsDelay)
-		{
-			if (millisecondsDelay < -1)
-			{
-				throw new ArgumentOutOfRangeException("millisecondsDelay");
-			}
-			Timer timer = new Timer(self => {
-				((Timer)self).Dispose();
-				try
-				{
-					source.Cancel();
-				}
-				catch (ObjectDisposedException) { }
-			});
-			timer.Change(millisecondsDelay, -1);
-		}
-	}
-
-	public static class TaskExtension
-	{
-		public static Task Delay(TimeSpan delay, CancellationToken token)
-		{
-			long delayMs = (long)delay.TotalMilliseconds;
-			if (delayMs < -1L || delayMs > int.MaxValue)
-			{
-				throw new ArgumentOutOfRangeException("delay");
-			}
-			TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
-
-			Timer timer = new Timer(self =>
-			{
-				tcs.TrySetResult(null); //timer expired, attempt to move task to the completed state.
-			}, null, delayMs, -1);
-
-			token.Register(() =>
-			{
-				timer.Dispose(); //stop the timer
-				tcs.TrySetCanceled(); //attempt to mode task to canceled state
-			});
-
-			return tcs.Task;
-		}
-
-		public static Task<Task> WhenAny(params Task[] tasks)
-		{
-			return Task.Factory.ContinueWhenAny(tasks, t => t);
-		}
-
-		public static Task WhenAll(params Task[] tasks)
-		{
-			return Task.Factory.ContinueWhenAll(tasks, t => t);
-		}
-	}
-#endif //NET35
 }

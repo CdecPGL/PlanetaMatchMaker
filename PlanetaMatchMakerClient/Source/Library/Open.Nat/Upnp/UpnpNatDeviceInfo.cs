@@ -37,19 +37,41 @@ namespace Open.Nat
 			ServiceType = serviceType;
 			HostEndPoint = new IPEndPoint(IPAddress.Parse(locationUri.Host), locationUri.Port);
 
-			if (Uri.IsWellFormedUriString(serviceControlUrl, UriKind.Absolute))
-			{
-				var u = new Uri(serviceControlUrl);
-				IPEndPoint old = HostEndPoint;
-				serviceControlUrl = u.PathAndQuery;
-
-				NatDiscoverer.TraceSource.LogInfo("{0}: Absolute URI detected. Host address is now: {1}", old,
-												  HostEndPoint);
-				NatDiscoverer.TraceSource.LogInfo("{0}: New control url: {1}", HostEndPoint, serviceControlUrl);
-			}
+			serviceControlUrl = NormalizeServiceControlUrl(serviceControlUrl);
 
 			var builder = new UriBuilder("http", locationUri.Host, locationUri.Port);
-			ServiceControlUri = new Uri(builder.Uri, serviceControlUrl); ;
+			ServiceControlUri = new Uri(builder.Uri, serviceControlUrl);
+			if (!string.Equals(ServiceControlUri.Host, locationUri.Host, StringComparison.OrdinalIgnoreCase))
+			{
+				throw new ArgumentException("UPnP service control URL must not change host.", nameof(serviceControlUrl));
+			}
+		}
+
+		private static string NormalizeServiceControlUrl(string serviceControlUrl)
+		{
+			if (string.IsNullOrEmpty(serviceControlUrl) || serviceControlUrl.Trim().Length == 0)
+			{
+				throw new ArgumentException("UPnP service control URL is empty.", nameof(serviceControlUrl));
+			}
+
+			if (serviceControlUrl.StartsWith("//", StringComparison.Ordinal))
+			{
+				throw new ArgumentException("UPnP service control URL must not change host.", nameof(serviceControlUrl));
+			}
+
+			Uri absoluteUri;
+			if (Uri.TryCreate(serviceControlUrl, UriKind.Absolute, out absoluteUri))
+			{
+				return absoluteUri.PathAndQuery;
+			}
+
+			Uri relativeUri;
+			if (!Uri.TryCreate(serviceControlUrl, UriKind.Relative, out relativeUri))
+			{
+				throw new ArgumentException("UPnP service control URL is invalid.", nameof(serviceControlUrl));
+			}
+
+			return serviceControlUrl;
 		}
 
 		public IPEndPoint HostEndPoint { get; private set; }

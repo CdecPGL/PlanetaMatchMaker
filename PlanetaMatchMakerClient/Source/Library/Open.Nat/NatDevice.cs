@@ -53,6 +53,7 @@ namespace Open.Nat
 		public abstract IPAddress LocalAddress { get; }
 
 		private readonly HashSet<Mapping> _openedMapping = new HashSet<Mapping>();
+		private readonly object _openedMappingLock = new object();
 		protected DateTime LastSeen { get; private set; }
 
 		internal void Touch()
@@ -120,98 +121,82 @@ namespace Open.Nat
 
 		protected void RegisterMapping(Mapping mapping)
 		{
-			_openedMapping.Remove(mapping);
-			_openedMapping.Add(mapping);
+			lock (_openedMappingLock)
+			{
+				_openedMapping.Remove(mapping);
+				_openedMapping.Add(mapping);
+			}
 		}
 
 		protected void UnregisterMapping(Mapping mapping)
 		{
-			_openedMapping.RemoveWhere(x => x.Equals(mapping));
+			lock (_openedMappingLock)
+			{
+				_openedMapping.RemoveWhere(x => x.Equals(mapping));
+			}
 		}
 
 
-		internal void ReleaseMapping(IEnumerable<Mapping> mappings)
+		internal async Task ReleaseMappingAsync(IEnumerable<Mapping> mappings)
 		{
 			var maparr = mappings.ToArray();
 			var mapCount = maparr.Length;
 			NatDiscoverer.TraceSource.LogInfo("{0} ports to close", mapCount);
-			for (var i = 0; i < mapCount; i++)
+			var tasks = maparr.Select(async mapping =>
 			{
-				var mapping = _openedMapping.ElementAt(i);
-
 				try
 				{
-					DeletePortMapAsync(mapping);
+					await DeletePortMapAsync(mapping).ConfigureAwait(false);
 					NatDiscoverer.TraceSource.LogInfo(mapping + " port successfully closed");
 				}
 				catch (Exception)
 				{
 					NatDiscoverer.TraceSource.LogError(mapping + " port couldn't be close");
 				}
-			}
+			}).ToArray();
+			await Task.WhenAll(tasks).ConfigureAwait(false);
 		}
 
-		internal void ReleaseAll()
+		internal async Task ReleaseAllAsync()
 		{
-			ReleaseMapping(_openedMapping);
-		}
-
-		internal void ReleaseSessionMappings()
-		{
-			var mappings = from m in _openedMapping
-						   where m.LifetimeType == MappingLifetime.Session
-						   select m;
-
-			ReleaseMapping(mappings);
-		}
-
-#if NET35
-		internal Task RenewMappings()
-		{
-			Task task = null;
-			var mappings = _openedMapping.Where(x => x.ShoundRenew());
-			foreach (var mapping in mappings.ToArray())
+			Mapping[] mappings;
+			lock (_openedMappingLock)
 			{
-				var m = mapping;
-				task = task == null ? RenewMapping(m) : task.ContinueWith(t => RenewMapping(m)).Unwrap();
+				mappings = _openedMapping.ToArray();
 			}
 
-			return task;
+			await ReleaseMappingAsync(mappings).ConfigureAwait(false);
 		}
-#else
+
+		internal async Task ReleaseSessionMappingsAsync()
+		{
+			Mapping[] mappings;
+			lock (_openedMappingLock)
+			{
+				mappings = (from m in _openedMapping
+							where m.LifetimeType == MappingLifetime.Session ||
+								  m.LifetimeType == MappingLifetime.ForcedSession
+							select m).ToArray();
+			}
+
+			await ReleaseMappingAsync(mappings).ConfigureAwait(false);
+		}
+
 		internal async Task RenewMappings()
 		{
-			var mappings = _openedMapping.Where(x => x.ShoundRenew());
-			foreach (var mapping in mappings.ToArray())
+			Mapping[] mappings;
+			lock (_openedMappingLock)
+			{
+				mappings = _openedMapping.Where(x => x.ShoundRenew()).ToArray();
+			}
+
+			foreach (var mapping in mappings)
 			{
 				var m = mapping;
 				await RenewMapping(m);
 			}
 		}
-#endif
 
-#if NET35
-		private Task RenewMapping(Mapping mapping)
-		{
-			var renewMapping = new Mapping(mapping);
-			renewMapping.Expiration = DateTime.UtcNow.AddSeconds(mapping.Lifetime);
-
-			NatDiscoverer.TraceSource.LogInfo("Renewing mapping {0}", renewMapping);
-			return CreatePortMapAsync(renewMapping)
-				.ContinueWith(task =>
-				{
-					if (task.IsFaulted)
-					{
-						NatDiscoverer.TraceSource.LogWarn("Renew {0} failed", mapping);
-					}
-					else
-					{
-						NatDiscoverer.TraceSource.LogInfo("Next renew scheduled at: {0}",
-															renewMapping.Expiration.ToLocalTime().TimeOfDay);
-					}
-				});
-		}
-#else
 		private async Task RenewMapping(Mapping mapping)
 		{
 			var renewMapping = new Mapping(mapping);
@@ -229,6 +214,5 @@ namespace Open.Nat
 				NatDiscoverer.TraceSource.LogWarn("Renew {0} failed", mapping);
 			}
 		}
-#endif
 	}
 }
