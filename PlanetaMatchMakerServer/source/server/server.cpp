@@ -1,9 +1,11 @@
 #include <boost/thread.hpp>
 #include <exception>
 #include <mutex>
+#include <memory>
 
 #include "server.hpp"
 
+#include "server_tls_reload_signal_handler.hpp"
 #include "server_thread.hpp"
 #include "logger/log.hpp"
 
@@ -15,6 +17,8 @@ namespace pgl {
 		server_setting_(std::move(setting)) {
 		// Setup server data
 		server_data_ = std::make_unique<server_data>();
+
+		reload_tls_context();
 
 		// Setup acceptor
 		const auto tcp = get_tcp(server_setting_->common.ip_version);
@@ -29,7 +33,24 @@ namespace pgl {
 
 	void server::run() {
 		// prevent to stop server when all request are processed
-        auto work = asio::make_work_guard(io_service_);
+		auto work = asio::make_work_guard(io_service_);
+
+#ifndef _WIN32
+		std::unique_ptr<server_tls_reload_signal_handler> tls_reload_signal_handler;
+		if (server_setting_->tls.mode == server_tls_mode::tls && server_setting_->tls.reload_on_sighup) {
+			tls_reload_signal_handler = std::make_unique<server_tls_reload_signal_handler>(
+				io_service_, [this] {
+					log(log_level::info, "Received SIGHUP. Reload TLS certificate.");
+					try_reload_tls_context();
+				});
+			tls_reload_signal_handler->start();
+			log(log_level::info, "TLS certificate reload on SIGHUP is enabled.");
+		}
+#else
+		if (server_setting_->tls.reload_on_sighup) {
+			log(log_level::warning, "TLS certificate reload on SIGHUP is not supported on Windows.");
+		}
+#endif
 
 		log(log_level::info, "Start ", server_setting_->common.thread, " threads.");
 
@@ -39,7 +60,8 @@ namespace pgl {
 		for (auto i = 0u; i < server_setting_->common.thread; ++i) {
 			thread_group.create_thread([&]() {
 				try {
-					server_thread server_thread(acceptor_, acceptor_mutex_, *server_data_, *server_setting_);
+					server_thread server_thread(acceptor_, acceptor_mutex_, tls_context_, *server_data_,
+						*server_setting_);
 					server_thread.start();
 					io_service_.run();
 				}
@@ -55,5 +77,22 @@ namespace pgl {
 
 		thread_group.join_all();
 		if (first_exception) { std::rethrow_exception(first_exception); }
+	}
+
+	void server::reload_tls_context() {
+		tls_context_.reload(server_setting_->tls);
+	}
+
+	void server::try_reload_tls_context() noexcept {
+		try {
+			reload_tls_context();
+			log(log_level::info, "TLS certificate reloaded.");
+		}
+		catch (const std::exception& e) {
+			log(log_level::error, "Failed to reload TLS certificate: ", e.what());
+		}
+		catch (...) {
+			log(log_level::error, "Failed to reload TLS certificate: Unknown error.");
+		}
 	}
 }

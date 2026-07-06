@@ -2,11 +2,18 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <iosfwd>
+#include <stdexcept>
+#include <string>
 
 #include "logger/log.hpp"
 #include "network/network_layer.hpp"
 
 namespace pgl {
+	enum class server_tls_mode : uint8_t { plain, tls };
+
+	server_tls_mode string_to_server_tls_mode(const std::string& str);
+
 	class server_setting_error final : public std::runtime_error {
 	public:
 		explicit server_setting_error(const std::string& message);
@@ -45,6 +52,13 @@ namespace pgl {
 		uint8_t connection_check_udp_try_count = 3;
 	};
 
+	struct server_tls_setting final {
+		server_tls_mode mode = server_tls_mode::tls;
+		std::filesystem::path certificate_path;
+		std::filesystem::path private_key_path;
+		bool reload_on_sighup = false;
+	};
+
 	// This class need not be thread safe because used for only read access.
 	struct server_setting final {
 		server_setting() = default;
@@ -53,6 +67,7 @@ namespace pgl {
 		server_authentication_setting authentication;
 		server_log_setting log;
 		server_connection_test_setting connection_test;
+		server_tls_setting tls;
 
 		/**
 		 * Load server setting from JSON file.

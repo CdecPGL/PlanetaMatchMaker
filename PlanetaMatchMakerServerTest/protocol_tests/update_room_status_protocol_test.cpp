@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_closes_room_without_reply) {
 		protocol_context context;
 		auto room = make_room(1, {u8"host", 1});
-		room.host_endpoint = pgl::endpoint::make_from_boost_endpoint(context.server_socket.remote_endpoint());
+		room.host_endpoint = pgl::endpoint::make_from_boost_endpoint(context.server_connection.remote_endpoint());
 		context.server_data.get_room_data_container().add_or_update(room);
 		const pgl::update_room_status_notice_message request{
 			1,

@@ -1,8 +1,10 @@
 #include <fstream>
 #include <concepts>
+#include <unordered_map>
 
 #include <boost/json.hpp>
 #include <boost/lexical_cast.hpp>
+#include "nameof.hpp"
 
 #include "minimal_serializer/string_utility.hpp"
 
@@ -19,6 +21,9 @@ namespace pgl {
 	const std::string authentication_section_key = "authentication";
 	const std::string log_section_key = "log";
 	const std::string connection_test_section_key = "connection_test";
+	const std::string tls_section_key = "tls";
+	const std::filesystem::path default_tls_certificate_file_name = "server.crt";
+	const std::filesystem::path default_tls_private_key_file_name = "server.key";
 
 	server_setting_error::server_setting_error(const std::string& message): std::runtime_error(message) {}
 	std::string server_setting_error::message() const { return what(); }
@@ -26,6 +31,14 @@ namespace pgl {
 	std::ostream& operator<<(std::ostream& os, const server_setting_error& error) {
 		os << error.message();
 		return os;
+	}
+
+	server_tls_mode string_to_server_tls_mode(const std::string& str) {
+		const static std::unordered_map<std::string, server_tls_mode> map{
+			{std::string(nameof::nameof_enum(server_tls_mode::plain)), server_tls_mode::plain},
+			{std::string(nameof::nameof_enum(server_tls_mode::tls)), server_tls_mode::tls},
+		};
+		return map.at(str);
 	}
 
 	template <typename T>
@@ -84,6 +97,10 @@ namespace pgl {
 
 	ip_version tag_invoke(json::value_to_tag<ip_version>, const json::value& jv) {
 		return string_to_ip_version(json::value_to<std::string>(jv));
+	}
+
+	server_tls_mode tag_invoke(json::value_to_tag<server_tls_mode>, const json::value& jv) {
+		return string_to_server_tls_mode(json::value_to<std::string>(jv));
 	}
 
 	server_common_setting tag_invoke(json::value_to_tag<server_common_setting>, const json::value& jv) {
@@ -214,6 +231,75 @@ namespace pgl {
 			setting.connection_check_udp_try_count);
 	}
 
+	server_tls_setting tag_invoke(json::value_to_tag<server_tls_setting>, const json::value& jv) {
+		const auto* obj = jv.if_object();
+		if (obj == nullptr) {
+			throw server_setting_error(generate_string("\"", tls_section_key, "\" must be object."));
+		}
+		server_tls_setting s;
+		EXTRACT_WITH_DEFAULT(*obj, s, server_tls_mode, mode);
+		EXTRACT_WITH_DEFAULT(*obj, s, std::filesystem::path, certificate_path);
+		EXTRACT_WITH_DEFAULT(*obj, s, std::filesystem::path, private_key_path);
+		EXTRACT_WITH_DEFAULT(*obj, s, bool, reload_on_sighup);
+		return s;
+	}
+
+	void apply_default_tls_file_paths_for_setting_file(server_tls_setting& setting,
+		const std::filesystem::path& setting_file_path) {
+		const auto setting_directory = setting_file_path.parent_path();
+		if (setting.certificate_path.empty()) {
+			setting.certificate_path = setting_directory / default_tls_certificate_file_name;
+		}
+		if (setting.private_key_path.empty()) {
+			setting.private_key_path = setting_directory / default_tls_private_key_file_name;
+		}
+	}
+
+	server_tls_setting load_tls_setting_from_json_file(const json::object& obj,
+		const std::filesystem::path& setting_file_path, const server_tls_setting& default_setting) {
+		server_tls_setting s = default_setting;
+		apply_default_tls_file_paths_for_setting_file(s, setting_file_path);
+
+		const auto* tls_section = obj.if_contains(tls_section_key);
+		if (tls_section == nullptr) { return s; }
+
+		const auto* tls_obj = tls_section->if_object();
+		if (tls_obj == nullptr) {
+			throw server_setting_error(generate_string("\"", tls_section_key, "\" must be object."));
+		}
+
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, server_tls_mode, mode);
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, std::filesystem::path, certificate_path);
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, std::filesystem::path, private_key_path);
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, bool, reload_on_sighup);
+		return s;
+	}
+
+	void validate_tls_setting(const server_tls_setting& setting) {
+		switch (setting.mode) {
+			case server_tls_mode::plain:
+				return;
+			case server_tls_mode::tls:
+				if (setting.certificate_path.empty()) {
+					throw server_setting_error(tls_section_key + ".certificate_path must not be empty when tls.mode is tls.");
+				}
+				if (setting.private_key_path.empty()) {
+					throw server_setting_error(tls_section_key + ".private_key_path must not be empty when tls.mode is tls.");
+				}
+				return;
+			default:
+				throw server_setting_error(generate_string(tls_section_key, ".mode is invalid."));
+		}
+	}
+
+	void output_tls_setting_to_log(const server_tls_setting& setting) {
+		log(log_level::info, "--------TLS--------");
+		log(log_level::info, NAMEOF(setting.mode), ": ", setting.mode);
+		log(log_level::info, NAMEOF(setting.certificate_path), ": ", setting.certificate_path);
+		log(log_level::info, NAMEOF(setting.private_key_path), ": ", setting.private_key_path);
+		log(log_level::info, NAMEOF(setting.reload_on_sighup), ": ", setting.reload_on_sighup);
+	}
+
 	void server_setting::load_from_json_file(const std::filesystem::path& file_path) {
 		if (!exists(file_path)) { throw server_setting_error(generate_string("\"", file_path, "\" does not exist.")); }
 
@@ -251,6 +337,9 @@ namespace pgl {
 				connection_test = json::value_to<server_connection_test_setting>(*connection_test_section);
 			}
 			validate_connection_test_setting(connection_test);
+
+			tls = load_tls_setting_from_json_file(*obj, file_path, tls);
+			validate_tls_setting(tls);
 		}
 		catch (const std::exception& e) {
 			throw server_setting_error(generate_string("Failed to load the file: ", e.what()));
@@ -283,35 +372,62 @@ namespace pgl {
 		return true;
 	}
 
+	template <>
+	bool get_env_var<server_tls_mode>(const std::string& var_name, server_tls_mode& dest) {
+		std::string str;
+		if (!get_env_var(var_name, str)) { return false; }
+		try { dest = string_to_server_tls_mode(str); }
+		catch (const std::out_of_range& e) {
+			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", str,
+				"\" is not convertible to server_tls_mode (", e.what(), ")."));
+		}
+
+		return true;
+	}
+
 	void server_setting::load_from_env_var() {
-		get_env_var("PMMS_COMMON_TIME_OUT_SECONDS", common.time_out_seconds);
-		get_env_var<ip_version>("PMMS_COMMON_IP_VERSION", common.ip_version);
-		get_env_var("PMMS_COMMON_PORT", common.port);
-		get_env_var("PMMS_COMMON_MAX_CONNECTION_PER_THREAD", common.max_connection_per_thread);
-		get_env_var("PMMS_COMMON_MAX_THREAD", common.thread);
-		get_env_var("PMMS_COMMON_MAX_ROOM_COUNT", common.max_room_count);
-		get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
-		validate_common_setting(common);
+		try {
+			get_env_var("PMMS_COMMON_TIME_OUT_SECONDS", common.time_out_seconds);
+			get_env_var<ip_version>("PMMS_COMMON_IP_VERSION", common.ip_version);
+			get_env_var("PMMS_COMMON_PORT", common.port);
+			get_env_var("PMMS_COMMON_MAX_CONNECTION_PER_THREAD", common.max_connection_per_thread);
+			get_env_var("PMMS_COMMON_MAX_THREAD", common.thread);
+			get_env_var("PMMS_COMMON_MAX_ROOM_COUNT", common.max_room_count);
+			get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
+			validate_common_setting(common);
 
-		get_env_var("PMMS_AUTHENTICATION_GAME_ID", authentication.game_id);
-		get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
-		get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
-		validate_authentication_setting(authentication);
+			get_env_var("PMMS_AUTHENTICATION_GAME_ID", authentication.game_id);
+			get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
+			get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
+			validate_authentication_setting(authentication);
 
-		get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);
-		get_env_var<log_level>("PMMS_LOG_CONSOLE_LOG_LEVEL", log.console_log_level);
-		get_env_var("PMMS_LOG_ENABLE_FILE_LOG", log.enable_file_log);
-		get_env_var<log_level>("PMMS_LOG_FILE_LOG_LEVEL", log.file_log_level);
-		get_env_var("PMMS_LOG_FILE_LOG_PATH", log.file_log_path);
-		validate_log_setting(log);
+			get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);
+			get_env_var<log_level>("PMMS_LOG_CONSOLE_LOG_LEVEL", log.console_log_level);
+			get_env_var("PMMS_LOG_ENABLE_FILE_LOG", log.enable_file_log);
+			get_env_var<log_level>("PMMS_LOG_FILE_LOG_LEVEL", log.file_log_level);
+			get_env_var("PMMS_LOG_FILE_LOG_PATH", log.file_log_path);
+			validate_log_setting(log);
 
-		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS",
-			connection_test.connection_check_tcp_time_out_seconds);
-		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS",
-			connection_test.connection_check_udp_time_out_seconds);
-		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT",
-			connection_test.connection_check_udp_try_count);
-		validate_connection_test_setting(connection_test);
+			get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS",
+				connection_test.connection_check_tcp_time_out_seconds);
+			get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS",
+				connection_test.connection_check_udp_time_out_seconds);
+			get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT",
+				connection_test.connection_check_udp_try_count);
+			validate_connection_test_setting(connection_test);
+
+			get_env_var<server_tls_mode>("PMMS_TLS_MODE", tls.mode);
+			get_env_var("PMMS_TLS_CERTIFICATE_PATH", tls.certificate_path);
+			get_env_var("PMMS_TLS_PRIVATE_KEY_PATH", tls.private_key_path);
+			get_env_var("PMMS_TLS_RELOAD_ON_SIGHUP", tls.reload_on_sighup);
+			validate_tls_setting(tls);
+		}
+		catch (const server_setting_error&) {
+			throw;
+		}
+		catch (const std::exception& e) {
+			throw server_setting_error(generate_string("Failed to load environment variables: ", e.what()));
+		}
 	}
 
 
@@ -321,6 +437,7 @@ namespace pgl {
 		output_authentication_setting_to_log(authentication);
 		output_log_setting_to_log(log);
 		output_connection_test_setting_to_log(connection_test);
+		output_tls_setting_to_log(tls);
 		pgl::log(log_level::info, "==============================================");
 	}
 }

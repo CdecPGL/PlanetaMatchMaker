@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_SUITE(network_test)
 	}
 
 	BOOST_AUTO_TEST_CASE(test_endpoint_to_boost_endpoint_round_trips_ipv6_address_and_port) {
-		const auto address = address_v6::from_string("2001:db8::1");
+		const auto address = boost::asio::ip::make_address_v6("2001:db8::1");
 		const auto endpoint = make_endpoint_from_address(address, 61000);
 
 		const auto boost_endpoint = endpoint.to_boost_endpoint();

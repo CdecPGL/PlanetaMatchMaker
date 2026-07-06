@@ -1,5 +1,27 @@
 # Client
 
+## Connection Security
+
+`MatchMakerClient.ConnectAsync` uses TLS by default. `Host` is an immutable value object for host or IP address values and validates IPv4, IPv6, or host names when constructed.
+
+To connect to a server with a certificate whose host name is different from the address you dial, pass the TLS target host to `ConnectionOptions`.
+
+```csharp
+await client.ConnectAsync(
+    new Host("127.0.0.1"),
+    new ServerPort(57000),
+    new PlayerName("player"),
+    new ConnectionOptions(
+        ConnectionMode.Tls,
+        new Host("match.example.com")));
+```
+
+User-provided values are represented by immutable value objects: `GameId`, `GameVersion`, `Host`, `ServerPort`, `PlayerName`, `RoomPassword`, `GameHostPort`, `GameHostExternalId`, and `SearchName`.
+
+Use `ConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
+
+`RemoteCertificateValidationCallback` can be set for development with self-signed certificates. Do not disable certificate validation in production.
+
 ## Port Mapping Auto Release
 
 In .Net Framework, port mappings created in the aplication are released automatically when the application exits.

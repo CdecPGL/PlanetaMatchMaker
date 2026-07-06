@@ -18,8 +18,8 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             var (totalRoomCount, matchedRoomCount, results) = await sharedClient.GetRoomListAsync(
-                options.StartIndex, options.Count, options.SortKind, options.SearchTargetFlag, options.SearchName,
-                options.SearchTag);
+                options.StartIndex, options.Count, options.SortKind, options.SearchTargetFlag,
+                new SearchName(options.SearchName), options.SearchTag);
 
             OutputStream.WriteLine($"{matchedRoomCount} rooms are matched in {totalRoomCount} rooms.");
             OutputStream.WriteLine($"{results.Length} rooms are replied from index {options.StartIndex}.");

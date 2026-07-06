@@ -18,7 +18,7 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             var roomEndpoint =
-                await sharedClient.JoinRoomAsync(options.Id, options.Password);
+                await sharedClient.JoinRoomAsync(options.Id, new RoomPassword(options.Password));
             OutputStream.WriteLine($"Obtain game host endpoint of room: {roomEndpoint}");
             OutputStream.WriteLine("Connection will be closed.");
         }

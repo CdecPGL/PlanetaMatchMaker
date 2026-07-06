@@ -117,6 +117,7 @@
     <ClInclude Include="source\main\log_initializer.hpp" />
     <ClInclude Include="source\message\message_handlers\keep_alive_notice_message_handler.hpp" />
     <ClInclude Include="source\message\message_parameter_validator.hpp" />
+    <ClInclude Include="source\network\client_connection.hpp" />
     <ClInclude Include="source\network\endpoint.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\data\data_constants.hpp" />
@@ -134,6 +135,8 @@
     <ClInclude Include="source\server\server.hpp" />
     <ClInclude Include="source\server\server_constants.hpp" />
     <ClInclude Include="source\server\server_data.hpp" />
+    <ClInclude Include="source\server\server_tls_context.hpp" />
+    <ClInclude Include="source\server\server_tls_reload_signal_handler.hpp" />
     <ClInclude Include="source\message\messages.hpp" />
     <ClInclude Include="source\message\message_handler.hpp" />
     <ClInclude Include="source\message\message_handlers\authentication_request_message_handler.hpp" />
@@ -180,6 +183,7 @@
     <ClCompile Include="source\message\message_error_code.cpp" />
     <ClCompile Include="source\message\message_handlers\keep_alive_notice_message_handler.cpp" />
     <ClCompile Include="source\message\message_parameter_validator.cpp" />
+    <ClCompile Include="source\network\client_connection.cpp" />
     <ClCompile Include="source\network\endpoint.cpp" />
     <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main\main.cpp" />
@@ -200,6 +204,8 @@
     <ClCompile Include="source\server\server.cpp" />
     <ClCompile Include="source\server\server_data.cpp" />
     <ClCompile Include="source\server\server_errors.cpp" />
+    <ClCompile Include="source\server\server_tls_context.cpp" />
+    <ClCompile Include="source\server\server_tls_reload_signal_handler.cpp" />
     <ClCompile Include="source\network\transport_layer.cpp" />
     <ClCompile Include="source\server\server_setting.cpp" />
     <ClCompile Include="source\server\server_thread.cpp" />

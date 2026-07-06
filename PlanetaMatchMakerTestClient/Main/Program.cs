@@ -37,7 +37,8 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var logger = StreamLogger.CreateStandardOutputLogger(LogLevel.Debug);
-                using var client = new MatchMakerClient(gameId, gameVersion, logger: logger);
+                using var client = new MatchMakerClient(new GameId(gameId), new GameVersion(gameVersion),
+                    logger: logger);
                 Console.CancelKeyPress += OnKeyBoardInterrupted;
 
                 if (!string.IsNullOrEmpty(options.CommandAndOptions))

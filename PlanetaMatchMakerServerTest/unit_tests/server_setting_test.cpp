@@ -31,6 +31,12 @@ const json::value required_setting = {
 		"authentication", {
 			{"game_id", "test"},
 		}
+	},
+	{
+		"tls", {
+			{"certificate_path", "server.crt"},
+			{"private_key_path", "server.key"},
+		}
 	}
 };
 
@@ -71,6 +77,8 @@ void set_typed_env_var<bool>(const std::string& name, const bool& value) {
  */
 void set_required_setting_env_var() {
 	set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
+	set_typed_env_var("PMMS_TLS_CERTIFICATE_PATH", "server.crt");
+	set_typed_env_var("PMMS_TLS_PRIVATE_KEY_PATH", "server.key");
 }
 
 struct setting_file_fixture {
@@ -142,6 +150,14 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 					{"connection_check_udp_time_out_seconds", 20},
 					{"connection_check_udp_try_count", 30}
 				}
+			},
+			{
+				"tls", {
+					{"mode", "plain"},
+					{"certificate_path", "test.crt"},
+					{"private_key_path", "test.key"},
+					{"reload_on_sighup", true}
+				}
 			}
 		};
 		create_setting_file(test_data);
@@ -171,6 +187,10 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_tcp_time_out_seconds, 10);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_time_out_seconds, 20);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_try_count, 30);
+		BOOST_CHECK(setting.tls.mode == server_tls_mode::plain);
+		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "test.crt");
+		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "test.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, true);
 	}
 
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_minimal, setting_file_fixture) {
@@ -202,6 +222,36 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_tcp_time_out_seconds, 5);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_time_out_seconds, 3);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_try_count, 3);
+		BOOST_CHECK(setting.tls.mode == server_tls_mode::tls);
+		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "server.crt");
+		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "server.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, false);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_uses_setting_directory_as_default_tls_paths,
+		setting_file_fixture) {
+		// set up
+		const json::value test_data = {
+			{
+				"authentication", {
+					{"game_id", "test"},
+				}
+			},
+			{
+				"tls", {
+					{"mode", "tls"},
+				}
+			}
+		};
+		create_setting_file(test_data);
+
+		// exercise
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		// verify
+		BOOST_CHECK_EQUAL(setting.tls.certificate_path, setting_path.parent_path() / "server.crt");
+		BOOST_CHECK_EQUAL(setting.tls.private_key_path, setting_path.parent_path() / "server.key");
 	}
 
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_time_out_seconds_valid,
@@ -492,6 +542,26 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_try_count, sample);
 	}
 
+	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_tls_mode_valid,
+		unit_test::data::make({ "plain", "tls"})) {
+		// set up
+		const auto test_data = create_setting({
+			{
+				"tls", {
+					{"mode", sample},
+				}
+			}
+		});
+		create_setting_file(test_data);
+
+		// exercise
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		// verify
+		BOOST_CHECK(setting.tls.mode == string_to_server_tls_mode(sample));
+	}
+
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_invalid_integer_value,
 		unit_test::data::make({
 			std::tuple{"common", "time_out_seconds", - 1},
@@ -537,7 +607,9 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			std::tuple{"authentication", "game_id", "---------25bytes---------"},
 			std::tuple{"log", "console_log_level", "inf"},
 			std::tuple{"log", "file_log_level", "inf"},
-			}), section, key, value) {
+			std::tuple{"tls", "mode", "external_tls_termination"},
+			std::tuple{"tls", "mode", "none"},
+		}), section, key, value) {
 		// set up
 		const auto test_data = create_setting({
 			{
@@ -574,6 +646,27 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
 	}
 
+	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_json_file_invalid_tls_path_when_tls_mode,
+		unit_test::data::make({
+			std::tuple{"certificate_path", ""},
+			std::tuple{"private_key_path", ""},
+			}), key, value) {
+		// set up
+		const auto test_data = create_setting({
+			{
+				"tls", {
+					{"mode", "tls"},
+					{key, value},
+				}
+			}
+		});
+		create_setting_file(test_data);
+
+		// exercise and verify
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
 
 	BOOST_FIXTURE_TEST_CASE(load_from_env_var_all, env_var_fixture) {
 		// set up
@@ -596,6 +689,10 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		set_typed_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS", 10);
 		set_typed_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS", 20);
 		set_typed_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT", 30);
+		set_typed_env_var("PMMS_TLS_MODE", "plain");
+		set_typed_env_var("PMMS_TLS_CERTIFICATE_PATH", "test.crt");
+		set_typed_env_var("PMMS_TLS_PRIVATE_KEY_PATH", "test.key");
+		set_typed_env_var("PMMS_TLS_RELOAD_ON_SIGHUP", true);
 
 		// exercise
 		server_setting setting;
@@ -622,6 +719,10 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_tcp_time_out_seconds, 10);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_time_out_seconds, 20);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_try_count, 30);
+		BOOST_CHECK(setting.tls.mode == server_tls_mode::plain);
+		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "test.crt");
+		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "test.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, true);
 	}
 
 	BOOST_FIXTURE_TEST_CASE(load_from_env_var_empty, env_var_fixture) {
@@ -651,6 +752,10 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_tcp_time_out_seconds, 5);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_time_out_seconds, 3);
 		BOOST_CHECK_EQUAL(setting.connection_test.connection_check_udp_try_count, 3);
+		BOOST_CHECK(setting.tls.mode == server_tls_mode::tls);
+		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "server.crt");
+		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "server.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, false);
 	}
 
 	// Test only one case for each setting section because exhaustive test for validation is done in test of load_from_json_file
@@ -660,6 +765,8 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			std::tuple{"PMMS_AUTHENTICATION_GAME_ID", ""},
 			std::tuple{"PMMS_LOG_CONSOLE_LOG_LEVEL", "none"},
 			std::tuple{"PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS", "0"},
+			std::tuple{"PMMS_TLS_MODE", "external_tls_termination"},
+			std::tuple{"PMMS_TLS_RELOAD_ON_SIGHUP", "yes"},
 			}), key, value) {
 		// set up
 		set_required_setting_env_var();

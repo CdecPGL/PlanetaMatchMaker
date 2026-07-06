@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,8 +22,9 @@ namespace PlanetaGameLabo.MatchMaker
             CancellationToken cancellationToken)
         {
             var result = await sharedClient.CreateRoomWithCreatingPortMappingAsync(options.MaxPlayerCount,
-                options.Protocol, options.PortCandidates, options.DefaultPortNumber,
-                options.DiscoverTimeoutMilliSeconds, options.Password, options.forceToDiscoverNatDevice);
+                options.Protocol, options.PortCandidates.Select(port => new GameHostPort(port)),
+                new GameHostPort(options.DefaultPortNumber), options.DiscoverTimeoutMilliSeconds,
+                new RoomPassword(options.Password), options.forceToDiscoverNatDevice);
 
             OutputStream.WriteLine(result.IsDefaultPortUsed
                 ? "Default port is used."

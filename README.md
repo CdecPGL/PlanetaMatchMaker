@@ -46,17 +46,29 @@ You can easily install and use server and client.
 
 You can very easily install server by using docker by following steps.
 
-1. Pull docker image with tag `cdec/plaenta-match-maker:server-alpine`
+1. Pull docker image with tag `cdec/planeta-match-maker-server:latest`
 2. Run a container with the image
 
-Following commands are example to run a server with port 57000 by using docker.
+Following commands are examples to run a server with port 57000 by using docker.
 
 ```bash
-docker pull cdec/plaenta-match-maker-server:latest
-docker run -p 57000:57000 cdec/planeta-match-maker-server:latest
+docker pull cdec/planeta-match-maker-server:latest
+
+# Production TLS. Mount an existing certificate chain and private key to the default paths.
+docker run -p 57000:57000 \
+  -v /etc/letsencrypt/live/match.example.com/fullchain.pem:/etc/pmms/server.crt:ro \
+  -v /etc/letsencrypt/live/match.example.com/privkey.pem:/etc/pmms/server.key:ro \
+  cdec/planeta-match-maker-server:latest
+
+# Local plain TCP test.
+docker run -p 57000:57000 \
+  -e PMMS_TLS_MODE=plain \
+  cdec/planeta-match-maker-server:latest
 ```
 
 You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.
+
+The default server setting uses TLS. Mount certificate and private key files to the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing. See [TLS Certificate Setup](Documents/TLSCertificate.md) for production and development certificate examples.
 
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
@@ -107,6 +119,7 @@ Note that enabling `Facepunch.Steamworks` and `Steamworks.NET` at same time is n
 ## Documents
 
 - [Server Settings](Documents/ServerSettings.md)
+- [TLS Certificate Setup](Documents/TLSCertificate.md)
 - [Build Manual](Documents/BuildManual.md)
 - [Server Message API Reference](Documents/ServerMessageAPIReference.md)
 - [NAT Traversal with UPnP](Documents/NatTraversal.md)

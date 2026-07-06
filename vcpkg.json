@@ -1,12 +1,17 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
     "dependencies": [
-        "boost"
+        "boost",
+        "openssl"
     ],
     "overrides": [
         {
             "name": "boost",
             "version": "1.89.0"
+        },
+        {
+            "name": "openssl",
+            "version": "3.6.2"
         }
     ]
 }

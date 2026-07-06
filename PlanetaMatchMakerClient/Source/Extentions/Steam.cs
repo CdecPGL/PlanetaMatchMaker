@@ -84,11 +84,11 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         /// <exception cref="InvalidOperationException">Steam client is not ready.</exception>
         /// <returns></returns>
         public static async Task<CreateRoomResult> CreateRoomWithSteamAsync(this MatchMakerClient client,
-            byte maxPlayerCount, string password = "")
+            byte maxPlayerCount, RoomPassword password)
         {
             var steamId64 = SteamLibraryHelpers.GetSteamId64();
             return await client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
-                    GameHostConnectionEstablishMode.Steam, steamId64, password)
+                    GameHostConnectionEstablishMode.Steam, GameHostExternalId.FromUInt64(steamId64), password)
                 .ConfigureAwait(false);
         }
 
@@ -101,7 +101,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         /// <exception cref="ArgumentException"></exception>
         /// <returns>Game host steam networking identity</returns>
         public static async Task<SteamIdentityType> JoinRoomWithSteamAsync(this MatchMakerClient client, uint roomId,
-            string password = "")
+            RoomPassword password)
         {
             var response = await client
                 .JoinRoomWithExternalServiceAsync(roomId, GameHostConnectionEstablishMode.Steam, password)

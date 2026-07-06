@@ -146,7 +146,9 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 var playerFullName =
-                    await sharedClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
+                    await sharedClient.ConnectAsync(new Host(options.ServerAddress),
+                        new ServerPort(options.ServerPort), new PlayerName(playerName),
+                        CreateConnectionOptions(options));
                 if (playerFullName.Name != playerName)
                 {
                     throw new TestFailedException(false,
@@ -168,7 +170,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                await sharedClient.CreateRoomAsync(8, options.GameHostDefaultPort);
+                await sharedClient.CreateRoomAsync(8, new GameHostPort(options.GameHostDefaultPort));
                 lastHostedRoomId = sharedClient.HostingRoomId;
             }
             catch (ClientErrorException e)
@@ -237,7 +239,8 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 await sharedClient.CreateRoomWithCreatingPortMappingAsync(8, options.GameHostProtocol,
-                    options.GameHostPortCandidates, options.GameHostDefaultPort, options.DiscoverTimeoutMilliSeconds);
+                    options.GameHostPortCandidates.Select(port => new GameHostPort(port)),
+                    new GameHostPort(options.GameHostDefaultPort), options.DiscoverTimeoutMilliSeconds);
                 lastHostedRoomId = sharedClient.HostingRoomId;
             }
             catch (ClientErrorException e)
@@ -257,7 +260,9 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 secondClient = new MatchMakerClient(sharedClient.GameId, sharedClient.GameVersion,
                     sharedClient.TimeoutMilliSeconds, logger: sharedClient.Logger);
-                await secondClient.ConnectAsync(options.ServerAddress, options.ServerPort, playerName);
+                await secondClient.ConnectAsync(new Host(options.ServerAddress),
+                    new ServerPort(options.ServerPort), new PlayerName(playerName),
+                    CreateConnectionOptions(options));
             }
             catch (ClientErrorException e)
             {
@@ -305,6 +310,12 @@ namespace PlanetaGameLabo.MatchMaker
         private MatchMakerClient secondClient;
         private ushort lastCreatedPrivatePort;
         private ushort lastCreatedPublicPort;
+
+        private static ConnectionOptions CreateConnectionOptions(TestAllCommandOptions options)
+        {
+            return ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
+                options.AcceptInvalidTlsCertificate);
+        }
     }
 
     internal class TestAllCommandOptions : TestCommandOptions

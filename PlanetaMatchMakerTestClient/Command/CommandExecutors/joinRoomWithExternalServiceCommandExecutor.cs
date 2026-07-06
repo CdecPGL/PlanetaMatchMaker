@@ -22,7 +22,7 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var result =
                 await sharedClient.JoinRoomWithExternalServiceAsync(options.Id, options.ConnectionEstablishMode,
-                    options.Password);
+                    new RoomPassword(options.Password));
             OutputStream.WriteLine($"Obtain game host signaling mode: {result.ConnectionEstablishMode}");
             OutputStream.WriteLine(
                 $"Obtain game host external id of room: {string.Join("", result.ExternalId.Select(b => $"{b:X00}"))} ({result.GetExternalIdAsString()})");

@@ -17,7 +17,8 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomCommandOptions options,
             CancellationToken cancellationToken)
         {
-            await sharedClient.CreateRoomAsync(options.MaxPlayerCount, options.PortNumber, options.Password);
+            await sharedClient.CreateRoomAsync(options.MaxPlayerCount, new GameHostPort(options.PortNumber),
+                new RoomPassword(options.Password));
             OutputStream.WriteLine($"Room created with id \"{sharedClient.HostingRoomId}\".");
         }
     }

@@ -5,10 +5,6 @@ if (STATIC_LINK_DEPENDENCIES)
 		message(FATAL_ERROR "Static link dependencies is only supported for GNU and Clang")
 	endif()
 
-	# Link libraries statically
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-	# Link executables statically
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 	# Link boost libraries statically
 	set(Boost_USE_STATIC_LIBS ON)
 endif()

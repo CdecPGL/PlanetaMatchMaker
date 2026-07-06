@@ -26,7 +26,7 @@ namespace PlanetaGameLabo.MatchMaker
             if (!sharedClient.PortMappingCreator.IsNatDeviceAvailable)
             {
                 throw new CommandExecutionErrorException(
-                    "There are no available NAT device found which supports UPnP.");
+                    "No available UPnP NAT device was found.");
             }
 
             var portMappings = await sharedClient.PortMappingCreator.GetAllPortMappingsAsync();

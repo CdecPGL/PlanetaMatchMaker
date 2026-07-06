@@ -5,32 +5,36 @@
 #include <mutex>
 
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include "session/session_data.hpp"
+#include "network/client_connection.hpp"
 
 namespace pgl {
 	class message_handler_invoker;
 	class server_data;
+	class server_tls_context;
 	struct server_setting;
 	class session_data;
 
 	class server_session final : public std::enable_shared_from_this<server_session>, boost::noncopyable {
 	public:
 		server_session(boost::asio::ip::tcp::acceptor& acceptor,
-			std::mutex& acceptor_mutex, server_data& server_data, const server_setting& server_setting,
-			std::shared_ptr<const message_handler_invoker> message_handler_invoker);
+			std::mutex& acceptor_mutex, server_tls_context& tls_context, server_data& server_data,
+			const server_setting& server_setting, std::shared_ptr<const message_handler_invoker> message_handler_invoker);
 		void start();
 		void stop();
 	private:
 		boost::asio::ip::tcp::acceptor& acceptor_;
 		std::mutex& acceptor_mutex_;
+		server_tls_context& tls_context_;
 		server_data& server_data_;
 		const server_setting& server_setting_;
 		std::shared_ptr<const message_handler_invoker> message_handler_invoker_;
 
-		// Socket operations and timeout timers share this strand through socket.get_executor().
+		// Connection operations and timeout timers share this strand through connection.get_executor().
 		boost::asio::strand<boost::asio::any_io_executor> strand_;
-		boost::asio::ip::tcp::socket socket_;
+		client_connection connection_;
 		std::unique_ptr<session_data> session_data_;
 		std::atomic_bool is_stopping_{false};
 

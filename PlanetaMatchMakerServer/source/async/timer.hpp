@@ -8,10 +8,10 @@
 #include <boost/asio.hpp>
 
 namespace pgl {
-	// The socket executor must serialize this timer handler with socket operations, normally by constructing the socket
-	// with a strand. This keeps socket.cancel() ordered with the yielding async operation.
-	template <class TProtocol, typename... TimeParams>
-	void execute_socket_timed_async_operation(boost::asio::basic_socket<TProtocol>& socket,
+	// The executor must serialize this timer handler with socket operations, normally by constructing the socket
+	// with a strand. This keeps cancel() ordered with the yielding async operation.
+	template <class SocketLike, typename... TimeParams>
+	void execute_socket_timed_async_operation(SocketLike& socket,
 		const std::chrono::duration<TimeParams...>& time, std::function<void()>&& proc) {
 		boost::asio::steady_timer timer(socket.get_executor());
 		timer.expires_after(time);

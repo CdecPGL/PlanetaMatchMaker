@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -106,6 +107,33 @@ namespace PlanetaGameLabo.MatchMaker
         {
             get => _serverPort;
             set => _serverPort = value;
+        }
+
+        /// <summary>
+        /// A connection mode to the matching server.
+        /// </summary>
+        public ConnectionMode connectionMode
+        {
+            get => _connectionMode;
+            set => _connectionMode = value;
+        }
+
+        /// <summary>
+        /// A TLS target host used for server certificate validation.
+        /// </summary>
+        public string tlsTargetHost
+        {
+            get => _tlsTargetHost;
+            set => _tlsTargetHost = value;
+        }
+
+        /// <summary>
+        /// Accept invalid TLS certificates. Use only for development with self-signed certificates.
+        /// </summary>
+        public bool acceptInvalidTlsCertificate
+        {
+            get => _acceptInvalidTlsCertificate;
+            set => _acceptInvalidTlsCertificate = value;
         }
 
         /// <summary>
@@ -364,8 +392,9 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="password"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
-        public void HostRoomWithExternalService<T>(GameHostConnectionEstablishMode connectionEstablishMode,
-            T externalId, byte maxPlayerCount, string password = "", Action<ErrorInfo, HostRoomResult> callback = null)
+        public void HostRoomWithExternalService(GameHostConnectionEstablishMode connectionEstablishMode,
+            GameHostExternalId externalId, byte maxPlayerCount, string password = "",
+            Action<ErrorInfo, HostRoomResult> callback = null)
         {
             RunTask(
                 async () => await HostRoomWithExternalServiceAsync(connectionEstablishMode, externalId, maxPlayerCount,
@@ -380,8 +409,8 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="password"></param>
         /// <param name="connectionEstablishMode"></param>
         /// <returns></returns>
-        public async Task<(ErrorInfo errorInfo, HostRoomResult result)> HostRoomWithExternalServiceAsync<T>(
-            GameHostConnectionEstablishMode connectionEstablishMode, T externalId, byte maxPlayerCount,
+        public async Task<(ErrorInfo errorInfo, HostRoomResult result)> HostRoomWithExternalServiceAsync(
+            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId, byte maxPlayerCount,
             string password = "")
         {
             if (status != Status.SearchingRoom)
@@ -662,8 +691,9 @@ namespace PlanetaGameLabo.MatchMaker
 
             _gameId = gameId;
             _gameVersion = gameVersion;
-            _client = new MatchMakerClient(_gameId, _gameVersion, (int)(_serverCommunicationTimeOutSeconds * 1000),
-                _keepAliveNoticeIntervalSeconds, new UnityLogger(_debugLogLevel));
+            _client = new MatchMakerClient(new GameId(_gameId), new GameVersion(_gameVersion),
+                (int)(_serverCommunicationTimeOutSeconds * 1000), _keepAliveNoticeIntervalSeconds,
+                new UnityLogger(_debugLogLevel));
         }
 
         public void Dispose()
@@ -696,6 +726,14 @@ namespace PlanetaGameLabo.MatchMaker
         [SerializeField, Tooltip("Port of Match Making Server")]
         private ushort _serverPort = 57000;
 
+        [SerializeField, Tooltip("Connection mode to Match Making Server")]
+        private ConnectionMode _connectionMode = ConnectionMode.Tls;
+
+        [SerializeField, Tooltip("TLS target host used for server certificate validation")]
+        private string _tlsTargetHost = "";
+
+        [SerializeField, Tooltip("Accept invalid TLS certificates. Use only for development.")]
+        private bool _acceptInvalidTlsCertificate;
 
         [SerializeField, Tooltip("Timeout seconds to send and receive data between match making server")]
         private float _serverCommunicationTimeOutSeconds = 10;
@@ -734,8 +772,9 @@ namespace PlanetaGameLabo.MatchMaker
 
         private void Awake()
         {
-            _client = new MatchMakerClient(_gameId, _gameVersion, (int)(_serverCommunicationTimeOutSeconds * 1000),
-                _keepAliveNoticeIntervalSeconds, new UnityLogger(_debugLogLevel));
+            _client = new MatchMakerClient(new GameId(_gameId), new GameVersion(_gameVersion),
+                (int)(_serverCommunicationTimeOutSeconds * 1000), _keepAliveNoticeIntervalSeconds,
+                new UnityLogger(_debugLogLevel));
             _client.Logger.Enabled = _enableDebugLog;
             if (_dontDestroyOnLoad)
             {
@@ -858,13 +897,15 @@ namespace PlanetaGameLabo.MatchMaker
 
         private async Task<PlayerFullName> ConnectImplAsync(string playerName)
         {
-            return await _client.ConnectAsync(_serverAddress, _serverPort, playerName);
+            return await _client.ConnectAsync(new Host(_serverAddress), new ServerPort(_serverPort),
+                new PlayerName(playerName), CreateConnectionOptions());
         }
 
         private async Task<HostRoomResult> CreateRoomImplAsync(byte maxPlayerCount,
             string password = "")
         {
-            var createRoomResult = await _client.CreateRoomAsync(maxPlayerCount, _gameDefaultPort, password);
+            var createRoomResult = await _client.CreateRoomAsync(maxPlayerCount, new GameHostPort(_gameDefaultPort),
+                new RoomPassword(password));
             _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
             return new HostRoomResult(_hostingRoomInfo);
         }
@@ -874,44 +915,34 @@ namespace PlanetaGameLabo.MatchMaker
         {
             var gameDefaultPortSnapshot = _gameDefaultPort;
             var result = await _client.CreateRoomWithCreatingPortMappingAsync(maxPlayerCount,
-                _gameTransportProtocol, GenerateGamePortCandidateList(), gameDefaultPortSnapshot,
-                (int)(_natDiscoverTimeOutSeconds * 1000), password);
+                _gameTransportProtocol, GenerateGamePortCandidateList(), new GameHostPort(gameDefaultPortSnapshot),
+                (int)(_natDiscoverTimeOutSeconds * 1000), new RoomPassword(password));
             _hostingRoomInfo = new HostingRoomInfo(result.CreteRoomResult, password);
             return new HostRoomWithCreatingPortMappingResult(_hostingRoomInfo, result.IsDefaultPortUsed,
                 result.IsDefaultPortUsed ? gameDefaultPortSnapshot : result.UsedPrivatePortFromCandidates,
                 result.IsDefaultPortUsed ? gameDefaultPortSnapshot : result.UsedPublicPortFromCandidates);
         }
 
-        private async Task<HostRoomResult> CreateRoomWithExternalServiceImplAsync<T>(
-            GameHostConnectionEstablishMode connectionEstablishMode, T externalId, byte maxPlayerCount,
+        private async Task<HostRoomResult> CreateRoomWithExternalServiceImplAsync(
+            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId, byte maxPlayerCount,
             string password = "")
         {
-            CreateRoomResult createRoomResult;
-            switch (externalId)
-            {
-                case byte[] externalIdByteArray:
-                    createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
-                        connectionEstablishMode, externalIdByteArray, password);
-                    break;
-                default:
-                    createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
-                        connectionEstablishMode, externalId, password);
-                    break;
-            }
-
+            var createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
+                connectionEstablishMode, externalId, new RoomPassword(password));
             _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
             return new HostRoomResult(_hostingRoomInfo);
         }
 
         private async Task<IPEndPoint> JoinRoomImplAsync(uint roomId, string password = "")
         {
-            return await _client.JoinRoomAsync(roomId, password);
+            return await _client.JoinRoomAsync(roomId, new RoomPassword(password));
         }
 
         private async Task<JoinRoomWithExternalServiceResult> JoinRoomWithExternalServiceImplAsync(
             GameHostConnectionEstablishMode connectionEstablishMode, uint roomId, string password = "")
         {
-            return await _client.JoinRoomWithExternalServiceAsync(roomId, connectionEstablishMode, password);
+            return await _client.JoinRoomWithExternalServiceAsync(roomId, connectionEstablishMode,
+                new RoomPassword(password));
         }
 
         private async Task UpdateHostingRoomStatusImplAsync(RoomStatus roomStatus,
@@ -937,7 +968,7 @@ namespace PlanetaGameLabo.MatchMaker
                 RoomSearchTargetFlag targetFlags, string searchName, ushort searchTag)
         {
             var (totalRoomCount, matchedRoomCount, roomInfoList) = await _client.GetRoomListAsync(
-                resultStartIndex, resultCount, sortKind, targetFlags, searchName, searchTag);
+                resultStartIndex, resultCount, sortKind, targetFlags, new SearchName(searchName), searchTag);
             return (totalRoomCount, resultStartIndex, matchedRoomCount,
                 roomInfoList.Select(result => new RoomInfo(result)).ToList().AsReadOnly());
         }
@@ -946,17 +977,34 @@ namespace PlanetaGameLabo.MatchMaker
 
         #region OtherPrivateMethods
 
-        private List<ushort> GenerateGamePortCandidateList()
+        private List<GameHostPort> GenerateGamePortCandidateList()
         {
-            var list = new List<ushort>();
+            var list = new List<GameHostPort>();
             foreach (var gamePortCandidate in _gamePortCandidates)
             {
                 list.AddRange(Enumerable
                     .Range(gamePortCandidate.startPort, gamePortCandidate.endPort - gamePortCandidate.startPort + 1)
-                    .Select(v => (ushort)v));
+                    .Select(v => new GameHostPort((ushort)v)));
             }
 
             return list;
+        }
+
+        private ConnectionOptions CreateConnectionOptions()
+        {
+            Host? tlsTargetHost = null;
+            if (!string.IsNullOrEmpty(_tlsTargetHost))
+            {
+                tlsTargetHost = new Host(_tlsTargetHost);
+            }
+
+            RemoteCertificateValidationCallback remoteCertificateValidationCallback = null;
+            if (_acceptInvalidTlsCertificate)
+            {
+                remoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            }
+
+            return new ConnectionOptions(_connectionMode, tlsTargetHost, remoteCertificateValidationCallback);
         }
 
         private void Reset()

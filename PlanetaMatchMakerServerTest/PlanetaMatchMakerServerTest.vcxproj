@@ -74,7 +74,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)obj\$(Platform)\$(Configuration)\PlanetaMatchMakerServer\;$(SolutionDir)obj\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>asio_stream_compatibility.obj;authentication_request_message_handler.obj;client_error_code.obj;client_errors.obj;connection_test_request_message_handler.obj;create_room_request_message_handler.obj;datetime.obj;endpoint.obj;file_utilities.obj;join_room_request_message_handler.obj;keep_alive_notice_message_handler.obj;log.obj;logger_common.obj;message_error_code.obj;message_handle_utilities.obj;message_handler.obj;message_handler_invoker.obj;message_handler_invoker_factory.obj;message_parameter_validator.obj;network_layer.obj;player_full_name.obj;player_name_container.obj;room_data.obj;server_data.obj;server_errors.obj;server_setting.obj;session_data.obj;transport_layer.obj;update_room_status_notice_message_handler.obj;list_room_request_message_handler.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asio_stream_compatibility.obj;authentication_request_message_handler.obj;client_connection.obj;client_error_code.obj;client_errors.obj;connection_test_request_message_handler.obj;create_room_request_message_handler.obj;datetime.obj;endpoint.obj;file_utilities.obj;join_room_request_message_handler.obj;keep_alive_notice_message_handler.obj;log.obj;logger_common.obj;message_error_code.obj;message_handle_utilities.obj;message_handler.obj;message_handler_invoker.obj;message_handler_invoker_factory.obj;message_parameter_validator.obj;network_layer.obj;player_full_name.obj;player_name_container.obj;room_data.obj;server_data.obj;server_errors.obj;server_session.obj;server_setting.obj;server_tls_context.obj;server_tls_reload_signal_handler.obj;session_data.obj;transport_layer.obj;update_room_status_notice_message_handler.obj;list_room_request_message_handler.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -100,7 +100,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)obj\$(Platform)\$(Configuration)\PlanetaMatchMakerServer\;$(SolutionDir)obj\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>asio_stream_compatibility.obj;authentication_request_message_handler.obj;client_error_code.obj;client_errors.obj;connection_test_request_message_handler.obj;create_room_request_message_handler.obj;datetime.obj;endpoint.obj;file_utilities.obj;join_room_request_message_handler.obj;keep_alive_notice_message_handler.obj;log.obj;logger_common.obj;message_error_code.obj;message_handle_utilities.obj;message_handler.obj;message_handler_invoker.obj;message_handler_invoker_factory.obj;message_parameter_validator.obj;network_layer.obj;player_full_name.obj;player_name_container.obj;room_data.obj;server_data.obj;server_errors.obj;server_setting.obj;session_data.obj;transport_layer.obj;update_room_status_notice_message_handler.obj;list_room_request_message_handler.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asio_stream_compatibility.obj;authentication_request_message_handler.obj;client_connection.obj;client_error_code.obj;client_errors.obj;connection_test_request_message_handler.obj;create_room_request_message_handler.obj;datetime.obj;endpoint.obj;file_utilities.obj;join_room_request_message_handler.obj;keep_alive_notice_message_handler.obj;log.obj;logger_common.obj;message_error_code.obj;message_handle_utilities.obj;message_handler.obj;message_handler_invoker.obj;message_handler_invoker_factory.obj;message_parameter_validator.obj;network_layer.obj;player_full_name.obj;player_name_container.obj;room_data.obj;server_data.obj;server_errors.obj;server_session.obj;server_setting.obj;server_tls_context.obj;server_tls_reload_signal_handler.obj;session_data.obj;transport_layer.obj;update_room_status_notice_message_handler.obj;list_room_request_message_handler.obj;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -128,6 +128,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="unit_tests\server_tls_reload_signal_handler_test.cpp" />
     <ClCompile Include="unit_tests\session_data_test.cpp" />
     <ClCompile Include="unit_tests\thread_safe_data_container_test.cpp" />
     <ClCompile Include="unit_tests\utilities_test.cpp" />

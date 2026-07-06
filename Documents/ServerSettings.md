@@ -62,3 +62,20 @@ Log lines include the current thread ID as `[thread:<id>]`. Logs emitted while p
 |connection_check_tcp_time_out_seconds|integer (1-3600)|5|PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS|Timeout seconds in TCP connection test request.|
 |connection_check_udp_time_out_seconds|integer (1-3600)|3|PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS|Timeout seconds in UDP connection test request.|
 |connection_check_udp_try_count|integer (1-100)|3|PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT|Connection test try count in UDP.|
+
+### `tls` Section
+
+|Name|Type|Default|Env Var|Explanation|
+|:---|:---|---:|:---|:---|
+|mode|string ("plain", "tls")|"tls"|PMMS_TLS_MODE|Connection security mode. Use "plain" only for backward compatibility or local development.|
+|certificate_path|string (path)|`setting.json` directory + `server.crt`|PMMS_TLS_CERTIFICATE_PATH|TLS server certificate chain path. Required when `mode` is "tls".|
+|private_key_path|string (path)|`setting.json` directory + `server.key`|PMMS_TLS_PRIVATE_KEY_PATH|TLS server private key path. Required when `mode` is "tls".|
+|reload_on_sighup|boolean|false|PMMS_TLS_RELOAD_ON_SIGHUP|Reload TLS certificate and private key when the server receives SIGHUP. This is supported on Linux and Unix-like platforms.|
+
+When `certificate_path` or `private_key_path` is omitted from the JSON setting file, the server uses files in the same directory as the loaded `setting.json`. For the standard setting paths, the defaults are `/etc/pmms/server.crt` and `/etc/pmms/server.key` on Linux, or `C:\pmms\server.crt` and `C:\pmms\server.key` on Windows. Environment variables still override these values.
+
+See [TLS Certificate Setup](TLSCertificate.md) for production certificate paths, Certbot examples, Docker mounts, renewal, and development self-signed certificates.
+
+`external_tls_termination` is reserved for future design but is not supported now. The server also does not support PROXY protocol, so it does not accept PROXY protocol headers and cannot restore the original client IP from a TLS terminator.
+
+In Builtin mode, PMMS uses the accepted TCP connection source IP to create the game host endpoint. If TLS is terminated by an external proxy without preserving the original source IP, Builtin mode can return the proxy IP instead of the host client IP.

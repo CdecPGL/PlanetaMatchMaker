@@ -22,6 +22,7 @@
     <ClCompile Include="unit_tests\serialize_pack_test.cpp" />
     <ClCompile Include="unit_tests\server_data_test.cpp" />
     <ClCompile Include="unit_tests\server_setting_test.cpp" />
+    <ClCompile Include="unit_tests\server_tls_reload_signal_handler_test.cpp" />
     <ClCompile Include="unit_tests\session_data_test.cpp" />
     <ClCompile Include="unit_tests\thread_safe_data_container_test.cpp" />
     <ClCompile Include="unit_tests\utilities_test.cpp" />

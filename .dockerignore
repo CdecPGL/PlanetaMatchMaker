@@ -1,0 +1,15 @@
+.git
+.vs
+.idea
+
+build*/
+vcpkg_installed/
+
+**/bin/
+**/obj/
+**/TestResults/
+
+PlanetaMatchMakerUnityClient/Library/
+PlanetaMatchMakerUnityClient/Logs/
+PlanetaMatchMakerUnityClient/Temp/
+PlanetaMatchMakerUnityClient/UserSettings/

@@ -8,8 +8,10 @@
 namespace pgl {
 
 	server_thread::server_thread(boost::asio::ip::tcp::acceptor& acceptor, std::mutex& acceptor_mutex,
-		server_data& server_data, const server_setting& server_setting): acceptor_(acceptor),
+		server_tls_context& tls_context, server_data& server_data, const server_setting& server_setting):
+		acceptor_(acceptor),
 		acceptor_mutex_(acceptor_mutex),
+		tls_context_(tls_context),
 		server_data_(server_data),
 		server_setting_(server_setting),
 		message_handler_invoker_(message_handler_invoker_factory::make_shared_standard()) {}
@@ -17,7 +19,7 @@ namespace pgl {
 	void server_thread::start() {
 		server_sessions_.reserve(server_setting_.common.max_connection_per_thread);
 		for (auto i = 0u; i < server_setting_.common.max_connection_per_thread; ++i) {
-			auto conn_handler = std::make_shared<server_session>(acceptor_, acceptor_mutex_, server_data_,
+			auto conn_handler = std::make_shared<server_session>(acceptor_, acceptor_mutex_, tls_context_, server_data_,
 				server_setting_, message_handler_invoker_);
 			conn_handler->start();
 			server_sessions_.push_back(std::move(conn_handler));

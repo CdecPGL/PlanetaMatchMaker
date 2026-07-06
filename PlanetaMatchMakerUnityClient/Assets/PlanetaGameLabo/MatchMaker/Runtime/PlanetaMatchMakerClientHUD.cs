@@ -284,7 +284,7 @@ namespace PlanetaGameLabo.MatchMaker
         private void HostRoomWithExternalService()
         {
             _isErrorOccured = false;
-            var externalId = gameObject.name;
+            var externalId = GameHostExternalId.FromString(gameObject.name);
             _client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Others, externalId, _roomMaxPlayerCount,
                 _roomPassword,
                 (errorInfo, args) =>

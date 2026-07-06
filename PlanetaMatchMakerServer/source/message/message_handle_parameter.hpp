@@ -3,12 +3,13 @@
 #include <boost/asio/spawn.hpp>
 
 namespace pgl {
+	class client_connection;
 	class server_data;
 	class session_data;
 	struct server_setting;
 
 	struct message_handle_parameter final {
-		boost::asio::ip::tcp::socket& socket;
+		client_connection& connection;
 		server_data& server_data;
 		boost::asio::yield_context yield;
 		std::chrono::seconds timeout_seconds;
