@@ -4,7 +4,7 @@ using namespace boost;
 
 namespace pgl {
 	client_connection::client_connection(asio::any_io_executor executor, asio::ssl::context& ssl_context):
-		executor_(std::move(executor)), ssl_context_(ssl_context), socket_(executor_) { reset(mode_); }
+		ssl_context_(ssl_context), socket_(std::move(executor)) { reset(mode_); }
 
 	void client_connection::reset(const server_tls_mode mode) {
 		boost::system::error_code ignored_error;

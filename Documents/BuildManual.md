@@ -80,7 +80,7 @@ make -j"$(nproc)"
 ctest
 ```
 
-The server project is compatible with gcc so specify clang++ to cmake.
+The server project is not compatible with gcc so specify clang++ to cmake.
 Coverage instrumentation is disabled by default outside the development Docker image.
 To calculate coverage manually, install `lcov`, `llvm-cov`, and the Clang profile runtime package such as `libclang-rt-14-dev`, configure with `-DENABLE_COVERAGE=ON`, run tests, and then run `../tools/coverage.sh` from the build directory.
 

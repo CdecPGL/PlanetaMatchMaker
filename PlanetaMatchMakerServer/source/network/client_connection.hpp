@@ -50,7 +50,6 @@ namespace pgl {
 		}
 
 	private:
-		boost::asio::any_io_executor executor_;
 		boost::asio::ssl::context& ssl_context_;
 		server_tls_mode mode_ = server_tls_mode::tls;
 		boost::asio::ip::tcp::socket socket_;
