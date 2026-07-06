@@ -84,6 +84,46 @@ docker run \
   cdec/planeta-match-maker-server:latest
 ```
 
+## Google Compute Engine VM
+
+The standard Docker certificate model also works on Google Cloud Compute Engine when you deploy the PMMS server container on a VM. Keep Certbot outside the PMMS container, store certificates on the VM, and mount them into the PMMS container read-only.
+
+Use this deployment shape:
+
+1. Reserve a static external IP address for the VM.
+1. Point the DNS `A` record, for example `match.example.com`, to that static IP address.
+1. Allow inbound `tcp:80` for Certbot HTTP-01 validation.
+1. Allow inbound `tcp:57000` or your configured PMMS server port.
+1. Obtain the certificate on the VM host.
+1. Run the PMMS container with `/etc/letsencrypt` mounted read-only.
+1. Restart the PMMS container from the Certbot renewal deploy hook.
+
+On a Debian or Ubuntu VM with Docker installed, obtain the certificate on the host:
+
+```bash
+sudo certbot certonly --standalone -d match.example.com
+```
+
+Then run the PMMS container with the Certbot live paths:
+
+```bash
+sudo docker run -d --name pmms \
+  -p 57000:57000 \
+  -e PMMS_TLS_MODE=tls \
+  -e PMMS_TLS_CERTIFICATE_PATH=/etc/letsencrypt/live/match.example.com/fullchain.pem \
+  -e PMMS_TLS_PRIVATE_KEY_PATH=/etc/letsencrypt/live/match.example.com/privkey.pem \
+  -v /etc/letsencrypt:/etc/letsencrypt:ro \
+  cdec/planeta-match-maker-server:latest
+```
+
+Restart the PMMS container when Certbot installs a renewed certificate:
+
+```bash
+sudo certbot renew --deploy-hook "docker restart pmms"
+```
+
+If you use Container-Optimized OS, do not rely on installing Certbot with a host package manager. Run Certbot as a separate container or use another certificate management process, persist `/etc/letsencrypt` on a mounted disk, and mount the same directory into the PMMS container read-only.
+
 ## Renewal
 
 Let Certbot manage certificate renewal. PMMS currently reads the certificate and key at startup; it does not reload them automatically when the files change.
@@ -148,3 +188,6 @@ If a TLS terminator or proxy sits in front of PMMS, the server may see the proxy
 - [Let's Encrypt Getting Started](https://letsencrypt.org/getting-started/)
 - [Certbot User Guide](https://eff-certbot.readthedocs.io/en/stable/using.html)
 - [OpenSSL req command](https://docs.openssl.org/3.0/man1/openssl-req/)
+- [Compute Engine container deployment](https://docs.cloud.google.com/compute/docs/containers/deploying-containers)
+- [Compute Engine static external IP addresses](https://docs.cloud.google.com/compute/docs/ip-addresses/configure-static-external-ip-address)
+- [Google Cloud VPC firewall rules](https://docs.cloud.google.com/firewall/docs/using-firewalls)
