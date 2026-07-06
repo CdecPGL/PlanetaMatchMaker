@@ -88,20 +88,36 @@ docker run \
 
 The standard Docker certificate model also works on Google Cloud Compute Engine when you deploy the PMMS server container on a VM. Keep Certbot outside the PMMS container, store certificates on the VM, and mount them into the PMMS container read-only.
 
+Use DNS-01 validation with Google Cloud DNS. Do not use HTTP-01 for this deployment model if opening inbound `tcp:80` is not acceptable.
+
 Use this deployment shape:
 
 1. Reserve a static external IP address for the VM.
+1. Manage the domain's authoritative DNS zone with Google Cloud DNS.
 1. Point the DNS `A` record, for example `match.example.com`, to that static IP address.
-1. Allow inbound `tcp:80` for Certbot HTTP-01 validation.
 1. Allow inbound `tcp:57000` or your configured PMMS server port.
-1. Obtain the certificate on the VM host.
+1. Give Certbot permission to update the Cloud DNS managed zone.
+1. Obtain the certificate on the VM host with the Certbot Google DNS plugin.
 1. Run the PMMS container with `/etc/letsencrypt` mounted read-only.
 1. Enable SIGHUP reload and send SIGHUP from the Certbot renewal deploy hook.
 
-On a Debian or Ubuntu VM with Docker installed, obtain the certificate on the host:
+For a VM running on Google Cloud, prefer Application Default Credentials through the VM's service account instead of a service account key file. Grant only the permissions required to edit the target Cloud DNS zone. Avoid project-wide `dns.admin` in production unless the project contains only this DNS zone.
+
+On a Debian or Ubuntu VM with Docker installed, install Certbot and the Google DNS plugin on the host:
 
 ```bash
-sudo certbot certonly --standalone -d match.example.com
+sudo apt-get update
+sudo apt-get install certbot python3-certbot-dns-google
+```
+
+Then obtain the certificate with DNS-01 validation:
+
+```bash
+sudo certbot certonly \
+  --dns-google \
+  --dns-google-project PROJECT_ID \
+  --dns-google-propagation-seconds 120 \
+  -d match.example.com
 ```
 
 Then run the PMMS container with the Certbot live paths:
