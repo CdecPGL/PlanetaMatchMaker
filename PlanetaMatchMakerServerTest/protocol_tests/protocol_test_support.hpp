@@ -25,6 +25,7 @@
 #include "../../PlanetaMatchMakerServer/source/server/server_data.hpp"
 #include "../../PlanetaMatchMakerServer/source/server/server_errors.hpp"
 #include "../../PlanetaMatchMakerServer/source/server/server_setting.hpp"
+#include "../../PlanetaMatchMakerServer/source/server/server_tls_context.hpp"
 #include "../../PlanetaMatchMakerServer/source/session/session_data.hpp"
 #include "../../PlanetaMatchMakerServer/source/utilities/pack.hpp"
 
@@ -115,7 +116,7 @@ namespace pgl::test {
 		tcp::acceptor acceptor;
 		tcp::socket client_socket;
 		boost::asio::strand<boost::asio::any_io_executor> strand;
-		boost::asio::ssl::context ssl_context;
+		pgl::server_tls_context tls_context;
 		pgl::client_connection server_connection;
 		pgl::server_data server_data;
 		pgl::server_setting setting;
@@ -125,8 +126,7 @@ namespace pgl::test {
 			acceptor(io, tcp::endpoint(tcp::v4(), 0)),
 			client_socket(io),
 			strand(boost::asio::make_strand(io)),
-			ssl_context(boost::asio::ssl::context::tls_server),
-			server_connection(strand, ssl_context),
+			server_connection(strand, tls_context),
 			setting(make_protocol_test_setting()) {
 			server_connection.reset(pgl::server_tls_mode::plain);
 			client_socket.connect(tcp::endpoint(boost::asio::ip::address_v4::loopback(),

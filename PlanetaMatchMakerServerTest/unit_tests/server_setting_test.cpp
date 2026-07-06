@@ -155,7 +155,8 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 				"tls", {
 					{"mode", "plain"},
 					{"certificate_path", "test.crt"},
-					{"private_key_path", "test.key"}
+					{"private_key_path", "test.key"},
+					{"reload_on_sighup", true}
 				}
 			}
 		};
@@ -189,6 +190,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK(setting.tls.mode == server_tls_mode::plain);
 		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "test.crt");
 		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "test.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, true);
 	}
 
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_minimal, setting_file_fixture) {
@@ -223,6 +225,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK(setting.tls.mode == server_tls_mode::tls);
 		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "server.crt");
 		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "server.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, false);
 	}
 
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_uses_setting_directory_as_default_tls_paths,
@@ -689,6 +692,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		set_typed_env_var("PMMS_TLS_MODE", "plain");
 		set_typed_env_var("PMMS_TLS_CERTIFICATE_PATH", "test.crt");
 		set_typed_env_var("PMMS_TLS_PRIVATE_KEY_PATH", "test.key");
+		set_typed_env_var("PMMS_TLS_RELOAD_ON_SIGHUP", true);
 
 		// exercise
 		server_setting setting;
@@ -718,6 +722,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK(setting.tls.mode == server_tls_mode::plain);
 		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "test.crt");
 		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "test.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, true);
 	}
 
 	BOOST_FIXTURE_TEST_CASE(load_from_env_var_empty, env_var_fixture) {
@@ -750,6 +755,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK(setting.tls.mode == server_tls_mode::tls);
 		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "server.crt");
 		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "server.key");
+		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, false);
 	}
 
 	// Test only one case for each setting section because exhaustive test for validation is done in test of load_from_json_file
@@ -760,6 +766,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			std::tuple{"PMMS_LOG_CONSOLE_LOG_LEVEL", "none"},
 			std::tuple{"PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS", "0"},
 			std::tuple{"PMMS_TLS_MODE", "external_tls_termination"},
+			std::tuple{"PMMS_TLS_RELOAD_ON_SIGHUP", "yes"},
 			}), key, value) {
 		// set up
 		set_required_setting_env_var();

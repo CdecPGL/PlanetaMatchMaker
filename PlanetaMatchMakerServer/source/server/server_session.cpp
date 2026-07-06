@@ -34,16 +34,16 @@ namespace pgl {
 	}
 
 	server_session::server_session(asio::ip::tcp::acceptor& acceptor, std::mutex& acceptor_mutex,
-		asio::ssl::context& ssl_context, server_data& server_data, const server_setting& server_setting,
+		server_tls_context& tls_context, server_data& server_data, const server_setting& server_setting,
 		std::shared_ptr<const message_handler_invoker> message_handler_invoker):
 		acceptor_(acceptor),
 		acceptor_mutex_(acceptor_mutex),
-		ssl_context_(ssl_context),
+		tls_context_(tls_context),
 		server_data_(server_data),
 		server_setting_(server_setting),
 		message_handler_invoker_(std::move(message_handler_invoker)),
 		strand_(asio::make_strand(acceptor.get_executor())),
-		connection_(strand_, ssl_context_) { }
+		connection_(strand_, tls_context_) { }
 
 	void server_session::start() {
 		asio::dispatch(strand_, [shared_this = shared_from_this()] {

@@ -1,16 +1,19 @@
 #include "client_connection.hpp"
 
+#include <stdexcept>
+
 using namespace boost;
 
 namespace pgl {
-	client_connection::client_connection(asio::any_io_executor executor, asio::ssl::context& ssl_context):
-		ssl_context_(ssl_context), socket_(std::move(executor)) { reset(mode_); }
+	client_connection::client_connection(asio::any_io_executor executor, server_tls_context& tls_context):
+		tls_context_(tls_context), socket_(std::move(executor)) { reset(mode_); }
 
 	void client_connection::reset(const server_tls_mode mode) {
 		boost::system::error_code ignored_error;
 		close(ignored_error);
 
 		tls_stream_.reset();
+		active_tls_context_.reset();
 		mode_ = mode;
 	}
 
@@ -28,7 +31,9 @@ namespace pgl {
 
 	void client_connection::async_handshake(const asio::yield_context yield) {
 		if (is_tls()) {
-			tls_stream_.emplace(socket_, ssl_context_);
+			active_tls_context_ = tls_context_.current();
+			if (!active_tls_context_) { throw std::runtime_error("TLS context is not loaded."); }
+			tls_stream_.emplace(socket_, *active_tls_context_);
 			tls_stream_->async_handshake(asio::ssl::stream_base::server, yield);
 		}
 	}
@@ -37,6 +42,7 @@ namespace pgl {
 
 	void client_connection::close(boost::system::error_code& error_code) {
 		tls_stream_.reset();
+		active_tls_context_.reset();
 		socket_.close(error_code);
 	}
 }

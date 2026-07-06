@@ -56,6 +56,7 @@ namespace pgl {
 		server_tls_mode mode = server_tls_mode::tls;
 		std::filesystem::path certificate_path;
 		std::filesystem::path private_key_path;
+		bool reload_on_sighup = false;
 	};
 
 	// This class need not be thread safe because used for only read access.

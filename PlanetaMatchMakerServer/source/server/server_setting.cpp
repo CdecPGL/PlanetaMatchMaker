@@ -240,6 +240,7 @@ namespace pgl {
 		EXTRACT_WITH_DEFAULT(*obj, s, server_tls_mode, mode);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::filesystem::path, certificate_path);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::filesystem::path, private_key_path);
+		EXTRACT_WITH_DEFAULT(*obj, s, bool, reload_on_sighup);
 		return s;
 	}
 
@@ -270,6 +271,7 @@ namespace pgl {
 		EXTRACT_WITH_DEFAULT(*tls_obj, s, server_tls_mode, mode);
 		EXTRACT_WITH_DEFAULT(*tls_obj, s, std::filesystem::path, certificate_path);
 		EXTRACT_WITH_DEFAULT(*tls_obj, s, std::filesystem::path, private_key_path);
+		EXTRACT_WITH_DEFAULT(*tls_obj, s, bool, reload_on_sighup);
 		return s;
 	}
 
@@ -295,6 +297,7 @@ namespace pgl {
 		log(log_level::info, NAMEOF(setting.mode), ": ", setting.mode);
 		log(log_level::info, NAMEOF(setting.certificate_path), ": ", setting.certificate_path);
 		log(log_level::info, NAMEOF(setting.private_key_path), ": ", setting.private_key_path);
+		log(log_level::info, NAMEOF(setting.reload_on_sighup), ": ", setting.reload_on_sighup);
 	}
 
 	void server_setting::load_from_json_file(const std::filesystem::path& file_path) {
@@ -383,39 +386,48 @@ namespace pgl {
 	}
 
 	void server_setting::load_from_env_var() {
-		get_env_var("PMMS_COMMON_TIME_OUT_SECONDS", common.time_out_seconds);
-		get_env_var<ip_version>("PMMS_COMMON_IP_VERSION", common.ip_version);
-		get_env_var("PMMS_COMMON_PORT", common.port);
-		get_env_var("PMMS_COMMON_MAX_CONNECTION_PER_THREAD", common.max_connection_per_thread);
-		get_env_var("PMMS_COMMON_MAX_THREAD", common.thread);
-		get_env_var("PMMS_COMMON_MAX_ROOM_COUNT", common.max_room_count);
-		get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
-		validate_common_setting(common);
+		try {
+			get_env_var("PMMS_COMMON_TIME_OUT_SECONDS", common.time_out_seconds);
+			get_env_var<ip_version>("PMMS_COMMON_IP_VERSION", common.ip_version);
+			get_env_var("PMMS_COMMON_PORT", common.port);
+			get_env_var("PMMS_COMMON_MAX_CONNECTION_PER_THREAD", common.max_connection_per_thread);
+			get_env_var("PMMS_COMMON_MAX_THREAD", common.thread);
+			get_env_var("PMMS_COMMON_MAX_ROOM_COUNT", common.max_room_count);
+			get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
+			validate_common_setting(common);
 
-		get_env_var("PMMS_AUTHENTICATION_GAME_ID", authentication.game_id);
-		get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
-		get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
-		validate_authentication_setting(authentication);
+			get_env_var("PMMS_AUTHENTICATION_GAME_ID", authentication.game_id);
+			get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
+			get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
+			validate_authentication_setting(authentication);
 
-		get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);
-		get_env_var<log_level>("PMMS_LOG_CONSOLE_LOG_LEVEL", log.console_log_level);
-		get_env_var("PMMS_LOG_ENABLE_FILE_LOG", log.enable_file_log);
-		get_env_var<log_level>("PMMS_LOG_FILE_LOG_LEVEL", log.file_log_level);
-		get_env_var("PMMS_LOG_FILE_LOG_PATH", log.file_log_path);
-		validate_log_setting(log);
+			get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);
+			get_env_var<log_level>("PMMS_LOG_CONSOLE_LOG_LEVEL", log.console_log_level);
+			get_env_var("PMMS_LOG_ENABLE_FILE_LOG", log.enable_file_log);
+			get_env_var<log_level>("PMMS_LOG_FILE_LOG_LEVEL", log.file_log_level);
+			get_env_var("PMMS_LOG_FILE_LOG_PATH", log.file_log_path);
+			validate_log_setting(log);
 
-		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS",
-			connection_test.connection_check_tcp_time_out_seconds);
-		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS",
-			connection_test.connection_check_udp_time_out_seconds);
-		get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT",
-			connection_test.connection_check_udp_try_count);
-		validate_connection_test_setting(connection_test);
+			get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS",
+				connection_test.connection_check_tcp_time_out_seconds);
+			get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TIME_OUT_SECONDS",
+				connection_test.connection_check_udp_time_out_seconds);
+			get_env_var("PMMS_CONNECTION_TEST_CONNECTION_CHECK_UDP_TRY_COUNT",
+				connection_test.connection_check_udp_try_count);
+			validate_connection_test_setting(connection_test);
 
-		get_env_var<server_tls_mode>("PMMS_TLS_MODE", tls.mode);
-		get_env_var("PMMS_TLS_CERTIFICATE_PATH", tls.certificate_path);
-		get_env_var("PMMS_TLS_PRIVATE_KEY_PATH", tls.private_key_path);
-		validate_tls_setting(tls);
+			get_env_var<server_tls_mode>("PMMS_TLS_MODE", tls.mode);
+			get_env_var("PMMS_TLS_CERTIFICATE_PATH", tls.certificate_path);
+			get_env_var("PMMS_TLS_PRIVATE_KEY_PATH", tls.private_key_path);
+			get_env_var("PMMS_TLS_RELOAD_ON_SIGHUP", tls.reload_on_sighup);
+			validate_tls_setting(tls);
+		}
+		catch (const server_setting_error&) {
+			throw;
+		}
+		catch (const std::exception& e) {
+			throw server_setting_error(generate_string("Failed to load environment variables: ", e.what()));
+		}
 	}
 
 

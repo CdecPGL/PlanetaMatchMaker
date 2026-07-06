@@ -50,6 +50,8 @@
     <ClInclude Include="source\server\server_thread.hpp" />
     <ClInclude Include="source\server\connection_handler.hpp" />
     <ClInclude Include="source\server\server_setting.hpp" />
+    <ClInclude Include="source\server\server_tls_context.hpp" />
+    <ClInclude Include="source\server\server_tls_reload_signal_handler.hpp" />
     <ClInclude Include="source\server\server.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +85,8 @@
     <ClCompile Include="source\server\server_thread.cpp" />
     <ClCompile Include="source\server\server.cpp" />
     <ClCompile Include="source\server\server_setting.cpp" />
+    <ClCompile Include="source\server\server_tls_context.cpp" />
+    <ClCompile Include="source\server\server_tls_reload_signal_handler.cpp" />
     <ClCompile Include="source\network\network_layer.cpp" />
   </ItemGroup>
 </Project>

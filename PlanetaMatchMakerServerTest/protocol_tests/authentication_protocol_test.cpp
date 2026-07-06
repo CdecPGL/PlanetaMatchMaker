@@ -1,8 +1,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "../../PlanetaMatchMakerServer/source/server/server_session.hpp"
+#include "../../PlanetaMatchMakerServer/source/server/server_tls_context.hpp"
 
 #include "protocol_test_support.hpp"
+
+#include <chrono>
+#include <filesystem>
+#include <fstream>
 
 namespace {
 	using namespace pgl::test;
@@ -56,18 +61,34 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 5o2lHdTf6ESQMeCDvjsukhSb
 -----END PRIVATE KEY-----)pem";
 
-	void configure_tls_test_server_context(boost::asio::ssl::context& ssl_context) {
-		ssl_context.set_options(
-			boost::asio::ssl::context::default_workarounds |
-			boost::asio::ssl::context::no_sslv2 |
-			boost::asio::ssl::context::no_sslv3 |
-			boost::asio::ssl::context::no_tlsv1 |
-			boost::asio::ssl::context::no_tlsv1_1);
-		ssl_context.use_certificate_chain(boost::asio::buffer(tls_test_certificate_pem,
-			std::char_traits<char>::length(tls_test_certificate_pem)));
-		ssl_context.use_private_key(boost::asio::buffer(tls_test_private_key_pem,
-			std::char_traits<char>::length(tls_test_private_key_pem)), boost::asio::ssl::context::pem);
-	}
+	class tls_test_certificate_files final {
+	public:
+		tls_test_certificate_files():
+			directory_(std::filesystem::temp_directory_path() /
+				("pmms_tls_protocol_test_" + std::to_string(
+					std::chrono::steady_clock::now().time_since_epoch().count()))),
+			certificate_path_(directory_ / "server.crt"),
+			private_key_path_(directory_ / "server.key") {
+			std::filesystem::create_directory(directory_);
+			std::ofstream certificate_stream(certificate_path_);
+			certificate_stream << tls_test_certificate_pem;
+			std::ofstream private_key_stream(private_key_path_);
+			private_key_stream << tls_test_private_key_pem;
+		}
+
+		~tls_test_certificate_files() {
+			std::error_code ignored_error;
+			std::filesystem::remove_all(directory_, ignored_error);
+		}
+
+		[[nodiscard]] const std::filesystem::path& certificate_path() const { return certificate_path_; }
+		[[nodiscard]] const std::filesystem::path& private_key_path() const { return private_key_path_; }
+
+	private:
+		std::filesystem::path directory_;
+		std::filesystem::path certificate_path_;
+		std::filesystem::path private_key_path_;
+	};
 
 	class io_context_thread final {
 	public:
@@ -132,14 +153,17 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		boost::asio::io_context server_io;
 		tcp::acceptor acceptor(server_io, tcp::endpoint(tcp::v4(), 0));
 		std::mutex acceptor_mutex;
-		boost::asio::ssl::context server_ssl_context(boost::asio::ssl::context::tls_server);
-		configure_tls_test_server_context(server_ssl_context);
 		pgl::server_data server_data;
 		auto setting = make_protocol_test_setting();
 		setting.tls.mode = pgl::server_tls_mode::tls;
+		const tls_test_certificate_files certificate_files;
+		setting.tls.certificate_path = certificate_files.certificate_path();
+		setting.tls.private_key_path = certificate_files.private_key_path();
+		pgl::server_tls_context tls_context;
+		tls_context.reload(setting.tls);
 		const auto invoker = pgl::message_handler_invoker_factory::make_shared_standard();
 		const auto session = std::make_shared<pgl::server_session>(
-			acceptor, acceptor_mutex, server_ssl_context, server_data, setting, invoker);
+			acceptor, acceptor_mutex, tls_context, server_data, setting, invoker);
 		session->start();
 		io_context_thread server_thread(server_io);
 

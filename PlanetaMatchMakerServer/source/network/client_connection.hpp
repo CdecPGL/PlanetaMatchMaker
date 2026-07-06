@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <memory>
 
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -8,11 +9,12 @@
 #include <boost/noncopyable.hpp>
 
 #include "server/server_setting.hpp"
+#include "server/server_tls_context.hpp"
 
 namespace pgl {
 	class client_connection final : boost::noncopyable {
 	public:
-		client_connection(boost::asio::any_io_executor executor, boost::asio::ssl::context& ssl_context);
+		client_connection(boost::asio::any_io_executor executor, server_tls_context& tls_context);
 
 		void reset(server_tls_mode mode);
 
@@ -50,9 +52,10 @@ namespace pgl {
 		}
 
 	private:
-		boost::asio::ssl::context& ssl_context_;
+		server_tls_context& tls_context_;
 		server_tls_mode mode_ = server_tls_mode::tls;
 		boost::asio::ip::tcp::socket socket_;
+		std::shared_ptr<boost::asio::ssl::context> active_tls_context_;
 		std::optional<boost::asio::ssl::stream<boost::asio::ip::tcp::socket&>> tls_stream_;
 	};
 }

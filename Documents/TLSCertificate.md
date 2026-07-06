@@ -96,7 +96,7 @@ Use this deployment shape:
 1. Allow inbound `tcp:57000` or your configured PMMS server port.
 1. Obtain the certificate on the VM host.
 1. Run the PMMS container with `/etc/letsencrypt` mounted read-only.
-1. Restart the PMMS container from the Certbot renewal deploy hook.
+1. Enable SIGHUP reload and send SIGHUP from the Certbot renewal deploy hook.
 
 On a Debian or Ubuntu VM with Docker installed, obtain the certificate on the host:
 
@@ -112,21 +112,22 @@ sudo docker run -d --name pmms \
   -e PMMS_TLS_MODE=tls \
   -e PMMS_TLS_CERTIFICATE_PATH=/etc/letsencrypt/live/match.example.com/fullchain.pem \
   -e PMMS_TLS_PRIVATE_KEY_PATH=/etc/letsencrypt/live/match.example.com/privkey.pem \
+  -e PMMS_TLS_RELOAD_ON_SIGHUP=true \
   -v /etc/letsencrypt:/etc/letsencrypt:ro \
   cdec/planeta-match-maker-server:latest
 ```
 
-Restart the PMMS container when Certbot installs a renewed certificate:
+Reload the certificate for new TLS handshakes when Certbot installs a renewed certificate:
 
 ```bash
-sudo certbot renew --deploy-hook "docker restart pmms"
+sudo certbot renew --deploy-hook "docker kill -s HUP pmms"
 ```
 
 If you use Container-Optimized OS, do not rely on installing Certbot with a host package manager. Run Certbot as a separate container or use another certificate management process, persist `/etc/letsencrypt` on a mounted disk, and mount the same directory into the PMMS container read-only.
 
 ## Renewal
 
-Let Certbot manage certificate renewal. PMMS currently reads the certificate and key at startup; it does not reload them automatically when the files change.
+Let Certbot manage certificate renewal. PMMS reads the certificate and key at startup. It can also reload them for new TLS connections on Linux and Unix-like platforms when `tls.reload_on_sighup` is enabled.
 
 Use a Certbot deploy hook to restart PMMS after a renewed certificate is installed:
 
@@ -135,6 +136,27 @@ sudo certbot renew --deploy-hook "systemctl restart pmms"
 ```
 
 For Docker deployments, restart the container or service from the deploy hook, for example with your systemd unit, Docker Compose service, or container orchestration platform.
+
+On Linux and Unix-like platforms, PMMS can reload the certificate and private key for new TLS connections when it receives SIGHUP:
+
+```json
+{
+  "tls": {
+    "mode": "tls",
+    "certificate_path": "/etc/letsencrypt/live/match.example.com/fullchain.pem",
+    "private_key_path": "/etc/letsencrypt/live/match.example.com/privkey.pem",
+    "reload_on_sighup": true
+  }
+}
+```
+
+With Docker, send SIGHUP from the Certbot deploy hook:
+
+```bash
+sudo certbot renew --deploy-hook "docker kill -s HUP pmms"
+```
+
+Existing TLS connections continue using the certificate context they were created with. New TLS handshakes use the reloaded certificate after the reload succeeds. If reload fails, PMMS keeps the previous certificate context and logs the error.
 
 ## Development Certificates
 

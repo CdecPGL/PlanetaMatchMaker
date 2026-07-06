@@ -70,6 +70,7 @@ Log lines include the current thread ID as `[thread:<id>]`. Logs emitted while p
 |mode|string ("plain", "tls")|"tls"|PMMS_TLS_MODE|Connection security mode. Use "plain" only for backward compatibility or local development.|
 |certificate_path|string (path)|`setting.json` directory + `server.crt`|PMMS_TLS_CERTIFICATE_PATH|TLS server certificate chain path. Required when `mode` is "tls".|
 |private_key_path|string (path)|`setting.json` directory + `server.key`|PMMS_TLS_PRIVATE_KEY_PATH|TLS server private key path. Required when `mode` is "tls".|
+|reload_on_sighup|boolean|false|PMMS_TLS_RELOAD_ON_SIGHUP|Reload TLS certificate and private key when the server receives SIGHUP. This is supported on Linux and Unix-like platforms.|
 
 When `certificate_path` or `private_key_path` is omitted from the JSON setting file, the server uses files in the same directory as the loaded `setting.json`. For the standard setting paths, the defaults are `/etc/pmms/server.crt` and `/etc/pmms/server.key` on Linux, or `C:\pmms\server.crt` and `C:\pmms\server.key` on Windows. Environment variables still override these values.
 
