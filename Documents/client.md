@@ -26,6 +26,8 @@ Use `ConnectionMode.Plain` only for backward compatibility or local development 
 ## Authentication
 
 `ConnectAsync` requires an `AuthenticationOptions` value. PMMS client libraries only send credentials; they do not implement OIDC browser login, PKCE, refresh token management, or Steam ticket acquisition.
+Authentication credentials are limited to `ClientConstants.MaxAuthenticationCredentialLength` (15,728,640 bytes),
+which is the maximum representable by the protocol chunk sequence field. The server's configured limit may be lower.
 
 ```csharp
 await client.ConnectAsync(

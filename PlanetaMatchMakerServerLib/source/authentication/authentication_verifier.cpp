@@ -34,11 +34,12 @@ namespace pgl {
 		const authentication_method method,
 		const std::vector<uint8_t>& credential,
 		const player_name_t& player_name,
-		const server_authentication_setting& setting) {
+		const server_authentication_setting& setting,
+		const authentication_execution_context& context) {
 		const auto* verifier = find_authentication_credential_verifier(method);
 		if (verifier == nullptr) {
 			return failure(authentication_result::unsupported_authentication_method);
 		}
-		return verifier->verify(credential, player_name, setting);
+		return verifier->verify(credential, player_name, setting, context);
 	}
 }

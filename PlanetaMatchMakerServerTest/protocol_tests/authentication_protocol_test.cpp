@@ -2,13 +2,17 @@
 
 #include "server/server_session.hpp"
 #include "server/server_tls_context.hpp"
+#include "authentication/authentication_http_client.hpp"
 
 #include "protocol_test_support.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+
+#include <jwt-cpp/traits/boost-json/defaults.h>
 
 namespace {
 	using namespace pgl::test;
@@ -123,19 +127,21 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 	}
 
 	const std::vector<uint8_t> test_credential{1, 2, 3, 4};
+	using jwt_json_traits = jwt::traits::boost_json;
 
 	pgl::authentication_request_message make_authentication_request(
 		const pgl::server_setting& setting,
 		const pgl::player_name_t& player_name,
 		const pgl::api_version_type request_api_version = pgl::api_version,
-		const pgl::authentication_method method = pgl::authentication_method::steam) {
+		const pgl::authentication_method method = pgl::authentication_method::steam,
+		const uint32_t credential_size = static_cast<uint32_t>(test_credential.size())) {
 		return {
 			request_api_version,
 			method,
 			pgl::game_id_t(setting.authentication.game_id),
 			pgl::game_version_t(setting.authentication.game_version),
 			player_name,
-			static_cast<uint32_t>(test_credential.size())
+			credential_size
 		};
 	}
 
@@ -147,25 +153,58 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		return chunk;
 	}
 
-	void write_authentication_request(tcp::socket& socket, const pgl::authentication_request_message& request) {
-		write_packed(socket, pgl::request_message_header{pgl::message_type::authentication}, request,
-			make_credential_chunk());
+	void write_authentication_request(tcp::socket& socket, const pgl::authentication_request_message& request,
+		const std::vector<uint8_t>& credential = test_credential) {
+		write_packed(socket, pgl::request_message_header{pgl::message_type::authentication}, request);
+		for (std::size_t offset = 0, sequence = 0; offset < credential.size();
+			offset += pgl::authentication_credential_chunk_data_size, ++sequence) {
+			pgl::authentication_credential_chunk_message chunk{};
+			chunk.sequence = static_cast<uint16_t>(sequence);
+			chunk.data_size = static_cast<uint8_t>(std::min<std::size_t>(
+				pgl::authentication_credential_chunk_data_size, credential.size() - offset));
+			std::ranges::copy_n(credential.begin() + offset, chunk.data_size, chunk.data.begin());
+			write_packed(socket, chunk);
+		}
 	}
 
 	template <typename SyncWriteStream>
 	void write_authentication_request_to_stream(SyncWriteStream& stream,
-		const pgl::authentication_request_message& request) {
-		write_packed_to_stream(stream, pgl::request_message_header{pgl::message_type::authentication}, request,
-			make_credential_chunk());
+		const pgl::authentication_request_message& request,
+		const std::vector<uint8_t>& credential = test_credential) {
+		write_packed_to_stream(stream, pgl::request_message_header{pgl::message_type::authentication}, request);
+		for (std::size_t offset = 0, sequence = 0; offset < credential.size();
+			offset += pgl::authentication_credential_chunk_data_size, ++sequence) {
+			pgl::authentication_credential_chunk_message chunk{};
+			chunk.sequence = static_cast<uint16_t>(sequence);
+			chunk.data_size = static_cast<uint8_t>(std::min<std::size_t>(
+				pgl::authentication_credential_chunk_data_size, credential.size() - offset));
+			std::ranges::copy_n(credential.begin() + offset, chunk.data_size, chunk.data.begin());
+			write_packed_to_stream(stream, chunk);
+		}
 	}
 
-	class steam_authentication_http_server final {
+	struct test_http_response final {
+		unsigned status = 200;
+		std::string body;
+		std::chrono::milliseconds delay{};
+	};
+
+	std::vector<test_http_response> successful_steam_responses() {
+		return {
+			{200, R"({"response":{"params":{"result":"OK","steamid":"76561198000000000"}}})"},
+			{200, R"({"appownership":{"ownsapp":true}})"}
+		};
+	}
+
+	class authentication_http_test_server final {
 	public:
-		steam_authentication_http_server():
+		explicit authentication_http_test_server(
+			std::vector<test_http_response> responses = successful_steam_responses()):
 			acceptor_(io_, tcp::endpoint(boost::asio::ip::address_v4::loopback(), 0)),
+			responses_(std::move(responses)),
 			thread_([this] { run(); }) {}
 
-		~steam_authentication_http_server() {
+		~authentication_http_test_server() {
 			boost::system::error_code ignored_error;
 			acceptor_.close(ignored_error);
 			if (thread_.joinable()) { thread_.join(); }
@@ -175,9 +214,11 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 			return "http://127.0.0.1:" + std::to_string(acceptor_.local_endpoint().port()) + path;
 		}
 
+		[[nodiscard]] std::size_t request_count() const { return request_count_; }
+
 	private:
 		void run() {
-			for (auto i = 0; i < 2; ++i) {
+			for (const auto& current_response : responses_) {
 				tcp::socket socket(io_);
 				boost::system::error_code error;
 				acceptor_.accept(socket, error);
@@ -186,24 +227,92 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 				boost::asio::streambuf request_buffer;
 				boost::asio::read_until(socket, request_buffer, "\r\n\r\n", error);
 				if (error) { return; }
+				++request_count_;
+				if (current_response.delay.count() > 0) { std::this_thread::sleep_for(current_response.delay); }
 
-				const auto body = i == 0
-					                  ? R"({"response":{"params":{"result":"OK","steamid":"76561198000000000"}}})"
-					                  : R"({"appownership":{"ownsapp":true}})";
-				const auto response = std::string("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
-					                      "Content-Length: ") +
-					std::to_string(std::char_traits<char>::length(body)) + "\r\nConnection: close\r\n\r\n" + body;
+				const auto& body = current_response.body;
+				const auto response = std::string("HTTP/1.1 ") + std::to_string(current_response.status) +
+					" Test\r\nContent-Type: application/json\r\nContent-Length: " +
+					std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
 				boost::asio::write(socket, boost::asio::buffer(response), error);
 			}
 		}
 
 		boost::asio::io_context io_;
 		tcp::acceptor acceptor_;
+		std::vector<test_http_response> responses_;
+		std::atomic_size_t request_count_{};
 		std::thread thread_;
 	};
 
+	class authentication_https_test_server final {
+	public:
+		authentication_https_test_server():
+			ssl_context_(boost::asio::ssl::context::tls_server),
+			acceptor_(io_, tcp::endpoint(tcp::v4(), 0)) {
+			ssl_context_.use_certificate_chain(boost::asio::buffer(tls_test_certificate_pem,
+				std::char_traits<char>::length(tls_test_certificate_pem)));
+			ssl_context_.use_private_key(boost::asio::buffer(tls_test_private_key_pem,
+				std::char_traits<char>::length(tls_test_private_key_pem)),
+				boost::asio::ssl::context::pem);
+			thread_ = std::thread([this] { run(); });
+		}
+
+		~authentication_https_test_server() {
+			boost::system::error_code ignored_error;
+			acceptor_.close(ignored_error);
+			if (thread_.joinable()) { thread_.join(); }
+		}
+
+		[[nodiscard]] std::string url(const std::string& host) const {
+			return "https://" + host + ":" + std::to_string(acceptor_.local_endpoint().port()) + "/jwks";
+		}
+
+	private:
+		void run() {
+			tcp::socket socket(io_);
+			boost::system::error_code error;
+			acceptor_.accept(socket, error);
+			if (error) { return; }
+			boost::asio::ssl::stream<tcp::socket> stream(std::move(socket), ssl_context_);
+			stream.handshake(boost::asio::ssl::stream_base::server, error);
+			if (error) { return; }
+
+			boost::asio::streambuf request_buffer;
+			boost::asio::read_until(stream, request_buffer, "\r\n\r\n", error);
+			if (error) { return; }
+			const std::string body = R"({"keys":[]})";
+			const auto response = std::string("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ") +
+				std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+			boost::asio::write(stream, boost::asio::buffer(response), error);
+		}
+
+		boost::asio::io_context io_;
+		boost::asio::ssl::context ssl_context_;
+		tcp::acceptor acceptor_;
+		std::thread thread_;
+	};
+
+	std::pair<std::optional<pgl::authentication_http::response>, std::exception_ptr> get_test_https_url(
+		const std::string& url) {
+		boost::asio::io_context io;
+		std::optional<pgl::authentication_http::response> response;
+		std::exception_ptr exception;
+		boost::asio::spawn(io, [&](boost::asio::yield_context yield) {
+			try {
+				const pgl::authentication_execution_context context{
+					io.get_executor(), yield, std::chrono::steady_clock::now() + std::chrono::seconds(2)
+				};
+				response = pgl::authentication_http::get(url, context, tls_test_certificate_pem);
+			}
+			catch (...) { exception = std::current_exception(); }
+		}, boost::asio::detached);
+		io.run();
+		return {std::move(response), exception};
+	}
+
 	void configure_steam_authentication(pgl::server_setting& setting,
-		const steam_authentication_http_server& steam_server) {
+		const authentication_http_test_server& steam_server) {
 		setting.authentication.allow_plain_connections = true;
 		setting.authentication.steam.enabled = true;
 		setting.authentication.steam.app_id = 480;
@@ -218,12 +327,100 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		setting.authentication.steam.app_id = 480;
 		setting.authentication.steam.publisher_key = "test-publisher-key";
 	}
+
+	std::string oidc_test_x5c() {
+		auto certificate = std::string(tls_test_certificate_pem);
+		const auto begin = certificate.find('\n') + 1;
+		const auto end = certificate.find("-----END CERTIFICATE-----");
+		certificate = certificate.substr(begin, end - begin);
+		std::erase(certificate, '\r');
+		std::erase(certificate, '\n');
+		return certificate;
+	}
+
+	std::string make_oidc_jwks(const std::string& kid) {
+		boost::json::object key{
+			{"kid", kid},
+			{"kty", "RSA"},
+			{"alg", "RS256"},
+			{"use", "sig"},
+			{"x5c", boost::json::array{oidc_test_x5c()}}
+		};
+		return boost::json::serialize(boost::json::object{{"keys", boost::json::array{std::move(key)}}});
+	}
+
+	std::string make_oidc_token(
+		const std::string& issuer = "https://issuer.example",
+		const std::string& audience = "pmms-test",
+		const std::string& subject = "oidc-user",
+		const std::string& kid = "test-key",
+		const std::chrono::seconds expires_from_now = std::chrono::hours(1),
+		const std::optional<std::chrono::seconds> not_before_from_now = std::nullopt) {
+		auto builder = jwt::create<jwt_json_traits>()
+			.set_key_id(kid)
+			.set_issuer(issuer)
+			.set_audience(audience)
+			.set_expires_at(std::chrono::system_clock::now() + expires_from_now);
+		if (!subject.empty()) { builder.set_subject(subject); }
+		if (not_before_from_now.has_value()) {
+			builder.set_not_before(std::chrono::system_clock::now() + *not_before_from_now);
+		}
+		return builder.sign(jwt::algorithm::rs256("", tls_test_private_key_pem));
+	}
+
+	void configure_oidc_authentication(pgl::server_setting& setting, const std::string& jwks = make_oidc_jwks("test-key")) {
+		setting.authentication.allow_plain_connections = true;
+		setting.authentication.oidc.enabled = true;
+		setting.authentication.oidc.issuer = "https://issuer.example";
+		setting.authentication.oidc.audience = "pmms-test";
+		setting.authentication.oidc.algorithms = {"RS256"};
+		setting.authentication.oidc.jwks = jwks;
+	}
+
+	pgl::authentication_result authenticate(
+		protocol_context& context,
+		const pgl::authentication_method method,
+		const std::vector<uint8_t>& credential) {
+		const auto request = make_authentication_request(context.setting, u8"player", pgl::api_version, method,
+			static_cast<uint32_t>(credential.size()));
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+		write_authentication_request(context.client_socket, request, credential);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+		BOOST_CHECK(reply_header.message_type == pgl::message_type::authentication);
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		if (reply.result == pgl::authentication_result::success) {
+			BOOST_CHECK(!exception);
+		}
+		else {
+			BOOST_CHECK(is_intended_disconnect(exception));
+		}
+		return reply.result;
+	}
 }
 
 BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
+	BOOST_AUTO_TEST_CASE(test_external_https_verifies_certificate_host_name) {
+		{
+			authentication_https_test_server server;
+			const auto [response, exception] = get_test_https_url(server.url("127.0.0.1"));
+			BOOST_CHECK(!exception);
+			BOOST_REQUIRE(response.has_value());
+			BOOST_CHECK_EQUAL(response->status, 200u);
+		}
+
+		{
+			authentication_https_test_server server;
+			const auto [response, exception] = get_test_https_url(server.url("127.0.0.2"));
+			BOOST_CHECK(exception);
+			BOOST_CHECK(!response.has_value());
+		}
+	}
+
 	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_success_and_assigns_player) {
 		protocol_context context;
-		steam_authentication_http_server steam_server;
+		authentication_http_test_server steam_server;
 		configure_steam_authentication(context.setting, steam_server);
 		const auto request = make_authentication_request(context.setting, u8"player");
 		protocol_handler_run handler(context, pgl::message_type::authentication);
@@ -247,13 +444,208 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 			context.session_data.client_player_name()));
 	}
 
+	BOOST_AUTO_TEST_CASE(test_steam_authentication_replies_ticket_invalid) {
+		protocol_context context;
+		authentication_http_test_server steam_server({
+			{200, R"({"response":{"params":{"result":"InvalidTicket"}}})"}
+		});
+		configure_steam_authentication(context.setting, steam_server);
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::steam, test_credential) ==
+			pgl::authentication_result::steam_ticket_invalid);
+		BOOST_CHECK_EQUAL(steam_server.request_count(), 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_steam_authentication_replies_ownership_check_failed) {
+		protocol_context context;
+		authentication_http_test_server steam_server({
+			{200, R"({"response":{"params":{"result":"OK","steamid":"76561198000000000"}}})"},
+			{200, R"({"appownership":{"ownsapp":false}})"}
+		});
+		configure_steam_authentication(context.setting, steam_server);
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::steam, test_credential) ==
+			pgl::authentication_result::steam_ownership_check_failed);
+		BOOST_CHECK_EQUAL(steam_server.request_count(), 2);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_steam_authentication_replies_service_unavailable) {
+		protocol_context context;
+		authentication_http_test_server steam_server({{503, R"({"error":"unavailable"})"}});
+		configure_steam_authentication(context.setting, steam_server);
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::steam, test_credential) ==
+			pgl::authentication_result::steam_authentication_service_unavailable);
+		BOOST_CHECK_EQUAL(steam_server.request_count(), 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_external_authentication_timeout_does_not_block_server_executor) {
+		protocol_context context;
+		authentication_http_test_server steam_server({
+			{200, R"({"response":{"params":{"result":"OK","steamid":"76561198000000000"}}})",
+				std::chrono::milliseconds(1500)}
+		});
+		configure_steam_authentication(context.setting, steam_server);
+		context.setting.authentication.timeout_seconds = 1;
+		const auto request = make_authentication_request(context.setting, u8"player");
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+
+		std::promise<void> executor_progress;
+		auto progress = executor_progress.get_future();
+		boost::asio::steady_timer progress_timer(context.io, std::chrono::milliseconds(100));
+		progress_timer.async_wait([&executor_progress](const boost::system::error_code& error) {
+			if (!error) { executor_progress.set_value(); }
+		});
+		write_authentication_request(context.client_socket, request);
+
+		BOOST_CHECK(progress.wait_for(std::chrono::milliseconds(500)) == std::future_status::ready);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		BOOST_CHECK(reply.result == pgl::authentication_result::steam_authentication_service_unavailable);
+		BOOST_CHECK(is_intended_disconnect(exception));
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_success_and_stores_identity) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const auto token = make_oidc_token();
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::success);
+		BOOST_REQUIRE(context.session_data.identity().has_value());
+		BOOST_CHECK_EQUAL(context.session_data.identity()->verified_user_id, "oidc-user");
+		BOOST_CHECK_EQUAL(context.session_data.identity()->oidc_issuer, "https://issuer.example");
+		BOOST_CHECK_EQUAL(context.session_data.identity()->oidc_audience, "pmms-test");
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_token_invalid_for_malformed_token) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const std::vector<uint8_t> credential{'n', 'o', 't', '-', 'a', '-', 'j', 'w', 't'};
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_token_invalid);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_signature_verification_failed) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		auto token = make_oidc_token();
+		const auto signature_start = token.rfind('.') + 1;
+		token[signature_start] = token[signature_start] == 'A' ? 'B' : 'A';
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_signature_verification_failed);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_issuer_mismatch) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const auto token = make_oidc_token("https://wrong-issuer.example");
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_issuer_mismatch);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_audience_mismatch) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const auto token = make_oidc_token("https://issuer.example", "wrong-audience");
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_audience_mismatch);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_token_expired) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const auto token = make_oidc_token("https://issuer.example", "pmms-test", "oidc-user", "test-key",
+			-std::chrono::hours(1));
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_token_expired);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_token_expired_when_not_before_is_in_future) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const auto token = make_oidc_token("https://issuer.example", "pmms-test", "oidc-user", "test-key",
+			std::chrono::hours(1), std::chrono::hours(1));
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_token_expired);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_subject_missing) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const auto token = make_oidc_token("https://issuer.example", "pmms-test", "");
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_subject_missing);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_disallowed_algorithm) {
+		protocol_context context;
+		configure_oidc_authentication(context.setting);
+		const auto token = jwt::create<jwt_json_traits>()
+			.set_issuer("https://issuer.example")
+			.set_audience("pmms-test")
+			.set_subject("oidc-user")
+			.set_expires_at(std::chrono::system_clock::now() + std::chrono::hours(1))
+			.sign(jwt::algorithm::hs256("test-secret"));
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_disallowed_algorithm);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_key_fetch_failed) {
+		protocol_context context;
+		authentication_http_test_server jwks_server({{503, R"({"error":"unavailable"})"}});
+		configure_oidc_authentication(context.setting, "");
+		context.setting.authentication.oidc.jwks_url = jwks_server.url("/jwks");
+		const auto token = make_oidc_token();
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_key_fetch_failed);
+		BOOST_CHECK_EQUAL(jwks_server.request_count(), 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_refreshes_cached_jwks_when_kid_is_unknown) {
+		protocol_context context;
+		authentication_http_test_server jwks_server({
+			{200, make_oidc_jwks("old-key")},
+			{200, make_oidc_jwks("test-key")}
+		});
+		configure_oidc_authentication(context.setting, "");
+		context.setting.authentication.oidc.jwks_url = jwks_server.url("/jwks");
+		context.setting.authentication.oidc.jwks_cache_seconds = 3600;
+		const auto token = make_oidc_token();
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::success);
+		BOOST_CHECK_EQUAL(jwks_server.request_count(), 2);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_tls_connection_authentication_request_replies_success_and_assigns_player) {
 		boost::asio::io_context server_io;
 		tcp::acceptor acceptor(server_io, tcp::endpoint(tcp::v4(), 0));
 		std::mutex acceptor_mutex;
 		pgl::server_data server_data;
 		auto setting = make_protocol_test_setting();
-		steam_authentication_http_server steam_server;
+		authentication_http_test_server steam_server;
 		configure_steam_authentication(setting, steam_server);
 		setting.authentication.allow_plain_connections = false;
 		setting.tls.mode = pgl::server_tls_mode::tls;

@@ -136,14 +136,15 @@ namespace pgl {
 				jwk.get_jwk_claim("e").as_string());
 		}
 
-		std::string fetch_oidc_jwks(const server_authentication_setting& setting) {
+		std::string fetch_oidc_jwks(const server_authentication_setting& setting,
+			const authentication_execution_context& context,
+			const bool force_refresh = false) {
 			const auto& oidc = setting.oidc;
 			if (!oidc.jwks.empty()) { return oidc.jwks; }
 
 			auto jwks_url = oidc.jwks_url;
 			if (jwks_url.empty()) {
-				const auto discovery_response =
-					authentication_http::get(oidc.discovery_url, std::chrono::seconds(setting.timeout_seconds));
+				const auto discovery_response = authentication_http::get(oidc.discovery_url, context);
 				if (discovery_response.status < 200 || discovery_response.status >= 300) {
 					throw std::runtime_error("Failed to fetch OIDC discovery document.");
 				}
@@ -157,7 +158,7 @@ namespace pgl {
 				jwks_url = *discovered_jwks_url;
 			}
 
-			if (oidc.jwks_cache_seconds > 0) {
+			if (!force_refresh && oidc.jwks_cache_seconds > 0) {
 				const std::lock_guard lock(jwks_cache_mutex);
 				if (const auto found = jwks_cache.find(jwks_url);
 					found != jwks_cache.end() && found->second.expires_at > std::chrono::steady_clock::now()) {
@@ -165,7 +166,7 @@ namespace pgl {
 				}
 			}
 
-			const auto jwks_response = authentication_http::get(jwks_url, std::chrono::seconds(setting.timeout_seconds));
+			const auto jwks_response = authentication_http::get(jwks_url, context);
 			if (jwks_response.status < 200 || jwks_response.status >= 300) {
 				throw std::runtime_error("Failed to fetch OIDC JWKS.");
 			}
@@ -185,6 +186,19 @@ namespace pgl {
 			if (!kid.empty()) { return jwks.get_jwk(kid); }
 			if (jwks.begin() == jwks.end()) { throw std::runtime_error("JWKS has no keys."); }
 			return *jwks.begin();
+		}
+
+		default_jwk select_jwk_with_refresh(
+			const server_authentication_setting& setting,
+			const authentication_execution_context& context,
+			const std::string& kid) {
+			const auto jwks_body = fetch_oidc_jwks(setting, context);
+			try { return select_jwk(jwks_body, kid); }
+			catch (const std::exception&) {
+				if (kid.empty() || !setting.oidc.jwks.empty()) { throw; }
+			}
+
+			return select_jwk(fetch_oidc_jwks(setting, context, true), kid);
 		}
 
 		authentication_result verify_signature_and_claims(
@@ -243,7 +257,8 @@ namespace pgl {
 			[[nodiscard]] authentication_verification_result verify(
 				const std::vector<uint8_t>& credential,
 				const player_name_t& player_name,
-				const server_authentication_setting& setting) const override {
+				const server_authentication_setting& setting,
+				const authentication_execution_context& context) const override {
 				try {
 					const std::string token(reinterpret_cast<const char*>(credential.data()), credential.size());
 					const auto decoded = [&token] {
@@ -271,8 +286,7 @@ namespace pgl {
 					const auto kid = decoded.has_header_claim("kid")
 						                 ? decoded.get_header_claim("kid").as_string()
 						                 : std::string();
-					const auto jwks_body = fetch_oidc_jwks(setting);
-					const auto jwk = select_jwk(jwks_body, kid);
+					const auto jwk = select_jwk_with_refresh(setting, context, kid);
 					if (jwk.has_algorithm() && jwk.get_algorithm() != algorithm) {
 						return failure(authentication_result::oidc_disallowed_algorithm);
 					}

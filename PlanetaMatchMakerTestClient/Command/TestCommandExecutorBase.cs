@@ -152,8 +152,9 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "Authentication method. Oidc or Steam.")]
         public TestClientAuthenticationMethod AuthenticationMethod { get; set; }
 
-        [CommandLine.Option("authentication_credential", Required = true,
-            HelpText = "OIDC token, or Steam ticket as a hex string.")]
-        public string AuthenticationCredential { get; set; }
+        [CommandLine.Option("authentication_credential_environment_variable",
+            Default = "PMMS_TEST_CLIENT_AUTHENTICATION_CREDENTIAL", Required = false,
+            HelpText = "Environment variable containing an OIDC token, or a Steam ticket as a hex string.")]
+        public string AuthenticationCredentialEnvironmentVariable { get; set; }
     }
 }

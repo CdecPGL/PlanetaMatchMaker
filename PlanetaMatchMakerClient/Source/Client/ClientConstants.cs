@@ -6,5 +6,6 @@ namespace PlanetaGameLabo.MatchMaker
         public const int PlayerNameLength = 24;
         public const int GameIdLength = 24;
         public const int GameVersionLength = 24;
+        public const int MaxAuthenticationCredentialLength = 15_728_640;
     }
 }

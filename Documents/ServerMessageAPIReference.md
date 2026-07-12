@@ -110,7 +110,7 @@ The authentication request body size is 79 bytes. The request body is followed b
 |game_id|24 byte length UTF-8 string|24|A game ID of the client.|
 |game_version|24 byte length UTF-8 string|24|A game version number of the client.|
 |player_name_t|24 byte length UTF-8 string|24|A name of player. This must not be empty.|
-|credential_size|32 bits unsigned integer|4|Credential byte size. This must be greater than 0 and less than or equal to `authentication.max_credential_bytes`.|
+|credential_size|32 bits unsigned integer|4|Credential byte size. This must be greater than 0 and less than or equal to both `authentication.max_credential_bytes` and the protocol maximum of 15,728,640 bytes.|
 
 `authentication_method` options are as below.
 

@@ -52,6 +52,12 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ArgumentNullException(nameof(credential));
             }
 
+            if (credential.Length > ClientConstants.MaxAuthenticationCredentialLength)
+            {
+                throw new ArgumentOutOfRangeException(nameof(credential),
+                    $"Credential must be at most {ClientConstants.MaxAuthenticationCredentialLength} bytes.");
+            }
+
             try
             {
                 var header = new RequestMessageHeader

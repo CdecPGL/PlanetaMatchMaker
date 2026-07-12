@@ -7,6 +7,7 @@
 
 #include "authentication/authentication_method.hpp"
 #include "authentication/authentication_result.hpp"
+#include "authentication/authentication_execution_context.hpp"
 #include "client/player_full_name.hpp"
 #include "server/server_setting.hpp"
 #include "session/session_data.hpp"
@@ -28,7 +29,8 @@ namespace pgl {
 		[[nodiscard]] virtual authentication_verification_result verify(
 			const std::vector<uint8_t>& credential,
 			const player_name_t& player_name,
-			const server_authentication_setting& setting) const = 0;
+			const server_authentication_setting& setting,
+			const authentication_execution_context& context) const = 0;
 	};
 
 	[[nodiscard]] const authentication_credential_verifier* find_authentication_credential_verifier(
@@ -38,5 +40,6 @@ namespace pgl {
 		authentication_method method,
 		const std::vector<uint8_t>& credential,
 		const player_name_t& player_name,
-		const server_authentication_setting& setting);
+		const server_authentication_setting& setting,
+		const authentication_execution_context& context);
 }

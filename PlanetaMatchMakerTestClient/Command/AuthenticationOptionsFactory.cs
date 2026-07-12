@@ -11,11 +11,20 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal static class AuthenticationOptionsFactory
     {
-        public static AuthenticationOptions Create(TestClientAuthenticationMethod method, string credential)
+        public static AuthenticationOptions CreateFromEnvironment(TestClientAuthenticationMethod method,
+            string environmentVariableName)
         {
+            if (string.IsNullOrWhiteSpace(environmentVariableName))
+            {
+                throw new ArgumentException("Authentication credential environment variable name is required.",
+                    nameof(environmentVariableName));
+            }
+
+            var credential = Environment.GetEnvironmentVariable(environmentVariableName);
             if (string.IsNullOrEmpty(credential))
             {
-                throw new ArgumentException("Authentication credential is required.", nameof(credential));
+                throw new InvalidOperationException(
+                    $"Authentication credential environment variable '{environmentVariableName}' is not set or empty.");
             }
 
             switch (method)

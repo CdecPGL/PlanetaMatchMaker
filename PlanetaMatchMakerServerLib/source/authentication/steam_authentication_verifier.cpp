@@ -69,7 +69,8 @@ namespace pgl {
 			[[nodiscard]] authentication_verification_result verify(
 				const std::vector<uint8_t>& credential,
 				const player_name_t& player_name,
-				const server_authentication_setting& setting) const override {
+				const server_authentication_setting& setting,
+				const authentication_execution_context& context) const override {
 				const auto& steam = setting.steam;
 				try {
 					auto authenticate_url = steam.authenticate_user_ticket_url;
@@ -81,8 +82,7 @@ namespace pgl {
 						authenticate_url = authentication_http::append_query(authenticate_url, "identity", steam.identity);
 					}
 
-					const auto auth_response =
-						authentication_http::get(authenticate_url, std::chrono::seconds(setting.timeout_seconds));
+					const auto auth_response = authentication_http::get(authenticate_url, context);
 					if (auth_response.status < 200 || auth_response.status >= 300) {
 						return failure(authentication_result::steam_authentication_service_unavailable);
 					}
@@ -107,8 +107,7 @@ namespace pgl {
 					ownership_url = authentication_http::append_query(ownership_url, "key", steam.publisher_key);
 					ownership_url = authentication_http::append_query(ownership_url, "steamid", *steam_id_string);
 					ownership_url = authentication_http::append_query(ownership_url, "appid", std::to_string(steam.app_id));
-					const auto ownership_response =
-						authentication_http::get(ownership_url, std::chrono::seconds(setting.timeout_seconds));
+					const auto ownership_response = authentication_http::get(ownership_url, context);
 					if (ownership_response.status < 200 || ownership_response.status >= 300) {
 						return failure(authentication_result::steam_authentication_service_unavailable);
 					}

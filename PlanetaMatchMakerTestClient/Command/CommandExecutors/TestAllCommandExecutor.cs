@@ -321,7 +321,8 @@ namespace PlanetaGameLabo.MatchMaker
 
         private static AuthenticationOptions CreateAuthenticationOptions(TestAllCommandOptions options)
         {
-            return AuthenticationOptionsFactory.Create(options.AuthenticationMethod, options.AuthenticationCredential);
+            return AuthenticationOptionsFactory.CreateFromEnvironment(options.AuthenticationMethod,
+                options.AuthenticationCredentialEnvironmentVariable);
         }
     }
 

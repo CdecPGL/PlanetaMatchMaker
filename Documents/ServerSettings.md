@@ -34,7 +34,7 @@ Those settings are loaded when server starts.
 |game_id|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_ID|A game id to accept.|
 |enable_game_version_check|boolean|false|PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK|Wheather game version check is enabled.|
 |game_version|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_VERSION|A game version to accept. This setting is reffered only if enable_game_version_check is true.|
-|max_credential_bytes|integer (1-4294967295)|16384|PMMS_AUTHENTICATION_MAX_CREDENTIAL_BYTES|Maximum Steam ticket or OIDC token size accepted during authentication. This setting is the absolute limit.|
+|max_credential_bytes|integer (1-15728640)|16384|PMMS_AUTHENTICATION_MAX_CREDENTIAL_BYTES|Maximum Steam ticket or OIDC token size accepted during authentication. This setting is limited by the authentication chunk sequence field.|
 |timeout_seconds|integer (1-3600)|5|PMMS_AUTHENTICATION_TIMEOUT_SECONDS|Timeout for external authentication service requests.|
 |clock_skew_seconds|integer (0-3600)|60|PMMS_AUTHENTICATION_CLOCK_SKEW_SECONDS|Allowed OIDC clock skew for time claim verification.|
 |allow_plain_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_CONNECTIONS|Allow authentication over plain TCP. Keep this false in production.|

@@ -95,7 +95,8 @@ namespace pgl {
 				api_version, server_game_version);
 		}
 
-		if (message.credential_size > param->server_setting.authentication.max_credential_bytes) {
+		if (message.credential_size > authentication_max_credential_bytes ||
+			message.credential_size > param->server_setting.authentication.max_credential_bytes) {
 			log_with_session(log_level::info, param,
 				"Authentication failed. Credential size exceeds configured limit. (limit: ",
 				param->server_setting.authentication.max_credential_bytes, ", actual: ", message.credential_size,
@@ -124,8 +125,14 @@ namespace pgl {
 			credential.insert(credential.end(), chunk.data.begin(), chunk.data.begin() + chunk.data_size);
 		}
 
+		const authentication_execution_context authentication_context{
+			param->connection.get_executor(),
+			param->yield,
+			std::chrono::steady_clock::now() +
+			std::chrono::seconds(param->server_setting.authentication.timeout_seconds)
+		};
 		const auto verification_result = verify_authentication_credential(message.authentication_method, credential,
-			message.player_name, param->server_setting.authentication);
+			message.player_name, param->server_setting.authentication, authentication_context);
 		if (!verification_result.succeeded() || !verification_result.identity.has_value()) {
 			log_with_session(log_level::info, param, "Authentication failed. (method: ",
 				message.authentication_method, ", result: ", static_cast<int>(verification_result.result), ")");

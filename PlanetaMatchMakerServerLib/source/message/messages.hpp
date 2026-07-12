@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
 
 #include "minimal_serializer/serializer.hpp"
 #include "message/message_error_code.hpp"
@@ -69,6 +70,9 @@ namespace pgl {
 	};
 
 	constexpr auto authentication_credential_chunk_data_size = 240;
+	constexpr uint32_t authentication_max_credential_bytes =
+		(static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()) + 1) *
+		authentication_credential_chunk_data_size;
 
 	// 243 bytes
 	struct authentication_credential_chunk_message final {

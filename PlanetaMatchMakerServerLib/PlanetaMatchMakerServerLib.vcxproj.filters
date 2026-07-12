@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClInclude Include="source\async\read_write.hpp" />
     <ClInclude Include="source\async\timer.hpp" />
+    <ClInclude Include="source\authentication\authentication_execution_context.hpp" />
     <ClInclude Include="source\authentication\authentication_http_client.hpp" />
     <ClInclude Include="source\authentication\authentication_method.hpp" />
     <ClInclude Include="source\authentication\authentication_result.hpp" />

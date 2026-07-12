@@ -16,6 +16,7 @@
 #include "server/server_setting.hpp"
 
 #include "authentication/game.hpp"
+#include "message/messages.hpp"
 #include "utilities/env_var.hpp"
 
 using namespace boost;
@@ -234,7 +235,7 @@ namespace pgl {
 	void validate_authentication_setting(const server_authentication_setting& setting) {
 		validate_str_length(authentication_section_key + ".game_id", setting.game_id, 1, game_id_bytes);
 		validate_range(authentication_section_key + ".max_credential_bytes", setting.max_credential_bytes, 1u,
-			std::numeric_limits<uint32_t>::max());
+			authentication_max_credential_bytes);
 		validate_range(authentication_section_key + ".timeout_seconds", setting.timeout_seconds, 1, 3600);
 		validate_range(authentication_section_key + ".clock_skew_seconds", setting.clock_skew_seconds, 0, 3600);
 

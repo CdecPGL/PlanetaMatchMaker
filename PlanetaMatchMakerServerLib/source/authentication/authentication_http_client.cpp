@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 
@@ -77,6 +78,28 @@ namespace pgl::authentication_http {
 			}
 			return stream.str();
 		}
+
+		tcp::resolver::results_type resolve(
+			const parsed_url& parsed,
+			const authentication_execution_context& context) {
+			auto resolver = std::make_shared<tcp::resolver>(context.executor);
+			asio::steady_timer timer(context.executor, context.deadline);
+			timer.async_wait([resolver](const boost::system::error_code& error) {
+				if (!error) { resolver->cancel(); }
+			});
+
+			boost::system::error_code error;
+			auto results = resolver->async_resolve(parsed.host, parsed.port, context.yield[error]);
+			timer.cancel();
+			if (error) { throw boost::system::system_error(error); }
+			return results;
+		}
+
+		void close_socket(tcp::socket& socket) {
+			boost::system::error_code ignored_error;
+			socket.shutdown(tcp::socket::shutdown_both, ignored_error);
+			socket.close(ignored_error);
+		}
 	}
 
 	std::string append_query(std::string url, const std::string& key, const std::string& value) {
@@ -87,45 +110,51 @@ namespace pgl::authentication_http {
 		return url;
 	}
 
-	response get(const std::string& url, const std::chrono::seconds timeout) {
+	response get(const std::string& url, const authentication_execution_context& context,
+		const std::string& additional_trusted_ca) {
 		const auto parsed = parse_url(url);
 
-		asio::io_context io;
-		tcp::resolver resolver(io);
 		http::request<http::empty_body> request{http::verb::get, parsed.target, 11};
 		request.set(http::field::host, parsed.host);
 		request.set(http::field::user_agent, "PlanetaMatchMaker");
 
 		beast::flat_buffer buffer;
 		http::response<http::string_body> http_response;
-		const auto results = resolver.resolve(parsed.host, parsed.port);
+		const auto results = resolve(parsed, context);
 
 		if (parsed.https) {
 			asio::ssl::context ssl_context(asio::ssl::context::tls_client);
 			ssl_context.set_default_verify_paths();
+			if (!additional_trusted_ca.empty()) {
+				ssl_context.add_certificate_authority(asio::buffer(additional_trusted_ca));
+			}
 			ssl_context.set_verify_mode(asio::ssl::verify_peer);
 
-			beast::ssl_stream<beast::tcp_stream> stream(io, ssl_context);
+			beast::ssl_stream<beast::tcp_stream> stream(context.executor, ssl_context);
 			if (!SSL_set_tlsext_host_name(stream.native_handle(), parsed.host.c_str())) {
 				throw beast::system_error(
 					beast::error_code(static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()));
 			}
-			beast::get_lowest_layer(stream).expires_after(timeout);
-			beast::get_lowest_layer(stream).connect(results);
-			stream.handshake(asio::ssl::stream_base::client);
-			http::write(stream, request);
-			http::read(stream, buffer, http_response);
-			beast::error_code ignored_error;
-			stream.shutdown(ignored_error);
+			stream.set_verify_callback(asio::ssl::host_name_verification(parsed.host));
+			beast::get_lowest_layer(stream).expires_at(context.deadline);
+			beast::get_lowest_layer(stream).async_connect(results, context.yield);
+			beast::get_lowest_layer(stream).expires_at(context.deadline);
+			stream.async_handshake(asio::ssl::stream_base::client, context.yield);
+			beast::get_lowest_layer(stream).expires_at(context.deadline);
+			http::async_write(stream, request, context.yield);
+			beast::get_lowest_layer(stream).expires_at(context.deadline);
+			http::async_read(stream, buffer, http_response, context.yield);
+			close_socket(beast::get_lowest_layer(stream).socket());
 		}
 		else {
-			beast::tcp_stream stream(io);
-			stream.expires_after(timeout);
-			stream.connect(results);
-			http::write(stream, request);
-			http::read(stream, buffer, http_response);
-			beast::error_code ignored_error;
-			stream.socket().shutdown(tcp::socket::shutdown_both, ignored_error);
+			beast::tcp_stream stream(context.executor);
+			stream.expires_at(context.deadline);
+			stream.async_connect(results, context.yield);
+			stream.expires_at(context.deadline);
+			http::async_write(stream, request, context.yield);
+			stream.expires_at(context.deadline);
+			http::async_read(stream, buffer, http_response, context.yield);
+			close_socket(stream.socket());
 		}
 
 		return {http_response.result_int(), http_response.body()};

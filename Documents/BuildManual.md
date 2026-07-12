@@ -138,6 +138,11 @@ dotnet test PlanetaMatchMakerClientTest -c Release
 
 ## TestClient
 
+Authentication credentials are read from the `PMMS_TEST_CLIENT_AUTHENTICATION_CREDENTIAL` environment variable by
+default. The command-line option `--authentication_credential_environment_variable` selects a different variable.
+Do not place an OIDC token or Steam ticket directly in command-line arguments because process listings and shell
+history may expose it.
+
 ### Environment
 
 - C# Compiler using .Net Core 3.1 or higher as a backend (the backend which is compatible with .Net Standard 2.1 is also OK but not tested)
