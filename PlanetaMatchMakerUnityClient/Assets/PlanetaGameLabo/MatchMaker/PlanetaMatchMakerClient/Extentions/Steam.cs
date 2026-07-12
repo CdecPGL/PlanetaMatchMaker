@@ -86,9 +86,8 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         public static async Task<CreateRoomResult> CreateRoomWithSteamAsync(this MatchMakerClient client,
             byte maxPlayerCount, RoomPassword password)
         {
-            var steamId64 = SteamLibraryHelpers.GetSteamId64();
             return await client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
-                    GameHostConnectionEstablishMode.Steam, GameHostExternalId.FromUInt64(steamId64), password)
+                    GameHostConnectionEstablishMode.Steam, null, password)
                 .ConfigureAwait(false);
         }
 

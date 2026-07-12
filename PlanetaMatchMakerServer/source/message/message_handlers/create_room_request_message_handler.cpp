@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "server/server_data.hpp"
 #include "server/server_setting.hpp"
 #include "async/read_write.hpp"
@@ -13,6 +15,27 @@ using namespace boost;
 using namespace minimal_serializer;
 
 namespace pgl {
+	namespace {
+		bool is_empty_external_id(const game_host_external_id_t& external_id) {
+			return std::ranges::all_of(external_id, [](const auto byte) { return byte == 0; });
+		}
+
+		game_host_external_id_t resolve_room_external_id(const create_room_request_message& message,
+			const session_data& session_data) {
+			const auto request_external_id_specified = !is_empty_external_id(message.external_id);
+			const auto& identity = session_data.identity();
+			if (identity.has_value() && identity->external_id.has_value()) {
+				if (request_external_id_specified && message.external_id != *identity->external_id) {
+					throw client_error(client_error_code::request_parameter_wrong, false,
+						"Requested external_id does not match authenticated identity.");
+				}
+				return request_external_id_specified ? message.external_id : *identity->external_id;
+			}
+
+			return message.external_id;
+		}
+	}
+
 	create_room_request_message_handler::handle_return_t create_room_request_message_handler::handle_message(
 		const create_room_request_message& message,
 		const std::shared_ptr<message_handle_parameter> param) {
@@ -23,6 +46,20 @@ namespace pgl {
 		// Check port number is valid.
 		if (message.connection_establish_mode == game_host_connection_establish_mode::builtin) {
 			parameter_validator.validate_port_number(message.port_number);
+		}
+		const auto room_external_id = resolve_room_external_id(message, param->session_data);
+		if (message.connection_establish_mode == game_host_connection_establish_mode::steam) {
+			const auto& identity = param->session_data.identity();
+			if (!identity.has_value() || identity->method != authentication_method::steam ||
+				!identity->external_id.has_value() || is_empty_external_id(room_external_id)) {
+				throw client_error(client_error_code::request_parameter_wrong, false,
+					"Steam room requires Steam authenticated identity.");
+			}
+		}
+		else if (message.connection_establish_mode == game_host_connection_establish_mode::others &&
+			is_empty_external_id(room_external_id)) {
+			throw client_error(client_error_code::request_parameter_wrong, false,
+				"external_id is required for others connection mode when authenticated identity has no external_id.");
 		}
 
 		// Check max player count is valid.
@@ -54,7 +91,7 @@ namespace pgl {
 				host_endpoint,
 				message.connection_establish_mode,
 				game_host_endpoint,
-				message.external_id,
+				room_external_id,
 				1
 			};
 

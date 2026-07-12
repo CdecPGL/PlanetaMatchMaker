@@ -36,6 +36,11 @@ namespace pgl {
 		is_authenticated_ = true;
 	}
 
+	void session_data::set_authenticated(const authenticated_identity& identity) {
+		set_authenticated();
+		identity_ = identity;
+	}
+
 	std::optional<session_number_t> session_data::session_number() const { return session_number_; }
 	room_id_t session_data::hosting_room_id() const {
 		if (!is_hosting_room_) { throw std::runtime_error("A hosting room is not set."); }
@@ -48,4 +53,5 @@ namespace pgl {
 	const endpoint& session_data::remote_endpoint() const { return remote_endpoint_; }
 	const player_full_name& session_data::client_player_name() const { return client_player_name_; }
 	bool session_data::is_authenticated() const { return is_authenticated_; }
+	const std::optional<authenticated_identity>& session_data::identity() const { return identity_; }
 }

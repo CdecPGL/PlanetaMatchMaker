@@ -34,6 +34,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
                         new Host("127.0.0.1"),
                         new ServerPort((ushort)server.Port),
                         new PlayerName("tls-player"),
+                        AuthenticationOptions.Oidc("tls-test-token"),
                         new ConnectionOptions(
                             ConnectionMode.Tls,
                             new Host("localhost"),
@@ -48,7 +49,8 @@ namespace PlanetaGameLabo.MatchMaker.Test
                     catch (Exception serverException)
                     {
                         throw new AssertFailedException(
-                            "TLS client connection failed. Server task also failed or timed out: " + serverException,
+                            "TLS client connection failed: " + clientException +
+                            Environment.NewLine + "Server task also failed or timed out: " + serverException,
                             clientException);
                     }
 
@@ -60,9 +62,11 @@ namespace PlanetaGameLabo.MatchMaker.Test
 
                 var request = await WithTimeout(server.AuthenticationRequest);
                 Assert.AreEqual(ClientConstants.ApiVersion, request.ApiVersion);
+                Assert.AreEqual(AuthenticationMethod.Oidc, request.AuthenticationMethod);
                 Assert.AreEqual("tls-game", request.GameId);
                 Assert.AreEqual("1.0.0", request.GameVersion);
                 Assert.AreEqual("tls-player", request.PlayerName);
+                Assert.AreEqual((uint)14, request.CredentialSize);
 
                 client.Close();
                 await WithTimeout(server.Completion);
@@ -145,6 +149,10 @@ namespace PlanetaGameLabo.MatchMaker.Test
                         var request = await ReadStructAsync<AuthenticationRequestMessage>(stream).ConfigureAwait(false);
                         Assert.AreEqual(expectedGameId, request.GameId);
                         Assert.AreEqual(expectedGameVersion, request.GameVersion);
+                        var chunk = await ReadStructAsync<AuthenticationCredentialChunkMessage>(stream)
+                            .ConfigureAwait(false);
+                        Assert.AreEqual((ushort)0, chunk.Sequence);
+                        Assert.AreEqual((byte)request.CredentialSize, chunk.DataSize);
                         authenticationRequest.SetResult(request);
 
                         await WriteStructAsync(
@@ -175,31 +183,29 @@ namespace PlanetaGameLabo.MatchMaker.Test
 
             private static X509Certificate2 CreateSelfSignedCertificate()
             {
-                using (var rsa = RSA.Create(2048))
-                {
-                    var request = new CertificateRequest(
-                        "CN=localhost",
-                        rsa,
-                        HashAlgorithmName.SHA256,
-                        RSASignaturePadding.Pkcs1);
-                    request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
-                    request.CertificateExtensions.Add(new X509KeyUsageExtension(
-                        X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
-                        false));
-                    var subjectAlternativeName = new SubjectAlternativeNameBuilder();
-                    subjectAlternativeName.AddDnsName("localhost");
-                    subjectAlternativeName.AddIpAddress(IPAddress.Loopback);
-                    request.CertificateExtensions.Add(subjectAlternativeName.Build());
+                var rsa = RSA.Create(2048);
+                var request = new CertificateRequest(
+                    "CN=localhost",
+                    rsa,
+                    HashAlgorithmName.SHA256,
+                    RSASignaturePadding.Pkcs1);
+                request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
+                request.CertificateExtensions.Add(new X509KeyUsageExtension(
+                    X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
+                    false));
+                var subjectAlternativeName = new SubjectAlternativeNameBuilder();
+                subjectAlternativeName.AddDnsName("localhost");
+                subjectAlternativeName.AddIpAddress(IPAddress.Loopback);
+                request.CertificateExtensions.Add(subjectAlternativeName.Build());
 
-                    using (var certificate = request.CreateSelfSigned(
-                        DateTimeOffset.UtcNow.AddDays(-1),
-                        DateTimeOffset.UtcNow.AddDays(1)))
-                    {
-                        return X509CertificateLoader.LoadPkcs12(
-                            certificate.Export(X509ContentType.Pfx),
-                            ReadOnlySpan<char>.Empty,
-                            X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.Exportable);
-                    }
+                using (var certificate = request.CreateSelfSigned(
+                    DateTimeOffset.UtcNow.AddDays(-1),
+                    DateTimeOffset.UtcNow.AddDays(1)))
+                {
+                    return X509CertificateLoader.LoadPkcs12(
+                        certificate.Export(X509ContentType.Pfx),
+                        (string)null,
+                        X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
                 }
             }
 

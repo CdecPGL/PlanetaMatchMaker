@@ -216,16 +216,42 @@ namespace PlanetaGameLabo.MatchMaker
         /// </summary>
         /// <param name="playerName"></param>
         /// <param name="callback"></param>
+        [Obsolete("Use Connect(string, AuthenticationOptions, Action<ErrorInfo, ConnectResult>) instead.")]
         public void Connect(string playerName, Action<ErrorInfo, ConnectResult> callback = null)
         {
-            RunTask(async () => await ConnectAsync(playerName), callback);
+            RunTask(async () => await ConnectAsync(playerName, null), callback);
         }
 
         /// <summary>
         /// Connect to the matching server
         /// </summary>
         /// <param name="playerName"></param>
+        /// <param name="authenticationOptions"></param>
+        /// <param name="callback"></param>
+        public void Connect(string playerName, AuthenticationOptions authenticationOptions,
+            Action<ErrorInfo, ConnectResult> callback = null)
+        {
+            RunTask(async () => await ConnectAsync(playerName, authenticationOptions), callback);
+        }
+
+        /// <summary>
+        /// Connect to the matching server
+        /// </summary>
+        /// <param name="playerName"></param>
+        /// <param name="authenticationOptions"></param>
+        [Obsolete("Use ConnectAsync(string, AuthenticationOptions) instead.")]
         public async Task<(ErrorInfo errorInfo, ConnectResult result)> ConnectAsync(string playerName)
+        {
+            return await ConnectAsync(playerName, null);
+        }
+
+        /// <summary>
+        /// Connect to the matching server
+        /// </summary>
+        /// <param name="playerName"></param>
+        /// <param name="authenticationOptions"></param>
+        public async Task<(ErrorInfo errorInfo, ConnectResult result)> ConnectAsync(string playerName,
+            AuthenticationOptions authenticationOptions)
         {
             if (status != Status.Disconnected)
             {
@@ -233,10 +259,15 @@ namespace PlanetaGameLabo.MatchMaker
                 return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
+            if (authenticationOptions == null)
+            {
+                return (new ErrorInfo(new ArgumentNullException(nameof(authenticationOptions))), default);
+            }
+
             return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.Connecting;
-                var returnedPlayerFullName = await ConnectImplAsync(playerName);
+                var returnedPlayerFullName = await ConnectImplAsync(playerName, authenticationOptions);
                 status = Status.SearchingRoom;
                 return new ConnectResult(returnedPlayerFullName);
             }, () =>
@@ -895,10 +926,10 @@ namespace PlanetaGameLabo.MatchMaker
 
         #region OperationImplementations
 
-        private async Task<PlayerFullName> ConnectImplAsync(string playerName)
+        private async Task<PlayerFullName> ConnectImplAsync(string playerName, AuthenticationOptions authenticationOptions)
         {
             return await _client.ConnectAsync(new Host(_serverAddress), new ServerPort(_serverPort),
-                new PlayerName(playerName), CreateConnectionOptions());
+                new PlayerName(playerName), authenticationOptions, CreateConnectionOptions());
         }
 
         private async Task<HostRoomResult> CreateRoomImplAsync(byte maxPlayerCount,

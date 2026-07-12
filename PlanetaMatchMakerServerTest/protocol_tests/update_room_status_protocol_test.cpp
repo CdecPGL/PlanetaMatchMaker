@@ -9,6 +9,7 @@ namespace {
 BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_closes_room_without_reply) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1});
 		room.host_endpoint = pgl::endpoint::make_from_boost_endpoint(context.server_connection.remote_endpoint());
 		context.server_data.get_room_data_container().add_or_update(room);
@@ -31,6 +32,7 @@ BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_opens_room_without_reply) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1}, pgl::room_setting_flag::public_room, {}, 4, 1);
 		make_room_hosted_by_client(context, room);
 		const pgl::update_room_status_notice_message request{
@@ -53,6 +55,7 @@ BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_removes_room_without_reply) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1});
 		make_room_hosted_by_client(context, room);
 		context.session_data.set_hosting_room_id(1);
@@ -75,6 +78,7 @@ BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_ignores_missing_room_without_reply) {
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::update_room_status_notice_message request{
 			404,
 			pgl::update_room_status_notice_message::status::close,
@@ -92,6 +96,7 @@ BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_ignores_host_mismatch_without_reply) {
 		protocol_context context;
+		mark_authenticated(context);
 		context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"host", 1}));
 		const pgl::update_room_status_notice_message request{
 			1,
@@ -112,6 +117,7 @@ BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_ignores_invalid_player_count_without_reply) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1}, public_open_room, {}, 2, 1);
 		make_room_hosted_by_client(context, room);
 		const pgl::update_room_status_notice_message request{
@@ -134,6 +140,7 @@ BOOST_AUTO_TEST_SUITE(update_room_status_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_update_room_status_notice_ignores_invalid_status_without_reply) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1});
 		make_room_hosted_by_client(context, room);
 		const auto invalid_status = static_cast<decltype(pgl::update_room_status_notice_message::status)>(255);

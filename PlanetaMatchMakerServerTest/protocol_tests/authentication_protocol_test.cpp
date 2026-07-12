@@ -5,6 +5,7 @@
 
 #include "protocol_test_support.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -120,20 +121,114 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		pgl::unpack_data(buffer, data);
 		return data;
 	}
+
+	const std::vector<uint8_t> test_credential{1, 2, 3, 4};
+
+	pgl::authentication_request_message make_authentication_request(
+		const pgl::server_setting& setting,
+		const pgl::player_name_t& player_name,
+		const pgl::api_version_type request_api_version = pgl::api_version,
+		const pgl::authentication_method method = pgl::authentication_method::steam) {
+		return {
+			request_api_version,
+			method,
+			pgl::game_id_t(setting.authentication.game_id),
+			pgl::game_version_t(setting.authentication.game_version),
+			player_name,
+			static_cast<uint32_t>(test_credential.size())
+		};
+	}
+
+	pgl::authentication_credential_chunk_message make_credential_chunk() {
+		pgl::authentication_credential_chunk_message chunk{};
+		chunk.sequence = 0;
+		chunk.data_size = static_cast<uint8_t>(test_credential.size());
+		std::ranges::copy(test_credential, chunk.data.begin());
+		return chunk;
+	}
+
+	void write_authentication_request(tcp::socket& socket, const pgl::authentication_request_message& request) {
+		write_packed(socket, pgl::request_message_header{pgl::message_type::authentication}, request,
+			make_credential_chunk());
+	}
+
+	template <typename SyncWriteStream>
+	void write_authentication_request_to_stream(SyncWriteStream& stream,
+		const pgl::authentication_request_message& request) {
+		write_packed_to_stream(stream, pgl::request_message_header{pgl::message_type::authentication}, request,
+			make_credential_chunk());
+	}
+
+	class steam_authentication_http_server final {
+	public:
+		steam_authentication_http_server():
+			acceptor_(io_, tcp::endpoint(boost::asio::ip::address_v4::loopback(), 0)),
+			thread_([this] { run(); }) {}
+
+		~steam_authentication_http_server() {
+			boost::system::error_code ignored_error;
+			acceptor_.close(ignored_error);
+			if (thread_.joinable()) { thread_.join(); }
+		}
+
+		[[nodiscard]] std::string url(const std::string& path) const {
+			return "http://127.0.0.1:" + std::to_string(acceptor_.local_endpoint().port()) + path;
+		}
+
+	private:
+		void run() {
+			for (auto i = 0; i < 2; ++i) {
+				tcp::socket socket(io_);
+				boost::system::error_code error;
+				acceptor_.accept(socket, error);
+				if (error) { return; }
+
+				boost::asio::streambuf request_buffer;
+				boost::asio::read_until(socket, request_buffer, "\r\n\r\n", error);
+				if (error) { return; }
+
+				const auto body = i == 0
+					                  ? R"({"response":{"params":{"result":"OK","steamid":"76561198000000000"}}})"
+					                  : R"({"appownership":{"ownsapp":true}})";
+				const auto response = std::string("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+					                      "Content-Length: ") +
+					std::to_string(std::char_traits<char>::length(body)) + "\r\nConnection: close\r\n\r\n" + body;
+				boost::asio::write(socket, boost::asio::buffer(response), error);
+			}
+		}
+
+		boost::asio::io_context io_;
+		tcp::acceptor acceptor_;
+		std::thread thread_;
+	};
+
+	void configure_steam_authentication(pgl::server_setting& setting,
+		const steam_authentication_http_server& steam_server) {
+		setting.authentication.allow_plain_connections = true;
+		setting.authentication.steam.enabled = true;
+		setting.authentication.steam.app_id = 480;
+		setting.authentication.steam.publisher_key = "test-publisher-key";
+		setting.authentication.steam.authenticate_user_ticket_url = steam_server.url("/auth");
+		setting.authentication.steam.check_app_ownership_url = steam_server.url("/ownership");
+	}
+
+	void enable_steam_authentication_without_http(pgl::server_setting& setting) {
+		setting.authentication.allow_plain_connections = true;
+		setting.authentication.steam.enabled = true;
+		setting.authentication.steam.app_id = 480;
+		setting.authentication.steam.publisher_key = "test-publisher-key";
+	}
 }
 
 BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_success_and_assigns_player) {
 		protocol_context context;
-		const pgl::authentication_request_message request{
-			pgl::api_version,
-			pgl::game_id_t(context.setting.authentication.game_id),
-			pgl::game_version_t(context.setting.authentication.game_version),
-			u8"player"
-		};
+		steam_authentication_http_server steam_server;
+		configure_steam_authentication(context.setting, steam_server);
+		const auto request = make_authentication_request(context.setting, u8"player");
 		protocol_handler_run handler(context, pgl::message_type::authentication);
 
-		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request);
+		write_authentication_request(context.client_socket, request);
 		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
 		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
 		const auto exception = handler.wait();
@@ -144,6 +239,9 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK(reply.result == pgl::authentication_result::success);
 		BOOST_CHECK_EQUAL(reply.player_tag, 1);
 		BOOST_CHECK(context.session_data.is_authenticated());
+		BOOST_REQUIRE(context.session_data.identity().has_value());
+		BOOST_CHECK(context.session_data.identity()->method == pgl::authentication_method::steam);
+		BOOST_CHECK_EQUAL(context.session_data.identity()->verified_user_id, "76561198000000000");
 		BOOST_CHECK(context.session_data.client_player_name().name == u8"player");
 		BOOST_CHECK(context.server_data.get_player_name_container().is_player_exist(
 			context.session_data.client_player_name()));
@@ -155,6 +253,9 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		std::mutex acceptor_mutex;
 		pgl::server_data server_data;
 		auto setting = make_protocol_test_setting();
+		steam_authentication_http_server steam_server;
+		configure_steam_authentication(setting, steam_server);
+		setting.authentication.allow_plain_connections = false;
 		setting.tls.mode = pgl::server_tls_mode::tls;
 		const tls_test_certificate_files certificate_files;
 		setting.tls.certificate_path = certificate_files.certificate_path();
@@ -174,14 +275,9 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		client_stream.lowest_layer().connect(tcp::endpoint(boost::asio::ip::address_v4::loopback(),
 			acceptor.local_endpoint().port()));
 		client_stream.handshake(boost::asio::ssl::stream_base::client);
-		const pgl::authentication_request_message request{
-			pgl::api_version,
-			pgl::game_id_t(setting.authentication.game_id),
-			pgl::game_version_t(setting.authentication.game_version),
-			u8"tls-player"
-		};
+		const auto request = make_authentication_request(setting, u8"tls-player");
 
-		write_packed_to_stream(client_stream, pgl::request_message_header{pgl::message_type::authentication}, request);
+		write_authentication_request_to_stream(client_stream, request);
 		const auto reply_header = read_packed_from_stream<pgl::reply_message_header>(client_stream);
 		const auto reply = read_packed_from_stream<pgl::authentication_reply_message>(client_stream);
 
@@ -201,9 +297,11 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		protocol_context context;
 		const pgl::authentication_request_message request{
 			pgl::api_version,
+			pgl::authentication_method::steam,
 			u8"wrong-game",
 			pgl::game_version_t(context.setting.authentication.game_version),
-			u8"player"
+			u8"player",
+			static_cast<uint32_t>(test_credential.size())
 		};
 		protocol_handler_run handler(context, pgl::message_type::authentication);
 
@@ -223,9 +321,11 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		protocol_context context;
 		const pgl::authentication_request_message request{
 			static_cast<pgl::api_version_type>(pgl::api_version + 1),
+			pgl::authentication_method::steam,
 			pgl::game_id_t(context.setting.authentication.game_id),
 			pgl::game_version_t(context.setting.authentication.game_version),
-			u8"player"
+			u8"player",
+			static_cast<uint32_t>(test_credential.size())
 		};
 		protocol_handler_run handler(context, pgl::message_type::authentication);
 
@@ -244,9 +344,11 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		protocol_context context;
 		const pgl::authentication_request_message request{
 			pgl::api_version,
+			pgl::authentication_method::steam,
 			pgl::game_id_t(context.setting.authentication.game_id),
 			u8"2.0.0",
-			u8"player"
+			u8"player",
+			static_cast<uint32_t>(test_credential.size())
 		};
 		protocol_handler_run handler(context, pgl::message_type::authentication);
 
@@ -261,14 +363,107 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK(reply.game_version == pgl::game_version_t(context.setting.authentication.game_version));
 	}
 
-	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_parameter_error_for_empty_player_name) {
+	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_unsupported_authentication_method_and_disconnects) {
 		protocol_context context;
+		context.setting.authentication.allow_plain_connections = true;
 		const pgl::authentication_request_message request{
 			pgl::api_version,
+			static_cast<pgl::authentication_method>(255),
 			pgl::game_id_t(context.setting.authentication.game_id),
 			pgl::game_version_t(context.setting.authentication.game_version),
-			u8""
+			u8"player",
+			static_cast<uint32_t>(test_credential.size())
 		};
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+
+		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+
+		BOOST_CHECK(is_intended_disconnect(exception));
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		BOOST_CHECK(reply.result == pgl::authentication_result::unsupported_authentication_method);
+		BOOST_CHECK(!context.session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_insecure_connection_when_plain_is_not_allowed) {
+		protocol_context context;
+		context.setting.authentication.steam.enabled = true;
+		context.setting.authentication.allow_plain_connections = false;
+		const auto request = make_authentication_request(context.setting, u8"player");
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+
+		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+
+		BOOST_CHECK(is_intended_disconnect(exception));
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		BOOST_CHECK(reply.result == pgl::authentication_result::insecure_connection);
+		BOOST_CHECK(!context.session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_format_invalid_for_empty_credential) {
+		protocol_context context;
+		enable_steam_authentication_without_http(context.setting);
+		auto request = make_authentication_request(context.setting, u8"player");
+		request.credential_size = 0;
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+
+		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+
+		BOOST_CHECK(is_intended_disconnect(exception));
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		BOOST_CHECK(reply.result == pgl::authentication_result::authentication_data_format_invalid);
+		BOOST_CHECK(!context.session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_size_exceeded_for_credential_over_setting_limit) {
+		protocol_context context;
+		enable_steam_authentication_without_http(context.setting);
+		context.setting.authentication.max_credential_bytes = 3;
+		const auto request = make_authentication_request(context.setting, u8"player");
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+
+		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+
+		BOOST_CHECK(is_intended_disconnect(exception));
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		BOOST_CHECK(reply.result == pgl::authentication_result::authentication_data_size_exceeded);
+		BOOST_CHECK(!context.session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_format_invalid_for_bad_chunk_sequence) {
+		protocol_context context;
+		enable_steam_authentication_without_http(context.setting);
+		const auto request = make_authentication_request(context.setting, u8"player");
+		auto chunk = make_credential_chunk();
+		chunk.sequence = 1;
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+
+		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request,
+			chunk);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::authentication_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+
+		BOOST_CHECK(is_intended_disconnect(exception));
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		BOOST_CHECK(reply.result == pgl::authentication_result::authentication_data_format_invalid);
+		BOOST_CHECK(!context.session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_parameter_error_for_empty_player_name) {
+		protocol_context context;
+		const auto request = make_authentication_request(context.setting, u8"");
 		protocol_handler_run handler(context, pgl::message_type::authentication);
 
 		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request);
@@ -283,12 +478,7 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_operation_invalid_when_already_authenticated) {
 		protocol_context context;
 		context.session_data.set_authenticated();
-		const pgl::authentication_request_message request{
-			pgl::api_version,
-			pgl::game_id_t(context.setting.authentication.game_id),
-			pgl::game_version_t(context.setting.authentication.game_version),
-			u8"player"
-		};
+		const auto request = make_authentication_request(context.setting, u8"player");
 		protocol_handler_run handler(context, pgl::message_type::authentication);
 
 		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::authentication}, request);

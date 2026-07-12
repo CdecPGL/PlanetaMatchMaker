@@ -22,6 +22,6 @@ namespace pgl {
 		// std::uniform_int_distribution is not compatible for char, signed char, unsigned char, char8_t, int8_t, and uint8_t, so use larger type and cast target type
 		std::uniform_int_distribution<int32_t> uniform_distribution(std::numeric_limits<Id>::min(),
 			std::numeric_limits<Id>::max());
-		return uniform_distribution(mt);
+		return static_cast<Id>(uniform_distribution(mt));
 	}
 }

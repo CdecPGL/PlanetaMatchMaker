@@ -147,5 +147,13 @@ namespace PlanetaGameLabo.MatchMaker
         [CommandLine.Option("accept_invalid_tls_certificate", Default = false, Required = false,
             HelpText = "Accept invalid TLS certificates. Use only for development.")]
         public bool AcceptInvalidTlsCertificate { get; set; }
+
+        [CommandLine.Option("authentication_method", Default = TestClientAuthenticationMethod.Oidc, Required = false,
+            HelpText = "Authentication method. Oidc or Steam.")]
+        public TestClientAuthenticationMethod AuthenticationMethod { get; set; }
+
+        [CommandLine.Option("authentication_credential", Required = true,
+            HelpText = "OIDC token, or Steam ticket as a hex string.")]
+        public string AuthenticationCredential { get; set; }
     }
 }

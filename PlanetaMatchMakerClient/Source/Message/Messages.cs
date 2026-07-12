@@ -73,12 +73,14 @@ namespace PlanetaGameLabo.MatchMaker
         public MessageErrorCode ErrorCode;
     }
 
-    // 74 bytes
+    // 79 bytes
     [Serializable]
     [Message(MessageType.Authentication)]
     internal struct AuthenticationRequestMessage
     {
         public ApiVersionType ApiVersion;
+
+        public AuthenticationMethod AuthenticationMethod;
 
         [FixedLength(ClientConstants.GameIdLength)]
         public string GameId;
@@ -88,6 +90,20 @@ namespace PlanetaGameLabo.MatchMaker
 
         [FixedLength(ClientConstants.PlayerNameLength)]
         public string PlayerName;
+
+        public UInt32 CredentialSize;
+    }
+
+    // 243 bytes
+    [Serializable]
+    internal struct AuthenticationCredentialChunkMessage
+    {
+        public UInt16 Sequence;
+
+        public byte DataSize;
+
+        [FixedLength(240)]
+        public byte[] Data;
     }
 
     // 29 bytes

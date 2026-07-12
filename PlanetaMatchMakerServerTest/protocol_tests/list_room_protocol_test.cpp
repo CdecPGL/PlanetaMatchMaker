@@ -9,6 +9,7 @@ namespace {
 BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_list_room_request_replies_matching_room_page) {
 		protocol_context context;
+		mark_authenticated(context);
 		context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"alice", 1}));
 		context.server_data.get_room_data_container().add_or_update(make_room(2, {u8"bob", 1}));
 		const pgl::list_room_request_message request{
@@ -37,6 +38,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_list_room_request_supports_all_sort_kinds) {
 		const auto first_room_id_for = [](const pgl::room_data_sort_kind sort_kind) {
 			protocol_context context;
+			mark_authenticated(context);
 			context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"bob", 2},
 				public_open_room, {}, 4, 1));
 			context.server_data.get_room_data_container().add_or_update(make_room(2, {u8"alice", 1},
@@ -71,6 +73,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_list_room_request_replies_empty_result_body) {
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::list_room_request_message request{
 			0,
 			10,
@@ -95,6 +98,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_list_room_request_replies_zero_rooms_when_start_index_is_out_of_range) {
 		protocol_context context;
+		mark_authenticated(context);
 		context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"alice", 1}));
 		context.server_data.get_room_data_container().add_or_update(make_room(2, {u8"bob", 1}));
 		const pgl::list_room_request_message request{
@@ -121,6 +125,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_list_room_request_splits_replies_when_result_exceeds_one_message_capacity) {
 		protocol_context context;
+		mark_authenticated(context);
 		for (auto i = pgl::room_id_t{1}; i <= 7; ++i) {
 			context.server_data.get_room_data_container().add_or_update(
 				make_room(i, {u8"host", static_cast<pgl::player_tag_t>(i)}));
@@ -155,6 +160,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_list_room_request_filters_by_room_status_name_and_tag) {
 		protocol_context context;
+		mark_authenticated(context);
 		context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"alice", 7},
 			pgl::room_setting_flag::none));
 		context.server_data.get_room_data_container().add_or_update(make_room(2, {u8"alina", 8},
@@ -187,6 +193,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_list_room_request_replies_parameter_error_for_invalid_sort_kind) {
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::list_room_request_message request{
 			0,
 			10,

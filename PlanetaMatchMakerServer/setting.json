@@ -12,7 +12,27 @@
     "authentication": {
         "game_id": "test",
         "enable_game_version_check": true,
-        "game_version": "1.0.0"
+        "game_version": "1.0.0",
+        "max_credential_bytes": 16384,
+        "timeout_seconds": 5,
+        "clock_skew_seconds": 60,
+        "allow_plain_connections": false,
+        "steam": {
+            "enabled": false,
+            "app_id": 0,
+            "publisher_key": "",
+            "identity": ""
+        },
+        "oidc": {
+            "enabled": false,
+            "issuer": "",
+            "audience": "",
+            "algorithms": ["RS256", "RS384", "RS512"],
+            "discovery_url": "",
+            "jwks_url": "",
+            "jwks": "",
+            "jwks_cache_seconds": 3600
+        }
     },
     "log":{
         "enable_console_log": true,

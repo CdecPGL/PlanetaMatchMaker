@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_SUITE(create_room_protocol_test)
 		const pgl::create_room_request_message request{
 			{},
 			4,
-			pgl::game_host_connection_establish_mode::steam,
+			pgl::game_host_connection_establish_mode::others,
 			1,
 			external_id
 		};
@@ -83,8 +83,68 @@ BOOST_AUTO_TEST_SUITE(create_room_protocol_test)
 
 		BOOST_CHECK(!exception);
 		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
-		BOOST_CHECK(room.game_host_connection_establish_mode == pgl::game_host_connection_establish_mode::steam);
+		BOOST_CHECK(room.game_host_connection_establish_mode == pgl::game_host_connection_establish_mode::others);
 		BOOST_CHECK_EQUAL(room.game_host_external_id[0], 7);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_create_room_request_uses_authenticated_external_id_when_not_specified) {
+		protocol_context context;
+		pgl::game_host_external_id_t external_id{};
+		external_id[0] = 12;
+		pgl::authenticated_identity identity;
+		identity.method = pgl::authentication_method::oidc;
+		identity.verified_user_id = "subject";
+		identity.external_id = external_id;
+		context.session_data.set_authenticated(identity);
+		context.session_data.set_client_player_name({u8"host", 1});
+		const pgl::create_room_request_message request{
+			{},
+			4,
+			pgl::game_host_connection_establish_mode::others,
+			1,
+			{}
+		};
+		protocol_handler_run handler(context, pgl::message_type::create_room);
+
+		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::create_room}, request);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto reply = read_packed<pgl::create_room_reply_message>(context.client_socket);
+		const auto exception = handler.wait();
+		const auto room = context.server_data.get_room_data_container().get(reply.room_id);
+
+		BOOST_CHECK(!exception);
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
+		BOOST_CHECK_EQUAL(room.game_host_external_id[0], 12);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_create_room_request_rejects_external_id_mismatch_with_authenticated_identity) {
+		protocol_context context;
+		pgl::game_host_external_id_t authenticated_external_id{};
+		authenticated_external_id[0] = 12;
+		pgl::authenticated_identity identity;
+		identity.method = pgl::authentication_method::oidc;
+		identity.verified_user_id = "subject";
+		identity.external_id = authenticated_external_id;
+		context.session_data.set_authenticated(identity);
+		context.session_data.set_client_player_name({u8"host", 1});
+		pgl::game_host_external_id_t requested_external_id{};
+		requested_external_id[0] = 13;
+		const pgl::create_room_request_message request{
+			{},
+			4,
+			pgl::game_host_connection_establish_mode::others,
+			1,
+			requested_external_id
+		};
+		protocol_handler_run handler(context, pgl::message_type::create_room);
+
+		write_packed(context.client_socket, pgl::request_message_header{pgl::message_type::create_room}, request);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto exception = handler.wait();
+
+		BOOST_CHECK(!exception);
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::request_parameter_wrong);
+		expect_no_more_reply_data(context.client_socket);
 	}
 
 	BOOST_AUTO_TEST_CASE(test_create_room_request_replies_parameter_error_for_invalid_builtin_port) {

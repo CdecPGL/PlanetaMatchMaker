@@ -37,9 +37,8 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             string password = "",
             Action<PlanetaMatchMakerClient.ErrorInfo, HostRoomResult> callback = null)
         {
-            var steamId64 = SteamLibraryHelpers.GetSteamId64();
             client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Steam,
-                GameHostExternalId.FromUInt64(steamId64), maxPlayerCount, password, callback);
+                GameHostExternalId.Empty, maxPlayerCount, password, callback);
         }
 
         /// <summary>
@@ -48,24 +47,14 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         /// <param name="client"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="password"></param>
-        /// <exception cref="InvalidOperationException">Steam client is not ready.</exception>
         /// <returns></returns>
         public static async Task<(PlanetaMatchMakerClient.ErrorInfo errorInfo, HostRoomResult result)>
             HostRoomWithSteamAsync(this PlanetaMatchMakerClient client,
                 byte maxPlayerCount, string password = "")
         {
-	        ulong steamId64;
-	        try {
-		        steamId64 = SteamLibraryHelpers.GetSteamId64();
-	        }
-	        catch (InvalidOperationException e) {
-		        Debug.LogException(e);
-		        return (new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation), default);
-	        }
-	        
-	        return await client.HostRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam,
-		        GameHostExternalId.FromUInt64(steamId64), maxPlayerCount, password);
-	        }
+            return await client.HostRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam,
+                GameHostExternalId.Empty, maxPlayerCount, password);
+        }
 
         /// <summary>
         /// Join to a room on the server and get SteamIdentity.

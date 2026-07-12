@@ -9,6 +9,7 @@ namespace {
 BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_join_room_request_replies_host_endpoint_and_disconnects) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1}, public_open_room, {}, 2, 1);
 		room.game_host_external_id[0] = 99;
 		context.server_data.get_room_data_container().add_or_update(room);
@@ -33,6 +34,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_join_room_request_replies_password_error_without_body) {
 		protocol_context context;
+		mark_authenticated(context);
 		context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"host", 1},
 			pgl::room_setting_flag::open_room, u8"secret"));
 		const pgl::join_room_request_message request{
@@ -54,6 +56,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_join_room_request_accepts_private_room_with_correct_password) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1}, pgl::room_setting_flag::open_room, u8"secret", 2, 1);
 		context.server_data.get_room_data_container().add_or_update(room);
 		const pgl::join_room_request_message request{
@@ -75,6 +78,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_join_room_request_ignores_password_for_public_room) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1}, public_open_room, {}, 2, 1);
 		context.server_data.get_room_data_container().add_or_update(room);
 		const pgl::join_room_request_message request{
@@ -96,6 +100,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_join_room_request_replies_room_not_found) {
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::join_room_request_message request{
 			404,
 			pgl::game_host_connection_establish_mode::builtin,
@@ -114,6 +119,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_join_room_request_replies_permission_denied_for_closed_room) {
 		protocol_context context;
+		mark_authenticated(context);
 		context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"host", 1},
 			pgl::room_setting_flag::public_room));
 		const pgl::join_room_request_message request{
@@ -134,6 +140,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_join_room_request_replies_room_full) {
 		protocol_context context;
+		mark_authenticated(context);
 		context.server_data.get_room_data_container().add_or_update(make_room(1, {u8"host", 1},
 			public_open_room, {}, 2, 2));
 		const pgl::join_room_request_message request{
@@ -154,6 +161,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_join_room_request_replies_connection_establish_mode_mismatch) {
 		protocol_context context;
+		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1});
 		room.game_host_connection_establish_mode = pgl::game_host_connection_establish_mode::steam;
 		context.server_data.get_room_data_container().add_or_update(room);

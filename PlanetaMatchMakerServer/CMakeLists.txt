@@ -37,10 +37,14 @@ endif()
 find_package(OpenSSL REQUIRED)
 target_link_libraries(PlanetaMatchMakerServerLib OpenSSL::SSL OpenSSL::Crypto)
 
+# JWT Library
+find_package(jwt-cpp CONFIG REQUIRED)
+target_link_libraries(PlanetaMatchMakerServerLib jwt-cpp::jwt-cpp)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	# -D_WIN32_WINNT=0x0A00: To avoid error of Boost Library 1.89 for MSVC
 	# _CRT_SECURE_NO_WARNINGS: To avoid error for getenv
-	add_definitions(-D_WIN32_WINNT=0x0A00 _CRT_SECURE_NO_WARNINGS)
+	add_definitions(-D_WIN32_WINNT=0x0A00 -D_CRT_SECURE_NO_WARNINGS)
 elseif((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
 	if (ENABLE_COVERAGE)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")

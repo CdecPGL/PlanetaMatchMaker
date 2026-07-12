@@ -11,6 +11,7 @@ await client.ConnectAsync(
     new Host("127.0.0.1"),
     new ServerPort(57000),
     new PlayerName("player"),
+    AuthenticationOptions.Oidc(oidcToken),
     new ConnectionOptions(
         ConnectionMode.Tls,
         new Host("match.example.com")));
@@ -21,6 +22,28 @@ User-provided values are represented by immutable value objects: `GameId`, `Game
 Use `ConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
 
 `RemoteCertificateValidationCallback` can be set for development with self-signed certificates. Do not disable certificate validation in production.
+
+## Authentication
+
+`ConnectAsync` requires an `AuthenticationOptions` value. PMMS client libraries only send credentials; they do not implement OIDC browser login, PKCE, refresh token management, or Steam ticket acquisition.
+
+```csharp
+await client.ConnectAsync(
+    host,
+    port,
+    new PlayerName("player"),
+    AuthenticationOptions.Steam(steamAuthTicket));
+
+await client.ConnectAsync(
+    host,
+    port,
+    new PlayerName("player"),
+    AuthenticationOptions.Oidc(oidcToken));
+```
+
+SteamID64 and OIDC subject are not sent as client-claimed authentication IDs. The server derives the authenticated identity from Steam or OIDC verification results.
+
+`CreateRoomWithExternalServiceAsync` accepts `GameHostExternalId? externalId = null`. `null` sends a 64-byte zero value, which means "unspecified". If the authenticated identity has a verified external ID, the server uses it automatically; if the request specifies an external ID, it must match the verified one. Steam rooms therefore normally call `CreateRoomWithSteamAsync` without passing an external ID.
 
 ## Port Mapping Auto Release
 

@@ -5,7 +5,9 @@
 #include <iosfwd>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
+#include "authentication/authentication_method.hpp"
 #include "logger/log.hpp"
 #include "network/network_layer.hpp"
 
@@ -36,6 +38,34 @@ namespace pgl {
 		std::u8string game_id;
 		bool enable_game_version_check = false;
 		std::u8string game_version;
+		uint32_t max_credential_bytes = 16 * 1024;
+		uint16_t timeout_seconds = 5;
+		uint16_t clock_skew_seconds = 60;
+		bool allow_plain_connections = false;
+
+		struct steam_setting final {
+			bool enabled = false;
+			uint32_t app_id = 0;
+			std::string publisher_key;
+			std::string identity;
+			std::string authenticate_user_ticket_url =
+				"https://partner.steam-api.com/ISteamUserAuth/AuthenticateUserTicket/v1/";
+			std::string check_app_ownership_url =
+				"https://partner.steam-api.com/ISteamUser/CheckAppOwnership/v4/";
+		} steam;
+
+		struct oidc_setting final {
+			bool enabled = false;
+			std::string issuer;
+			std::string audience;
+			std::vector<std::string> algorithms = {"RS256", "RS384", "RS512"};
+			std::string discovery_url;
+			std::string jwks_url;
+			std::string jwks;
+			uint32_t jwks_cache_seconds = 3600;
+		} oidc;
+
+		[[nodiscard]] bool is_method_enabled(authentication_method method) const;
 	};
 
 	struct server_log_setting final {

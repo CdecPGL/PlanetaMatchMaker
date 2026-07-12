@@ -23,6 +23,13 @@ namespace PlanetaGameLabo.MatchMaker
             ClientErrorCode = errorCode;
             ExtraMessage = extraMessage;
         }
+
+        public ClientErrorException(ClientErrorCode errorCode, string extraMessage, Exception innerException) : base(
+            errorCode.GetClientErrorMessage() + ": " + extraMessage, innerException)
+        {
+            ClientErrorCode = errorCode;
+            ExtraMessage = extraMessage;
+        }
     }
 
 #pragma warning restore CA1032

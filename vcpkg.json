@@ -1,14 +1,21 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
     "dependencies": [
-        "boost",
-        "openssl"
+        "boost-algorithm",
+        "boost-asio",
+        "boost-beast",
+        "boost-coroutine",
+        "boost-date-time",
+        "boost-filesystem",
+        "boost-json",
+        "boost-lexical-cast",
+        "boost-log",
+        "boost-test",
+        "boost-thread",
+        "openssl",
+        "jwt-cpp"
     ],
     "overrides": [
-        {
-            "name": "boost",
-            "version": "1.89.0"
-        },
         {
             "name": "openssl",
             "version": "3.6.2"

@@ -122,8 +122,14 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<PlayerFullName> ConnectAsync(Host serverAddress, ServerPort serverPort,
-            PlayerName playerName, ConnectionOptions connectionOptions = default(ConnectionOptions))
+            PlayerName playerName, AuthenticationOptions authenticationOptions,
+            ConnectionOptions connectionOptions = default(ConnectionOptions))
         {
+            if (authenticationOptions == null)
+            {
+                throw new ArgumentNullException(nameof(authenticationOptions));
+            }
+
             await semaphore.WaitAsync().ConfigureAwait(false);
             try
             {
@@ -156,22 +162,22 @@ namespace PlanetaGameLabo.MatchMaker
                 catch (SocketException e)
                 {
                     CloseConnection();
-                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message, e);
                 }
                 catch (ObjectDisposedException e)
                 {
                     CloseConnection();
-                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message, e);
                 }
                 catch (AuthenticationException e)
                 {
                     CloseConnection();
-                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message, e);
                 }
                 catch (IOException e)
                 {
                     CloseConnection();
-                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message);
+                    throw new ClientErrorException(ClientErrorCode.FailedToConnect, e.Message, e);
                 }
 
                 keepAliveSenderNotificator.UpdateLastRequestTime();
@@ -181,13 +187,16 @@ namespace PlanetaGameLabo.MatchMaker
                     new AuthenticationRequestMessage
                     {
                         ApiVersion = ClientConstants.ApiVersion,
+                        AuthenticationMethod = authenticationOptions.Method,
                         GameId = GameId.Value,
                         GameVersion = GameVersion.Value,
-                        PlayerName = playerName.Value
+                        PlayerName = playerName.Value,
+                        CredentialSize = checked((uint)authenticationOptions.Credential.Length)
                     };
-                await SendRequestAsync(requestBody).ConfigureAwait(false);
+                await SendAuthenticationRequestAsync(requestBody, authenticationOptions.Credential)
+                    .ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(GameId)}: {GameId}, {nameof(GameVersion)}: {GameVersion}, {nameof(playerName)}: {playerName})");
+                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(requestBody.AuthenticationMethod)}: {requestBody.AuthenticationMethod}, {nameof(GameId)}: {GameId}, {nameof(GameVersion)}: {GameVersion}, {nameof(playerName)}: {playerName}, {nameof(requestBody.CredentialSize)}: {requestBody.CredentialSize})");
                 var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
                     $"Receive AuthenticationReply. ({nameof(replyBody.Result)}: {replyBody.Result}, {nameof(replyBody.ApiVersion)}: {replyBody.ApiVersion}, {nameof(replyBody.GameVersion)}: {replyBody.GameVersion}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
@@ -275,7 +284,7 @@ namespace PlanetaGameLabo.MatchMaker
         /// <exception cref="ArgumentException"></exception>
         /// <returns></returns>
         public async Task<CreateRoomResult> CreateRoomWithExternalServiceAsync(byte maxPlayerCount,
-            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId,
+            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId? externalId = null,
             RoomPassword? password = null)
         {
             if (connectionEstablishMode == GameHostConnectionEstablishMode.Builtin)
@@ -299,7 +308,8 @@ namespace PlanetaGameLabo.MatchMaker
                         "The client can host only one room.");
                 }
 
-                return await CreateRoomCoreAsync(connectionEstablishMode, 0, externalId.ToArray(), maxPlayerCount,
+                return await CreateRoomCoreAsync(connectionEstablishMode, 0,
+                        (externalId ?? GameHostExternalId.Empty).ToArray(), maxPlayerCount,
                         (password ?? RoomPassword.Empty).Value)
                     .ConfigureAwait(false);
             }
@@ -744,6 +754,48 @@ namespace PlanetaGameLabo.MatchMaker
         private Stream communicationStream;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private readonly KeepAliveSenderNotificator keepAliveSenderNotificator;
+
+        private async Task SendAuthenticationRequestAsync(AuthenticationRequestMessage messageBody, byte[] credential)
+        {
+            try
+            {
+                keepAliveSenderNotificator.UpdateLastRequestTime();
+                await communicationStream.SendAuthenticationRequestMessage(messageBody, credential)
+                    .ConfigureAwait(false);
+            }
+            catch (MessageErrorException e)
+            {
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
+            }
+            catch (ObjectDisposedException e)
+            {
+                OnConnectionClosed();
+                throw new ClientErrorException(ClientErrorCode.ConnectionClosed, e.Message);
+            }
+            catch (SocketException e)
+            {
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
+            }
+            catch (IOException e)
+            {
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
+            }
+        }
 
         /// <summary>
         /// Send a request or notice message to the server.

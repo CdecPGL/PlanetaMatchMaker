@@ -101,14 +101,33 @@ A request to authenticate.
 
 #### Parameters
 
-The size is 74 bytes.
+The authentication request body size is 79 bytes. The request body is followed by credential chunk bodies. Credential chunks are sent without additional request headers.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |api_version|16 bits unsigned integer|2|An API version number the client requires.|
+|authentication_method|8 bits unsigned integer|1|Authentication method. `0` is Steam and `1` is OIDC.|
 |game_id|24 byte length UTF-8 string|24|A game ID of the client.|
 |game_version|24 byte length UTF-8 string|24|A game version number of the client.|
 |player_name_t|24 byte length UTF-8 string|24|A name of player. This must not be empty.|
+|credential_size|32 bits unsigned integer|4|Credential byte size. This must be greater than 0 and less than or equal to `authentication.max_credential_bytes`.|
+
+`authentication_method` options are as below.
+
+|Name|Value|Credential|
+|:---|---:|:---|
+|steam|0|Steam auth ticket bytes.|
+|oidc|1|OIDC JWT bytes, normally UTF-8 text.|
+
+An authentication credential chunk is 243 bytes.
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|sequence|16 bits unsigned integer|2|Zero-based chunk sequence number.|
+|data_size|8 bits unsigned integer|1|Credential bytes contained in this chunk. The maximum is 240.|
+|data|240 elements byte array|240|Credential chunk data. Unused tail bytes are zero.|
+
+The number of chunks is `ceil(credential_size / 240)`. Chunk sequence and size must exactly match the declared credential size.
 
 #### Reply
 
@@ -123,12 +142,29 @@ The size is 29 bytes.
 
 Options of `result` are as below.
 
-|Name|Value|Host Identifier|Explanation|
-|:---|---:|:---|:---|
+|Name|Value|Explanation|
+|:---|---:|:---|
 |success|0|Authentication is succeeded.|
 |api_version_mismatch|1|An API version of server is different from what the client required.|
 |game_id_mismatch|2|Client game id doesn't match to the acceptable value in the server.|
 |game_version_mismatch|3|Client game version doesn't match to the version the server required.|
+|unsupported_authentication_method|4|The requested authentication method is not enabled or is unknown.|
+|authentication_data_format_invalid|5|Credential size, chunk sequence, or chunk size is invalid.|
+|authentication_data_size_exceeded|6|Credential size exceeds `authentication.max_credential_bytes`.|
+|authentication_data_invalid|7|Credential is invalid.|
+|insecure_connection|8|Authentication over plain TCP is not allowed by server setting.|
+|steam_ticket_invalid|9|Steam ticket verification failed.|
+|steam_id_mismatch|10|Reserved for SteamID mismatch handling. Current authentication requests do not send a client-claimed SteamID.|
+|steam_ownership_check_failed|11|Steam AppID ownership check failed.|
+|steam_authentication_service_unavailable|12|Steam authentication or ownership service could not be reached or returned an unavailable response.|
+|oidc_token_invalid|13|OIDC token format or claims are invalid.|
+|oidc_signature_verification_failed|14|OIDC token signature verification failed.|
+|oidc_issuer_mismatch|15|OIDC issuer does not match server setting.|
+|oidc_audience_mismatch|16|OIDC audience does not match server setting.|
+|oidc_token_expired|17|OIDC token is expired, not yet valid, or lacks an expiration claim.|
+|oidc_subject_missing|18|OIDC token has no non-empty subject.|
+|oidc_key_fetch_failed|19|OIDC discovery or JWKS retrieval/selection failed.|
+|oidc_disallowed_algorithm|20|OIDC token uses a signature algorithm not allowed by server setting.|
 
 Note that authentication failure are not treated as error.
 If authentication is failed, the server closes the connection immediately after reply.
@@ -155,15 +191,17 @@ The size is 84 bytes.
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
 |connection_establish_mode|8 bits unsigned integer|1|A way how to establish P2P connection.|
 |port_number|16 bits unsigned integer|2|A port number which is used for game host. 49152 to 65535 is available. This is used when `connection_establish_mode` is `builtin`.|
-|external_id|64 elements byte array.|64|An id where clients connect using external service like Steam Networking. This is used when `connection_establish_mode` is not `builtin`. This is left justified and big endien.|
+|external_id|64 elements byte array.|64|An id where clients connect using an external service. All zero bytes mean unspecified. If the authenticated identity has a verified external ID, the server uses it when this field is all zero, and requires an exact match when this field is nonzero.|
 
 Options of `connection_establish_mode` are as below.
 
 |Name|Value|Host Identifier|Explanation|
 |:---|---:|:---|:---|
 |builtin|0|`port_number` property|Use builtin method.|
-|steam|1|`external_id` property containing SteamID64 as 64bits unsigned integer|Use Steam relay service.|
+|steam|1|Authenticated Steam external ID|Use Steam relay service. Only Steam-authenticated sessions can create Steam rooms. The room external ID is the verified SteamID64 as big-endian 8 bytes followed by zero padding.|
 |others|255|`external_id` property|Use other external service.|
+
+When `connection_establish_mode` is `others`, a nonzero request `external_id` is required unless the authenticated identity already has a verified external ID that can be used automatically.
 
 #### Reply
 

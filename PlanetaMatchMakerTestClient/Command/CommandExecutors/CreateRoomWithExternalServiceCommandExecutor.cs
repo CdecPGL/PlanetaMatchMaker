@@ -19,8 +19,11 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomWithExternalServiceCommandOptions options,
             CancellationToken cancellationToken)
         {
+            var externalId = string.IsNullOrEmpty(options.ExternalId)
+                ? (GameHostExternalId?)null
+                : GameHostExternalId.FromString(options.ExternalId);
             await sharedClient.CreateRoomWithExternalServiceAsync(options.MaxPlayerCount,
-                options.ConnectionEstablishMode, GameHostExternalId.FromString(options.ExternalId),
+                options.ConnectionEstablishMode, externalId,
                 new RoomPassword(options.Password));
             OutputStream.WriteLine($"Room created with id \"{sharedClient.HostingRoomId}\".");
         }
@@ -36,8 +39,8 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "A way how clients connect to the host.")]
         public GameHostConnectionEstablishMode ConnectionEstablishMode { get; set; }
 
-        [CommandLine.Value(3, MetaName = "external_id", Required = true,
-            HelpText = "An ID of eternal service for signaling.")]
+        [CommandLine.Value(3, MetaName = "external_id", Required = false,
+            HelpText = "An ID of external service for signaling. Omit to use authenticated identity if available.")]
         public string ExternalId { get; set; }
 
         [CommandLine.Option('s', "password", Default = "", Required = false,

@@ -13,6 +13,7 @@
 #include "authentication/game.hpp"
 #include "message_constants.hpp"
 #include "authentication/authentication_result.hpp"
+#include "authentication/authentication_method.hpp"
 
 namespace pgl {
 	enum class message_type : uint8_t {
@@ -48,18 +49,37 @@ namespace pgl {
 
 	// size of message should be less than (256 bytes - header size)
 
-	// 74 bytes
+	// 79 bytes
 	struct authentication_request_message final {
 		api_version_type api_version;
+		authentication_method authentication_method;
 		game_id_t game_id;
 		game_version_t game_version;
 		player_name_t player_name;
+		uint32_t credential_size;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
 			&authentication_request_message::api_version,
+			&authentication_request_message::authentication_method,
 			&authentication_request_message::game_id,
 			&authentication_request_message::game_version,
-			&authentication_request_message::player_name
+			&authentication_request_message::player_name,
+			&authentication_request_message::credential_size
+		>;
+	};
+
+	constexpr auto authentication_credential_chunk_data_size = 240;
+
+	// 243 bytes
+	struct authentication_credential_chunk_message final {
+		uint16_t sequence;
+		uint8_t data_size;
+		std::array<uint8_t, authentication_credential_chunk_data_size> data;
+
+		using serialize_targets = minimal_serializer::serialize_target_container<
+			&authentication_credential_chunk_message::sequence,
+			&authentication_credential_chunk_message::data_size,
+			&authentication_credential_chunk_message::data
 		>;
 	};
 

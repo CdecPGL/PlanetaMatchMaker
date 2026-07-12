@@ -148,6 +148,7 @@ namespace PlanetaGameLabo.MatchMaker
                 var playerFullName =
                     await sharedClient.ConnectAsync(new Host(options.ServerAddress),
                         new ServerPort(options.ServerPort), new PlayerName(playerName),
+                        CreateAuthenticationOptions(options),
                         CreateConnectionOptions(options));
                 if (playerFullName.Name != playerName)
                 {
@@ -262,6 +263,7 @@ namespace PlanetaGameLabo.MatchMaker
                     sharedClient.TimeoutMilliSeconds, logger: sharedClient.Logger);
                 await secondClient.ConnectAsync(new Host(options.ServerAddress),
                     new ServerPort(options.ServerPort), new PlayerName(playerName),
+                    CreateAuthenticationOptions(options),
                     CreateConnectionOptions(options));
             }
             catch (ClientErrorException e)
@@ -315,6 +317,11 @@ namespace PlanetaGameLabo.MatchMaker
         {
             return ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
                 options.AcceptInvalidTlsCertificate);
+        }
+
+        private static AuthenticationOptions CreateAuthenticationOptions(TestAllCommandOptions options)
+        {
+            return AuthenticationOptionsFactory.Create(options.AuthenticationMethod, options.AuthenticationCredential);
         }
     }
 

@@ -38,6 +38,12 @@ namespace pgl {
 			throw server_session_intended_disconnect_error(error_message);
 		}
 
+		if (header.message_type != message_type::authentication && !param->session_data.is_authenticated()) {
+			const auto error_message = generate_string("Unauthenticated session cannot handle message type: ",
+				header.message_type);
+			throw server_session_intended_disconnect_error(error_message);
+		}
+
 		const auto message_handler = make_message_handler(header.message_type);
 		constexpr auto header_size = minimal_serializer::serialized_size_v<request_message_header>;
 		const auto message_size = message_handler->get_message_size();

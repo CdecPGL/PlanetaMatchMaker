@@ -41,6 +41,23 @@ namespace PlanetaGameLabo.MatchMaker
         ApiVersionMismatch,
         GameIdMismatch,
         GameVersionMismatch,
+        UnsupportedAuthenticationMethod,
+        AuthenticationDataFormatInvalid,
+        AuthenticationDataSizeExceeded,
+        AuthenticationDataInvalid,
+        InsecureConnection,
+        SteamTicketInvalid,
+        SteamIdMismatch,
+        SteamOwnershipCheckFailed,
+        SteamAuthenticationServiceUnavailable,
+        OidcTokenInvalid,
+        OidcSignatureVerificationFailed,
+        OidcIssuerMismatch,
+        OidcAudienceMismatch,
+        OidcTokenExpired,
+        OidcSubjectMissing,
+        OidcKeyFetchFailed,
+        OidcDisallowedAlgorithm,
     };
 
     public static class AuthenticationErrorCodeExtension
@@ -57,6 +74,40 @@ namespace PlanetaGameLabo.MatchMaker
                     return AuthenticationErrorCode.GameIdMismatch;
                 case AuthenticationResult.GameVersionMismatch:
                     return AuthenticationErrorCode.GameVersionMismatch;
+                case AuthenticationResult.UnsupportedAuthenticationMethod:
+                    return AuthenticationErrorCode.UnsupportedAuthenticationMethod;
+                case AuthenticationResult.AuthenticationDataFormatInvalid:
+                    return AuthenticationErrorCode.AuthenticationDataFormatInvalid;
+                case AuthenticationResult.AuthenticationDataSizeExceeded:
+                    return AuthenticationErrorCode.AuthenticationDataSizeExceeded;
+                case AuthenticationResult.AuthenticationDataInvalid:
+                    return AuthenticationErrorCode.AuthenticationDataInvalid;
+                case AuthenticationResult.InsecureConnection:
+                    return AuthenticationErrorCode.InsecureConnection;
+                case AuthenticationResult.SteamTicketInvalid:
+                    return AuthenticationErrorCode.SteamTicketInvalid;
+                case AuthenticationResult.SteamIdMismatch:
+                    return AuthenticationErrorCode.SteamIdMismatch;
+                case AuthenticationResult.SteamOwnershipCheckFailed:
+                    return AuthenticationErrorCode.SteamOwnershipCheckFailed;
+                case AuthenticationResult.SteamAuthenticationServiceUnavailable:
+                    return AuthenticationErrorCode.SteamAuthenticationServiceUnavailable;
+                case AuthenticationResult.OidcTokenInvalid:
+                    return AuthenticationErrorCode.OidcTokenInvalid;
+                case AuthenticationResult.OidcSignatureVerificationFailed:
+                    return AuthenticationErrorCode.OidcSignatureVerificationFailed;
+                case AuthenticationResult.OidcIssuerMismatch:
+                    return AuthenticationErrorCode.OidcIssuerMismatch;
+                case AuthenticationResult.OidcAudienceMismatch:
+                    return AuthenticationErrorCode.OidcAudienceMismatch;
+                case AuthenticationResult.OidcTokenExpired:
+                    return AuthenticationErrorCode.OidcTokenExpired;
+                case AuthenticationResult.OidcSubjectMissing:
+                    return AuthenticationErrorCode.OidcSubjectMissing;
+                case AuthenticationResult.OidcKeyFetchFailed:
+                    return AuthenticationErrorCode.OidcKeyFetchFailed;
+                case AuthenticationResult.OidcDisallowedAlgorithm:
+                    return AuthenticationErrorCode.OidcDisallowedAlgorithm;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(result), result, null);
             }

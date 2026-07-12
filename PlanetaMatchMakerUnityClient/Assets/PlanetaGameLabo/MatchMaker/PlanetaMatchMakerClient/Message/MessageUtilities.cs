@@ -42,6 +42,52 @@ namespace PlanetaGameLabo.MatchMaker
             }
         }
 
+        internal static async Task SendAuthenticationRequestMessage(
+            this Stream stream,
+            AuthenticationRequestMessage messageBody,
+            byte[] credential)
+        {
+            if (credential == null)
+            {
+                throw new ArgumentNullException(nameof(credential));
+            }
+
+            try
+            {
+                var header = new RequestMessageHeader
+                {
+                    MessageType = MessageType.Authentication
+                };
+                var requestHeaderData = Serializer.Serialize(header);
+                var requestBodyData = Serializer.Serialize(messageBody);
+                await stream.WriteAsync(requestHeaderData, 0, requestHeaderData.Length).ConfigureAwait(false);
+                await stream.WriteAsync(requestBodyData, 0, requestBodyData.Length).ConfigureAwait(false);
+
+                var sequence = 0;
+                for (var offset = 0; offset < credential.Length; offset += AuthenticationCredentialChunkDataSize)
+                {
+                    var dataSize = Math.Min(AuthenticationCredentialChunkDataSize, credential.Length - offset);
+                    var data = new byte[AuthenticationCredentialChunkDataSize];
+                    Array.Copy(credential, offset, data, 0, dataSize);
+                    var chunk = new AuthenticationCredentialChunkMessage
+                    {
+                        Sequence = checked((ushort)sequence),
+                        DataSize = checked((byte)dataSize),
+                        Data = data
+                    };
+                    var chunkData = Serializer.Serialize(chunk);
+                    await stream.WriteAsync(chunkData, 0, chunkData.Length).ConfigureAwait(false);
+                    ++sequence;
+                }
+
+                await stream.FlushAsync().ConfigureAwait(false);
+            }
+            catch (InvalidSerializationException e)
+            {
+                throw new MessageErrorException("Failed to serialize a message: " + e.Message);
+            }
+        }
+
         /// <summary>
         /// Receive a reply message from the server.
         /// This method won't receive body data if reply code is not OK.
@@ -103,6 +149,8 @@ namespace PlanetaGameLabo.MatchMaker
                 offset += readSize;
             }
         }
+
+        private const int AuthenticationCredentialChunkDataSize = 240;
     }
 }
 #pragma warning restore CA1303
