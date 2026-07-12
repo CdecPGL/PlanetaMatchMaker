@@ -135,6 +135,44 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
 	}
 
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_plain_external_authentication_url_by_default,
+		setting_file_fixture) {
+		create_setting_file(create_setting({
+			{"authentication", {
+				{"steam", {
+					{"enabled", true},
+					{"app_id", 480},
+					{"publisher_key", "test-key"},
+					{"authenticate_user_ticket_url", "http://127.0.0.1/auth"},
+					{"check_app_ownership_url", "https://steam.example/ownership"}
+				}}
+			}}
+		}));
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_accepts_plain_external_authentication_url_with_development_setting,
+		setting_file_fixture) {
+		create_setting_file(create_setting({
+			{"authentication", {
+				{"allow_plain_external_service_connections", true},
+				{"oidc", {
+					{"enabled", true},
+					{"issuer", "https://issuer.example"},
+					{"audience", "pmms-test"},
+					{"jwks_url", "http://127.0.0.1/jwks"}
+				}}
+			}}
+		}));
+
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
+	}
+
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_all, setting_file_fixture) {
 		// set up
 		const json::value test_data = {
@@ -155,6 +193,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 					{"game_id", "test"},
 					{"enable_game_version_check", true},
 					{"game_version", "1.0.0"},
+					{"allow_plain_external_service_connections", true},
 				}
 			},
 			{
@@ -201,6 +240,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, true);
 		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
 		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
+		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);
@@ -703,6 +743,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
 		set_typed_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", true);
 		set_typed_env_var("PMMS_AUTHENTICATION_GAME_VERSION", "1.0.0");
+		set_typed_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS", true);
 		set_typed_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", false);
 		set_typed_env_var("PMMS_LOG_CONSOLE_LOG_LEVEL", "warning");
 		set_typed_env_var("PMMS_LOG_ENABLE_FILE_LOG", false);
@@ -733,6 +774,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, true);
 		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
 		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
+		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);

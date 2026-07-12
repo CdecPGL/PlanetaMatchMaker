@@ -10,5 +10,6 @@ namespace pgl {
 		boost::asio::any_io_executor executor;
 		boost::asio::yield_context yield;
 		std::chrono::steady_clock::time_point deadline;
+		bool allow_plain_http = false;
 	};
 }

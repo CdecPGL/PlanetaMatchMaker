@@ -314,6 +314,7 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 	void configure_steam_authentication(pgl::server_setting& setting,
 		const authentication_http_test_server& steam_server) {
 		setting.authentication.allow_plain_connections = true;
+		setting.authentication.allow_plain_external_service_connections = true;
 		setting.authentication.steam.enabled = true;
 		setting.authentication.steam.app_id = 480;
 		setting.authentication.steam.publisher_key = "test-publisher-key";
@@ -370,6 +371,7 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 
 	void configure_oidc_authentication(pgl::server_setting& setting, const std::string& jwks = make_oidc_jwks("test-key")) {
 		setting.authentication.allow_plain_connections = true;
+		setting.authentication.allow_plain_external_service_connections = true;
 		setting.authentication.oidc.enabled = true;
 		setting.authentication.oidc.issuer = "https://issuer.example";
 		setting.authentication.oidc.audience = "pmms-test";
@@ -401,6 +403,24 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 }
 
 BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
+	BOOST_AUTO_TEST_CASE(test_external_authentication_rejects_plain_http_by_default) {
+		boost::asio::io_context io;
+		std::exception_ptr exception;
+		boost::asio::spawn(io, [&](boost::asio::yield_context yield) {
+			try {
+				const pgl::authentication_execution_context context{
+					io.get_executor(), yield, std::chrono::steady_clock::now() + std::chrono::seconds(2)
+				};
+				pgl::authentication_http::get("http://127.0.0.1:1/auth", context);
+			}
+			catch (...) { exception = std::current_exception(); }
+		}, boost::asio::detached);
+		io.run();
+
+		BOOST_REQUIRE(exception);
+		BOOST_CHECK_THROW(std::rethrow_exception(exception), std::invalid_argument);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_external_https_verifies_certificate_host_name) {
 		{
 			authentication_https_test_server server;

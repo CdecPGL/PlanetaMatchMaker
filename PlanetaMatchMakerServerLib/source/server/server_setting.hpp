@@ -42,6 +42,7 @@ namespace pgl {
 		uint16_t timeout_seconds = 5;
 		uint16_t clock_skew_seconds = 60;
 		bool allow_plain_connections = false;
+		bool allow_plain_external_service_connections = false;
 
 		struct steam_setting final {
 			bool enabled = false;

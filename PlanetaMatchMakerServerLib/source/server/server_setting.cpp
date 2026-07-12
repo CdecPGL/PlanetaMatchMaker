@@ -128,6 +128,16 @@ namespace pgl {
 		}
 	}
 
+	void validate_external_authentication_url(const std::string& target, const std::string& url,
+		const bool allow_plain_external_service_connections) {
+		validate_str_length(target, url, 1, 2048);
+		if (url.starts_with("https://")) { return; }
+		if (allow_plain_external_service_connections && url.starts_with("http://")) { return; }
+		throw server_setting_error(target + (allow_plain_external_service_connections
+			? " must use the http or https scheme."
+			: " must use https. Set authentication.allow_plain_external_service_connections only for development."));
+	}
+
 	ip_version tag_invoke(json::value_to_tag<ip_version>, const json::value& jv) {
 		return string_to_ip_version(json::value_to<std::string>(jv));
 	}
@@ -223,6 +233,7 @@ namespace pgl {
 		EXTRACT_WITH_DEFAULT(*obj, s, uint16_t, timeout_seconds);
 		EXTRACT_WITH_DEFAULT(*obj, s, uint16_t, clock_skew_seconds);
 		EXTRACT_WITH_DEFAULT(*obj, s, bool, allow_plain_connections);
+		EXTRACT_WITH_DEFAULT(*obj, s, bool, allow_plain_external_service_connections);
 		if (const auto* steam_section = obj->if_contains("steam"); steam_section != nullptr) {
 			s.steam = json::value_to<server_authentication_setting::steam_setting>(*steam_section);
 		}
@@ -249,10 +260,10 @@ namespace pgl {
 				std::numeric_limits<uint32_t>::max());
 			validate_str_length(authentication_section_key + ".steam.publisher_key", setting.steam.publisher_key,
 				1, 4096);
-			validate_str_length(authentication_section_key + ".steam.authenticate_user_ticket_url",
-				setting.steam.authenticate_user_ticket_url, 1, 2048);
-			validate_str_length(authentication_section_key + ".steam.check_app_ownership_url",
-				setting.steam.check_app_ownership_url, 1, 2048);
+			validate_external_authentication_url(authentication_section_key + ".steam.authenticate_user_ticket_url",
+				setting.steam.authenticate_user_ticket_url, setting.allow_plain_external_service_connections);
+			validate_external_authentication_url(authentication_section_key + ".steam.check_app_ownership_url",
+				setting.steam.check_app_ownership_url, setting.allow_plain_external_service_connections);
 		}
 
 		if (setting.oidc.enabled) {
@@ -273,11 +284,12 @@ namespace pgl {
 					".oidc.discovery_url, jwks_url or jwks must be configured when oidc is enabled.");
 			}
 			if (!setting.oidc.discovery_url.empty()) {
-				validate_str_length(authentication_section_key + ".oidc.discovery_url", setting.oidc.discovery_url,
-					1, 2048);
+				validate_external_authentication_url(authentication_section_key + ".oidc.discovery_url",
+					setting.oidc.discovery_url, setting.allow_plain_external_service_connections);
 			}
 			if (!setting.oidc.jwks_url.empty()) {
-				validate_str_length(authentication_section_key + ".oidc.jwks_url", setting.oidc.jwks_url, 1, 2048);
+				validate_external_authentication_url(authentication_section_key + ".oidc.jwks_url",
+					setting.oidc.jwks_url, setting.allow_plain_external_service_connections);
 			}
 			validate_range(authentication_section_key + ".oidc.jwks_cache_seconds", setting.oidc.jwks_cache_seconds,
 				0u, std::numeric_limits<uint32_t>::max());
@@ -293,6 +305,12 @@ namespace pgl {
 		log(log_level::info, NAMEOF(setting.timeout_seconds), ": ", setting.timeout_seconds);
 		log(log_level::info, NAMEOF(setting.clock_skew_seconds), ": ", setting.clock_skew_seconds);
 		log(log_level::info, NAMEOF(setting.allow_plain_connections), ": ", setting.allow_plain_connections);
+		log(log_level::info, NAMEOF(setting.allow_plain_external_service_connections), ": ",
+			setting.allow_plain_external_service_connections);
+		if (setting.allow_plain_external_service_connections) {
+			log(log_level::warning,
+				"Plain HTTP connections to external authentication services are enabled. Use only for development.");
+		}
 		log(log_level::info, "steam.enabled: ", setting.steam.enabled);
 		log(log_level::info, "steam.app_id: ", setting.steam.app_id);
 		log(log_level::info, "steam.publisher_key: ", setting.steam.publisher_key.empty() ? "(not set)" : "(set)");
@@ -554,6 +572,8 @@ namespace pgl {
 			get_env_var("PMMS_AUTHENTICATION_TIMEOUT_SECONDS", authentication.timeout_seconds);
 			get_env_var("PMMS_AUTHENTICATION_CLOCK_SKEW_SECONDS", authentication.clock_skew_seconds);
 			get_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_CONNECTIONS", authentication.allow_plain_connections);
+			get_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS",
+				authentication.allow_plain_external_service_connections);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_ENABLED", authentication.steam.enabled);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_APP_ID", authentication.steam.app_id);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY", authentication.steam.publisher_key);

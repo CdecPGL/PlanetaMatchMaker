@@ -113,6 +113,9 @@ namespace pgl::authentication_http {
 	response get(const std::string& url, const authentication_execution_context& context,
 		const std::string& additional_trusted_ca) {
 		const auto parsed = parse_url(url);
+		if (!parsed.https && !context.allow_plain_http) {
+			throw std::invalid_argument("Plain HTTP is not allowed for external authentication services.");
+		}
 
 		http::request<http::empty_body> request{http::verb::get, parsed.target, 11};
 		request.set(http::field::host, parsed.host);

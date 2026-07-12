@@ -38,6 +38,7 @@ Those settings are loaded when server starts.
 |timeout_seconds|integer (1-3600)|5|PMMS_AUTHENTICATION_TIMEOUT_SECONDS|Timeout for external authentication service requests.|
 |clock_skew_seconds|integer (0-3600)|60|PMMS_AUTHENTICATION_CLOCK_SKEW_SECONDS|Allowed OIDC clock skew for time claim verification.|
 |allow_plain_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_CONNECTIONS|Allow authentication over plain TCP. Keep this false in production.|
+|allow_plain_external_service_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS|Allow Steam and OIDC Discovery/JWKS requests over plain HTTP. Enable only for local development with trusted endpoints.|
 |steam.enabled|boolean|false|PMMS_AUTHENTICATION_STEAM_ENABLED|Enable Steam authentication.|
 |steam.app_id|integer|0|PMMS_AUTHENTICATION_STEAM_APP_ID|Steam AppID checked by `AuthenticateUserTicket` and `CheckAppOwnership`. Required when Steam authentication is enabled.|
 |steam.publisher_key|string|""|PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY|Steam Web API publisher key. This is a server secret and is never sent to clients or logs.|
@@ -58,6 +59,10 @@ Steam authentication verifies a client-provided Steam auth ticket on the server 
 OIDC authentication verifies JWT signature, issuer, audience, expiration, not-before, subject, and allowed algorithm by using `jwt-cpp`. PMMS does not provide OIDC login UI, PKCE, refresh token handling, or token acquisition; the game or another client-side auth library must obtain the token.
 
 Authentication credentials should be sent over TLS in production. If `tls.mode` is `"plain"` and authentication is enabled, `allow_plain_connections` must be explicitly true or authentication fails.
+
+Steam authentication URLs and OIDC Discovery/JWKS URLs must use HTTPS by default. This policy also applies to a
+`jwks_uri` returned by Discovery. Plain HTTP is accepted only when
+`allow_plain_external_service_connections` is explicitly enabled for development; it must remain false in production.
 
 Steam room external IDs are derived from the verified SteamID64 as big-endian 8 bytes followed by zero padding. OIDC room external IDs are derived from the verified `sub` claim only when its UTF-8 representation fits in 64 bytes.
 

@@ -12,7 +12,8 @@
     "authentication": {
         "game_id": "test",
         "enable_game_version_check": true,
-        "game_version": "1.0.0"
+        "game_version": "1.0.0",
+        "allow_plain_external_service_connections": false
     },
     "log":{
         "enable_console_log": true,

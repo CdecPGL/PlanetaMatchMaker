@@ -129,7 +129,8 @@ namespace pgl {
 			param->connection.get_executor(),
 			param->yield,
 			std::chrono::steady_clock::now() +
-			std::chrono::seconds(param->server_setting.authentication.timeout_seconds)
+			std::chrono::seconds(param->server_setting.authentication.timeout_seconds),
+			param->server_setting.authentication.allow_plain_external_service_connections
 		};
 		const auto verification_result = verify_authentication_credential(message.authentication_method, credential,
 			message.player_name, param->server_setting.authentication, authentication_context);

@@ -17,6 +17,7 @@
         "timeout_seconds": 5,
         "clock_skew_seconds": 60,
         "allow_plain_connections": false,
+        "allow_plain_external_service_connections": false,
         "steam": {
             "enabled": false,
             "app_id": 0,
