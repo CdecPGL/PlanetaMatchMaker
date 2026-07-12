@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 		BOOST_CHECK_EQUAL(reply.total_room_count, 2);
 		BOOST_CHECK_EQUAL(reply.matched_room_count, 2);
 		BOOST_CHECK_EQUAL(reply.reply_room_count, 1);
-		BOOST_CHECK_EQUAL(reply.room_info_list[0].room_id, 1);
+		BOOST_CHECK_EQUAL(reply.room_info_list[0].room_id, pgl::room_id_t{1});
 		BOOST_CHECK(reply.room_info_list[0].host_player_full_name == (pgl::player_full_name{u8"alice", 1}));
 	}
 
@@ -65,10 +65,10 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 			return reply.room_info_list[0].room_id;
 		};
 
-		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::name_ascending), 2);
-		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::name_descending), 1);
-		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::create_datetime_ascending), 1);
-		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::create_datetime_descending), 3);
+		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::name_ascending), pgl::room_id_t{2});
+		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::name_descending), pgl::room_id_t{1});
+		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::create_datetime_ascending), pgl::room_id_t{1});
+		BOOST_CHECK_EQUAL(first_room_id_for(pgl::room_data_sort_kind::create_datetime_descending), pgl::room_id_t{3});
 	}
 
 	BOOST_AUTO_TEST_CASE(test_list_room_request_replies_empty_result_body) {
@@ -150,11 +150,11 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 		BOOST_CHECK(first_header.error_code == pgl::message_error_code::ok);
 		BOOST_CHECK(second_header.error_code == pgl::message_error_code::ok);
 		BOOST_CHECK_EQUAL(first_reply.reply_room_count, 7);
-		BOOST_CHECK_EQUAL(first_reply.room_info_list[0].room_id, 1);
-		BOOST_CHECK_EQUAL(first_reply.room_info_list[5].room_id, 6);
+		BOOST_CHECK_EQUAL(first_reply.room_info_list[0].room_id, pgl::room_id_t{1});
+		BOOST_CHECK_EQUAL(first_reply.room_info_list[5].room_id, pgl::room_id_t{6});
 		BOOST_CHECK_EQUAL(second_reply.reply_room_count, 7);
-		BOOST_CHECK_EQUAL(second_reply.room_info_list[0].room_id, 7);
-		BOOST_CHECK_EQUAL(second_reply.room_info_list[1].room_id, 0);
+		BOOST_CHECK_EQUAL(second_reply.room_info_list[0].room_id, pgl::room_id_t{7});
+		BOOST_CHECK_EQUAL(second_reply.room_info_list[1].room_id, pgl::room_id_t{0});
 		expect_no_more_reply_data(context.client_socket);
 	}
 
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 		BOOST_CHECK_EQUAL(reply.total_room_count, 4);
 		BOOST_CHECK_EQUAL(reply.matched_room_count, 1);
 		BOOST_CHECK_EQUAL(reply.reply_room_count, 1);
-		BOOST_CHECK_EQUAL(reply.room_info_list[0].room_id, 1);
+		BOOST_CHECK_EQUAL(reply.room_info_list[0].room_id, pgl::room_id_t{1});
 	}
 
 	BOOST_AUTO_TEST_CASE(test_list_room_request_replies_parameter_error_for_invalid_sort_kind) {

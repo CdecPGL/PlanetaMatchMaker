@@ -83,5 +83,6 @@ if(Windows)
 endif()
 
 # Subprojects
+add_subdirectory ("PlanetaMatchMakerServerLib")
 add_subdirectory ("PlanetaMatchMakerServer")
 add_subdirectory ("PlanetaMatchMakerServerTest")

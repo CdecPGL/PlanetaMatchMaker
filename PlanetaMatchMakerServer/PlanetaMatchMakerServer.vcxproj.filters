@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="source\main\log_initializer.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\main\log_initializer.cpp" />
+    <ClCompile Include="source\main\main.cpp" />
+  </ItemGroup>
+</Project>

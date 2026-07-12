@@ -2,10 +2,10 @@
 
 #include <sstream>
 
-#include "../../PlanetaMatchMakerServer/source/client/client_error_code.hpp"
-#include "../../PlanetaMatchMakerServer/source/client/client_errors.hpp"
-#include "../../PlanetaMatchMakerServer/source/message/message_error_code.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_errors.hpp"
+#include "client/client_error_code.hpp"
+#include "client/client_errors.hpp"
+#include "message/message_error_code.hpp"
+#include "server/server_errors.hpp"
 
 BOOST_AUTO_TEST_SUITE(errors_test)
 	BOOST_AUTO_TEST_CASE(test_client_error_stores_code_disconnect_flag_and_extra_message) {

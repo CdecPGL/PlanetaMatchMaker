@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/utilities/pack.hpp"
+#include "utilities/pack.hpp"
 
 BOOST_AUTO_TEST_SUITE(serialize_pack_test)
 

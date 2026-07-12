@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "../../PlanetaMatchMakerServer/source/session/session_data.hpp"
+#include "session/session_data.hpp"
 
 BOOST_AUTO_TEST_SUITE(session_data_test)
 	BOOST_AUTO_TEST_CASE(test_session_number_is_empty_by_default) {
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(session_data_test)
 		session_data.set_hosting_room_id(123);
 
 		BOOST_CHECK(session_data.is_hosting_room());
-		BOOST_CHECK_EQUAL(session_data.hosting_room_id(), 123);
+		BOOST_CHECK_EQUAL(session_data.hosting_room_id(), pgl::room_id_t{123});
 	}
 
 	BOOST_AUTO_TEST_CASE(test_set_hosting_room_id_rejects_reassignment) {
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_SUITE(session_data_test)
 
 		BOOST_CHECK_THROW(session_data.delete_hosting_room_id(456), std::runtime_error);
 		BOOST_CHECK(session_data.is_hosting_room());
-		BOOST_CHECK_EQUAL(session_data.hosting_room_id(), 123);
+		BOOST_CHECK_EQUAL(session_data.hosting_room_id(), pgl::room_id_t{123});
 	}
 
 	BOOST_AUTO_TEST_CASE(test_set_remote_endpoint_stores_value) {

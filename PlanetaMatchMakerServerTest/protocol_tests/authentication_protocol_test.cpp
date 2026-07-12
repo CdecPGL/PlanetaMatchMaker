@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/server/server_session.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_tls_context.hpp"
+#include "server/server_session.hpp"
+#include "server/server_tls_context.hpp"
 
 #include "protocol_test_support.hpp"
 

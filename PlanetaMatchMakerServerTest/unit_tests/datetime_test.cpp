@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/datetime/datetime.hpp"
+#include "datetime/datetime.hpp"
 
 BOOST_AUTO_TEST_SUITE(datetime_test)
 	BOOST_AUTO_TEST_CASE(test_year_getter) {

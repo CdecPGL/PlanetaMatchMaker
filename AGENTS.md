@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository contains a lightweight match-making server, C# client libraries, tests, and a Unity package. C++ server code lives in `PlanetaMatchMakerServer/source`, with vendored headers in `PlanetaMatchMakerServer/library`. C++ unit tests are in `PlanetaMatchMakerServerTest`. The .NET client source is in `PlanetaMatchMakerClient/Source`, with MSTest coverage in `PlanetaMatchMakerClientTest/Source`. `PlanetaMatchMakerTestClient` is a CLI test client. Unity-facing assets are under `PlanetaMatchMakerUnityClient/Assets/PlanetaGameLabo/MatchMaker`; keep Unity `.meta` files with their assets. Documentation is in `Documents`.
+This repository contains a lightweight match-making server, C# client libraries, tests, and a Unity package. Reusable C++ server code lives in `PlanetaMatchMakerServerLib/source`, with vendored headers in `PlanetaMatchMakerServerLib/library`. The executable entry point lives in `PlanetaMatchMakerServer/source/main`. C++ unit tests are in `PlanetaMatchMakerServerTest`. The .NET client source is in `PlanetaMatchMakerClient/Source`, with MSTest coverage in `PlanetaMatchMakerClientTest/Source`. `PlanetaMatchMakerTestClient` is a CLI test client. Unity-facing assets are under `PlanetaMatchMakerUnityClient/Assets/PlanetaGameLabo/MatchMaker`; keep Unity `.meta` files with their assets. Documentation is in `Documents`.
 
 ## Build, Test, and Development Commands
 

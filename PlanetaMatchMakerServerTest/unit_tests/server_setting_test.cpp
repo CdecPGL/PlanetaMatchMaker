@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-#include "../../PlanetaMatchMakerServer/source/server/server_setting.hpp"
+#include "server/server_setting.hpp"
 
 using namespace boost;
 using namespace pgl;
