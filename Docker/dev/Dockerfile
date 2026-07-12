@@ -33,6 +33,21 @@ ENV OPENSSL_ROOT_DIR=/usr/local/openssl
 ENV CMAKE_PREFIX_PATH=/usr/local/openssl
 ENV PMMS_ENABLE_COVERAGE=ON
 
+# Install jwt-cpp with the same version resolved by vcpkg.
+ARG JWT_CPP_VERSION=0.7.2
+ARG JWT_CPP_SHA256=6e815d86c168eb521a27937d603747dec0ca3c39ffc12d6fa72e2cf78a5b02d2
+ADD https://github.com/Thalhammer/jwt-cpp/archive/refs/tags/v${JWT_CPP_VERSION}.tar.gz /tmp/jwt-cpp.tar.gz
+RUN echo "${JWT_CPP_SHA256}  /tmp/jwt-cpp.tar.gz" | sha256sum -c - \
+  && mkdir /tmp/jwt-cpp-src \
+  && tar -xzf /tmp/jwt-cpp.tar.gz -C /tmp/jwt-cpp-src --strip-components=1 \
+  && cmake -S /tmp/jwt-cpp-src -B /tmp/jwt-cpp-build \
+    -DJWT_BUILD_EXAMPLES=OFF \
+    -DJWT_BUILD_TESTS=OFF \
+    -DOPENSSL_ROOT_DIR=/usr/local/openssl \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+  && cmake --build /tmp/jwt-cpp-build --target install -j"$(nproc)" \
+  && rm -rf /tmp/jwt-cpp.tar.gz /tmp/jwt-cpp-src /tmp/jwt-cpp-build
+
 # Install boost library
 ARG BOOST_VERSION=1.89.0
 ARG BOOST_ARCHIVE_VERSION=1_89_0
@@ -44,6 +59,13 @@ RUN echo "${BOOST_SHA256}  /tmp/boost.tar.gz" | sha256sum -c - \
   && cd /tmp/boost-src \
   && ./bootstrap.sh \
   && ./b2 install toolset=clang link=static,shared --prefix=/usr/local -j"$(nproc)" \
+    --with-coroutine \
+    --with-date_time \
+    --with-filesystem \
+    --with-json \
+    --with-log \
+    --with-test \
+    --with-thread \
   && rm -rf /tmp/boost.tar.gz /tmp/boost-src
 
 CMD ["/bin/bash"]
