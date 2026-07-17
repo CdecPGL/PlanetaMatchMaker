@@ -12,8 +12,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include <jwt-cpp/traits/boost-json/defaults.h>
-
 namespace {
 	using namespace pgl::test;
 
@@ -127,7 +125,6 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 	}
 
 	const std::vector<uint8_t> test_credential{1, 2, 3, 4};
-	using jwt_json_traits = jwt::traits::boost_json;
 
 	pgl::authentication_request_message make_authentication_request(
 		const pgl::server_setting& setting,
@@ -265,7 +262,7 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		}
 
 		[[nodiscard]] std::string url(const std::string& host) const {
-			return "https://" + host + ":" + std::to_string(acceptor_.local_endpoint().port()) + "/jwks";
+			return "https://" + host + ":" + std::to_string(acceptor_.local_endpoint().port()) + "/auth";
 		}
 
 	private:
@@ -329,63 +326,6 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		setting.authentication.steam.publisher_key = "test-publisher-key";
 	}
 
-	std::string oidc_test_x5c() {
-		auto certificate = std::string(tls_test_certificate_pem);
-		const auto begin = certificate.find('\n') + 1;
-		const auto end = certificate.find("-----END CERTIFICATE-----");
-		certificate = certificate.substr(begin, end - begin);
-		std::erase(certificate, '\r');
-		std::erase(certificate, '\n');
-		return certificate;
-	}
-
-	std::string make_oidc_jwks(const std::string& kid) {
-		boost::json::object key{
-			{"kid", kid},
-			{"kty", "RSA"},
-			{"alg", "RS256"},
-			{"use", "sig"},
-			{"x5c", boost::json::array{oidc_test_x5c()}}
-		};
-		return boost::json::serialize(boost::json::object{{"keys", boost::json::array{std::move(key)}}});
-	}
-
-	std::string make_oidc_discovery(const std::string& issuer, const std::string& jwks_url) {
-		return boost::json::serialize(boost::json::object{
-			{"issuer", issuer},
-			{"jwks_uri", jwks_url}
-		});
-	}
-
-	std::string make_oidc_token(
-		const std::string& issuer = "https://issuer.example",
-		const std::string& audience = "pmms-test",
-		const std::string& subject = "oidc-user",
-		const std::string& kid = "test-key",
-		const std::chrono::seconds expires_from_now = std::chrono::hours(1),
-		const std::optional<std::chrono::seconds> not_before_from_now = std::nullopt) {
-		auto builder = jwt::create<jwt_json_traits>()
-			.set_key_id(kid)
-			.set_issuer(issuer)
-			.set_audience(audience)
-			.set_expires_at(std::chrono::system_clock::now() + expires_from_now);
-		if (!subject.empty()) { builder.set_subject(subject); }
-		if (not_before_from_now.has_value()) {
-			builder.set_not_before(std::chrono::system_clock::now() + *not_before_from_now);
-		}
-		return builder.sign(jwt::algorithm::rs256("", tls_test_private_key_pem));
-	}
-
-	void configure_oidc_authentication(pgl::server_setting& setting, const std::string& jwks = make_oidc_jwks("test-key")) {
-		setting.authentication.allow_plain_connections = true;
-		setting.authentication.allow_plain_external_service_connections = true;
-		setting.authentication.method = pgl::authentication_method::oidc;
-		setting.authentication.oidc.issuer = "https://issuer.example";
-		setting.authentication.oidc.audience = "pmms-test";
-		setting.authentication.oidc.algorithms = {"RS256"};
-		setting.authentication.oidc.jwks = jwks;
-	}
-
 	pgl::authentication_result authenticate(
 		protocol_context& context,
 		const pgl::authentication_method method,
@@ -410,9 +350,8 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 
 BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_authentication_method_wire_values) {
-		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::steam), 0u);
-		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::oidc), 1u);
-		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::none), 2u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::none), 0u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::steam), 1u);
 	}
 
 	BOOST_AUTO_TEST_CASE(test_external_authentication_rejects_plain_http_by_default) {
@@ -575,200 +514,6 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK(is_intended_disconnect(exception));
 	}
 
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_success_and_stores_identity) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const auto token = make_oidc_token();
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::success);
-		BOOST_REQUIRE(context.session_data.identity().has_value());
-		BOOST_CHECK_EQUAL(context.session_data.identity()->verified_user_id, "oidc-user");
-		BOOST_CHECK_EQUAL(context.session_data.identity()->oidc_issuer, "https://issuer.example");
-		BOOST_CHECK_EQUAL(context.session_data.identity()->oidc_audience, "pmms-test");
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_token_invalid_for_malformed_token) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const std::vector<uint8_t> credential{'n', 'o', 't', '-', 'a', '-', 'j', 'w', 't'};
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_token_invalid);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_signature_verification_failed) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		auto token = make_oidc_token();
-		const auto signature_start = token.rfind('.') + 1;
-		token[signature_start] = token[signature_start] == 'A' ? 'B' : 'A';
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_signature_verification_failed);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_issuer_mismatch) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const auto token = make_oidc_token("https://wrong-issuer.example");
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_issuer_mismatch);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_audience_mismatch) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const auto token = make_oidc_token("https://issuer.example", "wrong-audience");
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_audience_mismatch);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_token_expired) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const auto token = make_oidc_token("https://issuer.example", "pmms-test", "oidc-user", "test-key",
-			-std::chrono::hours(1));
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_token_expired);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_token_expired_when_not_before_is_in_future) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const auto token = make_oidc_token("https://issuer.example", "pmms-test", "oidc-user", "test-key",
-			std::chrono::hours(1), std::chrono::hours(1));
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_token_expired);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_subject_missing) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const auto token = make_oidc_token("https://issuer.example", "pmms-test", "");
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_subject_missing);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_disallowed_algorithm) {
-		protocol_context context;
-		configure_oidc_authentication(context.setting);
-		const auto token = jwt::create<jwt_json_traits>()
-			.set_issuer("https://issuer.example")
-			.set_audience("pmms-test")
-			.set_subject("oidc-user")
-			.set_expires_at(std::chrono::system_clock::now() + std::chrono::hours(1))
-			.sign(jwt::algorithm::hs256("test-secret"));
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_disallowed_algorithm);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_replies_key_fetch_failed) {
-		protocol_context context;
-		authentication_http_test_server jwks_server({{503, R"({"error":"unavailable"})"}});
-		configure_oidc_authentication(context.setting, "");
-		context.setting.authentication.oidc.jwks_url = jwks_server.url("/jwks");
-		const auto token = make_oidc_token();
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_key_fetch_failed);
-		BOOST_CHECK_EQUAL(jwks_server.request_count(), 1);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_rejects_discovery_issuer_mismatch) {
-		protocol_context context;
-		authentication_http_test_server jwks_server(std::vector<test_http_response>{});
-		authentication_http_test_server discovery_server({
-			{200, make_oidc_discovery("https://wrong-issuer.example", jwks_server.url("/jwks"))}
-		});
-		configure_oidc_authentication(context.setting, "");
-		context.setting.authentication.oidc.discovery_url = discovery_server.url("/.well-known/openid-configuration");
-		const auto token = make_oidc_token();
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_key_fetch_failed);
-		BOOST_CHECK_EQUAL(discovery_server.request_count(), 1);
-		BOOST_CHECK_EQUAL(jwks_server.request_count(), 0);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_rejects_discovery_without_issuer) {
-		protocol_context context;
-		authentication_http_test_server jwks_server(std::vector<test_http_response>{});
-		const auto discovery = boost::json::serialize(boost::json::object{
-			{"jwks_uri", jwks_server.url("/jwks")}
-		});
-		authentication_http_test_server discovery_server({{200, discovery}});
-		configure_oidc_authentication(context.setting, "");
-		context.setting.authentication.oidc.discovery_url = discovery_server.url("/.well-known/openid-configuration");
-		const auto token = make_oidc_token();
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::oidc_key_fetch_failed);
-		BOOST_CHECK_EQUAL(discovery_server.request_count(), 1);
-		BOOST_CHECK_EQUAL(jwks_server.request_count(), 0);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_uses_cached_discovery_and_jwks) {
-		authentication_http_test_server jwks_server({{200, make_oidc_jwks("test-key")}});
-		authentication_http_test_server discovery_server({
-			{200, make_oidc_discovery("https://issuer.example", jwks_server.url("/jwks"))}
-		});
-		const auto configure = [&discovery_server](pgl::server_setting& setting) {
-			configure_oidc_authentication(setting, "");
-			setting.authentication.oidc.discovery_url =
-				discovery_server.url("/.well-known/openid-configuration");
-			setting.authentication.oidc.jwks_cache_seconds = 3600;
-		};
-		const auto token = make_oidc_token();
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		protocol_context first_context;
-		configure(first_context.setting);
-		BOOST_CHECK(authenticate(first_context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::success);
-
-		protocol_context second_context;
-		configure(second_context.setting);
-		BOOST_CHECK(authenticate(second_context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::success);
-		BOOST_CHECK_EQUAL(discovery_server.request_count(), 1);
-		BOOST_CHECK_EQUAL(jwks_server.request_count(), 1);
-	}
-
-	BOOST_AUTO_TEST_CASE(test_oidc_authentication_refreshes_cached_jwks_when_kid_is_unknown) {
-		protocol_context context;
-		authentication_http_test_server jwks_server({
-			{200, make_oidc_jwks("old-key")},
-			{200, make_oidc_jwks("test-key")}
-		});
-		configure_oidc_authentication(context.setting, "");
-		context.setting.authentication.oidc.jwks_url = jwks_server.url("/jwks");
-		context.setting.authentication.oidc.jwks_cache_seconds = 3600;
-		const auto token = make_oidc_token();
-		const std::vector<uint8_t> credential(token.begin(), token.end());
-
-		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
-			pgl::authentication_result::success);
-		BOOST_CHECK_EQUAL(jwks_server.request_count(), 2);
-	}
-
 	BOOST_AUTO_TEST_CASE(test_tls_connection_authentication_request_replies_success_and_assigns_player) {
 		boost::asio::io_context server_io;
 		tcp::acceptor acceptor(server_io, tcp::endpoint(tcp::v4(), 0));
@@ -882,12 +627,12 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK(reply.game_version == pgl::game_version_t(context.setting.authentication.game_version));
 	}
 
-	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_unsupported_authentication_method_and_disconnects) {
+	BOOST_AUTO_TEST_CASE(test_reserved_authentication_method_replies_unsupported_and_disconnects) {
 		protocol_context context;
 		context.setting.authentication.allow_plain_connections = true;
 		const pgl::authentication_request_message request{
 			pgl::api_version,
-			static_cast<pgl::authentication_method>(255),
+			static_cast<pgl::authentication_method>(2),
 			pgl::game_id_t(context.setting.authentication.game_id),
 			pgl::game_version_t(context.setting.authentication.game_version),
 			u8"player"

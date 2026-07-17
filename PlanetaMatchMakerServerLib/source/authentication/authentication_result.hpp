@@ -17,13 +17,5 @@ namespace pgl {
 		steam_id_mismatch,
 		steam_ownership_check_failed,
 		steam_authentication_service_unavailable,
-		oidc_token_invalid,
-		oidc_signature_verification_failed,
-		oidc_issuer_mismatch,
-		oidc_audience_mismatch,
-		oidc_token_expired,
-		oidc_subject_missing,
-		oidc_key_fetch_failed,
-		oidc_disallowed_algorithm,
 	};
 }

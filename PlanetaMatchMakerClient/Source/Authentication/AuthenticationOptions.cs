@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Text;
 
 namespace PlanetaGameLabo.MatchMaker
 {
@@ -46,16 +45,6 @@ namespace PlanetaGameLabo.MatchMaker
         public static AuthenticationOptions Steam(byte[] ticket)
         {
             return new AuthenticationOptions(AuthenticationMethod.Steam, ticket);
-        }
-
-        public static AuthenticationOptions Oidc(string token)
-        {
-            if (token == null)
-            {
-                throw new ArgumentNullException(nameof(token));
-            }
-
-            return new AuthenticationOptions(AuthenticationMethod.Oidc, Encoding.UTF8.GetBytes(token));
         }
     }
 }

@@ -23,6 +23,14 @@ Worker uses stackful coroutine.
 
 - Socket for Communication
 
+## Authentication Verifiers
+
+External authentication methods implement `authentication_credential_verifier`. The verifier registry in
+`authentication_verifier.cpp` selects an implementation by `authentication_method`; the message handler does not
+contain method-specific credential verification. Steam is the only external verifier currently registered, while
+`none` is handled as the credential-free development mode. A future OIDC implementation can add its method value,
+settings, verifier implementation, and registry entry without changing the authentication message handler.
+
 ## Error Disconnection
 
 - Authentication Failer: Disconnected

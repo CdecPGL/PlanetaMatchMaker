@@ -3,9 +3,8 @@ namespace PlanetaGameLabo.MatchMaker
 #pragma warning disable CA1028
     public enum AuthenticationMethod : byte
     {
-        Steam = 0,
-        Oidc = 1,
-        None = 2,
+        None = 0,
+        Steam = 1,
     }
 
     public enum AuthenticationResult : byte
@@ -23,14 +22,6 @@ namespace PlanetaGameLabo.MatchMaker
         SteamIdMismatch,
         SteamOwnershipCheckFailed,
         SteamAuthenticationServiceUnavailable,
-        OidcTokenInvalid,
-        OidcSignatureVerificationFailed,
-        OidcIssuerMismatch,
-        OidcAudienceMismatch,
-        OidcTokenExpired,
-        OidcSubjectMissing,
-        OidcKeyFetchFailed,
-        OidcDisallowedAlgorithm,
     }
 #pragma warning restore CA1028
 }

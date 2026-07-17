@@ -4,9 +4,7 @@
 #include <ranges>
 #include <sstream>
 #include <unordered_map>
-#include <unordered_set>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/json.hpp>
 #include <boost/lexical_cast.hpp>
 #include "nameof.hpp"
@@ -159,24 +157,6 @@ namespace pgl {
 		return s;
 	}
 
-	server_authentication_setting::oidc_setting tag_invoke(
-		json::value_to_tag<server_authentication_setting::oidc_setting>, const json::value& jv) {
-		const auto* obj = jv.if_object();
-		if (obj == nullptr) {
-			throw server_setting_error(generate_string("\"", authentication_section_key, ".oidc\" must be object."));
-		}
-
-		server_authentication_setting::oidc_setting s;
-		EXTRACT_WITH_DEFAULT(*obj, s, std::string, issuer);
-		EXTRACT_WITH_DEFAULT(*obj, s, std::string, audience);
-		EXTRACT_WITH_DEFAULT(*obj, s, std::vector<std::string>, algorithms);
-		EXTRACT_WITH_DEFAULT(*obj, s, std::string, discovery_url);
-		EXTRACT_WITH_DEFAULT(*obj, s, std::string, jwks_url);
-		EXTRACT_WITH_DEFAULT(*obj, s, std::string, jwks);
-		EXTRACT_WITH_DEFAULT(*obj, s, uint32_t, jwks_cache_seconds);
-		return s;
-	}
-
 	server_common_setting tag_invoke(json::value_to_tag<server_common_setting>, const json::value& jv) {
 		const auto* obj = jv.if_object();
 		if (obj == nullptr) {
@@ -231,14 +211,10 @@ namespace pgl {
 		EXTRACT_WITH_DEFAULT(*obj, s, std::u8string, game_version);
 		EXTRACT_WITH_DEFAULT(*obj, s, uint32_t, max_credential_bytes);
 		EXTRACT_WITH_DEFAULT(*obj, s, uint16_t, timeout_seconds);
-		EXTRACT_WITH_DEFAULT(*obj, s, uint16_t, clock_skew_seconds);
 		EXTRACT_WITH_DEFAULT(*obj, s, bool, allow_plain_connections);
 		EXTRACT_WITH_DEFAULT(*obj, s, bool, allow_plain_external_service_connections);
 		if (const auto* steam_section = obj->if_contains("steam"); steam_section != nullptr) {
 			s.steam = json::value_to<server_authentication_setting::steam_setting>(*steam_section);
-		}
-		if (const auto* oidc_section = obj->if_contains("oidc"); oidc_section != nullptr) {
-			s.oidc = json::value_to<server_authentication_setting::oidc_setting>(*oidc_section);
 		}
 		return s;
 	}
@@ -248,7 +224,6 @@ namespace pgl {
 		validate_range(authentication_section_key + ".max_credential_bytes", setting.max_credential_bytes, 1u,
 			message_attachment_max_bytes);
 		validate_range(authentication_section_key + ".timeout_seconds", setting.timeout_seconds, 1, 3600);
-		validate_range(authentication_section_key + ".clock_skew_seconds", setting.clock_skew_seconds, 0, 3600);
 
 		if (setting.enable_game_version_check) {
 			validate_str_length(authentication_section_key + ".game_version", setting.game_version, 1,
@@ -266,34 +241,6 @@ namespace pgl {
 				setting.steam.check_app_ownership_url, setting.allow_plain_external_service_connections);
 		}
 
-		if (setting.method == authentication_method::oidc) {
-			validate_str_length(authentication_section_key + ".oidc.issuer", setting.oidc.issuer, 1, 2048);
-			validate_str_length(authentication_section_key + ".oidc.audience", setting.oidc.audience, 1, 2048);
-			if (setting.oidc.algorithms.empty()) {
-				throw server_setting_error(authentication_section_key + ".oidc.algorithms must not be empty.");
-			}
-			const static std::unordered_set<std::string> supported_algorithms{"RS256", "RS384", "RS512"};
-			for (const auto& algorithm : setting.oidc.algorithms) {
-				if (!supported_algorithms.contains(algorithm)) {
-					throw server_setting_error(generate_string(authentication_section_key,
-						".oidc.algorithms contains unsupported algorithm: ", algorithm, "."));
-				}
-			}
-			if (setting.oidc.discovery_url.empty() && setting.oidc.jwks_url.empty() && setting.oidc.jwks.empty()) {
-				throw server_setting_error(authentication_section_key +
-					".oidc.discovery_url, jwks_url or jwks must be configured when oidc is enabled.");
-			}
-			if (!setting.oidc.discovery_url.empty()) {
-				validate_external_authentication_url(authentication_section_key + ".oidc.discovery_url",
-					setting.oidc.discovery_url, setting.allow_plain_external_service_connections);
-			}
-			if (!setting.oidc.jwks_url.empty()) {
-				validate_external_authentication_url(authentication_section_key + ".oidc.jwks_url",
-					setting.oidc.jwks_url, setting.allow_plain_external_service_connections);
-			}
-			validate_range(authentication_section_key + ".oidc.jwks_cache_seconds", setting.oidc.jwks_cache_seconds,
-				0u, std::numeric_limits<uint32_t>::max());
-		}
 	}
 
 	void output_authentication_setting_to_log(const server_authentication_setting& setting) {
@@ -304,7 +251,6 @@ namespace pgl {
 		log(log_level::info, NAMEOF(setting.game_version), ": ", setting.game_version);
 		log(log_level::info, NAMEOF(setting.max_credential_bytes), ": ", setting.max_credential_bytes);
 		log(log_level::info, NAMEOF(setting.timeout_seconds), ": ", setting.timeout_seconds);
-		log(log_level::info, NAMEOF(setting.clock_skew_seconds), ": ", setting.clock_skew_seconds);
 		log(log_level::info, NAMEOF(setting.allow_plain_connections), ": ", setting.allow_plain_connections);
 		log(log_level::info, NAMEOF(setting.allow_plain_external_service_connections), ": ",
 			setting.allow_plain_external_service_connections);
@@ -321,13 +267,6 @@ namespace pgl {
 		log(log_level::info, "steam.identity: ", setting.steam.identity);
 		log(log_level::info, "steam.authenticate_user_ticket_url: ", setting.steam.authenticate_user_ticket_url);
 		log(log_level::info, "steam.check_app_ownership_url: ", setting.steam.check_app_ownership_url);
-		log(log_level::info, "oidc.issuer: ", setting.oidc.issuer);
-		log(log_level::info, "oidc.audience: ", setting.oidc.audience);
-		log(log_level::info, "oidc.algorithms: ", boost::algorithm::join(setting.oidc.algorithms, ","));
-		log(log_level::info, "oidc.discovery_url: ", setting.oidc.discovery_url);
-		log(log_level::info, "oidc.jwks_url: ", setting.oidc.jwks_url);
-		log(log_level::info, "oidc.jwks: ", setting.oidc.jwks.empty() ? "(not set)" : "(set)");
-		log(log_level::info, "oidc.jwks_cache_seconds: ", setting.oidc.jwks_cache_seconds);
 	}
 
 	log_level tag_invoke(json::value_to_tag<log_level>, const json::value& jv) {
@@ -559,17 +498,6 @@ namespace pgl {
 		return true;
 	}
 
-	template <>
-	bool get_env_var<std::vector<std::string>>(const std::string& var_name, std::vector<std::string>& dest) {
-		std::string str;
-		if (!get_env_var(var_name, str)) { return false; }
-		std::vector<std::string> values;
-		boost::split(values, str, boost::is_any_of(","));
-		std::erase_if(values, [](const std::string& value) { return value.empty(); });
-		dest = std::move(values);
-		return true;
-	}
-
 	void server_setting::load_from_env_var() {
 		try {
 			get_env_var("PMMS_COMMON_TIME_OUT_SECONDS", common.time_out_seconds);
@@ -581,15 +509,12 @@ namespace pgl {
 			get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
 			validate_common_setting(common);
 
-			if (!get_env_var<authentication_method>("PMMS_AUTHENTICATION_METHOD", authentication.method)) {
-				throw server_setting_error("The environment variable PMMS_AUTHENTICATION_METHOD is required.");
-			}
+			get_env_var<authentication_method>("PMMS_AUTHENTICATION_METHOD", authentication.method);
 			get_env_var("PMMS_AUTHENTICATION_GAME_ID", authentication.game_id);
 			get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
 			get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
 			get_env_var("PMMS_AUTHENTICATION_MAX_CREDENTIAL_BYTES", authentication.max_credential_bytes);
 			get_env_var("PMMS_AUTHENTICATION_TIMEOUT_SECONDS", authentication.timeout_seconds);
-			get_env_var("PMMS_AUTHENTICATION_CLOCK_SKEW_SECONDS", authentication.clock_skew_seconds);
 			get_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_CONNECTIONS", authentication.allow_plain_connections);
 			get_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS",
 				authentication.allow_plain_external_service_connections);
@@ -600,13 +525,6 @@ namespace pgl {
 				authentication.steam.authenticate_user_ticket_url);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_CHECK_APP_OWNERSHIP_URL",
 				authentication.steam.check_app_ownership_url);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_ISSUER", authentication.oidc.issuer);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_AUDIENCE", authentication.oidc.audience);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_ALGORITHMS", authentication.oidc.algorithms);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_DISCOVERY_URL", authentication.oidc.discovery_url);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_JWKS_URL", authentication.oidc.jwks_url);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_JWKS", authentication.oidc.jwks);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_JWKS_CACHE_SECONDS", authentication.oidc.jwks_cache_seconds);
 			validate_authentication_setting(authentication);
 
 			get_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", log.enable_console_log);

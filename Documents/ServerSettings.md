@@ -31,40 +31,31 @@ Those settings are loaded when server starts.
 
 |Name|Type|Default|Env Var|Explanation|
 |:---|:---|---:|:---|:---|
-|method|string (`none`, `steam`, or `oidc`)|(required)|PMMS_AUTHENTICATION_METHOD|Select exactly one authentication method. `none` is only for local development. A client requesting a different method is rejected.|
+|method|string (`none` or `steam`)|(required)|PMMS_AUTHENTICATION_METHOD|Select exactly one authentication method. `none` is only for local development. A client requesting a different method is rejected.|
 |game_id|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_ID|A game id to accept.|
 |enable_game_version_check|boolean|false|PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK|Wheather game version check is enabled.|
 |game_version|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_VERSION|A game version to accept. This setting is reffered only if enable_game_version_check is true.|
-|max_credential_bytes|integer (1-15728640)|16384|PMMS_AUTHENTICATION_MAX_CREDENTIAL_BYTES|Maximum Steam ticket or OIDC token size accepted in the authentication message attachment. This setting is limited by the message attachment chunk sequence field.|
+|max_credential_bytes|integer (1-15728640)|16384|PMMS_AUTHENTICATION_MAX_CREDENTIAL_BYTES|Maximum Steam ticket size accepted in the authentication message attachment. This setting is limited by the message attachment chunk sequence field.|
 |timeout_seconds|integer (1-3600)|5|PMMS_AUTHENTICATION_TIMEOUT_SECONDS|Timeout for external authentication service requests.|
-|clock_skew_seconds|integer (0-3600)|60|PMMS_AUTHENTICATION_CLOCK_SKEW_SECONDS|Allowed OIDC clock skew for time claim verification.|
 |allow_plain_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_CONNECTIONS|Allow authentication over plain TCP. Keep this false in production.|
-|allow_plain_external_service_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS|Allow Steam and OIDC Discovery/JWKS requests over plain HTTP. Enable only for local development with trusted endpoints.|
+|allow_plain_external_service_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS|Allow Steam authentication requests over plain HTTP. Enable only for local development with trusted endpoints.|
 |steam.app_id|integer|0|PMMS_AUTHENTICATION_STEAM_APP_ID|Steam AppID checked by `AuthenticateUserTicket` and `CheckAppOwnership`. Required when Steam authentication is enabled.|
 |steam.publisher_key|string|""|PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY|Steam Web API publisher key. This is a server secret and is never sent to clients or logs.|
 |steam.identity|string|""|PMMS_AUTHENTICATION_STEAM_IDENTITY|Optional Steam ticket identity passed to `AuthenticateUserTicket`.|
 |steam.authenticate_user_ticket_url|string|Steam Web API URL|PMMS_AUTHENTICATION_STEAM_AUTHENTICATE_USER_TICKET_URL|Override URL for Steam ticket verification, mainly for tests.|
 |steam.check_app_ownership_url|string|Steam Web API URL|PMMS_AUTHENTICATION_STEAM_CHECK_APP_OWNERSHIP_URL|Override URL for Steam ownership verification, mainly for tests.|
-|oidc.issuer|string|""|PMMS_AUTHENTICATION_OIDC_ISSUER|Accepted OIDC issuer. Required when OIDC authentication is enabled.|
-|oidc.audience|string|""|PMMS_AUTHENTICATION_OIDC_AUDIENCE|Accepted OIDC audience. Required when OIDC authentication is enabled.|
-|oidc.algorithms|string array|["RS256","RS384","RS512"]|PMMS_AUTHENTICATION_OIDC_ALGORITHMS|Allowed JWT signature algorithms. Environment value is a comma-separated list.|
-|oidc.discovery_url|string|""|PMMS_AUTHENTICATION_OIDC_DISCOVERY_URL|OIDC discovery document URL. Used to discover `jwks_uri` if `jwks_url` and `jwks` are not set.|
-|oidc.jwks_url|string|""|PMMS_AUTHENTICATION_OIDC_JWKS_URL|JWKS URL.|
-|oidc.jwks|string|""|PMMS_AUTHENTICATION_OIDC_JWKS|Inline JWKS JSON. This is useful for tests or static deployments.|
-|oidc.jwks_cache_seconds|integer|3600|PMMS_AUTHENTICATION_OIDC_JWKS_CACHE_SECONDS|Lifetime of cached JWKS and resolved Discovery metadata. Set 0 to disable caching.|
+`authentication.method` is exclusive: the server accepts only the same method in the client's Authentication Request. Select `steam` for normal operation. Select `none` only for local development. A `none` client still sends the authentication request so API version, game ID, game version, player name, and player tag assignment are processed, but the session has no verified external identity. Its credential attachment must be empty.
 
-`authentication.method` is exclusive: the server accepts only the same method in the client's Authentication Request. Select `steam` or `oidc` for normal operation. Select `none` only for local development. A `none` client still sends the authentication request so API version, game ID, game version, player name, and player tag assignment are processed, but the session has no verified external identity. Its credential attachment must be empty.
+`PMMS_AUTHENTICATION_METHOD` is an optional override. When it is not set, the value loaded from `authentication.method` in `setting.json` is preserved. The production Docker image does not include a default `setting.json`; mount a complete configuration at `/etc/pmms/setting.json` so authentication cannot silently default to `none`.
 Steam authentication verifies a client-provided Steam auth ticket on the server and checks AppID ownership. Do not put the Steam publisher key in a client build.
-OIDC authentication verifies JWT signature, issuer, audience, expiration, not-before, subject, and allowed algorithm by using `jwt-cpp`. A Discovery response must contain an `issuer` exactly equal to `oidc.issuer`; its `jwks_uri` is trusted only after this validation. Valid Discovery metadata and JWKS are cached together so authentication can continue during a temporary Discovery endpoint outage. PMMS does not provide OIDC login UI, PKCE, refresh token handling, or token acquisition; the game or another client-side auth library must obtain the token.
 
-Authentication credentials should be sent over TLS in production. If `tls.mode` is `"plain"` and `authentication.method` is `steam` or `oidc`, `allow_plain_connections` must be explicitly true or authentication fails.
+Authentication credentials should be sent over TLS in production. If `tls.mode` is `"plain"` and `authentication.method` is `steam`, `allow_plain_connections` must be explicitly true or authentication fails.
 The credential-free development method can use plain TCP without `allow_plain_connections` because it transmits no authentication secret.
 
-Steam authentication URLs and OIDC Discovery/JWKS URLs must use HTTPS by default. This policy also applies to a
-`jwks_uri` returned by Discovery. Plain HTTP is accepted only when
+Steam authentication URLs must use HTTPS by default. Plain HTTP is accepted only when
 `allow_plain_external_service_connections` is explicitly enabled for development; it must remain false in production.
 
-Steam room external IDs are derived from the verified SteamID64 as big-endian 8 bytes followed by zero padding. OIDC room external IDs are derived from the verified `sub` claim only when its UTF-8 representation fits in 64 bytes.
+Steam room external IDs are derived from the verified SteamID64 as big-endian 8 bytes followed by zero padding.
 
 ### `log` Section
 

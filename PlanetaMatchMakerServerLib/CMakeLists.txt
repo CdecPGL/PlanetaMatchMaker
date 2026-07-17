@@ -37,10 +37,7 @@ endif()
 find_package(OpenSSL 3.0 REQUIRED)
 target_link_libraries(PlanetaMatchMakerServerLib PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
-# JWT Library
-find_package(jwt-cpp CONFIG REQUIRED)
-target_link_libraries(PlanetaMatchMakerServerLib PUBLIC jwt-cpp::jwt-cpp)
-
+# Compiler settings
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	# -D_WIN32_WINNT=0x0A00: To avoid error of Boost Library 1.89 for MSVC
 	# _CRT_SECURE_NO_WARNINGS: To avoid error for getenv

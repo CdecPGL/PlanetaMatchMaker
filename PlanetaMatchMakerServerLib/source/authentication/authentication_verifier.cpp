@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "authentication/oidc_authentication_verifier.hpp"
 #include "authentication/steam_authentication_verifier.hpp"
 
 namespace pgl {
@@ -15,7 +14,6 @@ namespace pgl {
 			static const auto registry = [] {
 				std::vector<std::unique_ptr<authentication_credential_verifier>> verifiers;
 				verifiers.push_back(make_steam_authentication_verifier());
-				verifiers.push_back(make_oidc_authentication_verifier());
 				return verifiers;
 			}();
 			return registry;

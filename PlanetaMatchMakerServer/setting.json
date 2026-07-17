@@ -16,22 +16,12 @@
         "game_version": "1.0.0",
         "max_credential_bytes": 16384,
         "timeout_seconds": 5,
-        "clock_skew_seconds": 60,
         "allow_plain_connections": false,
         "allow_plain_external_service_connections": false,
         "steam": {
             "app_id": 0,
             "publisher_key": "",
             "identity": ""
-        },
-        "oidc": {
-            "issuer": "",
-            "audience": "",
-            "algorithms": ["RS256", "RS384", "RS512"],
-            "discovery_url": "",
-            "jwks_url": "",
-            "jwks": "",
-            "jwks_cache_seconds": 3600
         }
     },
     "log":{

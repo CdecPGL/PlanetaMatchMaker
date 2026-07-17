@@ -120,12 +120,12 @@ namespace PlanetaGameLabo.MatchMaker
         public bool AcceptInvalidTlsCertificate { get; set; }
 
         [CommandLine.Option("authentication_method", Default = TestClientAuthenticationMethod.None, Required = false,
-            HelpText = "Authentication method. None, Oidc, or Steam.")]
+            HelpText = "Authentication method. None or Steam.")]
         public TestClientAuthenticationMethod AuthenticationMethod { get; set; }
 
         [CommandLine.Option("authentication_credential_environment_variable",
             Default = "PMMS_TEST_CLIENT_AUTHENTICATION_CREDENTIAL", Required = false,
-            HelpText = "Environment variable containing an OIDC token, or a Steam ticket as a hex string. Not used for None.")]
+            HelpText = "Environment variable containing a Steam ticket as a hex string. Not used for None.")]
         public string AuthenticationCredentialEnvironmentVariable { get; set; }
     }
 }

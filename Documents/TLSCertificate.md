@@ -114,6 +114,7 @@ When running with Docker and Certbot, mount `/etc/letsencrypt` read-only and ove
 ```bash
 docker run -d --name pmms \
   -p 57000:57000 \
+  -v /path/to/setting.json:/etc/pmms/setting.json:ro \
   -e PMMS_TLS_MODE=tls \
   -e PMMS_TLS_CERTIFICATE_PATH=/etc/letsencrypt/live/match.example.com/fullchain.pem \
   -e PMMS_TLS_PRIVATE_KEY_PATH=/etc/letsencrypt/live/match.example.com/privkey.pem \
@@ -122,11 +123,12 @@ docker run -d --name pmms \
   cdec/planeta-match-maker-server:latest
 ```
 
-If you want to use the default paths in `setting.json`, mount certificate files to `/etc/pmms/server.crt` and `/etc/pmms/server.key`:
+If you configure the default certificate paths in the mounted `setting.json`, mount certificate files to `/etc/pmms/server.crt` and `/etc/pmms/server.key`:
 
 ```bash
 docker run -d --name pmms \
   -p 57000:57000 \
+  -v /path/to/setting.json:/etc/pmms/setting.json:ro \
   -e PMMS_TLS_MODE=tls \
   -e PMMS_TLS_RELOAD_ON_SIGHUP=true \
   -v /path/to/fullchain.pem:/etc/pmms/server.crt:ro \
@@ -175,6 +177,7 @@ Run the PMMS container with the Certbot live paths:
 ```bash
 sudo docker run -d --name pmms \
   -p 57000:57000 \
+  -v /path/to/setting.json:/etc/pmms/setting.json:ro \
   -e PMMS_TLS_MODE=tls \
   -e PMMS_TLS_CERTIFICATE_PATH=/etc/letsencrypt/live/match.example.com/fullchain.pem \
   -e PMMS_TLS_PRIVATE_KEY_PATH=/etc/letsencrypt/live/match.example.com/privkey.pem \

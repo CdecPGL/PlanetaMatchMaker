@@ -9,7 +9,6 @@
     <ClInclude Include="source\authentication\authentication_result.hpp" />
     <ClInclude Include="source\authentication\authentication_verifier.hpp" />
     <ClInclude Include="source\authentication\game.hpp" />
-    <ClInclude Include="source\authentication\oidc_authentication_verifier.hpp" />
     <ClInclude Include="source\authentication\steam_authentication_verifier.hpp" />
     <ClInclude Include="source\client\client_constants.hpp" />
     <ClInclude Include="source\client\client_error_code.hpp" />
@@ -83,7 +82,6 @@
     <ClCompile Include="source\authentication\authentication_http_client.cpp" />
     <ClCompile Include="source\authentication\authentication_method.cpp" />
     <ClCompile Include="source\authentication\authentication_verifier.cpp" />
-    <ClCompile Include="source\authentication\oidc_authentication_verifier.cpp" />
     <ClCompile Include="source\authentication\steam_authentication_verifier.cpp" />
     <ClCompile Include="source\client\client_error_code.cpp" />
     <ClCompile Include="source\client\client_errors.cpp" />

@@ -34,7 +34,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
                         new Host("127.0.0.1"),
                         new ServerPort((ushort)server.Port),
                         new PlayerName("tls-player"),
-                        AuthenticationOptions.Oidc("tls-test-token"),
+                        AuthenticationOptions.Steam(new byte[14]),
                         new ConnectionOptions(
                             ConnectionMode.Tls,
                             new Host("localhost"),
@@ -62,7 +62,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
 
                 var request = await WithTimeout(server.AuthenticationRequest);
                 Assert.AreEqual(ClientConstants.ApiVersion, request.ApiVersion);
-                Assert.AreEqual(AuthenticationMethod.Oidc, request.AuthenticationMethod);
+                Assert.AreEqual(AuthenticationMethod.Steam, request.AuthenticationMethod);
                 Assert.AreEqual("tls-game", request.GameId);
                 Assert.AreEqual("1.0.0", request.GameVersion);
                 Assert.AreEqual("tls-player", request.PlayerName);

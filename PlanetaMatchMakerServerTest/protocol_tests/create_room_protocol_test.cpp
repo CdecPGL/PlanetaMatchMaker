@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_SUITE(create_room_protocol_test)
 		pgl::game_host_external_id_t external_id{};
 		external_id[0] = 12;
 		pgl::authenticated_identity identity;
-		identity.method = pgl::authentication_method::oidc;
-		identity.verified_user_id = "subject";
+		identity.method = pgl::authentication_method::steam;
+		identity.verified_user_id = "76561198000000000";
 		identity.external_id = external_id;
 		context.session_data.set_authenticated(identity);
 		context.session_data.set_client_player_name({u8"host", 1});
@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_SUITE(create_room_protocol_test)
 		pgl::game_host_external_id_t authenticated_external_id{};
 		authenticated_external_id[0] = 12;
 		pgl::authenticated_identity identity;
-		identity.method = pgl::authentication_method::oidc;
-		identity.verified_user_id = "subject";
+		identity.method = pgl::authentication_method::steam;
+		identity.verified_user_id = "76561198000000000";
 		identity.external_id = authenticated_external_id;
 		context.session_data.set_authenticated(identity);
 		context.session_data.set_client_player_name({u8"host", 1});

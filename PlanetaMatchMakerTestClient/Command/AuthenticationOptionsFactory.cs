@@ -6,7 +6,6 @@ namespace PlanetaGameLabo.MatchMaker
     internal enum TestClientAuthenticationMethod
     {
         None,
-        Oidc,
         Steam,
     }
 
@@ -37,8 +36,6 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 case TestClientAuthenticationMethod.None:
                     throw new InvalidOperationException("None authentication must not require a credential.");
-                case TestClientAuthenticationMethod.Oidc:
-                    return AuthenticationOptions.Oidc(credential);
                 case TestClientAuthenticationMethod.Steam:
                     return AuthenticationOptions.Steam(ParseHex(credential));
                 default:

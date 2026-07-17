@@ -1,3 +1,4 @@
+using System;
 using CdecPGL.MinimalSerializer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -35,9 +36,9 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [TestMethod]
         public void AuthenticationMethodsHaveStableWireValues()
         {
-            Assert.AreEqual((byte)0, (byte)AuthenticationMethod.Steam);
-            Assert.AreEqual((byte)1, (byte)AuthenticationMethod.Oidc);
-            Assert.AreEqual((byte)2, (byte)AuthenticationMethod.None);
+            Assert.AreEqual((byte)0, (byte)AuthenticationMethod.None);
+            Assert.AreEqual((byte)1, (byte)AuthenticationMethod.Steam);
+            Assert.IsFalse(Enum.IsDefined(typeof(AuthenticationMethod), (byte)2));
         }
     }
 }

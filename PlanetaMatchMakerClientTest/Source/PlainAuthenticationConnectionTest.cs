@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 using CdecPGL.MinimalSerializer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +17,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [TestMethod]
         public async Task ConnectAsyncSendsAuthenticationRequestAndCredentialChunks()
         {
-            var token = new string('x', 300);
+            var ticket = Enumerable.Repeat((byte)'x', 300).ToArray();
             using (var server = new PlainAuthenticationServer("plain-game", "1.0.0", 11))
             using (var client = new MatchMakerClient(
                        new GameId("plain-game"),
@@ -31,7 +30,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
                     new Host("127.0.0.1"),
                     new ServerPort((ushort)server.Port),
                     new PlayerName("plain-player"),
-                    AuthenticationOptions.Oidc(token),
+                    AuthenticationOptions.Steam(ticket),
                     new ConnectionOptions(ConnectionMode.Plain));
 
                 Assert.AreEqual("plain-player", fullName.Name);
@@ -39,11 +38,11 @@ namespace PlanetaGameLabo.MatchMaker.Test
 
                 var received = await WithTimeout(server.AuthenticationRequest);
                 Assert.AreEqual(ClientConstants.ApiVersion, received.Request.ApiVersion);
-                Assert.AreEqual(AuthenticationMethod.Oidc, received.Request.AuthenticationMethod);
+                Assert.AreEqual(AuthenticationMethod.Steam, received.Request.AuthenticationMethod);
                 Assert.AreEqual("plain-game", received.Request.GameId);
                 Assert.AreEqual("1.0.0", received.Request.GameVersion);
                 Assert.AreEqual("plain-player", received.Request.PlayerName);
-                CollectionAssert.AreEqual(Encoding.UTF8.GetBytes(token), received.Credential);
+                CollectionAssert.AreEqual(ticket, received.Credential);
                 CollectionAssert.AreEqual(new ushort[] { 0, 1 }, received.Sequences.ToArray());
 
                 client.Close();

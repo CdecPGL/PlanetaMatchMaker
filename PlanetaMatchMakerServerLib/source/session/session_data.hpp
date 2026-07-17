@@ -11,13 +11,10 @@
 
 namespace pgl {
 	struct authenticated_identity final {
-		authentication_method method = authentication_method::oidc;
+		authentication_method method = authentication_method::none;
 		std::string verified_user_id;
 		std::optional<game_host_external_id_t> external_id;
 		std::string display_name;
-		std::string oidc_issuer;
-		std::string oidc_subject;
-		std::string oidc_audience;
 	};
 
 	// This class need not be thread safe because one session is processed serially through its session strand.

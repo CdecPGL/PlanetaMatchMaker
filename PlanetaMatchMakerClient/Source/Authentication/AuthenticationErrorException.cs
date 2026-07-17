@@ -50,14 +50,6 @@ namespace PlanetaGameLabo.MatchMaker
         SteamIdMismatch,
         SteamOwnershipCheckFailed,
         SteamAuthenticationServiceUnavailable,
-        OidcTokenInvalid,
-        OidcSignatureVerificationFailed,
-        OidcIssuerMismatch,
-        OidcAudienceMismatch,
-        OidcTokenExpired,
-        OidcSubjectMissing,
-        OidcKeyFetchFailed,
-        OidcDisallowedAlgorithm,
     };
 
     public static class AuthenticationErrorCodeExtension
@@ -92,22 +84,6 @@ namespace PlanetaGameLabo.MatchMaker
                     return AuthenticationErrorCode.SteamOwnershipCheckFailed;
                 case AuthenticationResult.SteamAuthenticationServiceUnavailable:
                     return AuthenticationErrorCode.SteamAuthenticationServiceUnavailable;
-                case AuthenticationResult.OidcTokenInvalid:
-                    return AuthenticationErrorCode.OidcTokenInvalid;
-                case AuthenticationResult.OidcSignatureVerificationFailed:
-                    return AuthenticationErrorCode.OidcSignatureVerificationFailed;
-                case AuthenticationResult.OidcIssuerMismatch:
-                    return AuthenticationErrorCode.OidcIssuerMismatch;
-                case AuthenticationResult.OidcAudienceMismatch:
-                    return AuthenticationErrorCode.OidcAudienceMismatch;
-                case AuthenticationResult.OidcTokenExpired:
-                    return AuthenticationErrorCode.OidcTokenExpired;
-                case AuthenticationResult.OidcSubjectMissing:
-                    return AuthenticationErrorCode.OidcSubjectMissing;
-                case AuthenticationResult.OidcKeyFetchFailed:
-                    return AuthenticationErrorCode.OidcKeyFetchFailed;
-                case AuthenticationResult.OidcDisallowedAlgorithm:
-                    return AuthenticationErrorCode.OidcDisallowedAlgorithm;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(result), result, null);
             }

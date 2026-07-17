@@ -25,21 +25,6 @@ RUN echo "${OPENSSL_SHA256}  /tmp/openssl.tar.gz" | sha256sum -c - \
   && make install_sw \
   && rm -rf /tmp/openssl.tar.gz /tmp/openssl-src
 
-# Install jwt-cpp with the same version resolved by vcpkg.
-ARG JWT_CPP_VERSION=0.7.2
-ARG JWT_CPP_SHA256=6e815d86c168eb521a27937d603747dec0ca3c39ffc12d6fa72e2cf78a5b02d2
-ADD https://github.com/Thalhammer/jwt-cpp/archive/refs/tags/v${JWT_CPP_VERSION}.tar.gz /tmp/jwt-cpp.tar.gz
-RUN echo "${JWT_CPP_SHA256}  /tmp/jwt-cpp.tar.gz" | sha256sum -c - \
-  && mkdir /tmp/jwt-cpp-src \
-  && tar -xzf /tmp/jwt-cpp.tar.gz -C /tmp/jwt-cpp-src --strip-components=1 \
-  && cmake -S /tmp/jwt-cpp-src -B /tmp/jwt-cpp-build \
-    -DJWT_BUILD_EXAMPLES=OFF \
-    -DJWT_BUILD_TESTS=OFF \
-    -DOPENSSL_ROOT_DIR=/usr/local/openssl \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
-  && cmake --build /tmp/jwt-cpp-build --target install -j"$(nproc)" \
-  && rm -rf /tmp/jwt-cpp.tar.gz /tmp/jwt-cpp-src /tmp/jwt-cpp-build
-
 # Install boost library as static libraries
 ARG BOOST_VERSION=1.89.0
 ARG BOOST_ARCHIVE_VERSION=1_89_0
@@ -84,8 +69,8 @@ COPY --from=base /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/x86_64-linux-gnu/
 # Copy PlanetaMatchMakerServer binary (same location of make install result)
 COPY --from=base --chmod=755 /PlanetaMatchMaker/build/PlanetaMatchMakerServer/PlanetaMatchMakerServer /usr/local/bin/pmms
 
-# Copy pmms setting
-COPY Docker/server/pmms/setting.json /etc/pmms/
+# Keep the configuration directory in the image, but require operators to mount setting.json.
+COPY Docker/server/pmms/README.md /etc/pmms/README.md
 
 # Start server
 CMD ["pmms"]

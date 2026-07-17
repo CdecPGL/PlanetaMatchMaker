@@ -113,7 +113,7 @@ Each attachment chunk is 243 bytes.
 
 The sequence must start at zero and increase by one. `data_size` must be 240 except for the final chunk, whose expected size is derived from `attachment_size`. A missing chunk, an unexpected sequence or size, or non-zero padding makes the attachment malformed. Attachment reception uses an absolute timeout for the complete attachment rather than resetting the timeout for each chunk.
 
-All currently defined request and notice messages except authentication forbid attachments and require `attachment_size == 0`. An unexpected attachment causes the connection to be closed. Authentication requires a non-empty attachment.
+All currently defined request and notice messages except authentication forbid attachments and require `attachment_size == 0`. An unexpected attachment causes the connection to be closed. Authentication attachment requirements depend on the selected method.
 
 ## Message Body Structure
 
@@ -123,12 +123,12 @@ A request to authenticate.
 
 #### Parameters
 
-The authentication request body size is 75 bytes. Its message attachment contains the Steam ticket or OIDC token. The attachment is required for Steam and OIDC, and must not exceed either `authentication.max_credential_bytes` or the protocol maximum. The `none` development method requires an empty attachment.
+The authentication request body size is 75 bytes. Its message attachment contains the Steam ticket. The attachment is required for Steam and must not exceed either `authentication.max_credential_bytes` or the protocol maximum. The `none` development method requires an empty attachment.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |api_version|16 bits unsigned integer|2|An API version number the client requires.|
-|authentication_method|8 bits unsigned integer|1|Authentication method. `0` is Steam, `1` is OIDC, and `2` is the development-only unauthenticated method.|
+|authentication_method|8 bits unsigned integer|1|Authentication method. `0` is the development-only unauthenticated method and `1` is Steam. Other values are unsupported.|
 |game_id|24 byte length UTF-8 string|24|A game ID of the client.|
 |game_version|24 byte length UTF-8 string|24|A game version number of the client.|
 |player_name_t|24 byte length UTF-8 string|24|A name of player. This must not be empty.|
@@ -137,9 +137,8 @@ The authentication request body size is 75 bytes. Its message attachment contain
 
 |Name|Value|Attachment contents|
 |:---|---:|:---|
-|steam|0|Steam auth ticket bytes.|
-|oidc|1|OIDC JWT bytes, normally UTF-8 text.|
-|none|2|Empty. Accepted only when the server explicitly enables unauthenticated development connections.|
+|none|0|Empty. Accepted only when the server explicitly enables unauthenticated development connections.|
+|steam|1|Steam auth ticket bytes.|
 
 #### Reply
 
@@ -169,14 +168,6 @@ Options of `result` are as below.
 |steam_id_mismatch|10|Reserved for SteamID mismatch handling. Current authentication requests do not send a client-claimed SteamID.|
 |steam_ownership_check_failed|11|Steam AppID ownership check failed.|
 |steam_authentication_service_unavailable|12|Steam authentication or ownership service could not be reached or returned an unavailable response.|
-|oidc_token_invalid|13|OIDC token format or claims are invalid.|
-|oidc_signature_verification_failed|14|OIDC token signature verification failed.|
-|oidc_issuer_mismatch|15|OIDC issuer does not match server setting.|
-|oidc_audience_mismatch|16|OIDC audience does not match server setting.|
-|oidc_token_expired|17|OIDC token is expired, not yet valid, or lacks an expiration claim.|
-|oidc_subject_missing|18|OIDC token has no non-empty subject.|
-|oidc_key_fetch_failed|19|OIDC discovery or JWKS retrieval/selection failed.|
-|oidc_disallowed_algorithm|20|OIDC token uses a signature algorithm not allowed by server setting.|
 
 Note that authentication failure are not treated as error.
 If authentication is failed, the server closes the connection immediately after reply.
