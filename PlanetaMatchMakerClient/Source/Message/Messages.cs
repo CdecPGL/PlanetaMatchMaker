@@ -13,37 +13,37 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal enum MessageErrorCode : byte
     {
-        Ok,
+        Ok = 0,
 
         // Server internal error.
-        ServerError,
+        ServerError = 1,
 
         // The operation is invalid in the current state.
-        OperationInvalid,
+        OperationInvalid = 2,
 
         // Wrong parameters which must be rejected in the client is passed for request.
-        RequestParameterWrong,
+        RequestParameterWrong = 3,
 
         // Indicated room is not found.
-        RoomNotFound,
+        RoomNotFound = 4,
 
         // Indicated password of room is not correct.
-        RoomPasswordWrong,
+        RoomPasswordWrong = 5,
 
         // The number of player reaches limit.
-        RoomFull,
+        RoomFull = 6,
 
         // Request is rejected because indicated room is the room which you are not host of or closed.
-        RoomPermissionDenied,
+        RoomPermissionDenied = 7,
 
         // The number of room exceeds limit.
-        RoomCountExceedsLimit,
+        RoomCountExceedsLimit = 8,
 
         // Connection establish mode of the room host doesn't match expected one in the client.
-        RoomConnectionEstablishModeMismatch,
+        RoomConnectionEstablishModeMismatch = 9,
 
         // Request is failed because the client is already hosting room.
-        ClientAlreadyHostingRoom,
+        ClientAlreadyHostingRoom = 10,
     };
 
     internal enum MessageType : byte

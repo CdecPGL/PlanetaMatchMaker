@@ -88,13 +88,14 @@ Options of `error_code` are as below.
 |ok|0|Request is processed successfully.|
 |server_error|1|Server internal error.|
 |operation_invalid|2|The operation is invalid in current state.|
-|room_not_found|3|Indicated room is not found.|
-|request_parameter_wrong|4|Wrong parameters which must be rejected in the client is passed for request.|
+|request_parameter_wrong|3|Wrong parameters which must be rejected in the client is passed for request.|
+|room_not_found|4|Indicated room is not found.|
 |room_password_wrong|5|Indicated password of room is not correct.|
 |room_full|6|The number of player reaches limit.|
 |room_permission_denied|7|Request is rejected because indicated room is the room which you are not host of or closed.|
 |room_count_exceeds_limit|8|The number of room reaches limit.|
-|client_already_hosting_room|9|Request is failed because the client is already hosting room.|
+|room_connection_establish_mode_mismatch|9|Connection establish mode of the room host does not match the mode expected by the client.|
+|client_already_hosting_room|10|Request is failed because the client is already hosting room.|
 
 ## Message Attachment Structure
 
@@ -122,12 +123,12 @@ A request to authenticate.
 
 #### Parameters
 
-The authentication request body size is 75 bytes. Its required message attachment contains the Steam ticket or OIDC token. The attachment size must not exceed either `authentication.max_credential_bytes` or the protocol maximum.
+The authentication request body size is 75 bytes. Its message attachment contains the Steam ticket or OIDC token. The attachment is required for Steam and OIDC, and must not exceed either `authentication.max_credential_bytes` or the protocol maximum. The `none` development method requires an empty attachment.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |api_version|16 bits unsigned integer|2|An API version number the client requires.|
-|authentication_method|8 bits unsigned integer|1|Authentication method. `0` is Steam and `1` is OIDC.|
+|authentication_method|8 bits unsigned integer|1|Authentication method. `0` is Steam, `1` is OIDC, and `2` is the development-only unauthenticated method.|
 |game_id|24 byte length UTF-8 string|24|A game ID of the client.|
 |game_version|24 byte length UTF-8 string|24|A game version number of the client.|
 |player_name_t|24 byte length UTF-8 string|24|A name of player. This must not be empty.|
@@ -138,6 +139,7 @@ The authentication request body size is 75 bytes. Its required message attachmen
 |:---|---:|:---|
 |steam|0|Steam auth ticket bytes.|
 |oidc|1|OIDC JWT bytes, normally UTF-8 text.|
+|none|2|Empty. Accepted only when the server explicitly enables unauthenticated development connections.|
 
 #### Reply
 
@@ -158,8 +160,8 @@ Options of `result` are as below.
 |api_version_mismatch|1|An API version of server is different from what the client required.|
 |game_id_mismatch|2|Client game id doesn't match to the acceptable value in the server.|
 |game_version_mismatch|3|Client game version doesn't match to the version the server required.|
-|unsupported_authentication_method|4|The requested authentication method is not enabled or is unknown.|
-|authentication_data_format_invalid|5|The credential attachment is empty or malformed.|
+|unsupported_authentication_method|4|The requested authentication method does not match the server setting or is unknown.|
+|authentication_data_format_invalid|5|A required credential attachment is empty or malformed.|
 |authentication_data_size_exceeded|6|Credential size exceeds `authentication.max_credential_bytes`.|
 |authentication_data_invalid|7|Credential is invalid.|
 |insecure_connection|8|Authentication over plain TCP is not allowed by server setting.|

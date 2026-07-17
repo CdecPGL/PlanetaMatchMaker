@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PlanetaGameLabo.MatchMaker.Test
@@ -7,22 +9,31 @@ namespace PlanetaGameLabo.MatchMaker.Test
     [TestClass]
     public class UnityClientSynchronizationTest
     {
-        [DataTestMethod]
-        [DataRow("Authentication/AuthenticationOptions.cs")]
-        [DataRow("Client/ClientConstants.cs")]
-        [DataRow("Client/MatchMakerClient.cs")]
-        [DataRow("Message/MessageUtilities.cs")]
-        [DataRow("Message/Messages.cs")]
-        [DataRow("Room/RoomConstants.cs")]
-        public void ClientSourceMatchesUnityCopy(string relativePath)
+        [TestMethod]
+        public void AllClientSourcesMatchUnityCopies()
         {
             var repositoryRoot = FindRepositoryRoot();
-            var clientPath = Path.Combine(repositoryRoot, "PlanetaMatchMakerClient", "Source", relativePath);
-            var unityPath = Path.Combine(repositoryRoot, "PlanetaMatchMakerUnityClient", "Assets", "PlanetaGameLabo",
-                "MatchMaker", "PlanetaMatchMakerClient", relativePath);
+            var clientRoot = Path.Combine(repositoryRoot, "PlanetaMatchMakerClient", "Source");
+            var unityRoot = Path.Combine(repositoryRoot, "PlanetaMatchMakerUnityClient", "Assets", "PlanetaGameLabo",
+                "MatchMaker", "PlanetaMatchMakerClient");
+            var clientSources = ReadSources(clientRoot);
+            var unitySources = ReadSources(unityRoot);
 
-            Assert.AreEqual(File.ReadAllText(clientPath), File.ReadAllText(unityPath),
-                $"Unity client copy is out of sync: {relativePath}");
+            CollectionAssert.AreEqual(clientSources.Keys.OrderBy(path => path).ToArray(),
+                unitySources.Keys.OrderBy(path => path).ToArray(),
+                "The .NET and Unity clients do not contain the same C# source files.");
+            foreach (var relativePath in clientSources.Keys)
+            {
+                Assert.AreEqual(clientSources[relativePath], unitySources[relativePath],
+                    $"Unity client copy is out of sync: {relativePath}");
+            }
+        }
+
+        private static Dictionary<string, string> ReadSources(string root)
+        {
+            return Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories)
+                .ToDictionary(path => path.Substring(root.Length + 1).Replace(Path.DirectorySeparatorChar, '/'),
+                    File.ReadAllText, StringComparer.Ordinal);
         }
 
         private static string FindRepositoryRoot()

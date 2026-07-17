@@ -13,7 +13,13 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ArgumentNullException(nameof(credential));
             }
 
-            if (credential.Length == 0)
+            if (method == AuthenticationMethod.None && credential.Length != 0)
+            {
+                throw new ArgumentException("Credential must be empty when authentication is disabled.",
+                    nameof(credential));
+            }
+
+            if (method != AuthenticationMethod.None && credential.Length == 0)
             {
                 throw new ArgumentException("Credential must not be empty.", nameof(credential));
             }
@@ -31,6 +37,11 @@ namespace PlanetaGameLabo.MatchMaker
         public AuthenticationMethod Method { get; }
 
         internal byte[] Credential { get; }
+
+        public static AuthenticationOptions None()
+        {
+            return new AuthenticationOptions(AuthenticationMethod.None, Array.Empty<byte>());
+        }
 
         public static AuthenticationOptions Steam(byte[] ticket)
         {

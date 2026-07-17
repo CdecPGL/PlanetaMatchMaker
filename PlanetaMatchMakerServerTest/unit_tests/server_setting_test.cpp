@@ -30,6 +30,7 @@ bool unset_env_var(const std::string& var_name) {
 const json::value required_setting = {
 	{
 		"authentication", {
+			{"method", "none"},
 			{"game_id", "test"},
 		}
 	},
@@ -77,6 +78,7 @@ void set_typed_env_var<bool>(const std::string& name, const bool& value) {
  * @brief set required setting to environment variable
  */
 void set_required_setting_env_var() {
+	set_typed_env_var("PMMS_AUTHENTICATION_METHOD", "none");
 	set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
 	set_typed_env_var("PMMS_TLS_CERTIFICATE_PATH", "server.crt");
 	set_typed_env_var("PMMS_TLS_PRIVATE_KEY_PATH", "server.key");
@@ -113,6 +115,18 @@ private:
 };
 
 BOOST_AUTO_TEST_SUITE(server_setting_test)
+	BOOST_AUTO_TEST_CASE(authentication_setting_enables_only_selected_method) {
+		server_authentication_setting setting;
+		BOOST_CHECK(setting.accepts_method(authentication_method::none));
+		BOOST_CHECK(!setting.accepts_method(authentication_method::steam));
+		BOOST_CHECK(!setting.accepts_method(authentication_method::oidc));
+
+		setting.method = authentication_method::steam;
+		BOOST_CHECK(!setting.accepts_method(authentication_method::none));
+		BOOST_CHECK(setting.accepts_method(authentication_method::steam));
+		BOOST_CHECK(!setting.accepts_method(authentication_method::oidc));
+	}
+
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_accepts_protocol_maximum_message_attachment_size,
 		setting_file_fixture) {
 		create_setting_file(create_setting({
@@ -139,8 +153,8 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		setting_file_fixture) {
 		create_setting_file(create_setting({
 			{"authentication", {
+				{"method", "steam"},
 				{"steam", {
-					{"enabled", true},
 					{"app_id", 480},
 					{"publisher_key", "test-key"},
 					{"authenticate_user_ticket_url", "http://127.0.0.1/auth"},
@@ -157,9 +171,9 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		setting_file_fixture) {
 		create_setting_file(create_setting({
 			{"authentication", {
+				{"method", "oidc"},
 				{"allow_plain_external_service_connections", true},
 				{"oidc", {
-					{"enabled", true},
 					{"issuer", "https://issuer.example"},
 					{"audience", "pmms-test"},
 					{"jwks_url", "http://127.0.0.1/jwks"}
@@ -190,6 +204,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			},
 			{
 				"authentication", {
+					{"method", "none"},
 					{"game_id", "test"},
 					{"enable_game_version_check", true},
 					{"game_version", "1.0.0"},
@@ -241,6 +256,8 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
 		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
 		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
+		BOOST_CHECK(setting.authentication.method == authentication_method::none);
+		BOOST_CHECK(setting.authentication.accepts_method(authentication_method::none));
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);
@@ -290,12 +307,23 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, false);
 	}
 
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_missing_authentication_method, setting_file_fixture) {
+		create_setting_file({
+			{"authentication", {{"game_id", "test"}}},
+			{"tls", {{"certificate_path", "server.crt"}, {"private_key_path", "server.key"}}}
+		});
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_uses_setting_directory_as_default_tls_paths,
 		setting_file_fixture) {
 		// set up
 		const json::value test_data = {
 			{
 				"authentication", {
+					{"method", "none"},
 					{"game_id", "test"},
 				}
 			},
@@ -665,6 +693,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			std::tuple{"common", "ip_version", "v5"},
 			std::tuple{"common", "ip_version", "4"},
 			std::tuple{"common", "ip_version", "6"},
+			std::tuple{"authentication", "method", "password"},
 			std::tuple{"authentication", "game_id", ""},
 			std::tuple{"authentication", "game_id", "---------25bytes---------"},
 			std::tuple{"log", "console_log_level", "inf"},
@@ -741,6 +770,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		set_typed_env_var("PMMS_COMMON_MAX_ROOM_COUNT", 300);
 		set_typed_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", 200);
 		set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
+		set_typed_env_var("PMMS_AUTHENTICATION_METHOD", "none");
 		set_typed_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", true);
 		set_typed_env_var("PMMS_AUTHENTICATION_GAME_VERSION", "1.0.0");
 		set_typed_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS", true);
@@ -775,6 +805,8 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
 		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
 		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
+		BOOST_CHECK(setting.authentication.method == authentication_method::none);
+		BOOST_CHECK(setting.authentication.accepts_method(authentication_method::none));
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);
@@ -826,6 +858,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_env_var_validation_error,
 		unit_test::data::make({
 			std::tuple{"PMMS_COMMON_TIME_OUT_SECONDS", "0"},
+			std::tuple{"PMMS_AUTHENTICATION_METHOD", "password"},
 			std::tuple{"PMMS_AUTHENTICATION_GAME_ID", ""},
 			std::tuple{"PMMS_LOG_CONSOLE_LOG_LEVEL", "none"},
 			std::tuple{"PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS", "0"},

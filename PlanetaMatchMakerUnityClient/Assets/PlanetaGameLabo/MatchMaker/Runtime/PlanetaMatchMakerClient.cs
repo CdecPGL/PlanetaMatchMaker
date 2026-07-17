@@ -212,14 +212,13 @@ namespace PlanetaGameLabo.MatchMaker
         #region Operations
 
         /// <summary>
-        /// Connect to the matching server
+        /// Connect to a server that explicitly allows unauthenticated connections.
         /// </summary>
         /// <param name="playerName"></param>
         /// <param name="callback"></param>
-        [Obsolete("Use Connect(string, AuthenticationOptions, Action<ErrorInfo, ConnectResult>) instead.")]
         public void Connect(string playerName, Action<ErrorInfo, ConnectResult> callback = null)
         {
-            RunTask(async () => await ConnectAsync(playerName, null), callback);
+            RunTask(async () => await ConnectAsync(playerName), callback);
         }
 
         /// <summary>
@@ -235,14 +234,12 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         /// <summary>
-        /// Connect to the matching server
+        /// Connect to a server that explicitly allows unauthenticated connections.
         /// </summary>
         /// <param name="playerName"></param>
-        /// <param name="authenticationOptions"></param>
-        [Obsolete("Use ConnectAsync(string, AuthenticationOptions) instead.")]
         public async Task<(ErrorInfo errorInfo, ConnectResult result)> ConnectAsync(string playerName)
         {
-            return await ConnectAsync(playerName, null);
+            return await ConnectAsync(playerName, AuthenticationOptions.None());
         }
 
         /// <summary>

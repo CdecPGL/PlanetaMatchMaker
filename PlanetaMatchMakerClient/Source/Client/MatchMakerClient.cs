@@ -114,6 +114,16 @@ namespace PlanetaGameLabo.MatchMaker
         /// <summary>
         /// Connect to matching server.
         /// </summary>
+        /// <remarks>This overload is only for servers that explicitly allow unauthenticated connections.</remarks>
+        public Task<PlayerFullName> ConnectAsync(Host serverAddress, ServerPort serverPort,
+            PlayerName playerName, ConnectionOptions connectionOptions = default(ConnectionOptions))
+        {
+            return ConnectAsync(serverAddress, serverPort, playerName, AuthenticationOptions.None(), connectionOptions);
+        }
+
+        /// <summary>
+        /// Connect to matching server.
+        /// </summary>
         /// <param name="serverAddress"></param>
         /// <param name="serverPort"></param>
         /// <param name="playerName"></param>

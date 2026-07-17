@@ -25,7 +25,7 @@ Use `ConnectionMode.Plain` only for backward compatibility or local development 
 
 ## Authentication
 
-`ConnectAsync` requires an `AuthenticationOptions` value. PMMS client libraries only send credentials; they do not implement OIDC browser login, PKCE, refresh token management, or Steam ticket acquisition.
+`ConnectAsync` accepts an `AuthenticationOptions` value for Steam or OIDC. PMMS client libraries only send credentials; they do not implement OIDC browser login, PKCE, refresh token management, or Steam ticket acquisition.
 Authentication credentials are sent as the authentication message attachment. Message attachments are limited to
 `ClientConstants.MaxMessageAttachmentLength` (15,728,640 bytes), which is the maximum representable by the protocol
 chunk sequence field. The server's configured authentication credential limit may be lower.
@@ -43,6 +43,20 @@ await client.ConnectAsync(
     new PlayerName("player"),
     AuthenticationOptions.Oidc(oidcToken));
 ```
+
+For local development against a server with `authentication.method` set to `none`, use the credential-free overload or `AuthenticationOptions.None()`:
+
+```csharp
+await client.ConnectAsync(host, port, new PlayerName("player"));
+
+await client.ConnectAsync(
+    host,
+    port,
+    new PlayerName("player"),
+    AuthenticationOptions.None());
+```
+
+This mode does not create a verified external identity and must not be used in production.
 
 SteamID64 and OIDC subject are not sent as client-claimed authentication IDs. The server derives the authenticated identity from Steam or OIDC verification results.
 

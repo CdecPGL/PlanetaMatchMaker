@@ -26,18 +26,46 @@ namespace pgl {
 		using jwt_json_traits = jwt::traits::boost_json;
 		using default_jwk = jwt::jwk<jwt_json_traits>;
 
-		struct cached_jwks final {
+		struct cached_oidc_jwks final {
+			std::string jwks_url;
 			std::string body;
 			std::chrono::steady_clock::time_point expires_at{};
 		};
 
-		std::mutex jwks_cache_mutex;
-		std::unordered_map<std::string, cached_jwks> jwks_cache;
+		std::mutex oidc_jwks_cache_mutex;
+		std::unordered_map<std::string, cached_oidc_jwks> oidc_jwks_cache;
 
 		std::optional<std::string> get_json_string(const json::object& object, const std::string& key) {
 			const auto* value = object.if_contains(key);
 			if (value == nullptr || !value->is_string()) { return std::nullopt; }
 			return std::string(value->as_string().c_str());
+		}
+
+		std::string make_oidc_jwks_cache_key(const server_authentication_setting::oidc_setting& oidc) {
+			if (!oidc.jwks_url.empty()) { return "jwks_url\n" + oidc.jwks_url; }
+			return "discovery_url\n" + oidc.discovery_url + "\nissuer\n" + oidc.issuer;
+		}
+
+		std::optional<cached_oidc_jwks> get_cached_oidc_jwks(const std::string& cache_key) {
+			const std::lock_guard lock(oidc_jwks_cache_mutex);
+			const auto found = oidc_jwks_cache.find(cache_key);
+			if (found == oidc_jwks_cache.end()) { return std::nullopt; }
+			if (found->second.expires_at <= std::chrono::steady_clock::now()) {
+				oidc_jwks_cache.erase(found);
+				return std::nullopt;
+			}
+			return found->second;
+		}
+
+		void cache_oidc_jwks(const std::string& cache_key, const std::string& jwks_url,
+			const std::string& body, const uint32_t cache_seconds) {
+			if (cache_seconds == 0) { return; }
+			const std::lock_guard lock(oidc_jwks_cache_mutex);
+			oidc_jwks_cache[cache_key] = {
+				jwks_url,
+				body,
+				std::chrono::steady_clock::now() + std::chrono::seconds(cache_seconds)
+			};
 		}
 
 		authentication_verification_result failure(const authentication_result result) {
@@ -142,27 +170,37 @@ namespace pgl {
 			const auto& oidc = setting.oidc;
 			if (!oidc.jwks.empty()) { return oidc.jwks; }
 
+			const auto cache_key = make_oidc_jwks_cache_key(oidc);
+			const auto cached = oidc.jwks_cache_seconds > 0
+				                    ? get_cached_oidc_jwks(cache_key)
+				                    : std::nullopt;
+			if (cached.has_value() && !force_refresh) { return cached->body; }
+
 			auto jwks_url = oidc.jwks_url;
 			if (jwks_url.empty()) {
-				const auto discovery_response = authentication_http::get(oidc.discovery_url, context);
-				if (discovery_response.status < 200 || discovery_response.status >= 300) {
-					throw std::runtime_error("Failed to fetch OIDC discovery document.");
+				if (cached.has_value()) {
+					jwks_url = cached->jwks_url;
 				}
-				const auto discovery_json = json::parse(discovery_response.body);
-				const auto* discovery_obj = discovery_json.if_object();
-				const auto discovered_jwks_url =
-					discovery_obj == nullptr ? std::nullopt : get_json_string(*discovery_obj, "jwks_uri");
-				if (!discovered_jwks_url.has_value()) {
-					throw std::runtime_error("OIDC discovery document has no jwks_uri.");
-				}
-				jwks_url = *discovered_jwks_url;
-			}
-
-			if (!force_refresh && oidc.jwks_cache_seconds > 0) {
-				const std::lock_guard lock(jwks_cache_mutex);
-				if (const auto found = jwks_cache.find(jwks_url);
-					found != jwks_cache.end() && found->second.expires_at > std::chrono::steady_clock::now()) {
-					return found->second.body;
+				else {
+					const auto discovery_response = authentication_http::get(oidc.discovery_url, context);
+					if (discovery_response.status < 200 || discovery_response.status >= 300) {
+						throw std::runtime_error("Failed to fetch OIDC discovery document.");
+					}
+					const auto discovery_json = json::parse(discovery_response.body);
+					const auto* discovery_obj = discovery_json.if_object();
+					const auto discovered_issuer =
+						discovery_obj == nullptr ? std::nullopt : get_json_string(*discovery_obj, "issuer");
+					if (!discovered_issuer.has_value()) {
+						throw std::runtime_error("OIDC discovery document has no issuer.");
+					}
+					if (*discovered_issuer != oidc.issuer) {
+						throw std::runtime_error("OIDC discovery issuer does not match configured issuer.");
+					}
+					const auto discovered_jwks_url = get_json_string(*discovery_obj, "jwks_uri");
+					if (!discovered_jwks_url.has_value()) {
+						throw std::runtime_error("OIDC discovery document has no jwks_uri.");
+					}
+					jwks_url = *discovered_jwks_url;
 				}
 			}
 
@@ -171,13 +209,7 @@ namespace pgl {
 				throw std::runtime_error("Failed to fetch OIDC JWKS.");
 			}
 
-			if (oidc.jwks_cache_seconds > 0) {
-				const std::lock_guard lock(jwks_cache_mutex);
-				jwks_cache[jwks_url] = {
-					jwks_response.body,
-					std::chrono::steady_clock::now() + std::chrono::seconds(oidc.jwks_cache_seconds)
-				};
-			}
+			cache_oidc_jwks(cache_key, jwks_url, jwks_response.body, oidc.jwks_cache_seconds);
 			return jwks_response.body;
 		}
 

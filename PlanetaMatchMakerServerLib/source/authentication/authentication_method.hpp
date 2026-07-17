@@ -6,8 +6,9 @@
 
 namespace pgl {
 	enum class authentication_method : uint8_t {
-		steam,
-		oidc,
+		steam = 0,
+		oidc = 1,
+		none = 2,
 	};
 
 	authentication_method string_to_authentication_method(const std::string& str);

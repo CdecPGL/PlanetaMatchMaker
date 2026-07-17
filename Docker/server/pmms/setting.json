@@ -10,6 +10,7 @@
         "max_player_per_room": 8
     },
     "authentication": {
+        "method": "none",
         "game_id": "test",
         "enable_game_version_check": true,
         "game_version": "1.0.0",

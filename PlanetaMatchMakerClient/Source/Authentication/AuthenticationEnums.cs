@@ -3,8 +3,9 @@ namespace PlanetaGameLabo.MatchMaker
 #pragma warning disable CA1028
     public enum AuthenticationMethod : byte
     {
-        Steam,
-        Oidc,
+        Steam = 0,
+        Oidc = 1,
+        None = 2,
     }
 
     public enum AuthenticationResult : byte

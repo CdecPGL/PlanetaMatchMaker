@@ -5,6 +5,7 @@ namespace PlanetaGameLabo.MatchMaker
 {
     internal enum TestClientAuthenticationMethod
     {
+        None,
         Oidc,
         Steam,
     }
@@ -14,6 +15,11 @@ namespace PlanetaGameLabo.MatchMaker
         public static AuthenticationOptions CreateFromEnvironment(TestClientAuthenticationMethod method,
             string environmentVariableName)
         {
+            if (method == TestClientAuthenticationMethod.None)
+            {
+                return AuthenticationOptions.None();
+            }
+
             if (string.IsNullOrWhiteSpace(environmentVariableName))
             {
                 throw new ArgumentException("Authentication credential environment variable name is required.",
@@ -29,6 +35,8 @@ namespace PlanetaGameLabo.MatchMaker
 
             switch (method)
             {
+                case TestClientAuthenticationMethod.None:
+                    throw new InvalidOperationException("None authentication must not require a credential.");
                 case TestClientAuthenticationMethod.Oidc:
                     return AuthenticationOptions.Oidc(credential);
                 case TestClientAuthenticationMethod.Steam:

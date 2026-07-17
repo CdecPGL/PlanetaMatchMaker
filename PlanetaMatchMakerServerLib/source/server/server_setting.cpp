@@ -47,15 +47,8 @@ namespace pgl {
 		return map.at(str);
 	}
 
-	bool server_authentication_setting::is_method_enabled(const authentication_method method) const {
-		switch (method) {
-			case authentication_method::steam:
-				return steam.enabled;
-			case authentication_method::oidc:
-				return oidc.enabled;
-			default:
-				return false;
-		}
+	bool server_authentication_setting::accepts_method(const authentication_method requested_method) const {
+		return method == requested_method;
 	}
 
 	template <typename T>
@@ -146,6 +139,10 @@ namespace pgl {
 		return string_to_server_tls_mode(json::value_to<std::string>(jv));
 	}
 
+	authentication_method tag_invoke(json::value_to_tag<authentication_method>, const json::value& jv) {
+		return string_to_authentication_method(json::value_to<std::string>(jv));
+	}
+
 	server_authentication_setting::steam_setting tag_invoke(
 		json::value_to_tag<server_authentication_setting::steam_setting>, const json::value& jv) {
 		const auto* obj = jv.if_object();
@@ -154,7 +151,6 @@ namespace pgl {
 		}
 
 		server_authentication_setting::steam_setting s;
-		EXTRACT_WITH_DEFAULT(*obj, s, bool, enabled);
 		EXTRACT_WITH_DEFAULT(*obj, s, uint32_t, app_id);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::string, publisher_key);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::string, identity);
@@ -171,7 +167,6 @@ namespace pgl {
 		}
 
 		server_authentication_setting::oidc_setting s;
-		EXTRACT_WITH_DEFAULT(*obj, s, bool, enabled);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::string, issuer);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::string, audience);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::vector<std::string>, algorithms);
@@ -226,6 +221,11 @@ namespace pgl {
 		}
 
 		server_authentication_setting s;
+		const auto* method = obj->if_contains("method");
+		if (method == nullptr) {
+			throw server_setting_error(authentication_section_key + ".method is required.");
+		}
+		s.method = json::value_to<authentication_method>(*method);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::u8string, game_id);
 		EXTRACT_WITH_DEFAULT(*obj, s, bool, enable_game_version_check);
 		EXTRACT_WITH_DEFAULT(*obj, s, std::u8string, game_version);
@@ -255,7 +255,7 @@ namespace pgl {
 				game_version_bytes);
 		}
 
-		if (setting.steam.enabled) {
+		if (setting.method == authentication_method::steam) {
 			validate_range(authentication_section_key + ".steam.app_id", setting.steam.app_id, 1u,
 				std::numeric_limits<uint32_t>::max());
 			validate_str_length(authentication_section_key + ".steam.publisher_key", setting.steam.publisher_key,
@@ -266,7 +266,7 @@ namespace pgl {
 				setting.steam.check_app_ownership_url, setting.allow_plain_external_service_connections);
 		}
 
-		if (setting.oidc.enabled) {
+		if (setting.method == authentication_method::oidc) {
 			validate_str_length(authentication_section_key + ".oidc.issuer", setting.oidc.issuer, 1, 2048);
 			validate_str_length(authentication_section_key + ".oidc.audience", setting.oidc.audience, 1, 2048);
 			if (setting.oidc.algorithms.empty()) {
@@ -298,6 +298,7 @@ namespace pgl {
 
 	void output_authentication_setting_to_log(const server_authentication_setting& setting) {
 		log(log_level::info, "--------Authentication--------");
+		log(log_level::info, NAMEOF(setting.method), ": ", setting.method);
 		log(log_level::info, NAMEOF(setting.game_id), ": ", setting.game_id);
 		log(log_level::info, NAMEOF(setting.enable_game_version_check), ": ", setting.enable_game_version_check);
 		log(log_level::info, NAMEOF(setting.game_version), ": ", setting.game_version);
@@ -307,17 +308,19 @@ namespace pgl {
 		log(log_level::info, NAMEOF(setting.allow_plain_connections), ": ", setting.allow_plain_connections);
 		log(log_level::info, NAMEOF(setting.allow_plain_external_service_connections), ": ",
 			setting.allow_plain_external_service_connections);
+		if (setting.method == authentication_method::none) {
+			log(log_level::warning,
+				"Unauthenticated client connections are enabled. Use only for development.");
+		}
 		if (setting.allow_plain_external_service_connections) {
 			log(log_level::warning,
 				"Plain HTTP connections to external authentication services are enabled. Use only for development.");
 		}
-		log(log_level::info, "steam.enabled: ", setting.steam.enabled);
 		log(log_level::info, "steam.app_id: ", setting.steam.app_id);
 		log(log_level::info, "steam.publisher_key: ", setting.steam.publisher_key.empty() ? "(not set)" : "(set)");
 		log(log_level::info, "steam.identity: ", setting.steam.identity);
 		log(log_level::info, "steam.authenticate_user_ticket_url: ", setting.steam.authenticate_user_ticket_url);
 		log(log_level::info, "steam.check_app_ownership_url: ", setting.steam.check_app_ownership_url);
-		log(log_level::info, "oidc.enabled: ", setting.oidc.enabled);
 		log(log_level::info, "oidc.issuer: ", setting.oidc.issuer);
 		log(log_level::info, "oidc.audience: ", setting.oidc.audience);
 		log(log_level::info, "oidc.algorithms: ", boost::algorithm::join(setting.oidc.algorithms, ","));
@@ -544,6 +547,19 @@ namespace pgl {
 	}
 
 	template <>
+	bool get_env_var<authentication_method>(const std::string& var_name, authentication_method& dest) {
+		std::string str;
+		if (!get_env_var(var_name, str)) { return false; }
+		try { dest = string_to_authentication_method(str); }
+		catch (const std::out_of_range& e) {
+			throw server_setting_error(generate_string("The environment variable \"", var_name, "=", str,
+				"\" is not convertible to authentication_method (", e.what(), ")."));
+		}
+
+		return true;
+	}
+
+	template <>
 	bool get_env_var<std::vector<std::string>>(const std::string& var_name, std::vector<std::string>& dest) {
 		std::string str;
 		if (!get_env_var(var_name, str)) { return false; }
@@ -565,6 +581,9 @@ namespace pgl {
 			get_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", common.max_player_per_room);
 			validate_common_setting(common);
 
+			if (!get_env_var<authentication_method>("PMMS_AUTHENTICATION_METHOD", authentication.method)) {
+				throw server_setting_error("The environment variable PMMS_AUTHENTICATION_METHOD is required.");
+			}
 			get_env_var("PMMS_AUTHENTICATION_GAME_ID", authentication.game_id);
 			get_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", authentication.enable_game_version_check);
 			get_env_var("PMMS_AUTHENTICATION_GAME_VERSION", authentication.game_version);
@@ -574,7 +593,6 @@ namespace pgl {
 			get_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_CONNECTIONS", authentication.allow_plain_connections);
 			get_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS",
 				authentication.allow_plain_external_service_connections);
-			get_env_var("PMMS_AUTHENTICATION_STEAM_ENABLED", authentication.steam.enabled);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_APP_ID", authentication.steam.app_id);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY", authentication.steam.publisher_key);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_IDENTITY", authentication.steam.identity);
@@ -582,7 +600,6 @@ namespace pgl {
 				authentication.steam.authenticate_user_ticket_url);
 			get_env_var("PMMS_AUTHENTICATION_STEAM_CHECK_APP_OWNERSHIP_URL",
 				authentication.steam.check_app_ownership_url);
-			get_env_var("PMMS_AUTHENTICATION_OIDC_ENABLED", authentication.oidc.enabled);
 			get_env_var("PMMS_AUTHENTICATION_OIDC_ISSUER", authentication.oidc.issuer);
 			get_env_var("PMMS_AUTHENTICATION_OIDC_AUDIENCE", authentication.oidc.audience);
 			get_env_var("PMMS_AUTHENTICATION_OIDC_ALGORITHMS", authentication.oidc.algorithms);

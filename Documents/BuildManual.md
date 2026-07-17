@@ -18,10 +18,13 @@ Following compilers and platforms are tested.
 ### Dependencies
 
 - Boost Library 1.89.0
-- OpenSSL
+- OpenSSL 3.0 or higher (3.6.2 is pinned in `vcpkg.json` and used by the Docker images)
+- jwt-cpp 0.7.2
 - CMake 3.21.3 or higher
 - minimal-serializer v0.2.4 (included in this repogitory)
 - nameof C++ 0.10.1 (included in this repogitory)
+
+OpenSSL and jwt-cpp must provide CMake package configuration files so that `find_package(OpenSSL 3.0 REQUIRED)` and `find_package(jwt-cpp CONFIG REQUIRED)` can resolve them. The repository `vcpkg.json` manifest installs both dependencies when CMake is configured with the vcpkg toolchain. When installing dependencies manually, add their installation prefixes to `CMAKE_PREFIX_PATH` as needed.
 
 ### Build by CMake with Docker
 
@@ -138,8 +141,10 @@ dotnet test PlanetaMatchMakerClientTest -c Release
 
 ## TestClient
 
-Authentication credentials are read from the `PMMS_TEST_CLIENT_AUTHENTICATION_CREDENTIAL` environment variable by
-default. The command-line option `--authentication_credential_environment_variable` selects a different variable.
+The test client defaults to the credential-free `None` method for development servers. Select `Oidc` or `Steam` with
+the `authentication_method` option when external authentication is enabled. Authentication credentials are then read
+from the `PMMS_TEST_CLIENT_AUTHENTICATION_CREDENTIAL` environment variable by default. The command-line option
+`--authentication_credential_environment_variable` selects a different variable.
 Do not place an OIDC token or Steam ticket directly in command-line arguments because process listings and shell
 history may expose it.
 

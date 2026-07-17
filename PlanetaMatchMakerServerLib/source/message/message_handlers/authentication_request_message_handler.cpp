@@ -31,8 +31,11 @@ namespace pgl {
 	}
 
 	message_attachment_policy authentication_request_message_handler::get_message_attachment_policy(
-		const authentication_request_message& message [[maybe_unused]],
+		const authentication_request_message& message,
 		const std::shared_ptr<message_handle_parameter>& param) const {
+		if (message.authentication_method == authentication_method::none) {
+			return {message_attachment_requirement::forbidden, 0};
+		}
 		return {
 			message_attachment_requirement::required,
 			param->server_setting.authentication.max_credential_bytes
@@ -86,14 +89,15 @@ namespace pgl {
 				server_game_version);
 		}
 
-		if (!param->server_setting.authentication.is_method_enabled(message.authentication_method)) {
+		if (!param->server_setting.authentication.accepts_method(message.authentication_method)) {
 			log_with_session(log_level::info, param, "Authentication failed. Unsupported authentication method: ",
 				message.authentication_method);
 			return make_authentication_failure_reply(authentication_result::unsupported_authentication_method,
 				api_version, server_game_version);
 		}
 
-		if (!param->connection.is_tls() && !param->server_setting.authentication.allow_plain_connections) {
+		if (message.authentication_method != authentication_method::none && !param->connection.is_tls() &&
+			!param->server_setting.authentication.allow_plain_connections) {
 			log_with_session(log_level::warning, param,
 				"Authentication failed because authentication over plain TCP is not allowed.");
 			return make_authentication_failure_reply(authentication_result::insecure_connection, api_version,
@@ -141,16 +145,19 @@ namespace pgl {
 		const std::shared_ptr<message_handle_parameter> param) {
 		const auto server_game_version = game_version_t(param->server_setting.authentication.game_version);
 
-		const authentication_execution_context authentication_context{
-			param->connection.get_executor(),
-			param->yield,
-			std::chrono::steady_clock::now() +
-			std::chrono::seconds(param->server_setting.authentication.timeout_seconds),
-			param->server_setting.authentication.allow_plain_external_service_connections
-		};
-		const auto verification_result = verify_authentication_credential(message.authentication_method, credential,
-			message.player_name, param->server_setting.authentication, authentication_context);
-		if (!verification_result.succeeded() || !verification_result.identity.has_value()) {
+		authentication_verification_result verification_result{authentication_result::success, std::nullopt};
+		if (message.authentication_method != authentication_method::none) {
+			const authentication_execution_context authentication_context{
+				param->connection.get_executor(),
+				param->yield,
+				std::chrono::steady_clock::now() +
+				std::chrono::seconds(param->server_setting.authentication.timeout_seconds),
+				param->server_setting.authentication.allow_plain_external_service_connections
+			};
+			verification_result = verify_authentication_credential(message.authentication_method, credential,
+				message.player_name, param->server_setting.authentication, authentication_context);
+		}
+		if (!verification_result.succeeded()) {
 			log_with_session(log_level::info, param, "Authentication failed. (method: ",
 				message.authentication_method, ", result: ", static_cast<int>(verification_result.result), ")");
 			return make_authentication_failure_reply(verification_result.result, api_version, server_game_version);
@@ -166,7 +173,12 @@ namespace pgl {
 		param->session_data.set_client_player_name(player_full_name);
 
 		// Mark as authenticated
-		param->session_data.set_authenticated(*verification_result.identity);
+		if (verification_result.identity.has_value()) {
+			param->session_data.set_authenticated(*verification_result.identity);
+		}
+		else {
+			param->session_data.set_authenticated();
+		}
 
 		// Reply to the client
 		authentication_reply_message reply{

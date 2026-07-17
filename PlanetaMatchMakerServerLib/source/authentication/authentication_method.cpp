@@ -11,6 +11,7 @@ namespace pgl {
 		const static std::unordered_map<std::string, authentication_method> map{
 			{std::string(nameof::nameof_enum(authentication_method::steam)), authentication_method::steam},
 			{std::string(nameof::nameof_enum(authentication_method::oidc)), authentication_method::oidc},
+			{std::string(nameof::nameof_enum(authentication_method::none)), authentication_method::none},
 		};
 		return map.at(str);
 	}

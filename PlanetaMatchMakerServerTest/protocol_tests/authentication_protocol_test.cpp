@@ -315,7 +315,7 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		const authentication_http_test_server& steam_server) {
 		setting.authentication.allow_plain_connections = true;
 		setting.authentication.allow_plain_external_service_connections = true;
-		setting.authentication.steam.enabled = true;
+		setting.authentication.method = pgl::authentication_method::steam;
 		setting.authentication.steam.app_id = 480;
 		setting.authentication.steam.publisher_key = "test-publisher-key";
 		setting.authentication.steam.authenticate_user_ticket_url = steam_server.url("/auth");
@@ -324,7 +324,7 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 
 	void enable_steam_authentication_without_http(pgl::server_setting& setting) {
 		setting.authentication.allow_plain_connections = true;
-		setting.authentication.steam.enabled = true;
+		setting.authentication.method = pgl::authentication_method::steam;
 		setting.authentication.steam.app_id = 480;
 		setting.authentication.steam.publisher_key = "test-publisher-key";
 	}
@@ -350,6 +350,13 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		return boost::json::serialize(boost::json::object{{"keys", boost::json::array{std::move(key)}}});
 	}
 
+	std::string make_oidc_discovery(const std::string& issuer, const std::string& jwks_url) {
+		return boost::json::serialize(boost::json::object{
+			{"issuer", issuer},
+			{"jwks_uri", jwks_url}
+		});
+	}
+
 	std::string make_oidc_token(
 		const std::string& issuer = "https://issuer.example",
 		const std::string& audience = "pmms-test",
@@ -372,7 +379,7 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 	void configure_oidc_authentication(pgl::server_setting& setting, const std::string& jwks = make_oidc_jwks("test-key")) {
 		setting.authentication.allow_plain_connections = true;
 		setting.authentication.allow_plain_external_service_connections = true;
-		setting.authentication.oidc.enabled = true;
+		setting.authentication.method = pgl::authentication_method::oidc;
 		setting.authentication.oidc.issuer = "https://issuer.example";
 		setting.authentication.oidc.audience = "pmms-test";
 		setting.authentication.oidc.algorithms = {"RS256"};
@@ -402,6 +409,12 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 }
 
 BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
+	BOOST_AUTO_TEST_CASE(test_authentication_method_wire_values) {
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::steam), 0u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::oidc), 1u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::none), 2u);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_external_authentication_rejects_plain_http_by_default) {
 		boost::asio::io_context io;
 		std::exception_ptr exception;
@@ -461,6 +474,42 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK(context.session_data.client_player_name().name == u8"player");
 		BOOST_CHECK(context.server_data.get_player_name_container().is_player_exist(
 			context.session_data.client_player_name()));
+	}
+
+	BOOST_AUTO_TEST_CASE(test_unauthenticated_connection_replies_success_without_identity) {
+		protocol_context context;
+		context.setting.authentication.allow_plain_connections = false;
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::none, {}) ==
+			pgl::authentication_result::success);
+		BOOST_CHECK(context.session_data.is_authenticated());
+		BOOST_CHECK(!context.session_data.identity().has_value());
+		BOOST_CHECK(context.session_data.client_player_name().name == u8"player");
+	}
+
+	BOOST_AUTO_TEST_CASE(test_authentication_request_is_rejected_when_method_differs_from_server_setting) {
+		protocol_context context;
+		context.setting.authentication.method = pgl::authentication_method::steam;
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::none, {}) ==
+			pgl::authentication_result::unsupported_authentication_method);
+		BOOST_CHECK(!context.session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_unauthenticated_connection_rejects_credential_attachment) {
+		protocol_context context;
+		const auto request = make_authentication_request(context.setting, u8"player", pgl::api_version,
+			pgl::authentication_method::none);
+		protocol_handler_run handler(context, pgl::message_type::authentication);
+
+		write_authentication_request(context.client_socket, request, test_credential);
+		const auto reply_header = read_packed<pgl::reply_message_header>(context.client_socket);
+		const auto exception = handler.wait();
+
+		BOOST_CHECK(is_intended_disconnect(exception));
+		BOOST_CHECK(reply_header.message_type == pgl::message_type::authentication);
+		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::request_parameter_wrong);
+		BOOST_CHECK(!context.session_data.is_authenticated());
 	}
 
 	BOOST_AUTO_TEST_CASE(test_steam_authentication_replies_ticket_invalid) {
@@ -641,6 +690,68 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK_EQUAL(jwks_server.request_count(), 1);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_rejects_discovery_issuer_mismatch) {
+		protocol_context context;
+		authentication_http_test_server jwks_server(std::vector<test_http_response>{});
+		authentication_http_test_server discovery_server({
+			{200, make_oidc_discovery("https://wrong-issuer.example", jwks_server.url("/jwks"))}
+		});
+		configure_oidc_authentication(context.setting, "");
+		context.setting.authentication.oidc.discovery_url = discovery_server.url("/.well-known/openid-configuration");
+		const auto token = make_oidc_token();
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_key_fetch_failed);
+		BOOST_CHECK_EQUAL(discovery_server.request_count(), 1);
+		BOOST_CHECK_EQUAL(jwks_server.request_count(), 0);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_rejects_discovery_without_issuer) {
+		protocol_context context;
+		authentication_http_test_server jwks_server(std::vector<test_http_response>{});
+		const auto discovery = boost::json::serialize(boost::json::object{
+			{"jwks_uri", jwks_server.url("/jwks")}
+		});
+		authentication_http_test_server discovery_server({{200, discovery}});
+		configure_oidc_authentication(context.setting, "");
+		context.setting.authentication.oidc.discovery_url = discovery_server.url("/.well-known/openid-configuration");
+		const auto token = make_oidc_token();
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		BOOST_CHECK(authenticate(context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::oidc_key_fetch_failed);
+		BOOST_CHECK_EQUAL(discovery_server.request_count(), 1);
+		BOOST_CHECK_EQUAL(jwks_server.request_count(), 0);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_oidc_authentication_uses_cached_discovery_and_jwks) {
+		authentication_http_test_server jwks_server({{200, make_oidc_jwks("test-key")}});
+		authentication_http_test_server discovery_server({
+			{200, make_oidc_discovery("https://issuer.example", jwks_server.url("/jwks"))}
+		});
+		const auto configure = [&discovery_server](pgl::server_setting& setting) {
+			configure_oidc_authentication(setting, "");
+			setting.authentication.oidc.discovery_url =
+				discovery_server.url("/.well-known/openid-configuration");
+			setting.authentication.oidc.jwks_cache_seconds = 3600;
+		};
+		const auto token = make_oidc_token();
+		const std::vector<uint8_t> credential(token.begin(), token.end());
+
+		protocol_context first_context;
+		configure(first_context.setting);
+		BOOST_CHECK(authenticate(first_context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::success);
+
+		protocol_context second_context;
+		configure(second_context.setting);
+		BOOST_CHECK(authenticate(second_context, pgl::authentication_method::oidc, credential) ==
+			pgl::authentication_result::success);
+		BOOST_CHECK_EQUAL(discovery_server.request_count(), 1);
+		BOOST_CHECK_EQUAL(jwks_server.request_count(), 1);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_oidc_authentication_refreshes_cached_jwks_when_kid_is_unknown) {
 		protocol_context context;
 		authentication_http_test_server jwks_server({
@@ -796,7 +907,7 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_authentication_request_replies_insecure_connection_when_plain_is_not_allowed) {
 		protocol_context context;
-		context.setting.authentication.steam.enabled = true;
+		context.setting.authentication.method = pgl::authentication_method::steam;
 		context.setting.authentication.allow_plain_connections = false;
 		const auto request = make_authentication_request(context.setting, u8"player");
 		protocol_handler_run handler(context, pgl::message_type::authentication);

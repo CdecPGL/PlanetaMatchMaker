@@ -51,6 +51,36 @@ namespace PlanetaGameLabo.MatchMaker.Test
             }
         }
 
+        [TestMethod]
+        public async Task ConnectAsyncWithoutAuthenticationSendsNoneWithNoCredential()
+        {
+            using (var server = new PlainAuthenticationServer("plain-game", "1.0.0", 12))
+            using (var client = new MatchMakerClient(
+                       new GameId("plain-game"),
+                       new GameVersion("1.0.0"),
+                       3000,
+                       30,
+                       StreamLogger.CreateNullLogger()))
+            {
+                var fullName = await client.ConnectAsync(
+                    new Host("127.0.0.1"),
+                    new ServerPort((ushort)server.Port),
+                    new PlayerName("plain-player"),
+                    new ConnectionOptions(ConnectionMode.Plain));
+
+                Assert.AreEqual("plain-player", fullName.Name);
+                Assert.AreEqual((ushort)12, fullName.Tag);
+
+                var received = await WithTimeout(server.AuthenticationRequest);
+                Assert.AreEqual(AuthenticationMethod.None, received.Request.AuthenticationMethod);
+                Assert.AreEqual(0, received.Credential.Length);
+                Assert.AreEqual(0, received.Sequences.Count);
+
+                client.Close();
+                await WithTimeout(server.Completion);
+            }
+        }
+
         private static async Task<T> WithTimeout<T>(Task<T> task)
         {
             var completedTask = await Task.WhenAny(task, Task.Delay(5000));

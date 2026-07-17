@@ -35,6 +35,7 @@ namespace pgl {
 	};
 
 	struct server_authentication_setting final {
+		authentication_method method = authentication_method::none;
 		std::u8string game_id;
 		bool enable_game_version_check = false;
 		std::u8string game_version;
@@ -45,7 +46,6 @@ namespace pgl {
 		bool allow_plain_external_service_connections = false;
 
 		struct steam_setting final {
-			bool enabled = false;
 			uint32_t app_id = 0;
 			std::string publisher_key;
 			std::string identity;
@@ -56,7 +56,6 @@ namespace pgl {
 		} steam;
 
 		struct oidc_setting final {
-			bool enabled = false;
 			std::string issuer;
 			std::string audience;
 			std::vector<std::string> algorithms = {"RS256", "RS384", "RS512"};
@@ -66,7 +65,7 @@ namespace pgl {
 			uint32_t jwks_cache_seconds = 3600;
 		} oidc;
 
-		[[nodiscard]] bool is_method_enabled(authentication_method method) const;
+		[[nodiscard]] bool accepts_method(authentication_method requested_method) const;
 	};
 
 	struct server_log_setting final {

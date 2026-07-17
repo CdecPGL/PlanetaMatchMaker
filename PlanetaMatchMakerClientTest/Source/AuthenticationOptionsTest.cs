@@ -7,6 +7,15 @@ namespace PlanetaGameLabo.MatchMaker.Tests
     public class AuthenticationOptionsTest
     {
         [TestMethod]
+        public void NoneUsesEmptyCredential()
+        {
+            var options = AuthenticationOptions.None();
+
+            Assert.AreEqual(AuthenticationMethod.None, options.Method);
+            Assert.AreEqual(0, options.Credential.Length);
+        }
+
+        [TestMethod]
         public void SteamRejectsCredentialOverProtocolMaximum()
         {
             var credential = new byte[ClientConstants.MaxMessageAttachmentLength + 1];

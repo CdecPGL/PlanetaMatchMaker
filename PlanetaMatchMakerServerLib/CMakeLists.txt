@@ -34,7 +34,7 @@ target_link_libraries(PlanetaMatchMakerServerLib PUBLIC ${Boost_LIBRARIES})
 if (STATIC_LINK_DEPENDENCIES)
 	set(OPENSSL_USE_STATIC_LIBS ON)
 endif()
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL 3.0 REQUIRED)
 target_link_libraries(PlanetaMatchMakerServerLib PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
 # JWT Library

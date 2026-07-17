@@ -65,6 +65,21 @@ BOOST_AUTO_TEST_SUITE(errors_test)
 			pgl::message_error_code::client_already_hosting_room);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_message_error_code_wire_values) {
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::ok), 0u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::server_error), 1u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::operation_invalid), 2u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::request_parameter_wrong), 3u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_not_found), 4u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_password_wrong), 5u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_full), 6u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_permission_denied), 7u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_count_exceeds_limit), 8u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::message_error_code::room_connection_establish_mode_mismatch), 9u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::client_already_hosting_room), 10u);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_server_error_stores_disconnect_flag_and_extra_message) {
 		const pgl::server_error error(true, "database unavailable");
 

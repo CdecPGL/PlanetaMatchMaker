@@ -10,6 +10,7 @@
         "max_player_per_room": 16
     },
     "authentication": {
+        "method": "none",
         "game_id": "test",
         "enable_game_version_check": true,
         "game_version": "1.0.0",
@@ -19,13 +20,11 @@
         "allow_plain_connections": false,
         "allow_plain_external_service_connections": false,
         "steam": {
-            "enabled": false,
             "app_id": 0,
             "publisher_key": "",
             "identity": ""
         },
         "oidc": {
-            "enabled": false,
             "issuer": "",
             "audience": "",
             "algorithms": ["RS256", "RS384", "RS512"],
