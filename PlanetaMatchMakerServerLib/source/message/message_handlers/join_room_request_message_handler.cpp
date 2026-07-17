@@ -7,6 +7,7 @@ using namespace minimal_serializer;
 namespace pgl {
 	join_room_request_message_handler::handle_return_t join_room_request_message_handler::handle_message(
 		const join_room_request_message& message,
+		const std::vector<uint8_t>& attachment [[maybe_unused]],
 		const std::shared_ptr<message_handle_parameter> param) {
 		const message_parameter_validator parameter_validator(param);
 

@@ -130,11 +130,11 @@ namespace PlanetaGameLabo.MatchMaker.Test
 
                         var received = new ReceivedAuthentication { Request = request };
                         var credential = new List<byte>();
-                        while (credential.Count < request.CredentialSize)
+                        while (credential.Count < requestHeader.AttachmentSize)
                         {
-                            var chunk = await ReadStructAsync<AuthenticationCredentialChunkMessage>(stream)
+                            var chunk = await ReadStructAsync<MessageAttachmentChunk>(stream)
                                 .ConfigureAwait(false);
-                            var expectedDataSize = Math.Min(240, (int)request.CredentialSize - credential.Count);
+                            var expectedDataSize = Math.Min(240, (int)requestHeader.AttachmentSize - credential.Count);
                             Assert.AreEqual((ushort)received.Sequences.Count, chunk.Sequence);
                             Assert.AreEqual((byte)expectedDataSize, chunk.DataSize);
                             received.Sequences.Add(chunk.Sequence);

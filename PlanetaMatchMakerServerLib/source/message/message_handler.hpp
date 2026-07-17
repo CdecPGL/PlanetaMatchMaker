@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <functional>
+#include <optional>
 #include <utility>
 
 #include <boost/asio/spawn.hpp>
@@ -26,8 +27,18 @@ namespace pgl {
 	};
 
 	template <class ReplyMessage>
+	struct message_reply final {
+		ReplyMessage body;
+		std::vector<uint8_t> attachment;
+
+		message_reply(ReplyMessage reply_body) : body(std::move(reply_body)) {}
+		message_reply(ReplyMessage reply_body, std::vector<uint8_t> reply_attachment) :
+			body(std::move(reply_body)), attachment(std::move(reply_attachment)) {}
+	};
+
+	template <class ReplyMessage>
 	struct message_handling_result {
-		std::vector<ReplyMessage> reply_bodies;
+		std::vector<message_reply<ReplyMessage>> replies;
 		bool is_disconnect_required;
 		std::function<void()> on_reply_failure = {};
 	};
@@ -63,16 +74,32 @@ namespace pgl {
 				header.message_type,
 				message_error_code::ok,
 			};
-			std::vector<ReplyMessage> reply_bodies;
+			std::vector<message_reply<ReplyMessage>> replies;
 			std::function<void()> on_reply_failure;
 			try {
-				// handle message
-				log_with_session(log_level::info, param, "Handle ",
-					header.message_type, " message.");
-				auto result = handle_message(message, param);
-				is_disconnect_required = result.is_disconnect_required;
-				reply_bodies = std::move(result.reply_bodies);
-				on_reply_failure = std::move(result.on_reply_failure);
+				auto result = validate_message_before_attachment(message, header.attachment_size, param);
+				if (!result.has_value()) {
+					const auto attachment_policy = get_message_attachment_policy(message, param);
+					if (const auto error = validate_message_attachment_size(attachment_policy, header.attachment_size);
+						error != message_attachment_error::none) {
+						result = handle_message_attachment_error(message, error, header.attachment_size, param);
+					}
+					else {
+						auto attachment_result = receive_message_attachment(param, header.attachment_size);
+						if (!attachment_result.succeeded()) {
+							result = handle_message_attachment_error(message, attachment_result.error,
+								header.attachment_size, param);
+						}
+						else {
+							log_with_session(log_level::info, param, "Handle ",
+								header.message_type, " message.");
+							result = handle_message(message, attachment_result.data, param);
+						}
+					}
+				}
+				is_disconnect_required = result->is_disconnect_required;
+				replies = std::move(result->replies);
+				on_reply_failure = std::move(result->on_reply_failure);
 				reply_header.error_code = message_error_code::ok;
 				disconnect_reason = "Disconnect due to message handling result.";
 			}
@@ -82,7 +109,7 @@ namespace pgl {
 					" message: ", e.message());
 				is_disconnect_required = e.is_disconnect_required();
 				// don't reply bodies
-				reply_bodies = {};
+				replies = {};
 				reply_header.error_code = get_message_error_code_from_client_error_code(e.error_code());
 				disconnect_reason = "Disconnect due to not continuable client error.";
 			}
@@ -92,7 +119,7 @@ namespace pgl {
 					" message: ", e.message());
 				is_disconnect_required = e.is_disconnect_required();
 				// don't reply bodies
-				reply_bodies = {};
+				replies = {};
 				reply_header.error_code = message_error_code::server_error;
 				disconnect_reason = "Disconnect due to not continuable server error.";
 			}
@@ -100,18 +127,24 @@ namespace pgl {
 			// reply message if required
 			if constexpr (!std::is_same_v<ReplyMessage, no_reply>) {
 				try {
-					if (reply_bodies.empty()) {
+					if (replies.empty()) {
+						reply_header.attachment_size = 0;
 						log_with_session(log_level::info, param, "Reply ",
 							header.message_type, " message without body (", get_packed_size<reply_message_header>(),
 							" bytes).");
 						send(param, reply_header);
 					}
 					else {
-						for (auto&& reply_body : reply_bodies) {
+						for (auto&& reply : replies) {
+							if (reply.attachment.size() > message_attachment_max_bytes) {
+								throw server_error(false, "Reply message attachment exceeds protocol limit.");
+							}
+							reply_header.attachment_size = static_cast<message_attachment_size_t>(reply.attachment.size());
 							log_with_session(log_level::info, param, "Reply ",
 								header.message_type, " message (", get_packed_size<reply_message_header, ReplyMessage>(),
-								" bytes).");
-							send(param, reply_header, reply_body);
+								" bytes, attachment: ", reply.attachment.size(), " bytes).");
+							send(param, reply_header, reply.body);
+							send_message_attachment(param, std::span<const uint8_t>(reply.attachment));
 						}
 					}
 				}
@@ -132,6 +165,23 @@ namespace pgl {
 		}
 
 	private:
+		virtual message_attachment_policy get_message_attachment_policy(const RequestMessage&,
+			const std::shared_ptr<message_handle_parameter>&) const {
+			return {};
+		}
+
+		virtual std::optional<handle_return_t> validate_message_before_attachment(const RequestMessage&,
+			message_attachment_size_t, const std::shared_ptr<message_handle_parameter>&) {
+			return std::nullopt;
+		}
+
+		virtual handle_return_t handle_message_attachment_error(const RequestMessage&,
+			const message_attachment_error error, message_attachment_size_t,
+			const std::shared_ptr<message_handle_parameter>&) {
+			throw client_error(client_error_code::request_parameter_wrong, true,
+				minimal_serializer::generate_string("Invalid message attachment: ", static_cast<int>(error)));
+		}
+
 		/**
 		 * @brief Handle message. If ReplyMessage is no_reply, reply message bodies are ignored.
 		 * - Succeeded: Return reply message bodies and whether disconnect is required.
@@ -142,6 +192,7 @@ namespace pgl {
 		 * @return A tuple of reply message and whether disconnect is required.
 		 */
 		virtual handle_return_t handle_message(const RequestMessage& message,
+			const std::vector<uint8_t>& attachment,
 			std::shared_ptr<message_handle_parameter> param) = 0;
 	};
 }

@@ -4,7 +4,7 @@ This is reference about the message API of the server.
 
 ## Message
 
-Message is fixed size binary data to communicate between server and client.
+Messages use a fixed-size header and body. A message may also carry one variable-length binary attachment, encoded as a sequence of fixed-size attachment chunks.
 
 There are three types of message.
 
@@ -34,25 +34,27 @@ TLS is enabled by default in the official server and client settings. Plain TCP 
 
 ## Message Structure
 
-All messages consist of header and body.
-The sizes of all messages are in less than or equals 256 bytes.
+All messages consist of a header and a fixed-size body. A message whose header declares a non-zero `attachment_size` is immediately followed by attachment chunks. Each combined header and body record and each fixed-size 243-byte attachment chunk are less than or equal to 256 bytes.
+
+Attachment chunks are subordinate records of their parent message. They do not have a `message_type`, are not dispatched independently, and are only valid while the parent message is being handled.
 
 There are two types of header.
 
 - Request Header: A header for request message and notice message
 - Reply Header: A header for reply message
 
-If errors occured while handling messages, the server returns only reply message header with error code.
+If errors occured while handling messages, the server returns only a reply message header with an error code and an `attachment_size` of zero.
 
 ## Message Header Structure
 
 ### Request/Notice Header
 
-The size is 1 bytes.
+The size is 5 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |message_type|8 bits unsigned integer|1|A type of message.|
+|attachment_size|32 bits unsigned integer|4|Size of the attachment associated with this message. Zero means that the message has no attachment.|
 
 Options of `message_type` are below.
 
@@ -69,12 +71,13 @@ Options of `message_type` are below.
 
 ### Reply Header
 
-The size is 2 bytes.
+The size is 6 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |message_type|8 bits unsigned integer|1|A type of message.|
 |error_code|8 bits unsigned integer|1|An error code.|
+|attachment_size|32 bits unsigned integer|4|Size of the attachment associated with this reply. Zero means that the reply has no attachment. Current reply messages do not define attachments.|
 
 Options of `message_type` are same as one used in request header.
 
@@ -93,6 +96,24 @@ Options of `error_code` are as below.
 |room_count_exceeds_limit|8|The number of room reaches limit.|
 |client_already_hosting_room|9|Request is failed because the client is already hosting room.|
 
+## Message Attachment Structure
+
+A message may define one binary attachment. Whether the attachment is forbidden, optional, or required, and its semantic format, are defined by the parent message type. The attachment is an opaque byte sequence at the transport layer; it does not contain a generic type identifier.
+
+The protocol maximum attachment size is 15,728,640 bytes. A message or server setting may impose a lower limit. A sender must set `attachment_size` before the fixed-size body and then send exactly `ceil(attachment_size / 240)` chunks immediately after that body.
+
+Each attachment chunk is 243 bytes.
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|sequence|16 bits unsigned integer|2|Zero-based chunk sequence number.|
+|data_size|8 bits unsigned integer|1|Attachment bytes contained in this chunk. The maximum is 240.|
+|data|240 elements byte array|240|Attachment data. All unused tail bytes must be zero.|
+
+The sequence must start at zero and increase by one. `data_size` must be 240 except for the final chunk, whose expected size is derived from `attachment_size`. A missing chunk, an unexpected sequence or size, or non-zero padding makes the attachment malformed. Attachment reception uses an absolute timeout for the complete attachment rather than resetting the timeout for each chunk.
+
+All currently defined request and notice messages except authentication forbid attachments and require `attachment_size == 0`. An unexpected attachment causes the connection to be closed. Authentication requires a non-empty attachment.
+
 ## Message Body Structure
 
 ### Authentication Request
@@ -101,7 +122,7 @@ A request to authenticate.
 
 #### Parameters
 
-The authentication request body size is 79 bytes. The request body is followed by credential chunk bodies. Credential chunks are sent without additional request headers.
+The authentication request body size is 75 bytes. Its required message attachment contains the Steam ticket or OIDC token. The attachment size must not exceed either `authentication.max_credential_bytes` or the protocol maximum.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -110,24 +131,13 @@ The authentication request body size is 79 bytes. The request body is followed b
 |game_id|24 byte length UTF-8 string|24|A game ID of the client.|
 |game_version|24 byte length UTF-8 string|24|A game version number of the client.|
 |player_name_t|24 byte length UTF-8 string|24|A name of player. This must not be empty.|
-|credential_size|32 bits unsigned integer|4|Credential byte size. This must be greater than 0 and less than or equal to both `authentication.max_credential_bytes` and the protocol maximum of 15,728,640 bytes.|
 
 `authentication_method` options are as below.
 
-|Name|Value|Credential|
+|Name|Value|Attachment contents|
 |:---|---:|:---|
 |steam|0|Steam auth ticket bytes.|
 |oidc|1|OIDC JWT bytes, normally UTF-8 text.|
-
-An authentication credential chunk is 243 bytes.
-
-|Name|Type|Size|Explanation|
-|:---|:---|---:|:---|
-|sequence|16 bits unsigned integer|2|Zero-based chunk sequence number.|
-|data_size|8 bits unsigned integer|1|Credential bytes contained in this chunk. The maximum is 240.|
-|data|240 elements byte array|240|Credential chunk data. Unused tail bytes are zero.|
-
-The number of chunks is `ceil(credential_size / 240)`. Chunk sequence and size must exactly match the declared credential size.
 
 #### Reply
 
@@ -149,7 +159,7 @@ Options of `result` are as below.
 |game_id_mismatch|2|Client game id doesn't match to the acceptable value in the server.|
 |game_version_mismatch|3|Client game version doesn't match to the version the server required.|
 |unsupported_authentication_method|4|The requested authentication method is not enabled or is unknown.|
-|authentication_data_format_invalid|5|Credential size, chunk sequence, or chunk size is invalid.|
+|authentication_data_format_invalid|5|The credential attachment is empty or malformed.|
 |authentication_data_size_exceeded|6|Credential size exceeds `authentication.max_credential_bytes`.|
 |authentication_data_invalid|7|Credential is invalid.|
 |insecure_connection|8|Authentication over plain TCP is not allowed by server setting.|
@@ -226,7 +236,7 @@ A request to get room informations which matches to requested parameters.
 
 #### Parameters
 
-The size is 30 bytes.
+The size is 32 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -234,7 +244,7 @@ The size is 30 bytes.
 |count|16 bits unsigned integer|2|The number of room data which will be replied from search results.|
 |sort_kind|8 bits unsigned integer|1|A sort kind of result.|
 |search_target_flags|8 bits unsigned integer|1|A flags to indicate search target.|
-|search_full_name|player_full_name|24|A query to search room by the room's host player name.|
+|search_full_name|player_full_name|26|A query to search room by the room's host player name.|
 
 Options of `sort_kind` are as below.
 
@@ -255,7 +265,7 @@ Options are as below.
 |open_room|4|
 |closed_room|8|
 
-`player_full_name` is 24 bytes data as below.
+`player_full_name` is 26 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -264,21 +274,21 @@ Options are as below.
 
 #### Reply
 
-The size is 246 bytes.
+The body size is 216 bytes. Including the 6-byte reply header, one reply record is 222 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |total_room_count|16 bits unsigned integer|2|The number of rooms existing in the room group in the server.|
 |matched_room_count|16 bits unsigned integer|2|The number of rooms which match to the query of the room.|
 |reply_room_count|16 bits unsigned integer|2|The number of rooms which is included in reply messages.|
-|room_info_list|A 6 elements array of room_info|240|A result room info list.|
+|room_info_list|A 5 elements array of room_info|210|A result room info list.|
 
-`room_info` is 40 bytes data as below.
+`room_info` is 42 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |room_id|32 bits unsigned integer|4|An id of the room.|
-|host_player_full_name|player_full_name|24|A name of player who is hosting the room.|
+|host_player_full_name|player_full_name|26|A name of player who is hosting the room.|
 |setting_flags|8 bits unsigned integer|1|A flags which indicate a setting of the room.|
 |max_player_count|8 bits unsigned integer|1|Player capability of this room.|
 |current_player_count|8 bits unsigned integer|1|The number of player which joins the room currently.|
@@ -297,7 +307,7 @@ Multiple reply messages are sent if there are more rooms than rooms one reply me
 You can obtain the number of reply message (separation) by below expression.
 
 ```cpp
-separation = floor((reply.reply_room_count + 5) / 6);
+separation = floor((reply.reply_room_count + 4) / 5);
 ```
 
 #### Error Codes

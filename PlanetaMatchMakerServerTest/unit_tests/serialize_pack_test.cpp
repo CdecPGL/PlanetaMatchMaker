@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
+#include "message/messages.hpp"
 #include "utilities/pack.hpp"
 
 BOOST_AUTO_TEST_SUITE(serialize_pack_test)
@@ -79,6 +80,45 @@ BOOST_AUTO_TEST_SUITE(serialize_pack_test)
 		BOOST_CHECK_EXCEPTION(pgl::unpack_data(std::vector<uint8_t>(1), actual),
 			minimal_serializer::serialization_error,
 			[](auto) {return true; });
+	}
+
+	BOOST_AUTO_TEST_CASE(test_message_protocol_serialized_sizes) {
+		BOOST_CHECK_EQUAL(minimal_serializer::serialized_size_v<pgl::request_message_header>, 5);
+		BOOST_CHECK_EQUAL(minimal_serializer::serialized_size_v<pgl::reply_message_header>, 6);
+		BOOST_CHECK_EQUAL(minimal_serializer::serialized_size_v<pgl::authentication_request_message>, 75);
+		BOOST_CHECK_EQUAL(minimal_serializer::serialized_size_v<pgl::message_attachment_chunk>, 243);
+		BOOST_CHECK_EQUAL(minimal_serializer::serialized_size_v<pgl::list_room_reply_message>, 216);
+
+		constexpr auto max_record_size = 256;
+		constexpr auto request_header_size = minimal_serializer::serialized_size_v<pgl::request_message_header>;
+		constexpr auto reply_header_size = minimal_serializer::serialized_size_v<pgl::reply_message_header>;
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::authentication_request_message>, max_record_size);
+		BOOST_CHECK_LE(reply_header_size +
+			minimal_serializer::serialized_size_v<pgl::authentication_reply_message>, max_record_size);
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::create_room_request_message>, max_record_size);
+		BOOST_CHECK_LE(reply_header_size +
+			minimal_serializer::serialized_size_v<pgl::create_room_reply_message>, max_record_size);
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::list_room_request_message>, max_record_size);
+		BOOST_CHECK_LE(reply_header_size +
+			minimal_serializer::serialized_size_v<pgl::list_room_reply_message>, max_record_size);
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::join_room_request_message>, max_record_size);
+		BOOST_CHECK_LE(reply_header_size +
+			minimal_serializer::serialized_size_v<pgl::join_room_reply_message>, max_record_size);
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::update_room_status_notice_message>, max_record_size);
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::connection_test_request_message>, max_record_size);
+		BOOST_CHECK_LE(reply_header_size +
+			minimal_serializer::serialized_size_v<pgl::connection_test_reply_message>, max_record_size);
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::random_match_request_message>, max_record_size);
+		BOOST_CHECK_LE(request_header_size +
+			minimal_serializer::serialized_size_v<pgl::keep_alive_notice_message>, max_record_size);
+		BOOST_CHECK_LE(minimal_serializer::serialized_size_v<pgl::message_attachment_chunk>, max_record_size);
 	}
 
 BOOST_AUTO_TEST_SUITE_END()

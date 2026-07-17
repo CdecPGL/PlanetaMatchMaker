@@ -9,7 +9,7 @@ namespace PlanetaGameLabo.MatchMaker.Tests
         [TestMethod]
         public void SteamRejectsCredentialOverProtocolMaximum()
         {
-            var credential = new byte[ClientConstants.MaxAuthenticationCredentialLength + 1];
+            var credential = new byte[ClientConstants.MaxMessageAttachmentLength + 1];
 
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => AuthenticationOptions.Steam(credential));
         }
@@ -17,7 +17,7 @@ namespace PlanetaGameLabo.MatchMaker.Tests
         [TestMethod]
         public void SteamAcceptsCredentialAtProtocolMaximum()
         {
-            var credential = new byte[ClientConstants.MaxAuthenticationCredentialLength];
+            var credential = new byte[ClientConstants.MaxMessageAttachmentLength];
 
             var options = AuthenticationOptions.Steam(credential);
 

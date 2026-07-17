@@ -24,15 +24,26 @@ namespace pgl {
 			const api_version_type reply_api_version,
 			const game_version_t& server_game_version) {
 			return {
-				{{result, reply_api_version, server_game_version, 0}},
+				{authentication_reply_message{result, reply_api_version, server_game_version, 0}},
 				true
 			};
 		}
 	}
 
-	authentication_request_message_handler::handle_return_t authentication_request_message_handler::handle_message(
+	message_attachment_policy authentication_request_message_handler::get_message_attachment_policy(
+		const authentication_request_message& message [[maybe_unused]],
+		const std::shared_ptr<message_handle_parameter>& param) const {
+		return {
+			message_attachment_requirement::required,
+			param->server_setting.authentication.max_credential_bytes
+		};
+	}
+
+	std::optional<authentication_request_message_handler::handle_return_t>
+	authentication_request_message_handler::validate_message_before_attachment(
 		const authentication_request_message& message,
-		const std::shared_ptr<message_handle_parameter> param) {
+		const message_attachment_size_t attachment_size [[maybe_unused]],
+		const std::shared_ptr<message_handle_parameter>& param) {
 		const message_parameter_validator parameter_validator(param);
 		// Check status
 		if (param->session_data.is_authenticated()) {
@@ -89,41 +100,46 @@ namespace pgl {
 				server_game_version);
 		}
 
-		if (message.credential_size == 0) {
+		return std::nullopt;
+	}
+
+	authentication_request_message_handler::handle_return_t
+	authentication_request_message_handler::handle_message_attachment_error(
+		const authentication_request_message& message [[maybe_unused]],
+		const message_attachment_error error,
+		const message_attachment_size_t attachment_size,
+		const std::shared_ptr<message_handle_parameter>& param) {
+		const auto server_game_version = game_version_t(param->server_setting.authentication.game_version);
+		if (error == message_attachment_error::missing) {
 			log_with_session(log_level::info, param, "Authentication failed. Credential is empty.");
 			return make_authentication_failure_reply(authentication_result::authentication_data_format_invalid,
 				api_version, server_game_version);
 		}
 
-		if (message.credential_size > authentication_max_credential_bytes ||
-			message.credential_size > param->server_setting.authentication.max_credential_bytes) {
+		if (error == message_attachment_error::format_invalid) {
+			log_with_session(log_level::info, param, "Authentication failed. Credential attachment is malformed.");
+			return make_authentication_failure_reply(authentication_result::authentication_data_format_invalid,
+				api_version, server_game_version);
+		}
+
+		if (error == message_attachment_error::size_exceeded) {
 			log_with_session(log_level::info, param,
 				"Authentication failed. Credential size exceeds configured limit. (limit: ",
-				param->server_setting.authentication.max_credential_bytes, ", actual: ", message.credential_size,
+				param->server_setting.authentication.max_credential_bytes, ", actual: ", attachment_size,
 				")");
 			return make_authentication_failure_reply(authentication_result::authentication_data_size_exceeded,
 				api_version, server_game_version);
 		}
 
-		std::vector<uint8_t> credential;
-		credential.reserve(message.credential_size);
-		const auto chunk_count = (message.credential_size + authentication_credential_chunk_data_size - 1) /
-			authentication_credential_chunk_data_size;
-		for (auto sequence = 0u; sequence < chunk_count; ++sequence) {
-			authentication_credential_chunk_message chunk{};
-			receive(param, chunk);
-			const auto remaining = message.credential_size - credential.size();
-			const auto expected_data_size = std::min<std::size_t>(authentication_credential_chunk_data_size, remaining);
-			if (chunk.sequence != sequence || chunk.data_size != expected_data_size) {
-				log_with_session(log_level::info, param,
-					"Authentication failed. Credential chunk is invalid. (expected sequence: ", sequence,
-					", actual sequence: ", chunk.sequence, ", expected size: ", expected_data_size,
-					", actual size: ", static_cast<uint16_t>(chunk.data_size), ")");
-				return make_authentication_failure_reply(authentication_result::authentication_data_format_invalid,
-					api_version, server_game_version);
-			}
-			credential.insert(credential.end(), chunk.data.begin(), chunk.data.begin() + chunk.data_size);
-		}
+		throw client_error(client_error_code::request_parameter_wrong, true,
+			"Unexpected authentication message attachment error.");
+	}
+
+	authentication_request_message_handler::handle_return_t authentication_request_message_handler::handle_message(
+		const authentication_request_message& message,
+		const std::vector<uint8_t>& credential,
+		const std::shared_ptr<message_handle_parameter> param) {
+		const auto server_game_version = game_version_t(param->server_setting.authentication.game_version);
 
 		const authentication_execution_context authentication_context{
 			param->connection.get_executor(),

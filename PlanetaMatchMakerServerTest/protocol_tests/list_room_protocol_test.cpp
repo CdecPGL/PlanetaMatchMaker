@@ -151,10 +151,11 @@ BOOST_AUTO_TEST_SUITE(list_room_protocol_test)
 		BOOST_CHECK(second_header.error_code == pgl::message_error_code::ok);
 		BOOST_CHECK_EQUAL(first_reply.reply_room_count, 7);
 		BOOST_CHECK_EQUAL(first_reply.room_info_list[0].room_id, pgl::room_id_t{1});
-		BOOST_CHECK_EQUAL(first_reply.room_info_list[5].room_id, pgl::room_id_t{6});
+		BOOST_CHECK_EQUAL(first_reply.room_info_list[4].room_id, pgl::room_id_t{5});
 		BOOST_CHECK_EQUAL(second_reply.reply_room_count, 7);
-		BOOST_CHECK_EQUAL(second_reply.room_info_list[0].room_id, pgl::room_id_t{7});
-		BOOST_CHECK_EQUAL(second_reply.room_info_list[1].room_id, pgl::room_id_t{0});
+		BOOST_CHECK_EQUAL(second_reply.room_info_list[0].room_id, pgl::room_id_t{6});
+		BOOST_CHECK_EQUAL(second_reply.room_info_list[1].room_id, pgl::room_id_t{7});
+		BOOST_CHECK_EQUAL(second_reply.room_info_list[2].room_id, pgl::room_id_t{0});
 		expect_no_more_reply_data(context.client_socket);
 	}
 

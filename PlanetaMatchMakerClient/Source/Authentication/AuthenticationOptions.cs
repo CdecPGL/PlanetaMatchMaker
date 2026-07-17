@@ -18,10 +18,10 @@ namespace PlanetaGameLabo.MatchMaker
                 throw new ArgumentException("Credential must not be empty.", nameof(credential));
             }
 
-            if (credential.Length > ClientConstants.MaxAuthenticationCredentialLength)
+            if (credential.Length > ClientConstants.MaxMessageAttachmentLength)
             {
                 throw new ArgumentOutOfRangeException(nameof(credential),
-                    $"Credential must be at most {ClientConstants.MaxAuthenticationCredentialLength} bytes.");
+                    $"Credential must be at most {ClientConstants.MaxMessageAttachmentLength} bytes.");
             }
 
             Method = method;

@@ -13,6 +13,7 @@ using namespace minimal_serializer;
 namespace pgl {
 	list_room_request_message_handler::handle_return_t list_room_request_message_handler::handle_message(
 		const list_room_request_message& message,
+		const std::vector<uint8_t>& attachment [[maybe_unused]],
 		const std::shared_ptr<message_handle_parameter> param) {
 		const message_parameter_validator parameter_validator(param);
 
@@ -49,7 +50,7 @@ namespace pgl {
 		// Generate reply bodies separately
 		const auto separation = (reply.reply_room_count + list_room_reply_room_info_count - 1) /
 			list_room_reply_room_info_count;
-		std::vector<list_room_reply_message> reply_bodies;
+		std::vector<message_reply<list_room_reply_message>> replies;
 		for (auto i = 0; i < separation; ++i) {
 			for (auto j = 0; j < list_room_reply_room_info_count; ++j) {
 				if (const auto reply_data_index = list_room_reply_room_info_count * i + j; reply_data_index < reply.
@@ -71,7 +72,7 @@ namespace pgl {
 			log_with_session(log_level::debug, param, "Generate reply body ", i + 1, "/",
 				separation,
 				" message.");
-			reply_bodies.push_back(reply);
+			replies.emplace_back(reply);
 		}
 
 		if (separation == 0) {
@@ -79,12 +80,12 @@ namespace pgl {
 				"There are no room which matches request.");
 			reply.reply_room_count = 0;
 			reply.room_info_list = {};
-			reply_bodies.push_back(reply);
+			replies.emplace_back(reply);
 		}
 
 		log_with_session(log_level::info, param, "Finished generating reply bodies ",
 			message_type::list_room, " message by ", separation, " messages.");
 
-		return {reply_bodies, false};
+		return {replies, false};
 	}
 }

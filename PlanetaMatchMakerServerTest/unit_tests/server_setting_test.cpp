@@ -113,22 +113,22 @@ private:
 };
 
 BOOST_AUTO_TEST_SUITE(server_setting_test)
-	BOOST_FIXTURE_TEST_CASE(load_from_json_file_accepts_protocol_maximum_authentication_credential_size,
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_accepts_protocol_maximum_message_attachment_size,
 		setting_file_fixture) {
 		create_setting_file(create_setting({
-			{"authentication", {{"max_credential_bytes", authentication_max_credential_bytes}}}
+			{"authentication", {{"max_credential_bytes", message_attachment_max_bytes}}}
 		}));
 
 		server_setting setting;
 		setting.load_from_json_file(setting_path);
 
-		BOOST_CHECK_EQUAL(setting.authentication.max_credential_bytes, authentication_max_credential_bytes);
+		BOOST_CHECK_EQUAL(setting.authentication.max_credential_bytes, message_attachment_max_bytes);
 	}
 
-	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_authentication_credential_size_over_protocol_maximum,
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_authentication_credential_size_over_message_attachment_maximum,
 		setting_file_fixture) {
 		create_setting_file(create_setting({
-			{"authentication", {{"max_credential_bytes", authentication_max_credential_bytes + 1}}}
+			{"authentication", {{"max_credential_bytes", message_attachment_max_bytes + 1}}}
 		}));
 
 		server_setting setting;

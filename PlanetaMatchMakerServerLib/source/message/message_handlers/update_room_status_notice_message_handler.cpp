@@ -9,6 +9,7 @@ using namespace minimal_serializer;
 namespace pgl {
 	update_room_status_notice_message_handler::handle_return_t
 	update_room_status_notice_message_handler::handle_message(const update_room_status_notice_message& message,
+		const std::vector<uint8_t>& attachment [[maybe_unused]],
 		const std::shared_ptr<message_handle_parameter> param) {
 		const message_parameter_validator parameter_validator(param);
 

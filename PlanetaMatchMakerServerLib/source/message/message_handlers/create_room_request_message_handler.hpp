@@ -7,6 +7,7 @@ namespace pgl {
 	class create_room_request_message_handler final : public message_handler_base<create_room_request_message,
 			create_room_reply_message> {
 		handle_return_t handle_message(const create_room_request_message& message,
+			const std::vector<uint8_t>& attachment,
 			std::shared_ptr<message_handle_parameter> param) override;
 	};
 }

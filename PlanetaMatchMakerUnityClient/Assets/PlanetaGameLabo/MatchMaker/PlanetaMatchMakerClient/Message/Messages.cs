@@ -58,22 +58,26 @@ namespace PlanetaGameLabo.MatchMaker
         KeepAlive
     }
 
-    // 1 bytes. Use for notice message too
+    // 5 bytes. Use for notice message too
     [Serializable]
     internal struct RequestMessageHeader
     {
         public MessageType MessageType;
+
+        public UInt32 AttachmentSize;
     }
 
-    // 2 bytes
+    // 6 bytes
     [Serializable]
     internal struct ReplyMessageHeader
     {
         public MessageType MessageType;
         public MessageErrorCode ErrorCode;
+
+        public UInt32 AttachmentSize;
     }
 
-    // 79 bytes
+    // 75 bytes
     [Serializable]
     [Message(MessageType.Authentication)]
     internal struct AuthenticationRequestMessage
@@ -91,12 +95,11 @@ namespace PlanetaGameLabo.MatchMaker
         [FixedLength(ClientConstants.PlayerNameLength)]
         public string PlayerName;
 
-        public UInt32 CredentialSize;
     }
 
     // 243 bytes
     [Serializable]
-    internal struct AuthenticationCredentialChunkMessage
+    internal struct MessageAttachmentChunk
     {
         public UInt16 Sequence;
 
@@ -159,7 +162,7 @@ namespace PlanetaGameLabo.MatchMaker
         public PlayerFullName SearchFullName;
     }
 
-    // 246 bytes
+    // 216 bytes
     [Serializable]
     [Message(MessageType.ListRoom)]
     internal struct ListRoomReplyMessage

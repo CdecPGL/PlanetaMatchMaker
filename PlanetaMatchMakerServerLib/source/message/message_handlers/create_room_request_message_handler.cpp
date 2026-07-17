@@ -38,6 +38,7 @@ namespace pgl {
 
 	create_room_request_message_handler::handle_return_t create_room_request_message_handler::handle_message(
 		const create_room_request_message& message,
+		const std::vector<uint8_t>& attachment [[maybe_unused]],
 		const std::shared_ptr<message_handle_parameter> param) {
 		const message_parameter_validator parameter_validator(param);
 

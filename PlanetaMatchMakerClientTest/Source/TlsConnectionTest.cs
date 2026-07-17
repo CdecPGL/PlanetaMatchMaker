@@ -66,7 +66,6 @@ namespace PlanetaGameLabo.MatchMaker.Test
                 Assert.AreEqual("tls-game", request.GameId);
                 Assert.AreEqual("1.0.0", request.GameVersion);
                 Assert.AreEqual("tls-player", request.PlayerName);
-                Assert.AreEqual((uint)14, request.CredentialSize);
 
                 client.Close();
                 await WithTimeout(server.Completion);
@@ -145,14 +144,15 @@ namespace PlanetaGameLabo.MatchMaker.Test
 
                         var requestHeader = await ReadStructAsync<RequestMessageHeader>(stream).ConfigureAwait(false);
                         Assert.AreEqual(MessageType.Authentication, requestHeader.MessageType);
+                        Assert.AreEqual((uint)14, requestHeader.AttachmentSize);
 
                         var request = await ReadStructAsync<AuthenticationRequestMessage>(stream).ConfigureAwait(false);
                         Assert.AreEqual(expectedGameId, request.GameId);
                         Assert.AreEqual(expectedGameVersion, request.GameVersion);
-                        var chunk = await ReadStructAsync<AuthenticationCredentialChunkMessage>(stream)
+                        var chunk = await ReadStructAsync<MessageAttachmentChunk>(stream)
                             .ConfigureAwait(false);
                         Assert.AreEqual((ushort)0, chunk.Sequence);
-                        Assert.AreEqual((byte)request.CredentialSize, chunk.DataSize);
+                        Assert.AreEqual((byte)requestHeader.AttachmentSize, chunk.DataSize);
                         authenticationRequest.SetResult(request);
 
                         await WriteStructAsync(

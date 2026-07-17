@@ -127,6 +127,7 @@ namespace pgl {
 
 	connection_test_request_message_handler::handle_return_t connection_test_request_message_handler::handle_message(
 		const connection_test_request_message& message,
+		const std::vector<uint8_t>& attachment [[maybe_unused]],
 		std::shared_ptr<message_handle_parameter> param) {
 		const message_parameter_validator parameter_validator(param);
 

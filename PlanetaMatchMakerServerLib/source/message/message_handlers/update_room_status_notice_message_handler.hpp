@@ -8,6 +8,7 @@ namespace pgl {
 		final : public message_handler_base<update_room_status_notice_message> {
 	public:
 		handle_return_t handle_message(const update_room_status_notice_message& message,
+			const std::vector<uint8_t>& attachment,
 			std::shared_ptr<message_handle_parameter> param) override;
 	};
 }

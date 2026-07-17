@@ -28,62 +28,66 @@ namespace pgl {
 		keep_alive
 	};
 
-	// 1 bytes. Use for notice message too
+	using message_attachment_size_t = uint32_t;
+
+	// 5 bytes. Use for notice message too
 	struct request_message_header final {
 		message_type message_type;
+		message_attachment_size_t attachment_size;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
-			&request_message_header::message_type
+			&request_message_header::message_type,
+			&request_message_header::attachment_size
 		>;
 	};
 
-	// 2 bytes
+	// 6 bytes
 	struct reply_message_header final {
 		message_type message_type;
 		message_error_code error_code;
+		message_attachment_size_t attachment_size;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
 			&reply_message_header::message_type,
-			&reply_message_header::error_code
+			&reply_message_header::error_code,
+			&reply_message_header::attachment_size
 		>;
 	};
 
 	// size of message should be less than (256 bytes - header size)
 
-	// 79 bytes
+	// 75 bytes
 	struct authentication_request_message final {
 		api_version_type api_version;
 		authentication_method authentication_method;
 		game_id_t game_id;
 		game_version_t game_version;
 		player_name_t player_name;
-		uint32_t credential_size;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
 			&authentication_request_message::api_version,
 			&authentication_request_message::authentication_method,
 			&authentication_request_message::game_id,
 			&authentication_request_message::game_version,
-			&authentication_request_message::player_name,
-			&authentication_request_message::credential_size
+			&authentication_request_message::player_name
 		>;
 	};
 
-	constexpr auto authentication_credential_chunk_data_size = 240;
-	constexpr uint32_t authentication_max_credential_bytes =
+	constexpr auto message_attachment_chunk_data_size = 240;
+	constexpr message_attachment_size_t message_attachment_max_bytes =
 		(static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()) + 1) *
-		authentication_credential_chunk_data_size;
+		message_attachment_chunk_data_size;
 
 	// 243 bytes
-	struct authentication_credential_chunk_message final {
+	struct message_attachment_chunk final {
 		uint16_t sequence;
 		uint8_t data_size;
-		std::array<uint8_t, authentication_credential_chunk_data_size> data;
+		std::array<uint8_t, message_attachment_chunk_data_size> data;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
-			&authentication_credential_chunk_message::sequence,
-			&authentication_credential_chunk_message::data_size,
-			&authentication_credential_chunk_message::data
+			&message_attachment_chunk::sequence,
+			&message_attachment_chunk::data_size,
+			&message_attachment_chunk::data
 		>;
 	};
 
@@ -128,7 +132,7 @@ namespace pgl {
 		>;
 	};
 
-	// 30 bytes
+	// 32 bytes
 	struct list_room_request_message final {
 		uint16_t start_index;
 		uint16_t count;
@@ -145,9 +149,9 @@ namespace pgl {
 		>;
 	};
 
-	// 246 bytes
+	// 216 bytes
 	struct list_room_reply_message final {
-		//40 bytes
+		// 42 bytes
 		struct room_info final {
 			room_id_t room_id;
 			player_full_name host_player_full_name;

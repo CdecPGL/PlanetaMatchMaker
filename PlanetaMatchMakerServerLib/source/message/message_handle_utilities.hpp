@@ -1,7 +1,11 @@
 #pragma once
 
+#include <algorithm>
+#include <chrono>
 #include <memory>
+#include <span>
 #include <utility>
+#include <vector>
 
 #include "async/timer.hpp"
 #include "async/read_write.hpp"
@@ -62,14 +66,16 @@ namespace pgl {
 
 	// Receive data. server_session_error will be thrown when reception error occurred.
 	// todo: use shared_ptr to avoid invalid reference access in lambda function
-	template <typename FirstData, typename... RestData> requires(serializable_all<FirstData, RestData...> &&
+	template <typename Duration, typename FirstData, typename... RestData> requires(
+		serializable_all<FirstData, RestData...> &&
 		not_constant_all<FirstData, RestData...>)
-	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData&... rest_data) {
+	void receive_with_timeout(std::shared_ptr<message_handle_parameter> param, const Duration& timeout,
+		FirstData& first_data, RestData&... rest_data) {
 		auto data_summary = minimal_serializer::generate_string(sizeof...(rest_data) + 1, " data (",
 			get_packed_size<FirstData, RestData...>(), " bytes)");
 
 		try {
-			execute_socket_timed_async_operation(param->connection, param->timeout_seconds,
+			execute_socket_timed_async_operation(param->connection, timeout,
 				[param, &first_data, &rest_data...]()mutable {
 					unpacked_async_read(param->connection, param->yield, first_data, rest_data...);
 				});
@@ -87,6 +93,97 @@ namespace pgl {
 				throw server_session_error(extra_message + "(Disconnected unexpectedly)");
 			}
 			throw server_session_error(extra_message);
+		}
+	}
+
+	template <typename FirstData, typename... RestData> requires(serializable_all<FirstData, RestData...> &&
+		not_constant_all<FirstData, RestData...>)
+	void receive(std::shared_ptr<message_handle_parameter> param, FirstData& first_data, RestData&... rest_data) {
+		receive_with_timeout(param, param->timeout_seconds, first_data, rest_data...);
+	}
+
+	enum class message_attachment_requirement {
+		forbidden,
+		optional,
+		required
+	};
+
+	struct message_attachment_policy final {
+		message_attachment_requirement requirement = message_attachment_requirement::forbidden;
+		message_attachment_size_t max_size = 0;
+	};
+
+	enum class message_attachment_error {
+		none,
+		missing,
+		unexpected,
+		size_exceeded,
+		format_invalid
+	};
+
+	struct message_attachment_receive_result final {
+		message_attachment_error error = message_attachment_error::none;
+		std::vector<uint8_t> data;
+
+		[[nodiscard]] bool succeeded() const { return error == message_attachment_error::none; }
+	};
+
+	inline message_attachment_error validate_message_attachment_size(const message_attachment_policy policy,
+		const message_attachment_size_t size) {
+		if (size != 0 && policy.requirement == message_attachment_requirement::forbidden) {
+			return message_attachment_error::unexpected;
+		}
+		if (size > message_attachment_max_bytes || size > policy.max_size) {
+			return message_attachment_error::size_exceeded;
+		}
+		if (size == 0 && policy.requirement == message_attachment_requirement::required) {
+			return message_attachment_error::missing;
+		}
+		return message_attachment_error::none;
+	}
+
+	inline message_attachment_receive_result receive_message_attachment(
+		const std::shared_ptr<message_handle_parameter>& param,
+		const message_attachment_size_t attachment_size) {
+		if (attachment_size > message_attachment_max_bytes) {
+			return {message_attachment_error::size_exceeded, {}};
+		}
+
+		message_attachment_receive_result result;
+		result.data.reserve(attachment_size);
+		const auto deadline = std::chrono::steady_clock::now() + param->timeout_seconds;
+		const auto chunk_count = (attachment_size + message_attachment_chunk_data_size - 1) /
+			message_attachment_chunk_data_size;
+		for (auto sequence = 0u; sequence < chunk_count; ++sequence) {
+			const auto now = std::chrono::steady_clock::now();
+			if (now >= deadline) {
+				throw server_session_error("Failed to receive message attachment due to timeout.");
+			}
+
+			message_attachment_chunk chunk{};
+			receive_with_timeout(param, deadline - now, chunk);
+			const auto remaining = attachment_size - result.data.size();
+			const auto expected_data_size = std::min<std::size_t>(message_attachment_chunk_data_size, remaining);
+			const auto padding_begin = chunk.data.begin() + expected_data_size;
+			if (chunk.sequence != sequence || chunk.data_size != expected_data_size ||
+				std::ranges::any_of(padding_begin, chunk.data.end(), [](const auto value) { return value != 0; })) {
+				return {message_attachment_error::format_invalid, {}};
+			}
+			result.data.insert(result.data.end(), chunk.data.begin(), chunk.data.begin() + chunk.data_size);
+		}
+		return result;
+	}
+
+	inline void send_message_attachment(const std::shared_ptr<message_handle_parameter>& param,
+		const std::span<const uint8_t> attachment) {
+		for (std::size_t offset = 0, sequence = 0; offset < attachment.size();
+			offset += message_attachment_chunk_data_size, ++sequence) {
+			message_attachment_chunk chunk{};
+			chunk.sequence = static_cast<uint16_t>(sequence);
+			chunk.data_size = static_cast<uint8_t>(std::min<std::size_t>(
+				message_attachment_chunk_data_size, attachment.size() - offset));
+			std::ranges::copy_n(attachment.begin() + offset, chunk.data_size, chunk.data.begin());
+			send(param, chunk);
 		}
 	}
 

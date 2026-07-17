@@ -10,8 +10,11 @@ namespace PlanetaGameLabo.MatchMaker.Test
         [DataTestMethod]
         [DataRow("Authentication/AuthenticationOptions.cs")]
         [DataRow("Client/ClientConstants.cs")]
+        [DataRow("Client/MatchMakerClient.cs")]
         [DataRow("Message/MessageUtilities.cs")]
-        public void AuthenticationSourceMatchesUnityCopy(string relativePath)
+        [DataRow("Message/Messages.cs")]
+        [DataRow("Room/RoomConstants.cs")]
+        public void ClientSourceMatchesUnityCopy(string relativePath)
         {
             var repositoryRoot = FindRepositoryRoot();
             var clientPath = Path.Combine(repositoryRoot, "PlanetaMatchMakerClient", "Source", relativePath);

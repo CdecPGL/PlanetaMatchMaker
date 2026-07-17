@@ -8,6 +8,7 @@ namespace pgl {
 		final : public message_handler_base<keep_alive_notice_message> {
 	public:
 		handle_return_t handle_message(const keep_alive_notice_message& message,
+			const std::vector<uint8_t>& attachment,
 			std::shared_ptr<message_handle_parameter> param) override;
 	};
 }

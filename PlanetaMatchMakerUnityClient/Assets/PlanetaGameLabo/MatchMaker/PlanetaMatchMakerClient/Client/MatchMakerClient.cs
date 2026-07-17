@@ -190,13 +190,12 @@ namespace PlanetaGameLabo.MatchMaker
                         AuthenticationMethod = authenticationOptions.Method,
                         GameId = GameId.Value,
                         GameVersion = GameVersion.Value,
-                        PlayerName = playerName.Value,
-                        CredentialSize = checked((uint)authenticationOptions.Credential.Length)
+                        PlayerName = playerName.Value
                     };
-                await SendAuthenticationRequestAsync(requestBody, authenticationOptions.Credential)
+                await SendRequestAsync(requestBody, authenticationOptions.Credential)
                     .ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
-                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(requestBody.AuthenticationMethod)}: {requestBody.AuthenticationMethod}, {nameof(GameId)}: {GameId}, {nameof(GameVersion)}: {GameVersion}, {nameof(playerName)}: {playerName}, {nameof(requestBody.CredentialSize)}: {requestBody.CredentialSize})");
+                    $"Send AuthenticationRequest. ({nameof(ClientConstants.ApiVersion)}: {ClientConstants.ApiVersion}, {nameof(requestBody.AuthenticationMethod)}: {requestBody.AuthenticationMethod}, {nameof(GameId)}: {GameId}, {nameof(GameVersion)}: {GameVersion}, {nameof(playerName)}: {playerName}, AttachmentSize: {authenticationOptions.Credential.Length})");
                 var replyBody = await ReceiveReplyAsync<AuthenticationReplyMessage>().ConfigureAwait(false);
                 Logger.Log(LogLevel.Info,
                     $"Receive AuthenticationReply. ({nameof(replyBody.Result)}: {replyBody.Result}, {nameof(replyBody.ApiVersion)}: {replyBody.ApiVersion}, {nameof(replyBody.GameVersion)}: {replyBody.GameVersion}, {nameof(replyBody.PlayerTag)}: {replyBody.PlayerTag})");
@@ -755,48 +754,6 @@ namespace PlanetaGameLabo.MatchMaker
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private readonly KeepAliveSenderNotificator keepAliveSenderNotificator;
 
-        private async Task SendAuthenticationRequestAsync(AuthenticationRequestMessage messageBody, byte[] credential)
-        {
-            try
-            {
-                keepAliveSenderNotificator.UpdateLastRequestTime();
-                await communicationStream.SendAuthenticationRequestMessage(messageBody, credential)
-                    .ConfigureAwait(false);
-            }
-            catch (MessageErrorException e)
-            {
-                if (Connected)
-                {
-                    Close();
-                }
-
-                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
-            }
-            catch (ObjectDisposedException e)
-            {
-                OnConnectionClosed();
-                throw new ClientErrorException(ClientErrorCode.ConnectionClosed, e.Message);
-            }
-            catch (SocketException e)
-            {
-                if (Connected)
-                {
-                    Close();
-                }
-
-                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
-            }
-            catch (IOException e)
-            {
-                if (Connected)
-                {
-                    Close();
-                }
-
-                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
-            }
-        }
-
         /// <summary>
         /// Send a request or notice message to the server.
         /// </summary>
@@ -804,12 +761,13 @@ namespace PlanetaGameLabo.MatchMaker
         /// <param name="messageBody"></param>
         /// <exception cref="ClientErrorException"></exception>
         /// <returns></returns>
-        private async Task SendRequestAsync<T>(T messageBody)
+        private async Task SendRequestAsync<T>(T messageBody, byte[] attachment = null)
         {
             try
             {
                 keepAliveSenderNotificator.UpdateLastRequestTime();
-                await communicationStream.SendRequestMessage(messageBody).ConfigureAwait(false);
+                await communicationStream.SendRequestMessage(messageBody, attachment ?? Array.Empty<byte>())
+                    .ConfigureAwait(false);
             }
             catch (MessageErrorException e)
             {
@@ -855,10 +813,17 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                var (errorCode, replyBody) = await communicationStream.ReceiveReplyMessage<T>().ConfigureAwait(false);
+                var (errorCode, replyBody, attachment) = await communicationStream.ReceiveReplyMessage<T>()
+                    .ConfigureAwait(false);
                 if (errorCode != MessageErrorCode.Ok || replyBody == null)
                 {
                     throw new ClientErrorException(ClientErrorCode.RequestError, errorCode.ToString());
+                }
+
+                if (attachment.Length != 0)
+                {
+                    throw new ClientErrorException(ClientErrorCode.RequestError,
+                        "The reply contains an attachment that is not supported by this operation.");
                 }
 
                 return replyBody.Value;
