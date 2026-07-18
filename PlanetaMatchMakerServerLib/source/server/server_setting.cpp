@@ -401,6 +401,16 @@ namespace pgl {
 	}
 
 	void server_setting::load_from_json_file(const std::filesystem::path& file_path) {
+		load_from_json_file_impl(file_path, true);
+	}
+
+	void server_setting::load_from_json_file_and_env(const std::filesystem::path& file_path) {
+		load_from_json_file_impl(file_path, false);
+		load_from_env_var();
+	}
+
+	void server_setting::load_from_json_file_impl(const std::filesystem::path& file_path,
+		const bool validate) {
 		if (!exists(file_path)) { throw server_setting_error(generate_string("\"", file_path, "\" does not exist.")); }
 
 		try {
@@ -419,27 +429,27 @@ namespace pgl {
 			if (const auto* common_section = obj->if_contains(common_section_key); common_section != nullptr) {
 				common = json::value_to<server_common_setting>(*common_section);
 			}
-			validate_common_setting(common);
+			if (validate) { validate_common_setting(common); }
 
 			if (const auto* authentication_section = obj->if_contains(authentication_section_key);
 				authentication_section != nullptr) {
 				authentication = json::value_to<server_authentication_setting>(*authentication_section);
 			}
-			validate_authentication_setting(authentication);
+			if (validate) { validate_authentication_setting(authentication); }
 
 			if (const auto* log_section = obj->if_contains(log_section_key); log_section != nullptr) {
 				log = json::value_to<server_log_setting>(*log_section);
 			}
-			validate_log_setting(log);
+			if (validate) { validate_log_setting(log); }
 
 			if (const auto* connection_test_section = obj->if_contains(connection_test_section_key);
 				connection_test_section != nullptr) {
 				connection_test = json::value_to<server_connection_test_setting>(*connection_test_section);
 			}
-			validate_connection_test_setting(connection_test);
+			if (validate) { validate_connection_test_setting(connection_test); }
 
 			tls = load_tls_setting_from_json_file(*obj, file_path, tls);
-			validate_tls_setting(tls);
+			if (validate) { validate_tls_setting(tls); }
 		}
 		catch (const std::exception& e) {
 			throw server_setting_error(generate_string("Failed to load the file: ", e.what()));

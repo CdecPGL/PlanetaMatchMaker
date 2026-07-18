@@ -54,7 +54,8 @@ Following commands are examples to run a server with port 57000 by using docker.
 ```bash
 docker pull cdec/planeta-match-maker-server:latest
 
-# Production TLS. The environment file overrides the bundled Steam placeholders.
+# Production TLS. Create pmms.env from Docker/server/pmms/pmms.env.example
+# and replace every value before running this command.
 docker run -p 57000:57000 \
   --env-file /path/to/pmms.env \
   -v /etc/letsencrypt/live/match.example.com/fullchain.pem:/etc/pmms/server.crt:ro \
@@ -64,19 +65,20 @@ docker run -p 57000:57000 \
 # Local plain TCP test without external authentication.
 docker run -p 57000:57000 \
   -e PMMS_AUTHENTICATION_METHOD=none \
+  -e PMMS_AUTHENTICATION_GAME_ID=local-development \
   -e PMMS_TLS_MODE=plain \
   cdec/planeta-match-maker-server:latest
 ```
 
 You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.
 
-The image contains a default `/etc/pmms/setting.json` that selects Steam authentication. Its game ID, game version,
-Spacewar AppID 480, and Publisher Key placeholder are examples only. Override the deployment-specific values with the
-`PMMS_AUTHENTICATION_*` environment variables or mount a replacement setting file. In particular,
-`PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY` must contain the real server-side Publisher Key before Steam authentication
-can succeed. Mount certificate and private key files to the configured paths, or explicitly set `tls.mode` to
-`"plain"` and authentication to `"none"` for local testing only. See [TLS Certificate Setup](Documents/TLSCertificate.md)
-for production and development certificate examples.
+The image contains `/etc/pmms/setting.json` with Steam authentication selected, but intentionally omits the game ID,
+Steam AppID, and Publisher Key. The server refuses to start until all three are supplied through
+`PMMS_AUTHENTICATION_GAME_ID`, `PMMS_AUTHENTICATION_STEAM_APP_ID`, and
+`PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY`, or through a complete replacement setting file. Start from
+[`Docker/server/pmms/pmms.env.example`](Docker/server/pmms/pmms.env.example) when using `--env-file`. Mount certificate
+and private key files to the configured paths, or explicitly set `tls.mode` to `"plain"` and authentication to
+`"none"` for local testing only. See [TLS Certificate Setup](Documents/TLSCertificate.md) for certificate examples.
 
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 

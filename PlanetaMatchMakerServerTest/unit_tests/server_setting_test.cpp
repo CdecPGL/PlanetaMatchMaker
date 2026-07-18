@@ -760,6 +760,56 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
 	}
 
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_incomplete_steam_setting,
+		setting_file_and_env_var_fixture) {
+		create_setting_file({
+			{"authentication", {{"method", "steam"}}},
+			{"tls", {
+				{"certificate_path", "server.crt"},
+				{"private_key_path", "server.key"},
+			}}
+		});
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_and_env_validates_merged_steam_setting,
+		setting_file_and_env_var_fixture) {
+		create_setting_file({
+			{"authentication", {{"method", "steam"}}},
+			{"tls", {
+				{"certificate_path", "server.crt"},
+				{"private_key_path", "server.key"},
+			}}
+		});
+		set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "production-game");
+		set_typed_env_var("PMMS_AUTHENTICATION_STEAM_APP_ID", 123456);
+		set_typed_env_var("PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY", "test-publisher-key");
+
+		server_setting setting;
+		setting.load_from_json_file_and_env(setting_path);
+
+		BOOST_CHECK(setting.authentication.method == authentication_method::steam);
+		BOOST_CHECK(setting.authentication.game_id == u8"production-game");
+		BOOST_CHECK_EQUAL(setting.authentication.steam.app_id, 123456);
+		BOOST_CHECK_EQUAL(setting.authentication.steam.publisher_key, "test-publisher-key");
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_and_env_rejects_incomplete_merged_steam_setting,
+		setting_file_and_env_var_fixture) {
+		create_setting_file({
+			{"authentication", {{"method", "steam"}}},
+			{"tls", {
+				{"certificate_path", "server.crt"},
+				{"private_key_path", "server.key"},
+			}}
+		});
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file_and_env(setting_path), server_setting_error);
+	}
+
 
 	BOOST_FIXTURE_TEST_CASE(load_from_env_var_all, env_var_fixture) {
 		// set up

@@ -9,7 +9,9 @@ Server setting is located in `/etc/pmms/setting.json` (Linux) or `C:\pmms\settin
 Setting is written by JSON format which can include comments and trailing cammma.
 The encoding of the setting file must be UTF-8 without BOM.
 
-If specific environmet variables are defined, the value of environment variables are used even if setting file is located.
+If specific environment variables are defined, they override the corresponding JSON values. The merged setting is
+validated after both sources are loaded, so required deployment values may be supplied exclusively through environment
+variables.
 
 Those settings are loaded when server starts.
 
@@ -46,8 +48,15 @@ Those settings are loaded when server starts.
 |steam.check_app_ownership_url|string|Steam Web API URL|PMMS_AUTHENTICATION_STEAM_CHECK_APP_OWNERSHIP_URL|Override URL for Steam ownership verification, mainly for tests.|
 `authentication.method` is exclusive: the server accepts only the same method in the client's Authentication Request. Select `steam` for normal operation. Select `none` only for local development. A `none` client still sends the authentication request so API version, game ID, game version, player name, and player tag assignment are processed, but the session has no verified external identity. Its credential attachment must be empty.
 
-`PMMS_AUTHENTICATION_METHOD` is an optional override. When it is not set, the value loaded from `authentication.method` in `setting.json` is preserved. The production Docker image includes a default `setting.json` that selects Steam authentication. Its game and Steam values are fail-closed examples; override them through `PMMS_AUTHENTICATION_*` environment variables or mount a complete replacement setting file before production use. The bundled Publisher Key is an invalid placeholder, so Steam authentication cannot succeed until it is replaced.
+`PMMS_AUTHENTICATION_METHOD` is an optional override. When it is not set, the value loaded from `authentication.method`
+in `setting.json` is preserved. The production Docker image includes a `setting.json` that selects Steam authentication
+but omits `game_id`, `steam.app_id`, and `steam.publisher_key`. The server therefore refuses to start unless
+`PMMS_AUTHENTICATION_GAME_ID`, `PMMS_AUTHENTICATION_STEAM_APP_ID`, and
+`PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY` are supplied, or a complete replacement setting file is mounted. Use
+[`Docker/server/pmms/pmms.env.example`](../Docker/server/pmms/pmms.env.example) as the `docker run --env-file` template.
 Steam authentication verifies a client-provided Steam auth ticket on the server and checks AppID ownership. Do not put the Steam publisher key in a client build.
+Set `steam.app_id` to the AppID assigned to your game. AppID 480 belongs to the Steamworks Spacewar sample application
+and is not a production default ([Steamworks documentation](https://partner.steamgames.com/doc/sdk/api/example)).
 
 Authentication credentials should be sent over TLS in production. If `tls.mode` is `"plain"` and `authentication.method` is `steam`, `allow_plain_connections` must be explicitly true or authentication fails.
 The credential-free development method can use plain TCP without `allow_plain_connections` because it transmits no authentication secret.

@@ -97,6 +97,15 @@ namespace pgl {
 		void load_from_json_file(const std::filesystem::path& file_path);
 
 		/**
+		 * Load server setting from a JSON file, apply environment variable overrides,
+		 * and then validate the merged setting.
+		 *
+		 * @param file_path A path of setting file.
+		 * @exception server_setting_error Loading either source fails or the merged setting is invalid.
+		 */
+		void load_from_json_file_and_env(const std::filesystem::path& file_path);
+
+		/**
 		 * Load server setting from environment variable.
 		 * Settings which is not in environment variable will not be updated.
 		 *
@@ -108,5 +117,8 @@ namespace pgl {
 		 * Output content of setting to stdout.
 		 */
 		void output_to_log() const;
+
+	private:
+		void load_from_json_file_impl(const std::filesystem::path& file_path, bool validate);
 	};
 }

@@ -10,16 +10,12 @@
     },
     "authentication": {
         "method": "steam",
-        "game_id": "test",
-        "enable_game_version_check": true,
-        "game_version": "1.0.0",
+        "enable_game_version_check": false,
         "max_credential_bytes": 16384,
         "timeout_seconds": 5,
         "allow_plain_connections": false,
         "allow_plain_external_service_connections": false,
         "steam": {
-            "app_id": 480,
-            "publisher_key": "REPLACE_WITH_PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY",
             "identity": ""
         }
     },
