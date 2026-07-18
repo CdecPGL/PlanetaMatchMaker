@@ -9,6 +9,7 @@ RUN apt update && apt install -y --no-install-recommends \
   tar \
   pkg-config \
   perl \
+  ca-certificates \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -54,10 +55,16 @@ RUN \
   cmake -S . -B build -DCMAKE_CXX_COMPILER=clang++ -DSTATIC_LINK_DEPENDENCIES=ON \
     -DENABLE_COVERAGE=OFF \
     -DOPENSSL_ROOT_DIR=/usr/local/openssl && \
-  cmake --build build --target PlanetaMatchMakerServer --config Release -j"$(nproc)"
+  cmake --build build --target PlanetaMatchMakerServer \
+    PlanetaMatchMakerAuthenticationHttpsIntegrationTest --config Release -j"$(nproc)"
 
-FROM gcr.io/distroless/static-debian12
+FROM gcr.io/distroless/static-debian12 AS production
 LABEL maintainer="Cdec <cdecrement@gmail.com>"
+
+# OpenSSL was built with a private default directory. Point it at the Debian CA
+# bundle copied into the production image so set_default_verify_paths() works.
+COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 # Copy C++ runtime libraries required by the PMMS binary.
 COPY --from=base /lib64/ld-linux-x86-64.so.2 /lib64/
@@ -74,3 +81,12 @@ COPY Docker/server/pmms/README.md /etc/pmms/README.md
 
 # Start server
 CMD ["pmms"]
+
+# Opt-in integration target. It executes the PMMS authentication HTTP client
+# against Steam from the production filesystem and TLS configuration.
+FROM production AS production-https-test
+COPY --from=base --chmod=755 /PlanetaMatchMaker/build/PlanetaMatchMakerServerTest/PlanetaMatchMakerAuthenticationHttpsIntegrationTest /usr/local/bin/pmms-authentication-https-test
+RUN ["/usr/local/bin/pmms-authentication-https-test"]
+
+# Keep the default docker build output identical to the production stage.
+FROM production AS final

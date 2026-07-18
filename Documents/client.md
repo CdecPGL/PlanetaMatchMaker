@@ -54,6 +54,11 @@ This mode does not create a verified external identity and must not be used in p
 
 SteamID64 is not sent as a client-claimed authentication ID. The server derives the authenticated identity from the Steam verification result.
 
+The Unity wrapper returns authentication failures through `PlanetaMatchMakerClient.ErrorInfo`.
+When `authenticationErrorCode` is not `null`, it contains the detailed authentication reason. The
+`serverApiVersion` and `serverGameVersion` fields retain the values returned by the server so version
+mismatches can be handled without parsing an exception message.
+
 `CreateRoomWithExternalServiceAsync` accepts `GameHostExternalId? externalId = null`. `null` sends a 64-byte zero value, which means "unspecified". If the authenticated identity has a verified external ID, the server uses it automatically; if the request specifies an external ID, it must match the verified one. Steam rooms therefore normally call `CreateRoomWithSteamAsync` without passing an external ID.
 
 ## Port Mapping Auto Release

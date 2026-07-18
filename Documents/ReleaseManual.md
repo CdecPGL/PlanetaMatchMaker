@@ -28,6 +28,17 @@ In repository root, run following command.
 docker build -f Docker/server/Dockerfile -t cdec/planeta-match-maker-server:0.3.1 . --no-cache
 ```
 
+Before publishing, build the opt-in HTTPS integration target. It inherits the
+production image filesystem and TLS environment, then uses the PMMS
+authentication HTTP client to call Steam's public `GetServerInfo` endpoint:
+
+```shell
+docker build -f Docker/server/Dockerfile --target production-https-test .
+```
+
+This check requires outbound HTTPS access and is intentionally not part of the
+offline CTest suite.
+
 ### Push
 
 ```bash

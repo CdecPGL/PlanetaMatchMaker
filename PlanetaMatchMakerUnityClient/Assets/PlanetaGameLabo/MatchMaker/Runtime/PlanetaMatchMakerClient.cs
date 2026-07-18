@@ -32,14 +32,26 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 this.errorCode = errorCode;
                 message = "";
+                authenticationErrorCode = null;
+                serverApiVersion = null;
+                serverGameVersion = null;
             }
 
             public ErrorInfo(Exception e)
             {
+                authenticationErrorCode = null;
+                serverApiVersion = null;
+                serverGameVersion = null;
                 switch (e)
                 {
                     case ClientErrorException ce:
                         errorCode = ce.ClientErrorCode;
+                        break;
+                    case AuthenticationErrorException ae:
+                        errorCode = ClientErrorCode.UnknownError;
+                        authenticationErrorCode = ae.AuthenticationErrorCode;
+                        serverApiVersion = ae.ServerApiVersion;
+                        serverGameVersion = ae.ServerGameVersion;
                         break;
                     case SocketException _:
                         errorCode = ClientErrorCode.ConnectionClosed;
@@ -54,6 +66,9 @@ namespace PlanetaGameLabo.MatchMaker
 
             public readonly ClientErrorCode errorCode;
             public readonly string message;
+            public readonly AuthenticationErrorCode? authenticationErrorCode;
+            public readonly ushort? serverApiVersion;
+            public readonly string serverGameVersion;
 
             public static bool operator true(ErrorInfo e) { return e.errorCode == ClientErrorCode.Ok; }
             public static bool operator false(ErrorInfo e) { return e.errorCode != ClientErrorCode.Ok; }

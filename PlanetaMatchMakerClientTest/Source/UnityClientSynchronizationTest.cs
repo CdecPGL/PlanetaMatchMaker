@@ -29,6 +29,24 @@ namespace PlanetaGameLabo.MatchMaker.Test
             }
         }
 
+        [TestMethod]
+        public void UnityWrapperPreservesAuthenticationErrorDetails()
+        {
+            var repositoryRoot = FindRepositoryRoot();
+            var wrapperPath = Path.Combine(repositoryRoot, "PlanetaMatchMakerUnityClient", "Assets",
+                "PlanetaGameLabo", "MatchMaker", "Runtime", "PlanetaMatchMakerClient.cs");
+            var wrapperSource = File.ReadAllText(wrapperPath);
+
+            StringAssert.Contains(wrapperSource, "case AuthenticationErrorException ae:");
+            StringAssert.Contains(wrapperSource, "authenticationErrorCode = ae.AuthenticationErrorCode;");
+            StringAssert.Contains(wrapperSource, "serverApiVersion = ae.ServerApiVersion;");
+            StringAssert.Contains(wrapperSource, "serverGameVersion = ae.ServerGameVersion;");
+            StringAssert.Contains(wrapperSource,
+                "public readonly AuthenticationErrorCode? authenticationErrorCode;");
+            StringAssert.Contains(wrapperSource, "public readonly ushort? serverApiVersion;");
+            StringAssert.Contains(wrapperSource, "public readonly string serverGameVersion;");
+        }
+
         private static Dictionary<string, string> ReadSources(string root)
         {
             return Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories)
