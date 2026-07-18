@@ -54,23 +54,29 @@ Following commands are examples to run a server with port 57000 by using docker.
 ```bash
 docker pull cdec/planeta-match-maker-server:latest
 
-# Production TLS. The mounted setting must select Steam authentication.
+# Production TLS. The environment file overrides the bundled Steam placeholders.
 docker run -p 57000:57000 \
-  -v /path/to/setting.json:/etc/pmms/setting.json:ro \
+  --env-file /path/to/pmms.env \
   -v /etc/letsencrypt/live/match.example.com/fullchain.pem:/etc/pmms/server.crt:ro \
   -v /etc/letsencrypt/live/match.example.com/privkey.pem:/etc/pmms/server.key:ro \
   cdec/planeta-match-maker-server:latest
 
-# Local plain TCP test. The mounted setting may select authentication.method "none".
+# Local plain TCP test without external authentication.
 docker run -p 57000:57000 \
-  -v /path/to/local-setting.json:/etc/pmms/setting.json:ro \
+  -e PMMS_AUTHENTICATION_METHOD=none \
   -e PMMS_TLS_MODE=plain \
   cdec/planeta-match-maker-server:latest
 ```
 
 You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.
 
-The production image intentionally contains no `setting.json` and fails to start until a complete configuration is mounted at `/etc/pmms/setting.json`. Select Steam authentication for production. Mount certificate and private key files to the configured paths, or explicitly set `tls.mode` to `"plain"` and authentication to `"none"` for local testing only. See [TLS Certificate Setup](Documents/TLSCertificate.md) for production and development certificate examples.
+The image contains a default `/etc/pmms/setting.json` that selects Steam authentication. Its game ID, game version,
+Spacewar AppID 480, and Publisher Key placeholder are examples only. Override the deployment-specific values with the
+`PMMS_AUTHENTICATION_*` environment variables or mount a replacement setting file. In particular,
+`PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY` must contain the real server-side Publisher Key before Steam authentication
+can succeed. Mount certificate and private key files to the configured paths, or explicitly set `tls.mode` to
+`"plain"` and authentication to `"none"` for local testing only. See [TLS Certificate Setup](Documents/TLSCertificate.md)
+for production and development certificate examples.
 
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 

@@ -76,7 +76,10 @@ COPY --from=base /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/x86_64-linux-gnu/
 # Copy PlanetaMatchMakerServer binary (same location of make install result)
 COPY --from=base --chmod=755 /PlanetaMatchMaker/build/PlanetaMatchMakerServer/PlanetaMatchMakerServer /usr/local/bin/pmms
 
-# Keep the configuration directory in the image, but require operators to mount setting.json.
+# Copy the default Steam authentication configuration. Deployment-specific
+# identifiers and the publisher key must be supplied through environment
+# overrides or a replacement setting file.
+COPY Docker/server/pmms/setting.json /etc/pmms/setting.json
 COPY Docker/server/pmms/README.md /etc/pmms/README.md
 
 # Start server
