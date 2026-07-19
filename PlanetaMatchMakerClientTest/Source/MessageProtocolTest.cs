@@ -72,5 +72,23 @@ namespace PlanetaGameLabo.MatchMaker.Test
             Assert.AreEqual((byte)1, (byte)AuthenticationMethod.Steam);
             Assert.IsFalse(Enum.IsDefined(typeof(AuthenticationMethod), (byte)2));
         }
+
+        [TestMethod]
+        public void AuthenticationResultsHaveStableWireValues()
+        {
+            Assert.AreEqual((byte)0, (byte)AuthenticationResult.Success);
+            Assert.AreEqual((byte)1, (byte)AuthenticationResult.ApiVersionMismatch);
+            Assert.AreEqual((byte)2, (byte)AuthenticationResult.GameIdMismatch);
+            Assert.AreEqual((byte)3, (byte)AuthenticationResult.GameVersionMismatch);
+            Assert.AreEqual((byte)4, (byte)AuthenticationResult.UnsupportedAuthenticationMethod);
+            Assert.AreEqual((byte)5, (byte)AuthenticationResult.AuthenticationDataFormatInvalid);
+            Assert.AreEqual((byte)6, (byte)AuthenticationResult.AuthenticationDataSizeExceeded);
+            Assert.AreEqual((byte)7, (byte)AuthenticationResult.AuthenticationDataInvalid);
+            Assert.AreEqual((byte)8, (byte)AuthenticationResult.InsecureConnection);
+            Assert.AreEqual((byte)9, (byte)AuthenticationResult.SteamTicketInvalid);
+            Assert.AreEqual((byte)10, (byte)AuthenticationResult.SteamOwnershipCheckFailed);
+            Assert.AreEqual((byte)11, (byte)AuthenticationResult.SteamAuthenticationServiceUnavailable);
+            Assert.IsFalse(Enum.IsDefined(typeof(AuthenticationResult), (byte)12));
+        }
     }
 }

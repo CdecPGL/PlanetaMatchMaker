@@ -30,6 +30,22 @@ Authentication credentials are sent as the authentication message attachment. Me
 `ClientConstants.MaxMessageAttachmentLength` (15,728,640 bytes), which is the maximum representable by the protocol
 chunk sequence field. The server's configured authentication credential limit may be lower.
 
+`MatchMakerClient.TimeoutMilliSeconds` is an absolute deadline for each complete request or reply message, including
+all attachment chunks. The same deadline is passed to every asynchronous stream operation. If it expires, the client
+closes the partially used connection before releasing its operation semaphore. A value of `0` disables this deadline.
+
+Before connecting to a Steam-authenticated server:
+
+1. Register the Steamworks `GetTicketForWebApiResponse_t` callback.
+1. Call `GetAuthTicketForWebApi` using the same service identity as the server's `authentication.steam.identity` setting.
+1. Wait for the callback and verify its result. The ticket bytes are available from the callback, not from the initial function return.
+1. Copy exactly the ticket length returned by Steam and pass those bytes to `AuthenticationOptions.Steam`.
+1. Cancel the Steam ticket after it is no longer needed.
+
+See the Steamworks [`ISteamUser::GetAuthTicketForWebApi`](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthTicketForWebApi)
+documentation. PMMS must receive a Web API authentication ticket; a ticket created only for `BeginAuthSession` is not
+interchangeable.
+
 ```csharp
 await client.ConnectAsync(
     host,

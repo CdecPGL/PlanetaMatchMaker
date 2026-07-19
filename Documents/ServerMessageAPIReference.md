@@ -165,9 +165,8 @@ Options of `result` are as below.
 |authentication_data_invalid|7|Credential is invalid.|
 |insecure_connection|8|Authentication over plain TCP is not allowed by server setting.|
 |steam_ticket_invalid|9|Steam ticket verification failed.|
-|steam_id_mismatch|10|Reserved for SteamID mismatch handling. Current authentication requests do not send a client-claimed SteamID.|
-|steam_ownership_check_failed|11|Steam AppID ownership check failed.|
-|steam_authentication_service_unavailable|12|Steam authentication or ownership service could not be reached or returned an unavailable response.|
+|steam_ownership_check_failed|10|Steam AppID ownership check failed.|
+|steam_authentication_service_unavailable|11|Steam authentication or ownership service could not be reached or returned an unavailable response.|
 
 Note that authentication failure are not treated as error.
 If authentication is failed, the server closes the connection immediately after reply.

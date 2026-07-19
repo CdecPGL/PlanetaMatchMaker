@@ -19,7 +19,6 @@ namespace PlanetaGameLabo.MatchMaker
         AuthenticationDataInvalid,
         InsecureConnection,
         SteamTicketInvalid,
-        SteamIdMismatch,
         SteamOwnershipCheckFailed,
         SteamAuthenticationServiceUnavailable,
     }

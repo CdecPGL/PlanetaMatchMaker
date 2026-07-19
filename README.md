@@ -117,7 +117,21 @@ You can change settings by editing [the setting file](Documents/ServerSettings.m
 1. Install steamworks library for C# in below table
 1. Set pre-defined macro of compiler in below table
 1. Add `using PlanetaGameLabo.MatchMaker.Extentions;` in your code
-1. Use `MatchMakerClient.CreateRoomWithSteamAsync` and `MatchMakerClient.JoinRoomWithSteamAsync`
+1. Register the Steamworks `GetTicketForWebApiResponse_t` callback.
+1. Call `GetAuthTicketForWebApi` with the same service identity configured as `authentication.steam.identity` on the server.
+1. Wait for the callback, verify that it succeeded, and copy exactly the returned ticket bytes. The ticket is not available when `GetAuthTicketForWebApi` first returns.
+1. Pass those bytes to `AuthenticationOptions.Steam(ticket)` and call `ConnectAsync`.
+1. Only after `ConnectAsync` succeeds, use `CreateRoomWithSteamAsync` or `JoinRoomWithSteamAsync`.
+1. Call the Steamworks ticket cancellation API when the ticket is no longer needed.
+
+```csharp
+var authentication = AuthenticationOptions.Steam(ticketFromSteamCallback);
+await matchMakerClient.ConnectAsync(serverHost, serverPort, playerName, authentication);
+await matchMakerClient.CreateRoomWithSteamAsync(maxPlayerCount, password);
+```
+
+See the Steamworks [`ISteamUser::GetAuthTicketForWebApi`](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthTicketForWebApi)
+documentation and the [PMMS Client Guide](Documents/client.md) for the complete authentication flow.
 
 Note that enabling `Facepunch.Steamworks` and `Steamworks.NET` at same time is not supported.
 
@@ -128,6 +142,7 @@ Note that enabling `Facepunch.Steamworks` and `Steamworks.NET` at same time is n
 
 ## Documents
 
+- [Client Guide](Documents/client.md)
 - [Server Settings](Documents/ServerSettings.md)
 - [TLS Certificate Setup](Documents/TLSCertificate.md)
 - [Build Manual](Documents/BuildManual.md)

@@ -47,11 +47,41 @@ namespace PlanetaGameLabo.MatchMaker.Test
             StringAssert.Contains(wrapperSource, "public readonly string serverGameVersion;");
         }
 
+        [TestMethod]
+        public void UnitySteamJoinPropagatesFailuresBeforeParsingPeerId()
+        {
+            var repositoryRoot = FindRepositoryRoot();
+            var extensionPath = Path.Combine(repositoryRoot, "PlanetaMatchMakerUnityClient", "Assets",
+                "PlanetaGameLabo", "MatchMaker", "Runtime", "Extensions", "Steam.cs");
+            var extensionSource = File.ReadAllText(extensionPath);
+            var callbackMethod = extensionSource.IndexOf("public static void JoinRoomWithSteam", StringComparison.Ordinal);
+            var asyncMethod = extensionSource.IndexOf("JoinRoomWithSteamAsync", callbackMethod,
+                StringComparison.Ordinal);
+
+            Assert.IsTrue(callbackMethod >= 0);
+            Assert.IsTrue(asyncMethod > callbackMethod);
+            AssertFailureCheckPrecedesPeerIdParsing(extensionSource, callbackMethod, asyncMethod);
+            AssertFailureCheckPrecedesPeerIdParsing(extensionSource, asyncMethod, extensionSource.Length);
+            Assert.AreEqual(-1, extensionSource.IndexOf("ulong.Parse", StringComparison.Ordinal));
+        }
+
         private static Dictionary<string, string> ReadSources(string root)
         {
             return Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories)
                 .ToDictionary(path => path.Substring(root.Length + 1).Replace(Path.DirectorySeparatorChar, '/'),
                     File.ReadAllText, StringComparer.Ordinal);
+        }
+
+        private static void AssertFailureCheckPrecedesPeerIdParsing(string source, int startIndex, int endIndex)
+        {
+            var failureCheck = source.IndexOf("if (!errorInfo)", startIndex, endIndex - startIndex,
+                StringComparison.Ordinal);
+            var parserCall = source.IndexOf("SteamP2pServicePeerIdParser.TryParse", startIndex,
+                endIndex - startIndex, StringComparison.Ordinal);
+
+            Assert.IsTrue(failureCheck >= startIndex, "The Unity Steam Join API must inspect ErrorInfo.");
+            Assert.IsTrue(parserCall > failureCheck,
+                "The Unity Steam Join API must propagate an error before parsing the peer ID.");
         }
 
         private static string FindRepositoryRoot()

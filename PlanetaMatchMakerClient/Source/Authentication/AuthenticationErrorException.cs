@@ -47,7 +47,6 @@ namespace PlanetaGameLabo.MatchMaker
         AuthenticationDataInvalid,
         InsecureConnection,
         SteamTicketInvalid,
-        SteamIdMismatch,
         SteamOwnershipCheckFailed,
         SteamAuthenticationServiceUnavailable,
     };
@@ -78,8 +77,6 @@ namespace PlanetaGameLabo.MatchMaker
                     return AuthenticationErrorCode.InsecureConnection;
                 case AuthenticationResult.SteamTicketInvalid:
                     return AuthenticationErrorCode.SteamTicketInvalid;
-                case AuthenticationResult.SteamIdMismatch:
-                    return AuthenticationErrorCode.SteamIdMismatch;
                 case AuthenticationResult.SteamOwnershipCheckFailed:
                     return AuthenticationErrorCode.SteamOwnershipCheckFailed;
                 case AuthenticationResult.SteamAuthenticationServiceUnavailable:

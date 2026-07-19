@@ -1,6 +1,5 @@
 #if PMM_FacepunchSteamworks || PMM_SteamworksNET
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using Steamworks;
 using UnityEngine;
@@ -71,11 +70,32 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             Action<PlanetaMatchMakerClient.ErrorInfo, JoinRoomWithSteamResult> callback = null)
         {
             client.JoinRoomWithExternalService(GameHostConnectionEstablishMode.Steam, roomId, password,
-                (error, result) =>
+                (errorInfo, result) =>
                 {
-                    var steamId64 = ulong.Parse(result.P2pServicePeerId.Value, CultureInfo.InvariantCulture);
-                    var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
-                    callback?.Invoke(error, new JoinRoomWithSteamResult(steamIdentity));
+                    if (!errorInfo)
+                    {
+                        callback?.Invoke(errorInfo, default);
+                        return;
+                    }
+
+                    if (!SteamP2pServicePeerIdParser.TryParse(result.P2pServicePeerId, out var steamId64))
+                    {
+                        callback?.Invoke(new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation),
+                            default);
+                        return;
+                    }
+
+                    try
+                    {
+                        var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
+                        callback?.Invoke(errorInfo, new JoinRoomWithSteamResult(steamIdentity));
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Debug.LogException(e);
+                        callback?.Invoke(new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation),
+                            default);
+                    }
                 });
         }
 
@@ -92,18 +112,29 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             Task<(PlanetaMatchMakerClient.ErrorInfo errorInfo, JoinRoomWithSteamResult result)>
             JoinRoomWithSteamAsync(this PlanetaMatchMakerClient client, uint roomId, string password = "")
         {
-            var (error, result) = await client
+            var (errorInfo, result) = await client
                 .JoinRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam, roomId, password)
                 .ConfigureAwait(false);
 
-            try {
-	            var steamId64 = ulong.Parse(result.P2pServicePeerId.Value, CultureInfo.InvariantCulture);
-	            var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
-	            return (error, new JoinRoomWithSteamResult(steamIdentity));
+            if (!errorInfo)
+            {
+                return (errorInfo, default);
             }
-            catch (InvalidOperationException e) {
-	            Debug.LogException(e);
-	            return (new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation), default);
+
+            if (!SteamP2pServicePeerIdParser.TryParse(result.P2pServicePeerId, out var steamId64))
+            {
+                return (new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation), default);
+            }
+
+            try
+            {
+                var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
+                return (errorInfo, new JoinRoomWithSteamResult(steamIdentity));
+            }
+            catch (InvalidOperationException e)
+            {
+                Debug.LogException(e);
+                return (new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
         }
     }

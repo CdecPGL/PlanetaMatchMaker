@@ -14,7 +14,6 @@ namespace pgl {
 		authentication_data_invalid,
 		insecure_connection,
 		steam_ticket_invalid,
-		steam_id_mismatch,
 		steam_ownership_check_failed,
 		steam_authentication_service_unavailable,
 	};

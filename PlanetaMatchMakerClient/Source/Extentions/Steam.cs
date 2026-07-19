@@ -1,14 +1,27 @@
+using System.Globalization;
 #if PMM_FacepunchSteamworks || PMM_SteamworksNET
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using Steamworks;
+#endif
 
 namespace PlanetaGameLabo.MatchMaker.Extentions
 {
 #if PMM_FacepunchSteamworks
     using SteamIdentityType = SteamId;
+#elif PMM_SteamworksNET
+    using SteamIdentityType = SteamNetworkingIdentity;
+#endif
 
+    internal static class SteamP2pServicePeerIdParser
+    {
+        internal static bool TryParse(P2pServicePeerId peerId, out ulong steamId64)
+        {
+            return ulong.TryParse(peerId.Value, NumberStyles.None, CultureInfo.InvariantCulture, out steamId64);
+        }
+    }
+
+#if PMM_FacepunchSteamworks
     public static class SteamLibraryHelpers
     {
         /// <summary>
@@ -39,8 +52,6 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
         }
     }
 #elif PMM_SteamworksNET
-    using SteamIdentityType = SteamNetworkingIdentity;
-
     public static class SteamLibraryHelpers
     {
         /// <summary>
@@ -55,7 +66,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             {
                 throw new InvalidOperationException("Failed to get steam networking identity.");
             }
-            
+
             return steamNetworkingIdentity.GetSteamID64();
         }
 
@@ -74,6 +85,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
     }
 #endif
 
+#if PMM_FacepunchSteamworks || PMM_SteamworksNET
     public static class SteamExtensions
     {
         /// <summary>
@@ -106,11 +118,13 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             var response = await client
                 .JoinRoomWithExternalServiceAsync(roomId, GameHostConnectionEstablishMode.Steam, password)
                 .ConfigureAwait(false);
-            var steamId64 = ulong.Parse(response.P2pServicePeerId.Value, CultureInfo.InvariantCulture);
-            var steamId = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
-            return steamId;
+            if (!SteamP2pServicePeerIdParser.TryParse(response.P2pServicePeerId, out var steamId64))
+            {
+                throw new InvalidOperationException("The Steam room peer ID returned by the server is invalid.");
+            }
+
+            return SteamLibraryHelpers.CreateSteamIdentity(steamId64);
         }
     }
-}
-
 #endif
+}

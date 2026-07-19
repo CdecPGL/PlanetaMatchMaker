@@ -797,7 +797,8 @@ namespace PlanetaGameLabo.MatchMaker
             try
             {
                 keepAliveSenderNotificator.UpdateLastRequestTime();
-                await communicationStream.SendRequestMessage(messageBody, attachment ?? Array.Empty<byte>())
+                await communicationStream.SendRequestMessage(messageBody, attachment ?? Array.Empty<byte>(),
+                        TimeoutMilliSeconds)
                     .ConfigureAwait(false);
             }
             catch (MessageErrorException e)
@@ -832,6 +833,15 @@ namespace PlanetaGameLabo.MatchMaker
 
                 throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
             }
+            catch (TimeoutException e)
+            {
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message, e);
+            }
         }
 
         /// <summary>
@@ -844,7 +854,8 @@ namespace PlanetaGameLabo.MatchMaker
         {
             try
             {
-                var (errorCode, replyBody, attachment) = await communicationStream.ReceiveReplyMessage<T>()
+                var (errorCode, replyBody, attachment) = await communicationStream
+                    .ReceiveReplyMessage<T>(TimeoutMilliSeconds)
                     .ConfigureAwait(false);
                 if (errorCode != MessageErrorCode.Ok || replyBody == null)
                 {
@@ -890,6 +901,15 @@ namespace PlanetaGameLabo.MatchMaker
                 }
 
                 throw new ClientErrorException(ClientErrorCode.SystemError, e.Message);
+            }
+            catch (TimeoutException e)
+            {
+                if (Connected)
+                {
+                    Close();
+                }
+
+                throw new ClientErrorException(ClientErrorCode.SystemError, e.Message, e);
             }
         }
 
