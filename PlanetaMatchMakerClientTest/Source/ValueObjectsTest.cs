@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PlanetaGameLabo.MatchMaker.Test
@@ -17,7 +17,7 @@ namespace PlanetaGameLabo.MatchMaker.Test
             Assert.IsTrue(typeof(ServerPort).IsValueType);
             Assert.IsTrue(typeof(PlayerName).IsValueType);
             Assert.IsTrue(typeof(GameHostPort).IsValueType);
-            Assert.IsTrue(typeof(GameHostExternalId).IsValueType);
+            Assert.IsTrue(typeof(P2pServicePeerId).IsValueType);
             Assert.IsTrue(typeof(RoomPassword).IsValueType);
             Assert.IsTrue(typeof(SearchName).IsValueType);
         }
@@ -156,47 +156,54 @@ namespace PlanetaGameLabo.MatchMaker.Test
         }
 
         [TestMethod]
-        public void ExternalIdCopiesInputArray()
+        public void P2pServicePeerIdStoresUtf8String()
         {
-            var source = new byte[] { 1, 2, 3 };
-            var externalId = new GameHostExternalId(source);
+            var peerId = new P2pServicePeerId("peer-123");
 
-            source[0] = 9;
-            var copied = externalId.ToArray();
-            copied[1] = 9;
-
-            CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, externalId.ToArray());
+            Assert.AreEqual("peer-123", peerId.Value);
+            Assert.AreEqual("peer-123", peerId.ToString());
         }
 
         [TestMethod]
-        public void ExternalIdRejectsTooLongArray()
+        public void P2pServicePeerIdAccepts128Utf8Bytes()
         {
-            var tooLong = Enumerable.Repeat<byte>(1, RoomConstants.GameHostExternalIdLength + 1).ToArray();
+            var value = new string('x', RoomConstants.P2pServicePeerIdLength);
 
-            Assert.IsFalse(GameHostExternalId.TryParse(tooLong, out _));
+            Assert.IsTrue(P2pServicePeerId.TryParse(value, out var peerId));
+            Assert.AreEqual(value, peerId.Value);
         }
 
         [TestMethod]
-        public void ExternalIdAcceptsMaxLengthArray()
+        public void P2pServicePeerIdRejects129Utf8Bytes()
         {
-            var maxLength = Enumerable.Repeat<byte>(1, RoomConstants.GameHostExternalIdLength).ToArray();
+            var value = new string('x', RoomConstants.P2pServicePeerIdLength + 1);
 
-            Assert.IsTrue(GameHostExternalId.TryParse(maxLength, out var externalId));
-            CollectionAssert.AreEqual(maxLength, externalId.ToArray());
+            Assert.IsFalse(P2pServicePeerId.TryParse(value, out _));
+            Assert.ThrowsException<ArgumentException>(() => new P2pServicePeerId(value));
         }
 
         [TestMethod]
-        public void ExternalIdCreatesFromExplicitSourceTypes()
+        public void P2pServicePeerIdCountsUtf8BytesInsteadOfUtf16Characters()
         {
-            var stringExternalId = GameHostExternalId.FromString("external-id");
-            var uint64ExternalId = GameHostExternalId.FromUInt64(123456789UL);
-            var uint32ExternalId = GameHostExternalId.FromUInt32(123456789U);
-            var uint16ExternalId = GameHostExternalId.FromUInt16(12345);
+            Assert.IsTrue(P2pServicePeerId.TryParse(new string('あ', 42), out _));
+            Assert.IsFalse(P2pServicePeerId.TryParse(new string('あ', 43), out _));
+        }
 
-            Assert.IsTrue(stringExternalId.ToArray().Length <= RoomConstants.GameHostExternalIdLength);
-            Assert.IsTrue(uint64ExternalId.ToArray().Length <= RoomConstants.GameHostExternalIdLength);
-            Assert.IsTrue(uint32ExternalId.ToArray().Length <= RoomConstants.GameHostExternalIdLength);
-            Assert.IsTrue(uint16ExternalId.ToArray().Length <= RoomConstants.GameHostExternalIdLength);
+        [TestMethod]
+        public void P2pServicePeerIdRejectsEmbeddedNulAndInvalidUtf16()
+        {
+            Assert.IsFalse(P2pServicePeerId.TryParse("peer\0suffix", out _));
+            Assert.IsFalse(P2pServicePeerId.TryParse("\ud800", out _));
+        }
+
+        [TestMethod]
+        public void SteamP2pServicePeerIdParsesAsDecimalSteamId64()
+        {
+            var peerId = new P2pServicePeerId("76561198000000000");
+
+            var steamId64 = ulong.Parse(peerId.Value, CultureInfo.InvariantCulture);
+
+            Assert.AreEqual(76561198000000000UL, steamId64);
         }
 
         [TestMethod]

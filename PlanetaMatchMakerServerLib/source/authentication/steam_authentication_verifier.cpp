@@ -1,5 +1,6 @@
 #include "authentication/steam_authentication_verifier.hpp"
 
+#include <charconv>
 #include <iomanip>
 #include <memory>
 #include <optional>
@@ -47,17 +48,23 @@ namespace pgl {
 			return {authentication_result::success, std::move(identity)};
 		}
 
-		std::string player_name_to_display_name(const player_name_t& player_name) {
-			const auto name = player_name.to_string();
-			return reinterpret_cast<const char*>(name.c_str());
+		uint64_t parse_canonical_steam_id64(const std::string& value) {
+			if (value.empty() || value.size() > authentication_provider_user_id_bytes) {
+				throw std::invalid_argument("SteamID64 has an invalid length.");
+			}
+			uint64_t parsed = 0;
+			const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), parsed);
+			if (error != std::errc{} || end != value.data() + value.size() || std::to_string(parsed) != value) {
+				throw std::invalid_argument("SteamID64 is not a canonical decimal uint64 value.");
+			}
+			return parsed;
 		}
 
-		game_host_external_id_t steam_external_id_from_steam_id64(const uint64_t steam_id64) {
-			game_host_external_id_t external_id{};
-			for (auto i = 0u; i < sizeof(uint64_t); ++i) {
-				external_id[i] = static_cast<uint8_t>(steam_id64 >> ((sizeof(uint64_t) - 1 - i) * 8));
-			}
-			return external_id;
+		std::u8string as_u8string(const std::string& value) {
+			std::u8string result;
+			result.reserve(value.size());
+			for (const auto character : value) { result.push_back(static_cast<char8_t>(character)); }
+			return result;
 		}
 
 		class steam_authentication_verifier final : public authentication_credential_verifier {
@@ -68,7 +75,6 @@ namespace pgl {
 
 			[[nodiscard]] authentication_verification_result verify(
 				const std::vector<uint8_t>& credential,
-				const player_name_t& player_name,
 				const server_authentication_setting& setting,
 				const authentication_execution_context& context) const override {
 				const auto& steam = setting.steam;
@@ -101,7 +107,7 @@ namespace pgl {
 
 					const auto steam_id_string = get_json_string(*params, "steamid");
 					if (!steam_id_string.has_value()) { return failure(authentication_result::steam_ticket_invalid); }
-					const auto steam_id64 = std::stoull(*steam_id_string);
+					parse_canonical_steam_id64(*steam_id_string);
 
 					auto ownership_url = steam.check_app_ownership_url;
 					ownership_url = authentication_http::append_query(ownership_url, "key", steam.publisher_key);
@@ -128,10 +134,8 @@ namespace pgl {
 					}
 
 					authenticated_identity identity;
-					identity.method = authentication_method::steam;
-					identity.verified_user_id = *steam_id_string;
-					identity.external_id = steam_external_id_from_steam_id64(steam_id64);
-					identity.display_name = player_name_to_display_name(player_name);
+					identity.authentication_provider_user_id =
+						authentication_provider_user_id_t(as_u8string(*steam_id_string));
 					return success(std::move(identity));
 				}
 				catch (const std::invalid_argument&) {
@@ -149,5 +153,13 @@ namespace pgl {
 
 	std::unique_ptr<authentication_credential_verifier> make_steam_authentication_verifier() {
 		return std::make_unique<steam_authentication_verifier>();
+	}
+
+	p2p_service_peer_id_t derive_steam_p2p_service_peer_id(
+		const authentication_provider_user_id_t& authentication_provider_user_id) {
+		const auto value = authentication_provider_user_id.to_string();
+		const std::string ascii(value.begin(), value.end());
+		parse_canonical_steam_id64(ascii);
+		return p2p_service_peer_id_t(value);
 	}
 }

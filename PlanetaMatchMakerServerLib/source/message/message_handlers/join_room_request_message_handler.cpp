@@ -62,7 +62,7 @@ namespace pgl {
 		// Reply to the client and Disconnect
 		join_room_reply_message reply{
 			room_data.game_host_endpoint,
-			room_data.game_host_external_id
+			room_data.game_host_p2p_service_peer_id
 		};
 		return {
 			{reply},

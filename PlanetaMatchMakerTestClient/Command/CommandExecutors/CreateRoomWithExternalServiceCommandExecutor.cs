@@ -19,11 +19,11 @@ namespace PlanetaGameLabo.MatchMaker
             CreateRoomWithExternalServiceCommandOptions options,
             CancellationToken cancellationToken)
         {
-            var externalId = string.IsNullOrEmpty(options.ExternalId)
-                ? (GameHostExternalId?)null
-                : GameHostExternalId.FromString(options.ExternalId);
+            var peerId = string.IsNullOrEmpty(options.P2pServicePeerId)
+                ? (P2pServicePeerId?)null
+                : new P2pServicePeerId(options.P2pServicePeerId);
             await sharedClient.CreateRoomWithExternalServiceAsync(options.MaxPlayerCount,
-                options.ConnectionEstablishMode, externalId,
+                options.ConnectionEstablishMode, peerId,
                 new RoomPassword(options.Password));
             OutputStream.WriteLine($"Room created with id \"{sharedClient.HostingRoomId}\".");
         }
@@ -39,9 +39,9 @@ namespace PlanetaGameLabo.MatchMaker
             HelpText = "A way how clients connect to the host.")]
         public GameHostConnectionEstablishMode ConnectionEstablishMode { get; set; }
 
-        [CommandLine.Value(3, MetaName = "external_id", Required = false,
-            HelpText = "An ID of external service for signaling. Omit to use authenticated identity if available.")]
-        public string ExternalId { get; set; }
+        [CommandLine.Value(3, MetaName = "p2p_service_peer_id", Required = false,
+            HelpText = "A peer ID for an other P2P service. Omit for Steam.")]
+        public string P2pServicePeerId { get; set; }
 
         [CommandLine.Option('s', "password", Default = "", Required = false,
             HelpText = "A password for private room.")]

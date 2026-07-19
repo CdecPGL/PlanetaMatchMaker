@@ -36,6 +36,9 @@ if (STATIC_LINK_DEPENDENCIES)
 endif()
 find_package(OpenSSL 3.0 REQUIRED)
 target_link_libraries(PlanetaMatchMakerServerLib PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+if(WIN32)
+	target_link_libraries(PlanetaMatchMakerServerLib PRIVATE Crypt32)
+endif()
 
 # Compiler settings
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

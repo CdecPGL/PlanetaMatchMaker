@@ -792,7 +792,7 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 
 		BOOST_CHECK(setting.authentication.method == authentication_method::steam);
 		BOOST_CHECK(setting.authentication.game_id == u8"production-game");
-		BOOST_CHECK_EQUAL(setting.authentication.steam.app_id, 123456);
+		BOOST_CHECK_EQUAL(setting.authentication.steam.app_id, uint32_t{123456});
 		BOOST_CHECK_EQUAL(setting.authentication.steam.publisher_key, "test-publisher-key");
 	}
 

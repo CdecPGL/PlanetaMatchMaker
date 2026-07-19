@@ -1,5 +1,4 @@
-#include <algorithm>
-
+#include "authentication/steam_authentication_verifier.hpp"
 #include "server/server_data.hpp"
 #include "server/server_setting.hpp"
 #include "async/read_write.hpp"
@@ -16,23 +15,46 @@ using namespace minimal_serializer;
 
 namespace pgl {
 	namespace {
-		bool is_empty_external_id(const game_host_external_id_t& external_id) {
-			return std::ranges::all_of(external_id, [](const auto byte) { return byte == 0; });
-		}
-
-		game_host_external_id_t resolve_room_external_id(const create_room_request_message& message,
-			const session_data& session_data) {
-			const auto request_external_id_specified = !is_empty_external_id(message.external_id);
-			const auto& identity = session_data.identity();
-			if (identity.has_value() && identity->external_id.has_value()) {
-				if (request_external_id_specified && message.external_id != *identity->external_id) {
-					throw client_error(client_error_code::request_parameter_wrong, false,
-						"Requested external_id does not match authenticated identity.");
-				}
-				return request_external_id_specified ? message.external_id : *identity->external_id;
+		p2p_service_peer_id_t resolve_p2p_service_peer_id(const create_room_request_message& message,
+			const message_handle_parameter& param, const message_parameter_validator& parameter_validator) {
+			if (!is_valid_p2p_service_peer_id(message.p2p_service_peer_id)) {
+				throw client_error(client_error_code::request_parameter_wrong, false,
+					"p2p_service_peer_id must be valid UTF-8 without embedded NUL bytes or nonzero padding.");
 			}
 
-			return message.external_id;
+			const auto peer_id_is_specified = message.p2p_service_peer_id.length() != 0;
+			switch (message.connection_establish_mode) {
+			case game_host_connection_establish_mode::builtin:
+				if (peer_id_is_specified) {
+					throw client_error(client_error_code::request_parameter_wrong, false,
+						"p2p_service_peer_id must not be specified for builtin connection mode.");
+				}
+				parameter_validator.validate_port_number(message.port_number);
+				return {};
+
+			case game_host_connection_establish_mode::steam:
+				if (param.server_setting.authentication.method != authentication_method::steam ||
+					!param.session_data.identity().has_value()) {
+					throw client_error(client_error_code::request_parameter_wrong, false,
+						"Steam connection mode requires Steam authentication.");
+				}
+				if (peer_id_is_specified) {
+					throw client_error(client_error_code::request_parameter_wrong, false,
+						"p2p_service_peer_id must not be specified for Steam connection mode.");
+				}
+				return derive_steam_p2p_service_peer_id(
+					param.session_data.identity()->authentication_provider_user_id);
+
+			case game_host_connection_establish_mode::others:
+				if (!peer_id_is_specified) {
+					throw client_error(client_error_code::request_parameter_wrong, false,
+						"p2p_service_peer_id is required for others connection mode.");
+				}
+				return message.p2p_service_peer_id;
+			}
+
+			throw client_error(client_error_code::request_parameter_wrong, false,
+				"Unknown game host connection establish mode.");
 		}
 	}
 
@@ -44,24 +66,7 @@ namespace pgl {
 
 		auto& room_data_container = param->server_data.get_room_data_container();
 
-		// Check port number is valid.
-		if (message.connection_establish_mode == game_host_connection_establish_mode::builtin) {
-			parameter_validator.validate_port_number(message.port_number);
-		}
-		const auto room_external_id = resolve_room_external_id(message, param->session_data);
-		if (message.connection_establish_mode == game_host_connection_establish_mode::steam) {
-			const auto& identity = param->session_data.identity();
-			if (!identity.has_value() || identity->method != authentication_method::steam ||
-				!identity->external_id.has_value() || is_empty_external_id(room_external_id)) {
-				throw client_error(client_error_code::request_parameter_wrong, false,
-					"Steam room requires Steam authenticated identity.");
-			}
-		}
-		else if (message.connection_establish_mode == game_host_connection_establish_mode::others &&
-			is_empty_external_id(room_external_id)) {
-			throw client_error(client_error_code::request_parameter_wrong, false,
-				"external_id is required for others connection mode when authenticated identity has no external_id.");
-		}
+		const auto p2p_service_peer_id = resolve_p2p_service_peer_id(message, *param, parameter_validator);
 
 		// Check max player count is valid.
 		parameter_validator.validate_max_player_count(message.max_player_count);
@@ -92,7 +97,7 @@ namespace pgl {
 				host_endpoint,
 				message.connection_establish_mode,
 				game_host_endpoint,
-				room_external_id,
+				p2p_service_peer_id,
 				1
 			};
 

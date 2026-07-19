@@ -2,9 +2,22 @@
 
 #include <cctype>
 #include <iomanip>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <system_error>
+
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <wincrypt.h>
+#ifdef _MSC_VER
+#pragma comment(lib, "Crypt32.lib")
+#endif
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -18,6 +31,9 @@
 #pragma warning(pop)
 #endif
 #include <openssl/err.h>
+#include <openssl/ssl.h>
+#include <openssl/x509.h>
+#include <openssl/x509err.h>
 
 namespace pgl::authentication_http {
 	namespace {
@@ -100,6 +116,78 @@ namespace pgl::authentication_http {
 			socket.shutdown(tcp::socket::shutdown_both, ignored_error);
 			socket.close(ignored_error);
 		}
+
+		void throw_last_openssl_error() {
+			throw beast::system_error(
+				beast::error_code(static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()));
+		}
+
+#ifdef _WIN32
+		void load_windows_certificate_store(asio::ssl::context& ssl_context, const DWORD store_location) {
+			const auto certificate_store = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0,
+				static_cast<HCRYPTPROV_LEGACY>(0),
+				store_location | CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG, L"ROOT");
+			if (certificate_store == nullptr) {
+				throw std::system_error(static_cast<int>(GetLastError()), std::system_category(),
+					"Failed to open the Windows ROOT certificate store");
+			}
+
+			PCCERT_CONTEXT certificate_context = nullptr;
+			try {
+				auto* openssl_certificate_store = SSL_CTX_get_cert_store(ssl_context.native_handle());
+				while ((certificate_context = CertEnumCertificatesInStore(
+					certificate_store, certificate_context)) != nullptr) {
+					if (certificate_context->cbCertEncoded >
+						static_cast<DWORD>(std::numeric_limits<long>::max())) {
+						continue;
+					}
+
+					const auto* encoded_certificate = certificate_context->pbCertEncoded;
+					auto* certificate = d2i_X509(nullptr, &encoded_certificate,
+						static_cast<long>(certificate_context->cbCertEncoded));
+					if (certificate == nullptr) {
+						ERR_clear_error();
+						continue;
+					}
+
+					const auto add_result = X509_STORE_add_cert(openssl_certificate_store, certificate);
+					X509_free(certificate);
+					if (add_result != 1) {
+						const auto error = ERR_peek_last_error();
+						if (ERR_GET_LIB(error) == ERR_LIB_X509 &&
+							ERR_GET_REASON(error) == X509_R_CERT_ALREADY_IN_HASH_TABLE) {
+							ERR_clear_error();
+						}
+						else {
+							throw_last_openssl_error();
+						}
+					}
+				}
+
+				const auto enumeration_error = GetLastError();
+				if (enumeration_error != static_cast<DWORD>(CRYPT_E_NOT_FOUND)) {
+					throw std::system_error(static_cast<int>(enumeration_error), std::system_category(),
+						"Failed to enumerate the Windows ROOT certificate store");
+				}
+			}
+			catch (...) {
+				if (certificate_context != nullptr) { CertFreeCertificateContext(certificate_context); }
+				CertCloseStore(certificate_store, 0);
+				throw;
+			}
+
+			CertCloseStore(certificate_store, 0);
+		}
+#endif
+
+		void load_system_trusted_certificate_authorities(asio::ssl::context& ssl_context) {
+#ifdef _WIN32
+			load_windows_certificate_store(ssl_context, CERT_SYSTEM_STORE_LOCAL_MACHINE);
+			load_windows_certificate_store(ssl_context, CERT_SYSTEM_STORE_CURRENT_USER);
+#else
+			ssl_context.set_default_verify_paths();
+#endif
+		}
 	}
 
 	std::string append_query(std::string url, const std::string& key, const std::string& value) {
@@ -127,16 +215,17 @@ namespace pgl::authentication_http {
 
 		if (parsed.https) {
 			asio::ssl::context ssl_context(asio::ssl::context::tls_client);
-			ssl_context.set_default_verify_paths();
-			if (!additional_trusted_ca.empty()) {
+			if (additional_trusted_ca.empty()) {
+				load_system_trusted_certificate_authorities(ssl_context);
+			}
+			else {
 				ssl_context.add_certificate_authority(asio::buffer(additional_trusted_ca));
 			}
 			ssl_context.set_verify_mode(asio::ssl::verify_peer);
 
 			beast::ssl_stream<beast::tcp_stream> stream(context.executor, ssl_context);
 			if (!SSL_set_tlsext_host_name(stream.native_handle(), parsed.host.c_str())) {
-				throw beast::system_error(
-					beast::error_code(static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()));
+				throw_last_openssl_error();
 			}
 			stream.set_verify_callback(asio::ssl::host_name_verification(parsed.host));
 			beast::get_lowest_layer(stream).expires_at(context.deadline);

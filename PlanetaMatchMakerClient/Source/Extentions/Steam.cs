@@ -1,5 +1,6 @@
 #if PMM_FacepunchSteamworks || PMM_SteamworksNET
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Steamworks;
 
@@ -105,7 +106,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             var response = await client
                 .JoinRoomWithExternalServiceAsync(roomId, GameHostConnectionEstablishMode.Steam, password)
                 .ConfigureAwait(false);
-            var steamId64 = response.GetExternalIdAsUInt64();
+            var steamId64 = ulong.Parse(response.P2pServicePeerId.Value, CultureInfo.InvariantCulture);
             var steamId = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
             return steamId;
         }

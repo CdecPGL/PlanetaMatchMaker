@@ -3,6 +3,7 @@
 #include "server/server_session.hpp"
 #include "server/server_tls_context.hpp"
 #include "authentication/authentication_http_client.hpp"
+#include "authentication/steam_authentication_verifier.hpp"
 
 #include "protocol_test_support.hpp"
 
@@ -308,6 +309,18 @@ Bfnq2B6IKldqVZnDIsfbNE+ggr6ChQL5vuascFVmVuTTrqahgZrx5ulkNvhikil1
 		return {std::move(response), exception};
 	}
 
+	bool is_invalid_argument(const std::exception_ptr& exception) {
+		try {
+			std::rethrow_exception(exception);
+		}
+		catch (const std::invalid_argument&) {
+			return true;
+		}
+		catch (...) {
+			return false;
+		}
+	}
+
 	void configure_steam_authentication(pgl::server_setting& setting,
 		const authentication_http_test_server& steam_server) {
 		setting.authentication.allow_plain_connections = true;
@@ -354,6 +367,15 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_method::steam), 1u);
 	}
 
+	BOOST_AUTO_TEST_CASE(test_steam_peer_id_is_derived_from_canonical_decimal_steam_id64) {
+		const pgl::authentication_provider_user_id_t provider_user_id{u8"76561198000000000"};
+
+		BOOST_CHECK(pgl::derive_steam_p2p_service_peer_id(provider_user_id) ==
+			pgl::p2p_service_peer_id_t{u8"76561198000000000"});
+		BOOST_CHECK_THROW(pgl::derive_steam_p2p_service_peer_id(
+			pgl::authentication_provider_user_id_t{u8"076561198000000000"}), std::invalid_argument);
+	}
+
 	BOOST_AUTO_TEST_CASE(test_external_authentication_rejects_plain_http_by_default) {
 		boost::asio::io_context io;
 		std::exception_ptr exception;
@@ -369,7 +391,7 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		io.run();
 
 		BOOST_REQUIRE(exception);
-		BOOST_CHECK_THROW(std::rethrow_exception(exception), std::invalid_argument);
+		BOOST_CHECK(is_invalid_argument(exception));
 	}
 
 	BOOST_AUTO_TEST_CASE(test_external_https_verifies_certificate_host_name) {
@@ -408,8 +430,8 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK_EQUAL(reply.player_tag, 1);
 		BOOST_CHECK(context.session_data.is_authenticated());
 		BOOST_REQUIRE(context.session_data.identity().has_value());
-		BOOST_CHECK(context.session_data.identity()->method == pgl::authentication_method::steam);
-		BOOST_CHECK_EQUAL(context.session_data.identity()->verified_user_id, "76561198000000000");
+		BOOST_CHECK(context.session_data.identity()->authentication_provider_user_id ==
+			pgl::authentication_provider_user_id_t{u8"76561198000000000"});
 		BOOST_CHECK(context.session_data.client_player_name().name == u8"player");
 		BOOST_CHECK(context.server_data.get_player_name_container().is_player_exist(
 			context.session_data.client_player_name()));
@@ -461,6 +483,25 @@ BOOST_AUTO_TEST_SUITE(authentication_protocol_test)
 		BOOST_CHECK(authenticate(context, pgl::authentication_method::steam, test_credential) ==
 			pgl::authentication_result::steam_ticket_invalid);
 		BOOST_CHECK_EQUAL(steam_server.request_count(), 1);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_steam_authentication_rejects_noncanonical_steam_id64) {
+		const std::vector<std::string> invalid_steam_ids{
+			"", "not-a-steam-id", "076561198000000000", "18446744073709551616", std::string(129, '1')
+		};
+		for (const auto& steam_id : invalid_steam_ids) {
+			protocol_context context;
+			const auto body = std::string(R"({"response":{"params":{"result":"OK","steamid":")") +
+				steam_id + R"("}}})";
+			authentication_http_test_server steam_server({{200, body}});
+			configure_steam_authentication(context.setting, steam_server);
+
+			BOOST_TEST_CONTEXT("steamid=" << steam_id) {
+				BOOST_CHECK(authenticate(context, pgl::authentication_method::steam, test_credential) ==
+					pgl::authentication_result::steam_ticket_invalid);
+				BOOST_CHECK_EQUAL(steam_server.request_count(), 1);
+			}
+		}
 	}
 
 	BOOST_AUTO_TEST_CASE(test_steam_authentication_replies_ownership_check_failed) {

@@ -537,9 +537,9 @@ namespace PlanetaGameLabo.MatchMaker
         }
     }
 
-    public readonly struct GameHostExternalId : IEquatable<GameHostExternalId>
+    public readonly struct P2pServicePeerId : IEquatable<P2pServicePeerId>
     {
-        public GameHostExternalId(byte[] value)
+        public P2pServicePeerId(string value)
         {
             if (value == null)
             {
@@ -549,110 +549,81 @@ namespace PlanetaGameLabo.MatchMaker
             if (!IsValid(value))
             {
                 throw new ArgumentException(
-                    $"External id whose length is more than {RoomConstants.GameHostExternalIdLength} is not available.",
+                    $"P2P service peer ID must be valid UTF-8 without embedded NUL and at most {RoomConstants.P2pServicePeerIdLength} bytes.",
                     nameof(value));
             }
 
-            this.value = value.ToArray();
+            this.value = value;
         }
 
-        public static GameHostExternalId Empty { get; } =
-            new GameHostExternalId(Array.Empty<byte>());
+        public static P2pServicePeerId Empty { get; } = new P2pServicePeerId("");
 
-        private readonly byte[] value;
+        private readonly string value;
 
-        private byte[] ValueArray => value ?? Array.Empty<byte>();
+        public string Value => value ?? "";
 
-        public static GameHostExternalId Parse(byte[] value)
+        public static P2pServicePeerId Parse(string value)
         {
-            return new GameHostExternalId(value);
+            return new P2pServicePeerId(value);
         }
 
-        public static GameHostExternalId FromString(string value)
-        {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            return new GameHostExternalId(
-                Utility.ConvertStringToFixedLengthArray(value, RoomConstants.GameHostExternalIdLength));
-        }
-
-        public static GameHostExternalId FromUInt64(ulong value)
-        {
-            return new GameHostExternalId(Serializer.Serialize(value));
-        }
-
-        public static GameHostExternalId FromUInt32(uint value)
-        {
-            return new GameHostExternalId(Serializer.Serialize(value));
-        }
-
-        public static GameHostExternalId FromUInt16(ushort value)
-        {
-            return new GameHostExternalId(Serializer.Serialize(value));
-        }
-
-        public static bool TryParse(byte[] value, out GameHostExternalId externalId)
+        public static bool TryParse(string value, out P2pServicePeerId peerId)
         {
             if (!IsValid(value))
             {
-                externalId = default;
+                peerId = default;
                 return false;
             }
 
-            externalId = new GameHostExternalId(value);
+            peerId = new P2pServicePeerId(value);
             return true;
         }
 
-        public byte[] ToArray()
+        public bool Equals(P2pServicePeerId other)
         {
-            return ValueArray.ToArray();
+            return string.Equals(Value, other.Value, StringComparison.Ordinal);
         }
 
-        public bool Equals(GameHostExternalId other)
-        {
-            return ValueArray.SequenceEqual(other.ValueArray);
-        }
-
-        public static bool operator ==(GameHostExternalId left, GameHostExternalId right)
+        public static bool operator ==(P2pServicePeerId left, P2pServicePeerId right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(GameHostExternalId left, GameHostExternalId right)
+        public static bool operator !=(P2pServicePeerId left, P2pServicePeerId right)
         {
             return !left.Equals(right);
         }
 
         public override bool Equals(object obj)
         {
-            return obj is GameHostExternalId other && Equals(other);
+            return obj is P2pServicePeerId other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hash = 17;
-                foreach (var item in ValueArray)
-                {
-                    hash = hash * 31 + item;
-                }
-
-                return hash;
-            }
+            return StringComparer.Ordinal.GetHashCode(Value);
         }
 
         public override string ToString()
         {
-            return string.Join("", ValueArray.Select(b => $"{b:X2}"));
+            return Value;
         }
 
-        internal static bool IsValid(byte[] value)
+        internal static bool IsValid(string value)
         {
-            return value != null && value.Length <= RoomConstants.GameHostExternalIdLength;
+            if (value == null || value.IndexOf('\0') >= 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                return new UTF8Encoding(false, true).GetByteCount(value) <= RoomConstants.P2pServicePeerIdLength;
+            }
+            catch (EncoderFallbackException)
+            {
+                return false;
+            }
         }
     }
 

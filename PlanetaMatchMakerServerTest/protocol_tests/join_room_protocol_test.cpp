@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 		protocol_context context;
 		mark_authenticated(context);
 		auto room = make_room(1, {u8"host", 1}, public_open_room, {}, 2, 1);
-		room.game_host_external_id[0] = 99;
+		room.game_host_p2p_service_peer_id = pgl::p2p_service_peer_id_t{std::u8string(128, u8'p')};
 		context.server_data.get_room_data_container().add_or_update(room);
 		const pgl::join_room_request_message request{
 			1,
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(join_room_protocol_test)
 		BOOST_CHECK(is_intended_disconnect(exception));
 		BOOST_CHECK(reply_header.error_code == pgl::message_error_code::ok);
 		BOOST_CHECK(reply.game_host_endpoint == room.game_host_endpoint);
-		BOOST_CHECK_EQUAL(reply.game_host_external_id[0], 99);
+		BOOST_CHECK(reply.game_host_p2p_service_peer_id == room.game_host_p2p_service_peer_id);
 		BOOST_CHECK_EQUAL(context.server_data.get_room_data_container().get(1).current_player_count, 2);
 	}
 

@@ -106,20 +106,20 @@ namespace pgl {
 		>;
 	};
 
-	// 84 bytes
+	// 148 bytes
 	struct create_room_request_message final {
 		room_password_t password;
 		uint8_t max_player_count;
 		game_host_connection_establish_mode connection_establish_mode;
 		port_number_type port_number;
-		game_host_external_id_t external_id;
+		p2p_service_peer_id_t p2p_service_peer_id;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
 			&create_room_request_message::password,
 			&create_room_request_message::max_player_count,
 			&create_room_request_message::connection_establish_mode,
 			&create_room_request_message::port_number,
-			&create_room_request_message::external_id
+			&create_room_request_message::p2p_service_peer_id
 		>;
 	};
 
@@ -198,14 +198,14 @@ namespace pgl {
 		>;
 	};
 
-	// 82 bytes
+	// 146 bytes
 	struct join_room_reply_message final {
 		endpoint game_host_endpoint;
-		game_host_external_id_t game_host_external_id;
+		p2p_service_peer_id_t game_host_p2p_service_peer_id;
 
 		using serialize_targets = minimal_serializer::serialize_target_container<
 			&join_room_reply_message::game_host_endpoint,
-			&join_room_reply_message::game_host_external_id
+			&join_room_reply_message::game_host_p2p_service_peer_id
 		>;
 	};
 

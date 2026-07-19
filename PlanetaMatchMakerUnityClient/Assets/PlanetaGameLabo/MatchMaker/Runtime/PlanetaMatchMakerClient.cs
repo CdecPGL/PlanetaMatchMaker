@@ -430,31 +430,31 @@ namespace PlanetaGameLabo.MatchMaker
         /// Create and host new room to the server with trying to create port mapping.
         /// </summary>
         /// <param name="connectionEstablishMode"></param>
-        /// <param name="externalId"></param>
+        /// <param name="p2pServicePeerId"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
         public void HostRoomWithExternalService(GameHostConnectionEstablishMode connectionEstablishMode,
-            GameHostExternalId externalId, byte maxPlayerCount, string password = "",
+            P2pServicePeerId p2pServicePeerId, byte maxPlayerCount, string password = "",
             Action<ErrorInfo, HostRoomResult> callback = null)
         {
             RunTask(
-                async () => await HostRoomWithExternalServiceAsync(connectionEstablishMode, externalId, maxPlayerCount,
-                    password), callback);
+                async () => await HostRoomWithExternalServiceAsync(connectionEstablishMode, p2pServicePeerId,
+                    maxPlayerCount, password), callback);
         }
 
         /// <summary>
         /// Create and host new room to the server with external service to establish connection.
         /// </summary>
-        /// <param name="externalId"></param>
+        /// <param name="p2pServicePeerId"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="password"></param>
         /// <param name="connectionEstablishMode"></param>
         /// <returns></returns>
         public async Task<(ErrorInfo errorInfo, HostRoomResult result)> HostRoomWithExternalServiceAsync(
-            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId, byte maxPlayerCount,
-            string password = "")
+            GameHostConnectionEstablishMode connectionEstablishMode, P2pServicePeerId p2pServicePeerId,
+            byte maxPlayerCount, string password = "")
         {
             if (status != Status.SearchingRoom)
             {
@@ -465,7 +465,7 @@ namespace PlanetaGameLabo.MatchMaker
             return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.StartingHostingRoom;
-                var result = await CreateRoomWithExternalServiceImplAsync(connectionEstablishMode, externalId,
+                var result = await CreateRoomWithExternalServiceImplAsync(connectionEstablishMode, p2pServicePeerId,
                     maxPlayerCount, password);
                 status = Status.HostingRoom;
                 return result;
@@ -967,11 +967,11 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private async Task<HostRoomResult> CreateRoomWithExternalServiceImplAsync(
-            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId, byte maxPlayerCount,
-            string password = "")
+            GameHostConnectionEstablishMode connectionEstablishMode, P2pServicePeerId p2pServicePeerId,
+            byte maxPlayerCount, string password = "")
         {
             var createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
-                connectionEstablishMode, externalId, new RoomPassword(password));
+                connectionEstablishMode, p2pServicePeerId, new RoomPassword(password));
             _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
             return new HostRoomResult(_hostingRoomInfo);
         }

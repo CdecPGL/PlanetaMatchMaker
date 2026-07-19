@@ -124,6 +124,7 @@
     <ClInclude Include="source\utilities\enum_utilities.hpp" />
     <ClInclude Include="source\utilities\env_var.hpp" />
     <ClInclude Include="source\utilities\file_utilities.hpp" />
+    <ClInclude Include="source\utilities\fixed_u8string_validation.hpp" />
     <ClInclude Include="source\utilities\io_utility.hpp" />
     <ClInclude Include="source\utilities\pack.hpp" />
     <ClInclude Include="library\minimal_serializer\fixed_string.hpp" />

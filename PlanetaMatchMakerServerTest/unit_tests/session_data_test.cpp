@@ -108,6 +108,46 @@ BOOST_AUTO_TEST_SUITE(session_data_test)
 		session_data.set_authenticated();
 
 		BOOST_CHECK(session_data.is_authenticated());
+		BOOST_CHECK(!session_data.identity().has_value());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_set_authenticated_with_identity_stores_only_provider_user_id) {
+		pgl::session_data session_data;
+		const pgl::authenticated_identity identity{
+			pgl::authentication_provider_user_id_t{u8"76561198000000000"}
+		};
+
+		session_data.set_authenticated(identity);
+
+		BOOST_REQUIRE(session_data.identity().has_value());
+		BOOST_CHECK(session_data.identity()->authentication_provider_user_id ==
+			identity.authentication_provider_user_id);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_set_authenticated_rejects_empty_provider_user_id) {
+		pgl::session_data session_data;
+
+		BOOST_CHECK_THROW(session_data.set_authenticated(pgl::authenticated_identity{}), std::invalid_argument);
+		BOOST_CHECK(!session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_set_authenticated_rejects_embedded_nul_provider_user_id) {
+		pgl::session_data session_data;
+		pgl::authenticated_identity identity{};
+		identity.authentication_provider_user_id[0] = 'a';
+		identity.authentication_provider_user_id[2] = 'b';
+
+		BOOST_CHECK_THROW(session_data.set_authenticated(identity), std::invalid_argument);
+		BOOST_CHECK(!session_data.is_authenticated());
+	}
+
+	BOOST_AUTO_TEST_CASE(test_set_authenticated_rejects_invalid_utf8_provider_user_id) {
+		pgl::session_data session_data;
+		pgl::authenticated_identity identity{};
+		identity.authentication_provider_user_id[0] = 0xff;
+
+		BOOST_CHECK_THROW(session_data.set_authenticated(identity), std::invalid_argument);
+		BOOST_CHECK(!session_data.is_authenticated());
 	}
 
 	BOOST_AUTO_TEST_CASE(test_set_authenticated_rejects_reassignment) {

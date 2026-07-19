@@ -155,7 +155,7 @@ namespace pgl {
 				param->server_setting.authentication.allow_plain_external_service_connections
 			};
 			verification_result = verify_authentication_credential(message.authentication_method, credential,
-				message.player_name, param->server_setting.authentication, authentication_context);
+				param->server_setting.authentication, authentication_context);
 		}
 		if (!verification_result.succeeded()) {
 			log_with_session(log_level::info, param, "Authentication failed. (method: ",

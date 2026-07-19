@@ -18,6 +18,38 @@ namespace PlanetaGameLabo.MatchMaker.Test
         }
 
         [TestMethod]
+        public void CreateAndJoinRoomRecordsFitProtocolLimit()
+        {
+            const int maxRecordSize = 256;
+            Assert.AreEqual(128, RoomConstants.P2pServicePeerIdLength);
+            Assert.AreEqual(148, Serializer.GetSerializedSize<CreateRoomRequestMessage>());
+            Assert.AreEqual(146, Serializer.GetSerializedSize<JoinRoomReplyMessage>());
+            Assert.AreEqual(153, Serializer.GetSerializedSize<RequestMessageHeader>() +
+                                 Serializer.GetSerializedSize<CreateRoomRequestMessage>());
+            Assert.AreEqual(152, Serializer.GetSerializedSize<ReplyMessageHeader>() +
+                                 Serializer.GetSerializedSize<JoinRoomReplyMessage>());
+            Assert.IsTrue(Serializer.GetSerializedSize<RequestMessageHeader>() +
+                          Serializer.GetSerializedSize<CreateRoomRequestMessage>() <= maxRecordSize);
+            Assert.IsTrue(Serializer.GetSerializedSize<ReplyMessageHeader>() +
+                          Serializer.GetSerializedSize<JoinRoomReplyMessage>() <= maxRecordSize);
+        }
+
+        [TestMethod]
+        public void JoinRoomReplyPreservesP2pServicePeerId()
+        {
+            var expected = new string('p', RoomConstants.P2pServicePeerIdLength);
+            var serialized = Serializer.Serialize(new JoinRoomReplyMessage
+            {
+                GameHostEndPoint = new EndPoint { IpAddress = new byte[16] },
+                GameHostP2pServicePeerId = expected
+            });
+
+            var deserialized = Serializer.Deserialize<JoinRoomReplyMessage>(serialized);
+
+            Assert.AreEqual(expected, deserialized.GameHostP2pServicePeerId);
+        }
+
+        [TestMethod]
         public void MessageErrorCodesHaveStableWireValues()
         {
             Assert.AreEqual((byte)0, (byte)MessageErrorCode.Ok);

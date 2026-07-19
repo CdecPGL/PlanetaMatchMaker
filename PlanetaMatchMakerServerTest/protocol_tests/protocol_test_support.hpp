@@ -94,8 +94,6 @@ namespace pgl::test {
 		const pgl::room_password_t& password = {},
 		const uint8_t max_player_count = 4,
 		const uint8_t current_player_count = 1) {
-		pgl::game_host_external_id_t external_id{};
-		external_id[0] = 42;
 		return {
 			room_id,
 			host_full_name,
@@ -106,7 +104,7 @@ namespace pgl::test {
 			make_endpoint(57000),
 			pgl::game_host_connection_establish_mode::builtin,
 			make_endpoint(57001),
-			external_id,
+			{},
 			current_player_count
 		};
 	}

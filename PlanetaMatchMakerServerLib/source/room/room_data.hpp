@@ -34,7 +34,7 @@ namespace pgl {
 		endpoint host_endpoint;
 		game_host_connection_establish_mode game_host_connection_establish_mode;
 		endpoint game_host_endpoint;
-		game_host_external_id_t game_host_external_id;
+		p2p_service_peer_id_t game_host_p2p_service_peer_id;
 		uint8_t current_player_count;
 	};
 

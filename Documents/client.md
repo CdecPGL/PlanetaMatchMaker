@@ -17,7 +17,7 @@ await client.ConnectAsync(
         new Host("match.example.com")));
 ```
 
-User-provided values are represented by immutable value objects: `GameId`, `GameVersion`, `Host`, `ServerPort`, `PlayerName`, `RoomPassword`, `GameHostPort`, `GameHostExternalId`, and `SearchName`.
+User-provided values are represented by immutable value objects: `GameId`, `GameVersion`, `Host`, `ServerPort`, `PlayerName`, `RoomPassword`, `GameHostPort`, `P2pServicePeerId`, and `SearchName`.
 
 Use `ConnectionMode.Plain` only for backward compatibility or local development against a server configured with `tls.mode` set to `"plain"`.
 
@@ -50,16 +50,24 @@ await client.ConnectAsync(
     AuthenticationOptions.None());
 ```
 
-This mode does not create a verified external identity and must not be used in production.
+This mode does not create an authenticated provider user ID and must not be used in production.
 
-SteamID64 is not sent as a client-claimed authentication ID. The server derives the authenticated identity from the Steam verification result.
+SteamID64 is not sent as a client-claimed authentication ID. The server derives the authenticated provider user ID
+from the Steam verification result and stores it as a canonical decimal string. Authentication does not establish a
+P2P service peer ID.
 
 The Unity wrapper returns authentication failures through `PlanetaMatchMakerClient.ErrorInfo`.
 When `authenticationErrorCode` is not `null`, it contains the detailed authentication reason. The
 `serverApiVersion` and `serverGameVersion` fields retain the values returned by the server so version
 mismatches can be handled without parsing an exception message.
 
-`CreateRoomWithExternalServiceAsync` accepts `GameHostExternalId? externalId = null`. `null` sends a 64-byte zero value, which means "unspecified". If the authenticated identity has a verified external ID, the server uses it automatically; if the request specifies an external ID, it must match the verified one. Steam rooms therefore normally call `CreateRoomWithSteamAsync` without passing an external ID.
+`P2pServicePeerId` stores a UTF-8 string of at most 128 bytes and rejects embedded NUL characters. Steam room APIs do
+not accept a peer ID: the server derives the Steam peer ID from the authenticated SteamID64 when Create Room is
+processed. `CreateRoomWithExternalServiceAsync` requires a nonempty `P2pServicePeerId` for `Others`; this is an
+unverified client-provided identifier for that P2P service. Builtin rooms do not use a peer ID.
+
+`JoinRoomWithExternalServiceResult.P2pServicePeerId` returns the room peer ID unchanged. Steam extensions parse its
+canonical decimal value with invariant culture before constructing a Steamworks identity.
 
 ## Port Mapping Auto Release
 

@@ -1,5 +1,7 @@
 #include "session/session_data.hpp"
 
+#include <stdexcept>
+
 namespace pgl {
 	void session_data::set_session_number(const session_number_t session_number) {
 		if (session_number_.has_value()) { throw std::runtime_error("A session number is already set."); }
@@ -37,6 +39,11 @@ namespace pgl {
 	}
 
 	void session_data::set_authenticated(const authenticated_identity& identity) {
+		if (identity.authentication_provider_user_id.length() == 0 ||
+			!is_canonical_fixed_u8string(identity.authentication_provider_user_id)) {
+			throw std::invalid_argument(
+				"An authenticated provider user ID must be nonempty canonical UTF-8 without embedded NUL bytes.");
+		}
 		set_authenticated();
 		identity_ = identity;
 	}

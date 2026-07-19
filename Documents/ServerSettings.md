@@ -46,7 +46,7 @@ Those settings are loaded when server starts.
 |steam.identity|string|""|PMMS_AUTHENTICATION_STEAM_IDENTITY|Optional Steam ticket identity passed to `AuthenticateUserTicket`.|
 |steam.authenticate_user_ticket_url|string|Steam Web API URL|PMMS_AUTHENTICATION_STEAM_AUTHENTICATE_USER_TICKET_URL|Override URL for Steam ticket verification, mainly for tests.|
 |steam.check_app_ownership_url|string|Steam Web API URL|PMMS_AUTHENTICATION_STEAM_CHECK_APP_OWNERSHIP_URL|Override URL for Steam ownership verification, mainly for tests.|
-`authentication.method` is exclusive: the server accepts only the same method in the client's Authentication Request. Select `steam` for normal operation. Select `none` only for local development. A `none` client still sends the authentication request so API version, game ID, game version, player name, and player tag assignment are processed, but the session has no verified external identity. Its credential attachment must be empty.
+`authentication.method` is exclusive: the server accepts only the same method in the client's Authentication Request. Select `steam` for normal operation. Select `none` only for local development. A `none` client still sends the authentication request so API version, game ID, game version, player name, and player tag assignment are processed, but the session has no authenticated provider user ID. Its credential attachment must be empty.
 
 `PMMS_AUTHENTICATION_METHOD` is an optional override. When it is not set, the value loaded from `authentication.method`
 in `setting.json` is preserved. The production Docker image includes a `setting.json` that selects Steam authentication
@@ -64,7 +64,10 @@ The credential-free development method can use plain TCP without `allow_plain_co
 Steam authentication URLs must use HTTPS by default. Plain HTTP is accepted only when
 `allow_plain_external_service_connections` is explicitly enabled for development; it must remain false in production.
 
-Steam room external IDs are derived from the verified SteamID64 as big-endian 8 bytes followed by zero padding.
+Steam authentication stores the verified SteamID64 as a canonical decimal UTF-8
+`authentication_provider_user_id`, for example `76561198000000000`. It does not create a P2P peer ID during
+authentication. When a Steam room is created, the server derives `p2p_service_peer_id` from that decimal string.
+The two IDs are separate so other connection services can use their own client-provided peer IDs.
 
 ### `log` Section
 

@@ -1,5 +1,6 @@
 #if PMM_FacepunchSteamworks || PMM_SteamworksNET
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Steamworks;
 using UnityEngine;
@@ -38,7 +39,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             Action<PlanetaMatchMakerClient.ErrorInfo, HostRoomResult> callback = null)
         {
             client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Steam,
-                GameHostExternalId.Empty, maxPlayerCount, password, callback);
+                P2pServicePeerId.Empty, maxPlayerCount, password, callback);
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
                 byte maxPlayerCount, string password = "")
         {
             return await client.HostRoomWithExternalServiceAsync(GameHostConnectionEstablishMode.Steam,
-                GameHostExternalId.Empty, maxPlayerCount, password);
+                P2pServicePeerId.Empty, maxPlayerCount, password);
         }
 
         /// <summary>
@@ -72,7 +73,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
             client.JoinRoomWithExternalService(GameHostConnectionEstablishMode.Steam, roomId, password,
                 (error, result) =>
                 {
-                    var steamId64 = result.GetExternalIdAsUInt64();
+                    var steamId64 = ulong.Parse(result.P2pServicePeerId.Value, CultureInfo.InvariantCulture);
                     var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
                     callback?.Invoke(error, new JoinRoomWithSteamResult(steamIdentity));
                 });
@@ -96,7 +97,7 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
                 .ConfigureAwait(false);
 
             try {
-	            var steamId64 = result.GetExternalIdAsUInt64();
+	            var steamId64 = ulong.Parse(result.P2pServicePeerId.Value, CultureInfo.InvariantCulture);
 	            var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
 	            return (error, new JoinRoomWithSteamResult(steamIdentity));
             }

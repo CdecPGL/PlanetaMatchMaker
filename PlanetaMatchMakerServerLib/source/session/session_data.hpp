@@ -1,20 +1,21 @@
 #pragma once
 
+#include <cstddef>
 #include <optional>
-#include <string>
 
-#include "authentication/authentication_method.hpp"
-#include "room/room_constants.hpp"
+#include "minimal_serializer/fixed_string.hpp"
 #include "network/endpoint.hpp"
 #include "client/player_full_name.hpp"
+#include "room/room_constants.hpp"
 #include "session_constants.hpp"
 
 namespace pgl {
+	constexpr std::size_t authentication_provider_user_id_bytes = 128;
+	using authentication_provider_user_id_t =
+		minimal_serializer::fixed_u8string<authentication_provider_user_id_bytes>;
+
 	struct authenticated_identity final {
-		authentication_method method = authentication_method::none;
-		std::string verified_user_id;
-		std::optional<game_host_external_id_t> external_id;
-		std::string display_name;
+		authentication_provider_user_id_t authentication_provider_user_id;
 	};
 
 	// This class need not be thread safe because one session is processed serially through its session strand.

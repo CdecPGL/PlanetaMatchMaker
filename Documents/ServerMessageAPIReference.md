@@ -186,7 +186,7 @@ A request to create room.
 
 #### Parameters
 
-The size is 84 bytes.
+The body size is 148 bytes. The serialized record is 153 bytes including the request header.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -194,17 +194,20 @@ The size is 84 bytes.
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
 |connection_establish_mode|8 bits unsigned integer|1|A way how to establish P2P connection.|
 |port_number|16 bits unsigned integer|2|A port number which is used for game host. 49152 to 65535 is available. This is used when `connection_establish_mode` is `builtin`.|
-|external_id|64 elements byte array.|64|An id where clients connect using an external service. All zero bytes mean unspecified. If the authenticated identity has a verified external ID, the server uses it when this field is all zero, and requires an exact match when this field is nonzero.|
+|p2p_service_peer_id|128-byte fixed UTF-8 string|128|The peer ID used to connect to the host through a P2P service. It must not contain an embedded NUL, and unused bytes are zero padded. All zero bytes mean unspecified.|
 
 Options of `connection_establish_mode` are as below.
 
-|Name|Value|Host Identifier|Explanation|
+|Name|Value|Peer ID policy|Explanation|
 |:---|---:|:---|:---|
-|builtin|0|`port_number` property|Use builtin method.|
-|steam|1|Authenticated Steam external ID|Use Steam relay service. Only Steam-authenticated sessions can create Steam rooms. The room external ID is the verified SteamID64 as big-endian 8 bytes followed by zero padding.|
-|others|255|`external_id` property|Use other external service.|
+|builtin|0|Must be unspecified.|Use the client IP address and `port_number`. A specified peer ID is rejected.|
+|steam|1|Must be unspecified and is derived by the server.|Requires server authentication method `steam`. The verified SteamID64 decimal string becomes the room peer ID. A client-specified value is rejected even when it matches.|
+|others|255|Must be specified by the client.|Use another external service. The value is an unverified client-provided connection identifier and is not derived from the authenticated user ID.|
 
-When `connection_establish_mode` is `others`, a nonzero request `external_id` is required unless the authenticated identity already has a verified external ID that can be used automatically.
+The authenticated provider user ID and the P2P service peer ID have separate purposes. Authentication establishes
+`authentication_provider_user_id`; Create Room establishes `p2p_service_peer_id`. Neither ID is sent in the
+Authentication Request. For Steam, the server stores the verified SteamID64 as a canonical decimal UTF-8 string and
+derives the same decimal string as the room peer ID only when a Steam room is created.
 
 #### Reply
 
@@ -221,7 +224,7 @@ The size is 4 bytes.
 |ok|The request is processed succesfully.|yes|
 |client_already_hosting_room|Failed to host new room because the client already hosting room.|yes|
 |room_count_exceeds_limit|The number of room exceeds limit.|yes|
-|request_parameter_wrong|Max player count exceeds limit. Or indicated port number is invalid.|yes|
+|request_parameter_wrong|Max player count exceeds limit, the port is invalid, or the peer ID violates the selected connection mode policy.|yes|
 
 ### List Room Request
 
@@ -326,12 +329,12 @@ The size is 21 bytes.
 
 #### Reply
 
-The size is 82 bytes.
+The body size is 146 bytes. The serialized record is 152 bytes including the reply header.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |game_host_endpoint|endpoint|18|An endpoint of game host which is hosting the room you want to join.|
-|game_host_external_id|64 elements byte array.|64|An id to connect to the host using external service like Steam Networking. This is left justified and big endien.|
+|game_host_p2p_service_peer_id|128-byte fixed UTF-8 string|128|The P2P service peer ID determined when the room was created. It is returned unchanged. All zero bytes mean unspecified for builtin rooms.|
 
 `game_host_endpoint` is 18 bytes data as below.
 
