@@ -2,10 +2,11 @@
 
 #include <sstream>
 
-#include "../../PlanetaMatchMakerServer/source/client/client_error_code.hpp"
-#include "../../PlanetaMatchMakerServer/source/client/client_errors.hpp"
-#include "../../PlanetaMatchMakerServer/source/message/message_error_code.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_errors.hpp"
+#include "authentication/authentication_result.hpp"
+#include "client/client_error_code.hpp"
+#include "client/client_errors.hpp"
+#include "message/message_error_code.hpp"
+#include "server/server_errors.hpp"
 
 BOOST_AUTO_TEST_SUITE(errors_test)
 	BOOST_AUTO_TEST_CASE(test_client_error_stores_code_disconnect_flag_and_extra_message) {
@@ -63,6 +64,42 @@ BOOST_AUTO_TEST_SUITE(errors_test)
 		BOOST_CHECK(pgl::get_message_error_code_from_client_error_code(
 			pgl::client_error_code::client_already_hosting_room) ==
 			pgl::message_error_code::client_already_hosting_room);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_message_error_code_wire_values) {
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::ok), 0u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::server_error), 1u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::operation_invalid), 2u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::request_parameter_wrong), 3u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_not_found), 4u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_password_wrong), 5u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_full), 6u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_permission_denied), 7u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::room_count_exceeds_limit), 8u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::message_error_code::room_connection_establish_mode_mismatch), 9u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::message_error_code::client_already_hosting_room), 10u);
+	}
+
+	BOOST_AUTO_TEST_CASE(test_authentication_result_wire_values) {
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_result::success), 0u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_result::api_version_mismatch), 1u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_result::game_id_mismatch), 2u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_result::game_version_mismatch), 3u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::authentication_result::unsupported_authentication_method), 4u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::authentication_result::authentication_data_format_invalid), 5u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::authentication_result::authentication_data_size_exceeded), 6u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::authentication_result::authentication_data_invalid), 7u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_result::insecure_connection), 8u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(pgl::authentication_result::steam_ticket_invalid), 9u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::authentication_result::steam_ownership_check_failed), 10u);
+		BOOST_CHECK_EQUAL(static_cast<unsigned int>(
+			pgl::authentication_result::steam_authentication_service_unavailable), 11u);
 	}
 
 	BOOST_AUTO_TEST_CASE(test_server_error_stores_disconnect_flag_and_extra_message) {

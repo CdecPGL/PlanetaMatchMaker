@@ -8,7 +8,7 @@
 #include <minimal_serializer/serializer.hpp>
 #include <minimal_serializer/fixed_string.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/data/thread_safe_data_container.hpp"
+#include "data/thread_safe_data_container.hpp"
 
 using namespace boost;
 using namespace pgl;

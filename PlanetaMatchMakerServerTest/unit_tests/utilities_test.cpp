@@ -4,12 +4,12 @@
 
 #include <sstream>
 
-#include "../../PlanetaMatchMakerServer/source/room/room_data.hpp"
-#include "../../PlanetaMatchMakerServer/source/network/transport_layer.hpp"
-#include "../../PlanetaMatchMakerServer/source/utilities/asio_stream_compatibility.hpp"
-#include "../../PlanetaMatchMakerServer/source/utilities/file_utilities.hpp"
-#include "../../PlanetaMatchMakerServer/source/data/random_id_generator.hpp"
-#include "../../PlanetaMatchMakerServer/library/minimal_serializer/string_utility.hpp"
+#include "room/room_data.hpp"
+#include "network/transport_layer.hpp"
+#include "utilities/asio_stream_compatibility.hpp"
+#include "utilities/file_utilities.hpp"
+#include "data/random_id_generator.hpp"
+#include "minimal_serializer/string_utility.hpp"
 
 BOOST_AUTO_TEST_SUITE(utilities_test)
 	BOOST_AUTO_TEST_CASE(test_room_setting_flag_supports_bitwise_operators) {

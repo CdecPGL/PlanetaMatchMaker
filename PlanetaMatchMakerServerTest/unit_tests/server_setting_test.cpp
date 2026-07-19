@@ -5,7 +5,8 @@
 
 #include <fstream>
 
-#include "../../PlanetaMatchMakerServer/source/server/server_setting.hpp"
+#include "server/server_setting.hpp"
+#include "message/messages.hpp"
 
 using namespace boost;
 using namespace pgl;
@@ -29,6 +30,7 @@ bool unset_env_var(const std::string& var_name) {
 const json::value required_setting = {
 	{
 		"authentication", {
+			{"method", "none"},
 			{"game_id", "test"},
 		}
 	},
@@ -76,6 +78,7 @@ void set_typed_env_var<bool>(const std::string& name, const bool& value) {
  * @brief set required setting to environment variable
  */
 void set_required_setting_env_var() {
+	set_typed_env_var("PMMS_AUTHENTICATION_METHOD", "none");
 	set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
 	set_typed_env_var("PMMS_TLS_CERTIFICATE_PATH", "server.crt");
 	set_typed_env_var("PMMS_TLS_PRIVATE_KEY_PATH", "server.key");
@@ -111,7 +114,79 @@ private:
 	}
 };
 
+struct setting_file_and_env_var_fixture : setting_file_fixture, env_var_fixture { };
+
 BOOST_AUTO_TEST_SUITE(server_setting_test)
+	BOOST_AUTO_TEST_CASE(authentication_setting_enables_only_selected_method) {
+		server_authentication_setting setting;
+		BOOST_CHECK(setting.accepts_method(authentication_method::none));
+		BOOST_CHECK(!setting.accepts_method(authentication_method::steam));
+
+		setting.method = authentication_method::steam;
+		BOOST_CHECK(!setting.accepts_method(authentication_method::none));
+		BOOST_CHECK(setting.accepts_method(authentication_method::steam));
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_accepts_protocol_maximum_message_attachment_size,
+		setting_file_fixture) {
+		create_setting_file(create_setting({
+			{"authentication", {{"max_credential_bytes", message_attachment_max_bytes}}}
+		}));
+
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		BOOST_CHECK_EQUAL(setting.authentication.max_credential_bytes, message_attachment_max_bytes);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_authentication_credential_size_over_message_attachment_maximum,
+		setting_file_fixture) {
+		create_setting_file(create_setting({
+			{"authentication", {{"max_credential_bytes", message_attachment_max_bytes + 1}}}
+		}));
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_plain_external_authentication_url_by_default,
+		setting_file_fixture) {
+		create_setting_file(create_setting({
+			{"authentication", {
+				{"method", "steam"},
+				{"steam", {
+					{"app_id", 480},
+					{"publisher_key", "test-key"},
+					{"authenticate_user_ticket_url", "http://127.0.0.1/auth"},
+					{"check_app_ownership_url", "https://steam.example/ownership"}
+				}}
+			}}
+		}));
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_accepts_plain_external_authentication_url_with_development_setting,
+		setting_file_fixture) {
+		create_setting_file(create_setting({
+			{"authentication", {
+				{"method", "steam"},
+				{"allow_plain_external_service_connections", true},
+				{"steam", {
+					{"app_id", 480},
+					{"publisher_key", "test-key"},
+					{"authenticate_user_ticket_url", "http://127.0.0.1/auth"},
+					{"check_app_ownership_url", "http://127.0.0.1/ownership"}
+				}}
+			}}
+		}));
+
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
+	}
 
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_all, setting_file_fixture) {
 		// set up
@@ -130,9 +205,11 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			},
 			{
 				"authentication", {
+					{"method", "none"},
 					{"game_id", "test"},
 					{"enable_game_version_check", true},
 					{"game_version", "1.0.0"},
+					{"allow_plain_external_service_connections", true},
 				}
 			},
 			{
@@ -179,6 +256,9 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, true);
 		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
 		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
+		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
+		BOOST_CHECK(setting.authentication.method == authentication_method::none);
+		BOOST_CHECK(setting.authentication.accepts_method(authentication_method::none));
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);
@@ -228,12 +308,23 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, false);
 	}
 
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_missing_authentication_method, setting_file_fixture) {
+		create_setting_file({
+			{"authentication", {{"game_id", "test"}}},
+			{"tls", {{"certificate_path", "server.crt"}, {"private_key_path", "server.key"}}}
+		});
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
 	BOOST_FIXTURE_TEST_CASE(load_from_json_file_uses_setting_directory_as_default_tls_paths,
 		setting_file_fixture) {
 		// set up
 		const json::value test_data = {
 			{
 				"authentication", {
+					{"method", "none"},
 					{"game_id", "test"},
 				}
 			},
@@ -603,6 +694,8 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 			std::tuple{"common", "ip_version", "v5"},
 			std::tuple{"common", "ip_version", "4"},
 			std::tuple{"common", "ip_version", "6"},
+			std::tuple{"authentication", "method", "oidc"},
+			std::tuple{"authentication", "method", "password"},
 			std::tuple{"authentication", "game_id", ""},
 			std::tuple{"authentication", "game_id", "---------25bytes---------"},
 			std::tuple{"log", "console_log_level", "inf"},
@@ -667,6 +760,56 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
 	}
 
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_rejects_incomplete_steam_setting,
+		setting_file_and_env_var_fixture) {
+		create_setting_file({
+			{"authentication", {{"method", "steam"}}},
+			{"tls", {
+				{"certificate_path", "server.crt"},
+				{"private_key_path", "server.key"},
+			}}
+		});
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file(setting_path), server_setting_error);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_and_env_validates_merged_steam_setting,
+		setting_file_and_env_var_fixture) {
+		create_setting_file({
+			{"authentication", {{"method", "steam"}}},
+			{"tls", {
+				{"certificate_path", "server.crt"},
+				{"private_key_path", "server.key"},
+			}}
+		});
+		set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "production-game");
+		set_typed_env_var("PMMS_AUTHENTICATION_STEAM_APP_ID", 123456);
+		set_typed_env_var("PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY", "test-publisher-key");
+
+		server_setting setting;
+		setting.load_from_json_file_and_env(setting_path);
+
+		BOOST_CHECK(setting.authentication.method == authentication_method::steam);
+		BOOST_CHECK(setting.authentication.game_id == u8"production-game");
+		BOOST_CHECK_EQUAL(setting.authentication.steam.app_id, uint32_t{123456});
+		BOOST_CHECK_EQUAL(setting.authentication.steam.publisher_key, "test-publisher-key");
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_json_file_and_env_rejects_incomplete_merged_steam_setting,
+		setting_file_and_env_var_fixture) {
+		create_setting_file({
+			{"authentication", {{"method", "steam"}}},
+			{"tls", {
+				{"certificate_path", "server.crt"},
+				{"private_key_path", "server.key"},
+			}}
+		});
+
+		server_setting setting;
+		BOOST_CHECK_THROW(setting.load_from_json_file_and_env(setting_path), server_setting_error);
+	}
+
 
 	BOOST_FIXTURE_TEST_CASE(load_from_env_var_all, env_var_fixture) {
 		// set up
@@ -679,8 +822,10 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		set_typed_env_var("PMMS_COMMON_MAX_ROOM_COUNT", 300);
 		set_typed_env_var("PMMS_COMMON_MAX_PLAYER_PER_ROOM", 200);
 		set_typed_env_var("PMMS_AUTHENTICATION_GAME_ID", "test");
+		set_typed_env_var("PMMS_AUTHENTICATION_METHOD", "none");
 		set_typed_env_var("PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK", true);
 		set_typed_env_var("PMMS_AUTHENTICATION_GAME_VERSION", "1.0.0");
+		set_typed_env_var("PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS", true);
 		set_typed_env_var("PMMS_LOG_ENABLE_CONSOLE_LOG", false);
 		set_typed_env_var("PMMS_LOG_CONSOLE_LOG_LEVEL", "warning");
 		set_typed_env_var("PMMS_LOG_ENABLE_FILE_LOG", false);
@@ -711,6 +856,9 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.authentication.enable_game_version_check, true);
 		// Cannot use BOOST_CHECK_EQUAL because it does not support char8_t
 		BOOST_CHECK(setting.authentication.game_version == u8"1.0.0");
+		BOOST_CHECK(setting.authentication.allow_plain_external_service_connections);
+		BOOST_CHECK(setting.authentication.method == authentication_method::none);
+		BOOST_CHECK(setting.authentication.accepts_method(authentication_method::none));
 		BOOST_CHECK_EQUAL(setting.log.enable_console_log, false);
 		BOOST_CHECK(setting.log.console_log_level == log_level::warning);
 		BOOST_CHECK_EQUAL(setting.log.enable_file_log, false);
@@ -723,6 +871,32 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 		BOOST_CHECK_EQUAL(setting.tls.certificate_path, "test.crt");
 		BOOST_CHECK_EQUAL(setting.tls.private_key_path, "test.key");
 		BOOST_CHECK_EQUAL(setting.tls.reload_on_sighup, true);
+	}
+
+	BOOST_FIXTURE_TEST_CASE(load_from_env_var_preserves_json_authentication_method_when_variable_is_unset,
+		setting_file_and_env_var_fixture) {
+		// set up
+		create_setting_file(create_setting({
+			{
+				"authentication", {
+					{"method", "steam"},
+					{"steam", {
+						{"app_id", 480},
+						{"publisher_key", "test-publisher-key"},
+					}}
+				}
+			}
+		}));
+
+		server_setting setting;
+		setting.load_from_json_file(setting_path);
+
+		// exercise
+		setting.load_from_env_var();
+
+		// verify
+		BOOST_CHECK(setting.authentication.method == authentication_method::steam);
+		BOOST_CHECK(setting.authentication.accepts_method(authentication_method::steam));
 	}
 
 	BOOST_FIXTURE_TEST_CASE(load_from_env_var_empty, env_var_fixture) {
@@ -762,6 +936,8 @@ BOOST_AUTO_TEST_SUITE(server_setting_test)
 	BOOST_DATA_TEST_CASE_F(setting_file_fixture, test_load_from_env_var_validation_error,
 		unit_test::data::make({
 			std::tuple{"PMMS_COMMON_TIME_OUT_SECONDS", "0"},
+			std::tuple{"PMMS_AUTHENTICATION_METHOD", "oidc"},
+			std::tuple{"PMMS_AUTHENTICATION_METHOD", "password"},
 			std::tuple{"PMMS_AUTHENTICATION_GAME_ID", ""},
 			std::tuple{"PMMS_LOG_CONSOLE_LOG_LEVEL", "none"},
 			std::tuple{"PMMS_CONNECTION_TEST_CONNECTION_CHECK_TCP_TIME_OUT_SECONDS", "0"},

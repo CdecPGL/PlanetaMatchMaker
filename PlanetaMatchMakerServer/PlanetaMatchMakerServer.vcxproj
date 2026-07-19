@@ -38,181 +38,38 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(ProjectDir)..\PlanetaMatchMaker.Cpp.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(ProjectDir)..\PlanetaMatchMaker.Cpp.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Label="Vcpkg">
-    <VcpkgEnableManifest>true</VcpkgEnableManifest>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)library;$(ProjectDir)source</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0A00;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
-      <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <StackReserveSize>
-      </StackReserveSize>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)library;$(ProjectDir)source</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0A00;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
-      <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <StackReserveSize>
-      </StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="source\authentication\authentication_result.hpp" />
-    <ClInclude Include="source\authentication\game.hpp" />
-    <ClInclude Include="source\client\client_error_code.hpp" />
-    <ClInclude Include="library\nameof.hpp" />
-    <ClInclude Include="source\async\read_write.hpp" />
-    <ClInclude Include="source\async\timer.hpp" />
-    <ClInclude Include="source\client\client_errors.hpp" />
-    <ClInclude Include="source\client\player_full_name.hpp" />
-    <ClInclude Include="source\client\player_name_container.hpp" />
-    <ClInclude Include="source\logger\boost_console_logger.hpp" />
-    <ClInclude Include="source\logger\boost_file_logger.hpp" />
-    <ClInclude Include="source\logger\boost_logger_common.hpp" />
-    <ClInclude Include="source\logger\console_logger.hpp" />
-    <ClInclude Include="source\logger\file_logger.hpp" />
-    <ClInclude Include="source\logger\logger.hpp" />
-    <ClInclude Include="source\logger\logger_common.hpp" />
     <ClInclude Include="source\main\log_initializer.hpp" />
-    <ClInclude Include="source\message\message_handlers\keep_alive_notice_message_handler.hpp" />
-    <ClInclude Include="source\message\message_parameter_validator.hpp" />
-    <ClInclude Include="source\network\client_connection.hpp" />
-    <ClInclude Include="source\network\endpoint.hpp" />
-    <ClInclude Include="source\client\client_constants.hpp" />
-    <ClInclude Include="source\data\data_constants.hpp" />
-    <ClInclude Include="source\data\random_id_generator.hpp" />
-    <ClInclude Include="source\data\thread_safe_data_container.hpp" />
-    <ClInclude Include="source\datetime\datetime.hpp" />
-    <ClInclude Include="source\message\message_constants.hpp" />
-    <ClInclude Include="source\message\message_error_code.hpp" />
-    <ClInclude Include="source\message\message_handlers\connection_test_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\update_room_status_notice_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handle_utilities.hpp" />
-    <ClInclude Include="source\room\room_data_container.hpp" />
-    <ClInclude Include="source\server\server_errors.hpp" />
-    <ClInclude Include="source\server\server_session.hpp" />
-    <ClInclude Include="source\server\server.hpp" />
-    <ClInclude Include="source\server\server_constants.hpp" />
-    <ClInclude Include="source\server\server_data.hpp" />
-    <ClInclude Include="source\server\server_tls_context.hpp" />
-    <ClInclude Include="source\server\server_tls_reload_signal_handler.hpp" />
-    <ClInclude Include="source\message\messages.hpp" />
-    <ClInclude Include="source\message\message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\authentication_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\create_room_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\join_room_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handlers\list_room_request_message_handler.hpp" />
-    <ClInclude Include="source\message\message_handler_invoker.hpp" />
-    <ClInclude Include="source\message\message_handler_invoker_factory.hpp" />
-    <ClInclude Include="source\message\message_handle_parameter.hpp" />
-    <ClInclude Include="source\network\network_layer.hpp" />
-    <ClInclude Include="source\network\transport_layer.hpp" />
-    <ClInclude Include="source\room\room_constants.hpp" />
-    <ClInclude Include="source\room\room_data.hpp" />
-    <ClInclude Include="source\server\server_setting.hpp" />
-    <ClInclude Include="source\server\server_shared_data_repository.hpp" />
-    <ClInclude Include="source\server\server_thread.hpp" />
-    <ClInclude Include="source\session\session_constants.hpp" />
-    <ClInclude Include="source\session\session_data.hpp" />
-    <ClInclude Include="source\utilities\application.hpp" />
-    <ClInclude Include="source\utilities\asio_stream_compatibility.hpp" />
-    <ClInclude Include="source\utilities\class_traits.hpp" />
-    <ClInclude Include="source\utilities\enum_utilities.hpp" />
-    <ClInclude Include="source\utilities\env_var.hpp" />
-    <ClInclude Include="source\utilities\file_utilities.hpp" />
-    <ClInclude Include="source\utilities\io_utility.hpp" />
-    <ClInclude Include="source\logger\log.hpp" />
-    <ClInclude Include="source\utilities\checked_static_cast.hpp" />
-    <ClInclude Include="source\utilities\pack.hpp" />
-    <ClInclude Include="source\utilities\concepts.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\client\client_error_code.cpp" />
-    <ClCompile Include="source\async\timer.cpp" />
-    <ClCompile Include="source\client\client_errors.cpp" />
-    <ClCompile Include="source\client\player_full_name.cpp" />
-    <ClCompile Include="source\client\player_name_container.cpp" />
-    <ClCompile Include="source\logger\boost_console_logger.cpp" />
-    <ClCompile Include="source\logger\boost_file_logger.cpp" />
-    <ClCompile Include="source\logger\boost_logger_common.cpp" />
-    <ClCompile Include="source\logger\console_logger.cpp" />
-    <ClCompile Include="source\logger\file_logger.cpp" />
-    <ClCompile Include="source\logger\logger_common.cpp" />
     <ClCompile Include="source\main\log_initializer.cpp" />
-    <ClCompile Include="source\message\message_error_code.cpp" />
-    <ClCompile Include="source\message\message_handlers\keep_alive_notice_message_handler.cpp" />
-    <ClCompile Include="source\message\message_parameter_validator.cpp" />
-    <ClCompile Include="source\network\client_connection.cpp" />
-    <ClCompile Include="source\network\endpoint.cpp" />
-    <ClCompile Include="source\datetime\datetime.cpp" />
     <ClCompile Include="source\main\main.cpp" />
-    <ClCompile Include="source\message\message_handlers\connection_test_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\update_room_status_notice_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handle_utilities.cpp" />
-    <ClCompile Include="source\network\network_layer.cpp" />
-    <ClCompile Include="source\room\room_data.cpp" />
-    <ClCompile Include="source\room\room_data_container.cpp" />
-    <ClCompile Include="source\server\server_session.cpp" />
-    <ClCompile Include="source\message\message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\authentication_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\create_room_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\join_room_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handlers\list_room_request_message_handler.cpp" />
-    <ClCompile Include="source\message\message_handler_invoker.cpp" />
-    <ClCompile Include="source\message\message_handler_invoker_factory.cpp" />
-    <ClCompile Include="source\server\server.cpp" />
-    <ClCompile Include="source\server\server_data.cpp" />
-    <ClCompile Include="source\server\server_errors.cpp" />
-    <ClCompile Include="source\server\server_tls_context.cpp" />
-    <ClCompile Include="source\server\server_tls_reload_signal_handler.cpp" />
-    <ClCompile Include="source\network\transport_layer.cpp" />
-    <ClCompile Include="source\server\server_setting.cpp" />
-    <ClCompile Include="source\server\server_thread.cpp" />
-    <ClCompile Include="source\session\session_data.cpp" />
-    <ClCompile Include="source\utilities\asio_stream_compatibility.cpp" />
-    <ClCompile Include="source\utilities\file_utilities.cpp" />
-    <ClCompile Include="source\logger\log.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PlanetaMatchMakerServerLib\PlanetaMatchMakerServerLib.vcxproj">
+      <Project>{7c6982f7-835c-49a1-af0b-6d96a9e72e19}</Project>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

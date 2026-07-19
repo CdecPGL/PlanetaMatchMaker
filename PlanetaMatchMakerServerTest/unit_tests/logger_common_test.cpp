@@ -4,7 +4,7 @@
 #include <string>
 #include <thread>
 
-#include "../../PlanetaMatchMakerServer/source/logger/logger_common.hpp"
+#include "logger/logger_common.hpp"
 
 BOOST_AUTO_TEST_SUITE(logger_common_test)
 	BOOST_AUTO_TEST_CASE(test_output_formatted_log_includes_thread_id) {

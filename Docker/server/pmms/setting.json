@@ -1,6 +1,5 @@
 {
-    "common":{
-        "enable_session_key_check": true,
+    "common": {
         "time_out_seconds": 60,
         "ip_version": "v4",
         "port": 57000,
@@ -10,23 +9,29 @@
         "max_player_per_room": 8
     },
     "authentication": {
-        "game_id": "test",
-        "enable_game_version_check": true,
-        "game_version": "1.0.0"
+        "method": "steam",
+        "enable_game_version_check": false,
+        "max_credential_bytes": 16384,
+        "timeout_seconds": 5,
+        "allow_plain_connections": false,
+        "allow_plain_external_service_connections": false,
+        "steam": {
+            "identity": ""
+        }
     },
-    "log":{
+    "log": {
         "enable_console_log": true,
         "console_log_level": "info",
         "enable_file_log": false,
         "file_log_level": "info",
         "file_log_path": ""
     },
-    "connection_test":{
+    "connection_test": {
         "connection_check_tcp_time_out_seconds": 5,
         "connection_check_udp_time_out_seconds": 3,
         "connection_check_udp_try_count": 3
     },
-    "tls":{
+    "tls": {
         "mode": "tls"
     }
 }

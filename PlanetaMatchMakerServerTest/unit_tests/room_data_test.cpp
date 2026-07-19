@@ -5,7 +5,7 @@
 #include <sstream>
 #include <vector>
 
-#include "../../PlanetaMatchMakerServer/source/room/room_data.hpp"
+#include "room/room_data.hpp"
 
 namespace {
 	constexpr auto public_open_room = pgl::room_setting_flag::public_room | pgl::room_setting_flag::open_room;

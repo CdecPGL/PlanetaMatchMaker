@@ -9,7 +9,9 @@ Server setting is located in `/etc/pmms/setting.json` (Linux) or `C:\pmms\settin
 Setting is written by JSON format which can include comments and trailing cammma.
 The encoding of the setting file must be UTF-8 without BOM.
 
-If specific environmet variables are defined, the value of environment variables are used even if setting file is located.
+If specific environment variables are defined, they override the corresponding JSON values. The merged setting is
+validated after both sources are loaded, so required deployment values may be supplied exclusively through environment
+variables.
 
 Those settings are loaded when server starts.
 
@@ -31,17 +33,41 @@ Those settings are loaded when server starts.
 
 |Name|Type|Default|Env Var|Explanation|
 |:---|:---|---:|:---|:---|
+|method|string (`none` or `steam`)|(required)|PMMS_AUTHENTICATION_METHOD|Select exactly one authentication method. `none` is only for local development. A client requesting a different method is rejected.|
 |game_id|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_ID|A game id to accept.|
 |enable_game_version_check|boolean|false|PMMS_AUTHENTICATION_ENABLE_GAME_VERSION_CHECK|Wheather game version check is enabled.|
 |game_version|string (the length is less than 24)|""|PMMS_AUTHENTICATION_GAME_VERSION|A game version to accept. This setting is reffered only if enable_game_version_check is true.|
+|max_credential_bytes|integer (1-15728640)|16384|PMMS_AUTHENTICATION_MAX_CREDENTIAL_BYTES|Maximum Steam ticket size accepted in the authentication message attachment. This setting is limited by the message attachment chunk sequence field.|
+|timeout_seconds|integer (1-3600)|5|PMMS_AUTHENTICATION_TIMEOUT_SECONDS|Timeout for external authentication service requests.|
+|allow_plain_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_CONNECTIONS|Allow authentication over plain TCP. Keep this false in production.|
+|allow_plain_external_service_connections|boolean|false|PMMS_AUTHENTICATION_ALLOW_PLAIN_EXTERNAL_SERVICE_CONNECTIONS|Allow Steam authentication requests over plain HTTP. Enable only for local development with trusted endpoints.|
+|steam.app_id|integer|0|PMMS_AUTHENTICATION_STEAM_APP_ID|Steam AppID checked by `AuthenticateUserTicket` and `CheckAppOwnership`. Required when Steam authentication is enabled.|
+|steam.publisher_key|string|""|PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY|Steam Web API publisher key. This is a server secret and is never sent to clients or logs.|
+|steam.identity|string|""|PMMS_AUTHENTICATION_STEAM_IDENTITY|Optional Steam ticket identity passed to `AuthenticateUserTicket`.|
+|steam.authenticate_user_ticket_url|string|Steam Web API URL|PMMS_AUTHENTICATION_STEAM_AUTHENTICATE_USER_TICKET_URL|Override URL for Steam ticket verification, mainly for tests.|
+|steam.check_app_ownership_url|string|Steam Web API URL|PMMS_AUTHENTICATION_STEAM_CHECK_APP_OWNERSHIP_URL|Override URL for Steam ownership verification, mainly for tests.|
+`authentication.method` is exclusive: the server accepts only the same method in the client's Authentication Request. Select `steam` for normal operation. Select `none` only for local development. A `none` client still sends the authentication request so API version, game ID, game version, player name, and player tag assignment are processed, but the session has no authenticated provider user ID. Its credential attachment must be empty.
 
-Detail of each `game_version_check_mode` options is below.
+`PMMS_AUTHENTICATION_METHOD` is an optional override. When it is not set, the value loaded from `authentication.method`
+in `setting.json` is preserved. The production Docker image includes a `setting.json` that selects Steam authentication
+but omits `game_id`, `steam.app_id`, and `steam.publisher_key`. The server therefore refuses to start unless
+`PMMS_AUTHENTICATION_GAME_ID`, `PMMS_AUTHENTICATION_STEAM_APP_ID`, and
+`PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY` are supplied, or a complete replacement setting file is mounted. Use
+[`Docker/server/pmms/pmms.env.example`](../Docker/server/pmms/pmms.env.example) as the `docker run --env-file` template.
+Steam authentication verifies a client-provided Steam auth ticket on the server and checks AppID ownership. Do not put the Steam publisher key in a client build.
+Set `steam.app_id` to the AppID assigned to your game. AppID 480 belongs to the Steamworks Spacewar sample application
+and is not a production default ([Steamworks documentation](https://partner.steamgames.com/doc/sdk/api/example)).
 
-|Option|Explanation|
-|:---|:---|
-|ignore|The server does't check game version of clients|
-|overall|The server checks a game version of all clients matches the value of `game_version` setting.|
-|room|The server checks a game version of clients in a room matches a host of the room.|
+Authentication credentials should be sent over TLS in production. If `tls.mode` is `"plain"` and `authentication.method` is `steam`, `allow_plain_connections` must be explicitly true or authentication fails.
+The credential-free development method can use plain TCP without `allow_plain_connections` because it transmits no authentication secret.
+
+Steam authentication URLs must use HTTPS by default. Plain HTTP is accepted only when
+`allow_plain_external_service_connections` is explicitly enabled for development; it must remain false in production.
+
+Steam authentication stores the verified SteamID64 as a canonical decimal UTF-8
+`authentication_provider_user_id`, for example `76561198000000000`. It does not create a P2P peer ID during
+authentication. When a Steam room is created, the server derives `p2p_service_peer_id` from that decimal string.
+The two IDs are separate so other connection services can use their own client-provided peer IDs.
 
 ### `log` Section
 

@@ -1,5 +1,4 @@
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,7 +24,7 @@ namespace PlanetaGameLabo.MatchMaker
                     new RoomPassword(options.Password));
             OutputStream.WriteLine($"Obtain game host signaling mode: {result.ConnectionEstablishMode}");
             OutputStream.WriteLine(
-                $"Obtain game host external id of room: {string.Join("", result.ExternalId.Select(b => $"{b:X00}"))} ({result.GetExternalIdAsString()})");
+                $"Obtain game host P2P service peer ID: {result.P2pServicePeerId.Value}");
             OutputStream.WriteLine("Connection will be closed.");
         }
     }

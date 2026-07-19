@@ -4,7 +4,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/room/room_data_container.hpp"
+#include "room/room_data_container.hpp"
 
 using namespace pgl;
 
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_SUITE(room_data_container_test)
 		for (auto& thread : threads) { thread.join(); }
 
 		// verify
-		BOOST_CHECK_EQUAL(accepted_count.load(), max_player_count - 1);
+		BOOST_CHECK_EQUAL(accepted_count.load(), static_cast<unsigned>(max_player_count) - 1u);
 		BOOST_CHECK_EQUAL(full_count.load(), thread_count - accepted_count.load());
 		BOOST_CHECK_EQUAL(container.get(1).current_player_count, max_player_count);
 	}
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_SUITE(room_data_container_test)
 		// verify
 		BOOST_CHECK_EQUAL(result.total_room_count, 2);
 		BOOST_REQUIRE_EQUAL(result.data.size(), 1);
-		BOOST_CHECK_EQUAL(result.data.front().room_id, 1);
+		BOOST_CHECK_EQUAL(result.data.front().room_id, room_id_t{1});
 	}
 
 BOOST_AUTO_TEST_SUITE_END()

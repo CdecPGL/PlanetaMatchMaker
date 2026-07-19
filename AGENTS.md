@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository contains a lightweight match-making server, C# client libraries, tests, and a Unity package. C++ server code lives in `PlanetaMatchMakerServer/source`, with vendored headers in `PlanetaMatchMakerServer/library`. C++ unit tests are in `PlanetaMatchMakerServerTest`. The .NET client source is in `PlanetaMatchMakerClient/Source`, with MSTest coverage in `PlanetaMatchMakerClientTest/Source`. `PlanetaMatchMakerTestClient` is a CLI test client. Unity-facing assets are under `PlanetaMatchMakerUnityClient/Assets/PlanetaGameLabo/MatchMaker`; keep Unity `.meta` files with their assets. Documentation is in `Documents`.
+This repository contains a lightweight match-making server, C# client libraries, tests, and a Unity package. Reusable C++ server code lives in `PlanetaMatchMakerServerLib/source`, with vendored headers in `PlanetaMatchMakerServerLib/library`. The executable entry point lives in `PlanetaMatchMakerServer/source/main`. C++ unit tests are in `PlanetaMatchMakerServerTest`. The .NET client source is in `PlanetaMatchMakerClient/Source`, with MSTest coverage in `PlanetaMatchMakerClientTest/Source`. `PlanetaMatchMakerTestClient` is a CLI test client. Unity-facing assets are under `PlanetaMatchMakerUnityClient/Assets/PlanetaGameLabo/MatchMaker`; keep Unity `.meta` files with their assets. Documentation is in `Documents`.
 
 ## Build, Test, and Development Commands
 
@@ -11,6 +11,7 @@ This repository contains a lightweight match-making server, C# client libraries,
 - `ctest --test-dir build`: run the C++ Boost.Test suite.
 - `dotnet build PlanetaMatchMakerClient -c Release`: build the .NET client library.
 - `dotnet test PlanetaMatchMakerClientTest -c Release`: run MSTest client tests.
+- On Windows, run .NET TLS tests outside the Codex sandbox. Sandboxed Schannel may fail with `SEC_E_NO_CREDENTIALS (0x8009030E)` even though the same tests pass under the normal user token.
 - `dotnet publish PlanetaMatchMakerTestClient -c Release --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true -r win-x64`: publish a standalone test client.
 - `docker build -t planeta-match-maker-dev Docker/dev`: build the documented Linux development image.
 

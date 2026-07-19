@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/server/server_data.hpp"
+#include "server/server_data.hpp"
 
 BOOST_AUTO_TEST_SUITE(server_data_test)
 	BOOST_AUTO_TEST_CASE(test_issue_session_number_returns_sequential_values) {

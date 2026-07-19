@@ -54,21 +54,31 @@ Following commands are examples to run a server with port 57000 by using docker.
 ```bash
 docker pull cdec/planeta-match-maker-server:latest
 
-# Production TLS. Mount an existing certificate chain and private key to the default paths.
+# Production TLS. Create pmms.env from Docker/server/pmms/pmms.env.example
+# and replace every value before running this command.
 docker run -p 57000:57000 \
+  --env-file /path/to/pmms.env \
   -v /etc/letsencrypt/live/match.example.com/fullchain.pem:/etc/pmms/server.crt:ro \
   -v /etc/letsencrypt/live/match.example.com/privkey.pem:/etc/pmms/server.key:ro \
   cdec/planeta-match-maker-server:latest
 
-# Local plain TCP test.
+# Local plain TCP test without external authentication.
 docker run -p 57000:57000 \
+  -e PMMS_AUTHENTICATION_METHOD=none \
+  -e PMMS_AUTHENTICATION_GAME_ID=local-development \
   -e PMMS_TLS_MODE=plain \
   cdec/planeta-match-maker-server:latest
 ```
 
 You may need to set firewall to acceppt recieve connection of TCP port which is defined in the setting file.
 
-The default server setting uses TLS. Mount certificate and private key files to the configured paths, or explicitly set `tls.mode` to `"plain"` for local plain TCP testing. See [TLS Certificate Setup](Documents/TLSCertificate.md) for production and development certificate examples.
+The image contains `/etc/pmms/setting.json` with Steam authentication selected, but intentionally omits the game ID,
+Steam AppID, and Publisher Key. The server refuses to start until all three are supplied through
+`PMMS_AUTHENTICATION_GAME_ID`, `PMMS_AUTHENTICATION_STEAM_APP_ID`, and
+`PMMS_AUTHENTICATION_STEAM_PUBLISHER_KEY`, or through a complete replacement setting file. Start from
+[`Docker/server/pmms/pmms.env.example`](Docker/server/pmms/pmms.env.example) when using `--env-file`. Mount certificate
+and private key files to the configured paths, or explicitly set `tls.mode` to `"plain"` and authentication to
+`"none"` for local testing only. See [TLS Certificate Setup](Documents/TLSCertificate.md) for certificate examples.
 
 You can change settings by editing [the setting file](Documents/ServerSettings.md) if you need.
 
@@ -107,7 +117,21 @@ You can change settings by editing [the setting file](Documents/ServerSettings.m
 1. Install steamworks library for C# in below table
 1. Set pre-defined macro of compiler in below table
 1. Add `using PlanetaGameLabo.MatchMaker.Extentions;` in your code
-1. Use `MatchMakerClient.CreateRoomWithSteamAsync` and `MatchMakerClient.JoinRoomWithSteamAsync`
+1. Register the Steamworks `GetTicketForWebApiResponse_t` callback.
+1. Call `GetAuthTicketForWebApi` with the same service identity configured as `authentication.steam.identity` on the server.
+1. Wait for the callback, verify that it succeeded, and copy exactly the returned ticket bytes. The ticket is not available when `GetAuthTicketForWebApi` first returns.
+1. Pass those bytes to `AuthenticationOptions.Steam(ticket)` and call `ConnectAsync`.
+1. Only after `ConnectAsync` succeeds, use `CreateRoomWithSteamAsync` or `JoinRoomWithSteamAsync`.
+1. Call the Steamworks ticket cancellation API when the ticket is no longer needed.
+
+```csharp
+var authentication = AuthenticationOptions.Steam(ticketFromSteamCallback);
+await matchMakerClient.ConnectAsync(serverHost, serverPort, playerName, authentication);
+await matchMakerClient.CreateRoomWithSteamAsync(maxPlayerCount, password);
+```
+
+See the Steamworks [`ISteamUser::GetAuthTicketForWebApi`](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthTicketForWebApi)
+documentation and the [PMMS Client Guide](Documents/client.md) for the complete authentication flow.
 
 Note that enabling `Facepunch.Steamworks` and `Steamworks.NET` at same time is not supported.
 
@@ -118,6 +142,7 @@ Note that enabling `Facepunch.Steamworks` and `Steamworks.NET` at same time is n
 
 ## Documents
 
+- [Client Guide](Documents/client.md)
 - [Server Settings](Documents/ServerSettings.md)
 - [TLS Certificate Setup](Documents/TLSCertificate.md)
 - [Build Manual](Documents/BuildManual.md)

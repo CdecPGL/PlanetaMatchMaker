@@ -28,6 +28,8 @@ namespace PlanetaGameLabo.MatchMaker
                 Stopwatch.Restart();
                 await client.ConnectAsync(new Host(options.ServerAddress),
                     new ServerPort(options.ServerPort), new PlayerName(playerName),
+                    AuthenticationOptionsFactory.CreateFromEnvironment(options.AuthenticationMethod,
+                        options.AuthenticationCredentialEnvironmentVariable),
                     ConnectionOptionsFactory.Create(options.ConnectionMode, options.TlsTargetHost,
                         options.AcceptInvalidTlsCertificate));
                 Stopwatch.Stop();

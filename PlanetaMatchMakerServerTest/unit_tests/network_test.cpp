@@ -2,9 +2,9 @@
 
 #include <boost/asio.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/network/endpoint.hpp"
-#include "../../PlanetaMatchMakerServer/source/network/network_layer.hpp"
-#include "../../PlanetaMatchMakerServer/source/network/transport_layer.hpp"
+#include "network/endpoint.hpp"
+#include "network/network_layer.hpp"
+#include "network/transport_layer.hpp"
 
 namespace {
 	using boost::asio::ip::address_v4;

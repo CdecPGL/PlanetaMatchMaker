@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/message/message_handler_invoker.hpp"
-#include "../../PlanetaMatchMakerServer/source/message/message_handler_invoker_factory.hpp"
+#include "message/message_handler_invoker.hpp"
+#include "message/message_handler_invoker_factory.hpp"
 
 BOOST_AUTO_TEST_SUITE(message_handler_invoker_factory_test)
 	BOOST_AUTO_TEST_CASE(test_make_shared_standard_returns_invoker) {

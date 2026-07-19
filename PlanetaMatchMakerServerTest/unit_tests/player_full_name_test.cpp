@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/client/player_full_name.hpp"
+#include "client/player_full_name.hpp"
 
 BOOST_AUTO_TEST_SUITE(player_full_name_test)
 	BOOST_AUTO_TEST_CASE(test_generate_full_name_combines_name_and_tag) {

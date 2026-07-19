@@ -13,37 +13,37 @@ namespace PlanetaGameLabo.MatchMaker
 
     internal enum MessageErrorCode : byte
     {
-        Ok,
+        Ok = 0,
 
         // Server internal error.
-        ServerError,
+        ServerError = 1,
 
         // The operation is invalid in the current state.
-        OperationInvalid,
+        OperationInvalid = 2,
 
         // Wrong parameters which must be rejected in the client is passed for request.
-        RequestParameterWrong,
+        RequestParameterWrong = 3,
 
         // Indicated room is not found.
-        RoomNotFound,
+        RoomNotFound = 4,
 
         // Indicated password of room is not correct.
-        RoomPasswordWrong,
+        RoomPasswordWrong = 5,
 
         // The number of player reaches limit.
-        RoomFull,
+        RoomFull = 6,
 
         // Request is rejected because indicated room is the room which you are not host of or closed.
-        RoomPermissionDenied,
+        RoomPermissionDenied = 7,
 
         // The number of room exceeds limit.
-        RoomCountExceedsLimit,
+        RoomCountExceedsLimit = 8,
 
         // Connection establish mode of the room host doesn't match expected one in the client.
-        RoomConnectionEstablishModeMismatch,
+        RoomConnectionEstablishModeMismatch = 9,
 
         // Request is failed because the client is already hosting room.
-        ClientAlreadyHostingRoom,
+        ClientAlreadyHostingRoom = 10,
     };
 
     internal enum MessageType : byte
@@ -58,27 +58,33 @@ namespace PlanetaGameLabo.MatchMaker
         KeepAlive
     }
 
-    // 1 bytes. Use for notice message too
+    // 5 bytes. Use for notice message too
     [Serializable]
     internal struct RequestMessageHeader
     {
         public MessageType MessageType;
+
+        public UInt32 AttachmentSize;
     }
 
-    // 2 bytes
+    // 6 bytes
     [Serializable]
     internal struct ReplyMessageHeader
     {
         public MessageType MessageType;
         public MessageErrorCode ErrorCode;
+
+        public UInt32 AttachmentSize;
     }
 
-    // 74 bytes
+    // 75 bytes
     [Serializable]
     [Message(MessageType.Authentication)]
     internal struct AuthenticationRequestMessage
     {
         public ApiVersionType ApiVersion;
+
+        public AuthenticationMethod AuthenticationMethod;
 
         [FixedLength(ClientConstants.GameIdLength)]
         public string GameId;
@@ -88,6 +94,19 @@ namespace PlanetaGameLabo.MatchMaker
 
         [FixedLength(ClientConstants.PlayerNameLength)]
         public string PlayerName;
+
+    }
+
+    // 243 bytes
+    [Serializable]
+    internal struct MessageAttachmentChunk
+    {
+        public UInt16 Sequence;
+
+        public byte DataSize;
+
+        [FixedLength(240)]
+        public byte[] Data;
     }
 
     // 29 bytes
@@ -105,7 +124,7 @@ namespace PlanetaGameLabo.MatchMaker
         public ushort PlayerTag;
     }
 
-    // 84 bytes
+    // 148 bytes
     [Serializable]
     [Message(MessageType.CreateRoom)]
     internal struct CreateRoomRequestMessage
@@ -119,8 +138,8 @@ namespace PlanetaGameLabo.MatchMaker
 
         public ushort PortNumber;
 
-        [FixedLength(RoomConstants.GameHostExternalIdLength)]
-        public byte[] ExternalId;
+        [FixedLength(RoomConstants.P2pServicePeerIdLength)]
+        public string P2pServicePeerId;
     }
 
     // 4 bytes
@@ -143,7 +162,7 @@ namespace PlanetaGameLabo.MatchMaker
         public PlayerFullName SearchFullName;
     }
 
-    // 246 bytes
+    // 216 bytes
     [Serializable]
     [Message(MessageType.ListRoom)]
     internal struct ListRoomReplyMessage
@@ -182,15 +201,15 @@ namespace PlanetaGameLabo.MatchMaker
         public string Password;
     }
 
-    // 82 bytes
+    // 146 bytes
     [Serializable]
     [Message(MessageType.JoinRoom)]
     internal struct JoinRoomReplyMessage
     {
         public EndPoint GameHostEndPoint;
 
-        [FixedLength(RoomConstants.GameHostExternalIdLength)]
-        public byte[] GameHostExternalId;
+        [FixedLength(RoomConstants.P2pServicePeerIdLength)]
+        public string GameHostP2pServicePeerId;
     }
 
     // 7 bytes

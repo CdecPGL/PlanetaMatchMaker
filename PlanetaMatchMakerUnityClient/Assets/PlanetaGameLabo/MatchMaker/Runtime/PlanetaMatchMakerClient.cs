@@ -32,14 +32,26 @@ namespace PlanetaGameLabo.MatchMaker
             {
                 this.errorCode = errorCode;
                 message = "";
+                authenticationErrorCode = null;
+                serverApiVersion = null;
+                serverGameVersion = null;
             }
 
             public ErrorInfo(Exception e)
             {
+                authenticationErrorCode = null;
+                serverApiVersion = null;
+                serverGameVersion = null;
                 switch (e)
                 {
                     case ClientErrorException ce:
                         errorCode = ce.ClientErrorCode;
+                        break;
+                    case AuthenticationErrorException ae:
+                        errorCode = ClientErrorCode.UnknownError;
+                        authenticationErrorCode = ae.AuthenticationErrorCode;
+                        serverApiVersion = ae.ServerApiVersion;
+                        serverGameVersion = ae.ServerGameVersion;
                         break;
                     case SocketException _:
                         errorCode = ClientErrorCode.ConnectionClosed;
@@ -54,6 +66,9 @@ namespace PlanetaGameLabo.MatchMaker
 
             public readonly ClientErrorCode errorCode;
             public readonly string message;
+            public readonly AuthenticationErrorCode? authenticationErrorCode;
+            public readonly ushort? serverApiVersion;
+            public readonly string serverGameVersion;
 
             public static bool operator true(ErrorInfo e) { return e.errorCode == ClientErrorCode.Ok; }
             public static bool operator false(ErrorInfo e) { return e.errorCode != ClientErrorCode.Ok; }
@@ -212,7 +227,7 @@ namespace PlanetaGameLabo.MatchMaker
         #region Operations
 
         /// <summary>
-        /// Connect to the matching server
+        /// Connect to a server that explicitly allows unauthenticated connections.
         /// </summary>
         /// <param name="playerName"></param>
         /// <param name="callback"></param>
@@ -225,7 +240,30 @@ namespace PlanetaGameLabo.MatchMaker
         /// Connect to the matching server
         /// </summary>
         /// <param name="playerName"></param>
+        /// <param name="authenticationOptions"></param>
+        /// <param name="callback"></param>
+        public void Connect(string playerName, AuthenticationOptions authenticationOptions,
+            Action<ErrorInfo, ConnectResult> callback = null)
+        {
+            RunTask(async () => await ConnectAsync(playerName, authenticationOptions), callback);
+        }
+
+        /// <summary>
+        /// Connect to a server that explicitly allows unauthenticated connections.
+        /// </summary>
+        /// <param name="playerName"></param>
         public async Task<(ErrorInfo errorInfo, ConnectResult result)> ConnectAsync(string playerName)
+        {
+            return await ConnectAsync(playerName, AuthenticationOptions.None());
+        }
+
+        /// <summary>
+        /// Connect to the matching server
+        /// </summary>
+        /// <param name="playerName"></param>
+        /// <param name="authenticationOptions"></param>
+        public async Task<(ErrorInfo errorInfo, ConnectResult result)> ConnectAsync(string playerName,
+            AuthenticationOptions authenticationOptions)
         {
             if (status != Status.Disconnected)
             {
@@ -233,10 +271,15 @@ namespace PlanetaGameLabo.MatchMaker
                 return (new ErrorInfo(ClientErrorCode.InvalidOperation), default);
             }
 
+            if (authenticationOptions == null)
+            {
+                return (new ErrorInfo(new ArgumentNullException(nameof(authenticationOptions))), default);
+            }
+
             return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.Connecting;
-                var returnedPlayerFullName = await ConnectImplAsync(playerName);
+                var returnedPlayerFullName = await ConnectImplAsync(playerName, authenticationOptions);
                 status = Status.SearchingRoom;
                 return new ConnectResult(returnedPlayerFullName);
             }, () =>
@@ -387,31 +430,31 @@ namespace PlanetaGameLabo.MatchMaker
         /// Create and host new room to the server with trying to create port mapping.
         /// </summary>
         /// <param name="connectionEstablishMode"></param>
-        /// <param name="externalId"></param>
+        /// <param name="p2pServicePeerId"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="password"></param>
         /// <param name="callback"></param>
         /// <returns></returns>
         public void HostRoomWithExternalService(GameHostConnectionEstablishMode connectionEstablishMode,
-            GameHostExternalId externalId, byte maxPlayerCount, string password = "",
+            P2pServicePeerId p2pServicePeerId, byte maxPlayerCount, string password = "",
             Action<ErrorInfo, HostRoomResult> callback = null)
         {
             RunTask(
-                async () => await HostRoomWithExternalServiceAsync(connectionEstablishMode, externalId, maxPlayerCount,
-                    password), callback);
+                async () => await HostRoomWithExternalServiceAsync(connectionEstablishMode, p2pServicePeerId,
+                    maxPlayerCount, password), callback);
         }
 
         /// <summary>
         /// Create and host new room to the server with external service to establish connection.
         /// </summary>
-        /// <param name="externalId"></param>
+        /// <param name="p2pServicePeerId"></param>
         /// <param name="maxPlayerCount"></param>
         /// <param name="password"></param>
         /// <param name="connectionEstablishMode"></param>
         /// <returns></returns>
         public async Task<(ErrorInfo errorInfo, HostRoomResult result)> HostRoomWithExternalServiceAsync(
-            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId, byte maxPlayerCount,
-            string password = "")
+            GameHostConnectionEstablishMode connectionEstablishMode, P2pServicePeerId p2pServicePeerId,
+            byte maxPlayerCount, string password = "")
         {
             if (status != Status.SearchingRoom)
             {
@@ -422,7 +465,7 @@ namespace PlanetaGameLabo.MatchMaker
             return await RunTaskWithErrorHandlingAsync(async () =>
             {
                 status = Status.StartingHostingRoom;
-                var result = await CreateRoomWithExternalServiceImplAsync(connectionEstablishMode, externalId,
+                var result = await CreateRoomWithExternalServiceImplAsync(connectionEstablishMode, p2pServicePeerId,
                     maxPlayerCount, password);
                 status = Status.HostingRoom;
                 return result;
@@ -895,10 +938,10 @@ namespace PlanetaGameLabo.MatchMaker
 
         #region OperationImplementations
 
-        private async Task<PlayerFullName> ConnectImplAsync(string playerName)
+        private async Task<PlayerFullName> ConnectImplAsync(string playerName, AuthenticationOptions authenticationOptions)
         {
             return await _client.ConnectAsync(new Host(_serverAddress), new ServerPort(_serverPort),
-                new PlayerName(playerName), CreateConnectionOptions());
+                new PlayerName(playerName), authenticationOptions, CreateConnectionOptions());
         }
 
         private async Task<HostRoomResult> CreateRoomImplAsync(byte maxPlayerCount,
@@ -924,11 +967,11 @@ namespace PlanetaGameLabo.MatchMaker
         }
 
         private async Task<HostRoomResult> CreateRoomWithExternalServiceImplAsync(
-            GameHostConnectionEstablishMode connectionEstablishMode, GameHostExternalId externalId, byte maxPlayerCount,
-            string password = "")
+            GameHostConnectionEstablishMode connectionEstablishMode, P2pServicePeerId p2pServicePeerId,
+            byte maxPlayerCount, string password = "")
         {
             var createRoomResult = await _client.CreateRoomWithExternalServiceAsync(maxPlayerCount,
-                connectionEstablishMode, externalId, new RoomPassword(password));
+                connectionEstablishMode, p2pServicePeerId, new RoomPassword(password));
             _hostingRoomInfo = new HostingRoomInfo(createRoomResult, password);
             return new HostRoomResult(_hostingRoomInfo);
         }

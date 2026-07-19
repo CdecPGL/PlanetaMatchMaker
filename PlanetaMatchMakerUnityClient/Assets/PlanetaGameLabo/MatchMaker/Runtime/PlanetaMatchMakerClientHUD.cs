@@ -20,7 +20,7 @@ namespace PlanetaGameLabo.MatchMaker
         private string _errorMessage;
         private bool _isJoinedRoom;
         private IPEndPoint _joinedRoomHost;
-        private string _joinedRoomHostExternalId;
+        private string _joinedRoomHostP2pServicePeerId;
 
         private string _playerName = "test";
         private string _roomPassword = "";
@@ -64,7 +64,7 @@ namespace PlanetaGameLabo.MatchMaker
                         if (_isJoinedRoom)
                         {
                             GUILayout.Label(_useExternalService
-                                ? $"Joined Room Host ExId: {_joinedRoomHostExternalId}"
+                                ? $"Joined Room Host Peer ID: {_joinedRoomHostP2pServicePeerId}"
                                 : $"Joined Room Host: {_joinedRoomHost}");
                         }
 
@@ -284,8 +284,8 @@ namespace PlanetaGameLabo.MatchMaker
         private void HostRoomWithExternalService()
         {
             _isErrorOccured = false;
-            var externalId = GameHostExternalId.FromString(gameObject.name);
-            _client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Others, externalId, _roomMaxPlayerCount,
+            var peerId = new P2pServicePeerId(gameObject.name);
+            _client.HostRoomWithExternalService(GameHostConnectionEstablishMode.Others, peerId, _roomMaxPlayerCount,
                 _roomPassword,
                 (errorInfo, args) =>
                 {
@@ -338,7 +338,7 @@ namespace PlanetaGameLabo.MatchMaker
                         {
                             Close();
                             _isJoinedRoom = true;
-                            _joinedRoomHostExternalId = args.GetExternalIdAsString();
+                            _joinedRoomHostP2pServicePeerId = args.P2pServicePeerId.Value;
                             return;
                         }
 

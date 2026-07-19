@@ -16,18 +16,18 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/message/message_handler_invoker.hpp"
-#include "../../PlanetaMatchMakerServer/source/message/message_handler_invoker_factory.hpp"
-#include "../../PlanetaMatchMakerServer/source/message/message_handle_parameter.hpp"
-#include "../../PlanetaMatchMakerServer/source/message/messages.hpp"
-#include "../../PlanetaMatchMakerServer/source/network/client_connection.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_constants.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_data.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_errors.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_setting.hpp"
-#include "../../PlanetaMatchMakerServer/source/server/server_tls_context.hpp"
-#include "../../PlanetaMatchMakerServer/source/session/session_data.hpp"
-#include "../../PlanetaMatchMakerServer/source/utilities/pack.hpp"
+#include "message/message_handler_invoker.hpp"
+#include "message/message_handler_invoker_factory.hpp"
+#include "message/message_handle_parameter.hpp"
+#include "message/messages.hpp"
+#include "network/client_connection.hpp"
+#include "server/server_constants.hpp"
+#include "server/server_data.hpp"
+#include "server/server_errors.hpp"
+#include "server/server_setting.hpp"
+#include "server/server_tls_context.hpp"
+#include "session/session_data.hpp"
+#include "utilities/pack.hpp"
 
 namespace pgl::test {
 	using tcp = boost::asio::ip::tcp;
@@ -94,8 +94,6 @@ namespace pgl::test {
 		const pgl::room_password_t& password = {},
 		const uint8_t max_player_count = 4,
 		const uint8_t current_player_count = 1) {
-		pgl::game_host_external_id_t external_id{};
-		external_id[0] = 42;
 		return {
 			room_id,
 			host_full_name,
@@ -106,7 +104,7 @@ namespace pgl::test {
 			make_endpoint(57000),
 			pgl::game_host_connection_establish_mode::builtin,
 			make_endpoint(57001),
-			external_id,
+			{},
 			current_player_count
 		};
 	}

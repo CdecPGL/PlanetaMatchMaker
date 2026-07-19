@@ -10,6 +10,7 @@ BOOST_AUTO_TEST_SUITE(connection_test_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_connection_test_request_replies_success_for_tcp_echo) {
 		tcp_echo_server echo_server;
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::connection_test_request_message request{
 			pgl::transport_protocol::tcp,
 			echo_server.port()
@@ -28,6 +29,7 @@ BOOST_AUTO_TEST_SUITE(connection_test_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_connection_test_request_replies_parameter_error_for_invalid_protocol) {
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::connection_test_request_message request{
 			static_cast<pgl::transport_protocol>(255),
 			57000
@@ -46,6 +48,7 @@ BOOST_AUTO_TEST_SUITE(connection_test_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_connection_test_request_replies_success_for_udp_echo) {
 		udp_echo_server echo_server;
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::connection_test_request_message request{
 			pgl::transport_protocol::udp,
 			echo_server.port()
@@ -64,6 +67,7 @@ BOOST_AUTO_TEST_SUITE(connection_test_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_connection_test_request_replies_failure_for_unreachable_tcp_endpoint) {
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::connection_test_request_message request{
 			pgl::transport_protocol::tcp,
 			find_unused_dynamic_private_tcp_port()
@@ -83,6 +87,7 @@ BOOST_AUTO_TEST_SUITE(connection_test_protocol_test)
 	BOOST_AUTO_TEST_CASE(test_connection_test_request_replies_failure_for_unreachable_udp_endpoint) {
 		udp_port_guard port_guard;
 		protocol_context context;
+		mark_authenticated(context);
 		context.setting.connection_test.connection_check_udp_time_out_seconds = 1;
 		context.setting.connection_test.connection_check_udp_try_count = 1;
 		const pgl::connection_test_request_message request{
@@ -103,6 +108,7 @@ BOOST_AUTO_TEST_SUITE(connection_test_protocol_test)
 
 	BOOST_AUTO_TEST_CASE(test_connection_test_request_replies_parameter_error_for_invalid_port) {
 		protocol_context context;
+		mark_authenticated(context);
 		const pgl::connection_test_request_message request{
 			pgl::transport_protocol::tcp,
 			49151

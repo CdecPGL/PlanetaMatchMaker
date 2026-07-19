@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../../PlanetaMatchMakerServer/source/server/server_tls_reload_signal_handler.hpp"
+#include "server/server_tls_reload_signal_handler.hpp"
 
 #include <atomic>
 #include <chrono>

@@ -18,10 +18,12 @@ Following compilers and platforms are tested.
 ### Dependencies
 
 - Boost Library 1.89.0
-- OpenSSL
+- OpenSSL 3.0 or higher (3.6.2 is pinned in `vcpkg.json` and used by the Docker images)
 - CMake 3.21.3 or higher
 - minimal-serializer v0.2.4 (included in this repogitory)
 - nameof C++ 0.10.1 (included in this repogitory)
+
+OpenSSL must provide a CMake package configuration file so that `find_package(OpenSSL 3.0 REQUIRED)` can resolve it. The repository `vcpkg.json` manifest installs the dependency when CMake is configured with the vcpkg toolchain. When installing dependencies manually, add its installation prefix to `CMAKE_PREFIX_PATH` as needed. On Windows, PMMS imports trusted certificate authorities from the Local Machine and Current User Windows system `ROOT` certificate stores into OpenSSL when connecting to external authentication services.
 
 ### Build by CMake with Docker
 
@@ -137,6 +139,13 @@ dotnet test PlanetaMatchMakerClientTest -c Release
 ```
 
 ## TestClient
+
+The test client defaults to the credential-free `None` method for development servers. Select `Steam` with
+the `authentication_method` option when external authentication is enabled. Authentication credentials are then read
+from the `PMMS_TEST_CLIENT_AUTHENTICATION_CREDENTIAL` environment variable by default. The command-line option
+`--authentication_credential_environment_variable` selects a different variable.
+Do not place a Steam ticket directly in command-line arguments because process listings and shell
+history may expose it.
 
 ### Environment
 

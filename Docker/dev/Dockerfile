@@ -44,6 +44,13 @@ RUN echo "${BOOST_SHA256}  /tmp/boost.tar.gz" | sha256sum -c - \
   && cd /tmp/boost-src \
   && ./bootstrap.sh \
   && ./b2 install toolset=clang link=static,shared --prefix=/usr/local -j"$(nproc)" \
+    --with-coroutine \
+    --with-date_time \
+    --with-filesystem \
+    --with-json \
+    --with-log \
+    --with-test \
+    --with-thread \
   && rm -rf /tmp/boost.tar.gz /tmp/boost-src
 
 CMD ["/bin/bash"]

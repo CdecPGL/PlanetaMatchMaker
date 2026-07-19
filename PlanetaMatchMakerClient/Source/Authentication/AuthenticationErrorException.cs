@@ -41,6 +41,14 @@ namespace PlanetaGameLabo.MatchMaker
         ApiVersionMismatch,
         GameIdMismatch,
         GameVersionMismatch,
+        UnsupportedAuthenticationMethod,
+        AuthenticationDataFormatInvalid,
+        AuthenticationDataSizeExceeded,
+        AuthenticationDataInvalid,
+        InsecureConnection,
+        SteamTicketInvalid,
+        SteamOwnershipCheckFailed,
+        SteamAuthenticationServiceUnavailable,
     };
 
     public static class AuthenticationErrorCodeExtension
@@ -57,6 +65,22 @@ namespace PlanetaGameLabo.MatchMaker
                     return AuthenticationErrorCode.GameIdMismatch;
                 case AuthenticationResult.GameVersionMismatch:
                     return AuthenticationErrorCode.GameVersionMismatch;
+                case AuthenticationResult.UnsupportedAuthenticationMethod:
+                    return AuthenticationErrorCode.UnsupportedAuthenticationMethod;
+                case AuthenticationResult.AuthenticationDataFormatInvalid:
+                    return AuthenticationErrorCode.AuthenticationDataFormatInvalid;
+                case AuthenticationResult.AuthenticationDataSizeExceeded:
+                    return AuthenticationErrorCode.AuthenticationDataSizeExceeded;
+                case AuthenticationResult.AuthenticationDataInvalid:
+                    return AuthenticationErrorCode.AuthenticationDataInvalid;
+                case AuthenticationResult.InsecureConnection:
+                    return AuthenticationErrorCode.InsecureConnection;
+                case AuthenticationResult.SteamTicketInvalid:
+                    return AuthenticationErrorCode.SteamTicketInvalid;
+                case AuthenticationResult.SteamOwnershipCheckFailed:
+                    return AuthenticationErrorCode.SteamOwnershipCheckFailed;
+                case AuthenticationResult.SteamAuthenticationServiceUnavailable:
+                    return AuthenticationErrorCode.SteamAuthenticationServiceUnavailable;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(result), result, null);
             }

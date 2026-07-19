@@ -4,7 +4,7 @@ This is reference about the message API of the server.
 
 ## Message
 
-Message is fixed size binary data to communicate between server and client.
+Messages use a fixed-size header and body. A message may also carry one variable-length binary attachment, encoded as a sequence of fixed-size attachment chunks.
 
 There are three types of message.
 
@@ -34,25 +34,27 @@ TLS is enabled by default in the official server and client settings. Plain TCP 
 
 ## Message Structure
 
-All messages consist of header and body.
-The sizes of all messages are in less than or equals 256 bytes.
+All messages consist of a header and a fixed-size body. A message whose header declares a non-zero `attachment_size` is immediately followed by attachment chunks. Each combined header and body record and each fixed-size 243-byte attachment chunk are less than or equal to 256 bytes.
+
+Attachment chunks are subordinate records of their parent message. They do not have a `message_type`, are not dispatched independently, and are only valid while the parent message is being handled.
 
 There are two types of header.
 
 - Request Header: A header for request message and notice message
 - Reply Header: A header for reply message
 
-If errors occured while handling messages, the server returns only reply message header with error code.
+If errors occured while handling messages, the server returns only a reply message header with an error code and an `attachment_size` of zero.
 
 ## Message Header Structure
 
 ### Request/Notice Header
 
-The size is 1 bytes.
+The size is 5 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |message_type|8 bits unsigned integer|1|A type of message.|
+|attachment_size|32 bits unsigned integer|4|Size of the attachment associated with this message. Zero means that the message has no attachment.|
 
 Options of `message_type` are below.
 
@@ -69,12 +71,13 @@ Options of `message_type` are below.
 
 ### Reply Header
 
-The size is 2 bytes.
+The size is 6 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |message_type|8 bits unsigned integer|1|A type of message.|
 |error_code|8 bits unsigned integer|1|An error code.|
+|attachment_size|32 bits unsigned integer|4|Size of the attachment associated with this reply. Zero means that the reply has no attachment. Current reply messages do not define attachments.|
 
 Options of `message_type` are same as one used in request header.
 
@@ -85,13 +88,32 @@ Options of `error_code` are as below.
 |ok|0|Request is processed successfully.|
 |server_error|1|Server internal error.|
 |operation_invalid|2|The operation is invalid in current state.|
-|room_not_found|3|Indicated room is not found.|
-|request_parameter_wrong|4|Wrong parameters which must be rejected in the client is passed for request.|
+|request_parameter_wrong|3|Wrong parameters which must be rejected in the client is passed for request.|
+|room_not_found|4|Indicated room is not found.|
 |room_password_wrong|5|Indicated password of room is not correct.|
 |room_full|6|The number of player reaches limit.|
 |room_permission_denied|7|Request is rejected because indicated room is the room which you are not host of or closed.|
 |room_count_exceeds_limit|8|The number of room reaches limit.|
-|client_already_hosting_room|9|Request is failed because the client is already hosting room.|
+|room_connection_establish_mode_mismatch|9|Connection establish mode of the room host does not match the mode expected by the client.|
+|client_already_hosting_room|10|Request is failed because the client is already hosting room.|
+
+## Message Attachment Structure
+
+A message may define one binary attachment. Whether the attachment is forbidden, optional, or required, and its semantic format, are defined by the parent message type. The attachment is an opaque byte sequence at the transport layer; it does not contain a generic type identifier.
+
+The protocol maximum attachment size is 15,728,640 bytes. A message or server setting may impose a lower limit. A sender must set `attachment_size` before the fixed-size body and then send exactly `ceil(attachment_size / 240)` chunks immediately after that body.
+
+Each attachment chunk is 243 bytes.
+
+|Name|Type|Size|Explanation|
+|:---|:---|---:|:---|
+|sequence|16 bits unsigned integer|2|Zero-based chunk sequence number.|
+|data_size|8 bits unsigned integer|1|Attachment bytes contained in this chunk. The maximum is 240.|
+|data|240 elements byte array|240|Attachment data. All unused tail bytes must be zero.|
+
+The sequence must start at zero and increase by one. `data_size` must be 240 except for the final chunk, whose expected size is derived from `attachment_size`. A missing chunk, an unexpected sequence or size, or non-zero padding makes the attachment malformed. Attachment reception uses an absolute timeout for the complete attachment rather than resetting the timeout for each chunk.
+
+All currently defined request and notice messages except authentication forbid attachments and require `attachment_size == 0`. An unexpected attachment causes the connection to be closed. Authentication attachment requirements depend on the selected method.
 
 ## Message Body Structure
 
@@ -101,14 +123,22 @@ A request to authenticate.
 
 #### Parameters
 
-The size is 74 bytes.
+The authentication request body size is 75 bytes. Its message attachment contains the Steam ticket. The attachment is required for Steam and must not exceed either `authentication.max_credential_bytes` or the protocol maximum. The `none` development method requires an empty attachment.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |api_version|16 bits unsigned integer|2|An API version number the client requires.|
+|authentication_method|8 bits unsigned integer|1|Authentication method. `0` is the development-only unauthenticated method and `1` is Steam. Other values are unsupported.|
 |game_id|24 byte length UTF-8 string|24|A game ID of the client.|
 |game_version|24 byte length UTF-8 string|24|A game version number of the client.|
 |player_name_t|24 byte length UTF-8 string|24|A name of player. This must not be empty.|
+
+`authentication_method` options are as below.
+
+|Name|Value|Attachment contents|
+|:---|---:|:---|
+|none|0|Empty. Accepted only when the server explicitly enables unauthenticated development connections.|
+|steam|1|Steam auth ticket bytes.|
 
 #### Reply
 
@@ -123,12 +153,20 @@ The size is 29 bytes.
 
 Options of `result` are as below.
 
-|Name|Value|Host Identifier|Explanation|
-|:---|---:|:---|:---|
+|Name|Value|Explanation|
+|:---|---:|:---|
 |success|0|Authentication is succeeded.|
 |api_version_mismatch|1|An API version of server is different from what the client required.|
 |game_id_mismatch|2|Client game id doesn't match to the acceptable value in the server.|
 |game_version_mismatch|3|Client game version doesn't match to the version the server required.|
+|unsupported_authentication_method|4|The requested authentication method does not match the server setting or is unknown.|
+|authentication_data_format_invalid|5|A required credential attachment is empty or malformed.|
+|authentication_data_size_exceeded|6|Credential size exceeds `authentication.max_credential_bytes`.|
+|authentication_data_invalid|7|Credential is invalid.|
+|insecure_connection|8|Authentication over plain TCP is not allowed by server setting.|
+|steam_ticket_invalid|9|Steam ticket verification failed.|
+|steam_ownership_check_failed|10|Steam AppID ownership check failed.|
+|steam_authentication_service_unavailable|11|Steam authentication or ownership service could not be reached or returned an unavailable response.|
 
 Note that authentication failure are not treated as error.
 If authentication is failed, the server closes the connection immediately after reply.
@@ -147,7 +185,7 @@ A request to create room.
 
 #### Parameters
 
-The size is 84 bytes.
+The body size is 148 bytes. The serialized record is 153 bytes including the request header.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -155,15 +193,20 @@ The size is 84 bytes.
 |max_player_count|8 bits unsigned integer|1|A limit of player count in the room. This must not exceeds the limit which is defined in server setting.|
 |connection_establish_mode|8 bits unsigned integer|1|A way how to establish P2P connection.|
 |port_number|16 bits unsigned integer|2|A port number which is used for game host. 49152 to 65535 is available. This is used when `connection_establish_mode` is `builtin`.|
-|external_id|64 elements byte array.|64|An id where clients connect using external service like Steam Networking. This is used when `connection_establish_mode` is not `builtin`. This is left justified and big endien.|
+|p2p_service_peer_id|128-byte fixed UTF-8 string|128|The peer ID used to connect to the host through a P2P service. It must not contain an embedded NUL, and unused bytes are zero padded. All zero bytes mean unspecified.|
 
 Options of `connection_establish_mode` are as below.
 
-|Name|Value|Host Identifier|Explanation|
+|Name|Value|Peer ID policy|Explanation|
 |:---|---:|:---|:---|
-|builtin|0|`port_number` property|Use builtin method.|
-|steam|1|`external_id` property containing SteamID64 as 64bits unsigned integer|Use Steam relay service.|
-|others|255|`external_id` property|Use other external service.|
+|builtin|0|Must be unspecified.|Use the client IP address and `port_number`. A specified peer ID is rejected.|
+|steam|1|Must be unspecified and is derived by the server.|Requires server authentication method `steam`. The verified SteamID64 decimal string becomes the room peer ID. A client-specified value is rejected even when it matches.|
+|others|255|Must be specified by the client.|Use another external service. The value is an unverified client-provided connection identifier and is not derived from the authenticated user ID.|
+
+The authenticated provider user ID and the P2P service peer ID have separate purposes. Authentication establishes
+`authentication_provider_user_id`; Create Room establishes `p2p_service_peer_id`. Neither ID is sent in the
+Authentication Request. For Steam, the server stores the verified SteamID64 as a canonical decimal UTF-8 string and
+derives the same decimal string as the room peer ID only when a Steam room is created.
 
 #### Reply
 
@@ -180,7 +223,7 @@ The size is 4 bytes.
 |ok|The request is processed succesfully.|yes|
 |client_already_hosting_room|Failed to host new room because the client already hosting room.|yes|
 |room_count_exceeds_limit|The number of room exceeds limit.|yes|
-|request_parameter_wrong|Max player count exceeds limit. Or indicated port number is invalid.|yes|
+|request_parameter_wrong|Max player count exceeds limit, the port is invalid, or the peer ID violates the selected connection mode policy.|yes|
 
 ### List Room Request
 
@@ -188,7 +231,7 @@ A request to get room informations which matches to requested parameters.
 
 #### Parameters
 
-The size is 30 bytes.
+The size is 32 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -196,7 +239,7 @@ The size is 30 bytes.
 |count|16 bits unsigned integer|2|The number of room data which will be replied from search results.|
 |sort_kind|8 bits unsigned integer|1|A sort kind of result.|
 |search_target_flags|8 bits unsigned integer|1|A flags to indicate search target.|
-|search_full_name|player_full_name|24|A query to search room by the room's host player name.|
+|search_full_name|player_full_name|26|A query to search room by the room's host player name.|
 
 Options of `sort_kind` are as below.
 
@@ -217,7 +260,7 @@ Options are as below.
 |open_room|4|
 |closed_room|8|
 
-`player_full_name` is 24 bytes data as below.
+`player_full_name` is 26 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
@@ -226,21 +269,21 @@ Options are as below.
 
 #### Reply
 
-The size is 246 bytes.
+The body size is 216 bytes. Including the 6-byte reply header, one reply record is 222 bytes.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |total_room_count|16 bits unsigned integer|2|The number of rooms existing in the room group in the server.|
 |matched_room_count|16 bits unsigned integer|2|The number of rooms which match to the query of the room.|
 |reply_room_count|16 bits unsigned integer|2|The number of rooms which is included in reply messages.|
-|room_info_list|A 6 elements array of room_info|240|A result room info list.|
+|room_info_list|A 5 elements array of room_info|210|A result room info list.|
 
-`room_info` is 40 bytes data as below.
+`room_info` is 42 bytes data as below.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |room_id|32 bits unsigned integer|4|An id of the room.|
-|host_player_full_name|player_full_name|24|A name of player who is hosting the room.|
+|host_player_full_name|player_full_name|26|A name of player who is hosting the room.|
 |setting_flags|8 bits unsigned integer|1|A flags which indicate a setting of the room.|
 |max_player_count|8 bits unsigned integer|1|Player capability of this room.|
 |current_player_count|8 bits unsigned integer|1|The number of player which joins the room currently.|
@@ -259,7 +302,7 @@ Multiple reply messages are sent if there are more rooms than rooms one reply me
 You can obtain the number of reply message (separation) by below expression.
 
 ```cpp
-separation = floor((reply.reply_room_count + 5) / 6);
+separation = floor((reply.reply_room_count + 4) / 5);
 ```
 
 #### Error Codes
@@ -285,12 +328,12 @@ The size is 21 bytes.
 
 #### Reply
 
-The size is 82 bytes.
+The body size is 146 bytes. The serialized record is 152 bytes including the reply header.
 
 |Name|Type|Size|Explanation|
 |:---|:---|---:|:---|
 |game_host_endpoint|endpoint|18|An endpoint of game host which is hosting the room you want to join.|
-|game_host_external_id|64 elements byte array.|64|An id to connect to the host using external service like Steam Networking. This is left justified and big endien.|
+|game_host_p2p_service_peer_id|128-byte fixed UTF-8 string|128|The P2P service peer ID determined when the room was created. It is returned unchanged. All zero bytes mean unspecified for builtin rooms.|
 
 `game_host_endpoint` is 18 bytes data as below.
 

@@ -1,0 +1,50 @@
+using System;
+using System.Linq;
+
+namespace PlanetaGameLabo.MatchMaker
+{
+    public sealed class AuthenticationOptions
+    {
+        private AuthenticationOptions(AuthenticationMethod method, byte[] credential)
+        {
+            if (credential == null)
+            {
+                throw new ArgumentNullException(nameof(credential));
+            }
+
+            if (method == AuthenticationMethod.None && credential.Length != 0)
+            {
+                throw new ArgumentException("Credential must be empty when authentication is disabled.",
+                    nameof(credential));
+            }
+
+            if (method != AuthenticationMethod.None && credential.Length == 0)
+            {
+                throw new ArgumentException("Credential must not be empty.", nameof(credential));
+            }
+
+            if (credential.Length > ClientConstants.MaxMessageAttachmentLength)
+            {
+                throw new ArgumentOutOfRangeException(nameof(credential),
+                    $"Credential must be at most {ClientConstants.MaxMessageAttachmentLength} bytes.");
+            }
+
+            Method = method;
+            Credential = credential.ToArray();
+        }
+
+        public AuthenticationMethod Method { get; }
+
+        internal byte[] Credential { get; }
+
+        public static AuthenticationOptions None()
+        {
+            return new AuthenticationOptions(AuthenticationMethod.None, Array.Empty<byte>());
+        }
+
+        public static AuthenticationOptions Steam(byte[] ticket)
+        {
+            return new AuthenticationOptions(AuthenticationMethod.Steam, ticket);
+        }
+    }
+}
