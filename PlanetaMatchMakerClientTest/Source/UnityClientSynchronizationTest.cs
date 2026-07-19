@@ -65,6 +65,34 @@ namespace PlanetaGameLabo.MatchMaker.Test
             Assert.AreEqual(-1, extensionSource.IndexOf("ulong.Parse", StringComparison.Ordinal));
         }
 
+        [TestMethod]
+        public void UnitySteamJoinInvokesSuccessCallbackOutsideIdentityCreationTryCatch()
+        {
+            var repositoryRoot = FindRepositoryRoot();
+            var extensionPath = Path.Combine(repositoryRoot, "PlanetaMatchMakerUnityClient", "Assets",
+                "PlanetaGameLabo", "MatchMaker", "Runtime", "Extensions", "Steam.cs");
+            var extensionSource = File.ReadAllText(extensionPath);
+            var callbackMethod = extensionSource.IndexOf("public static void JoinRoomWithSteam", StringComparison.Ordinal);
+            var asyncMethod = extensionSource.IndexOf("JoinRoomWithSteamAsync", callbackMethod,
+                StringComparison.Ordinal);
+            var tryIndex = extensionSource.IndexOf("try", callbackMethod, asyncMethod - callbackMethod,
+                StringComparison.Ordinal);
+            var catchIndex = extensionSource.IndexOf("catch (InvalidOperationException", tryIndex,
+                asyncMethod - tryIndex, StringComparison.Ordinal);
+            var catchOpenBrace = extensionSource.IndexOf('{', catchIndex);
+            var catchCloseBrace = FindMatchingClosingBrace(extensionSource, catchOpenBrace);
+            var successCallback = extensionSource.IndexOf(
+                "callback?.Invoke(errorInfo, new JoinRoomWithSteamResult", callbackMethod,
+                asyncMethod - callbackMethod, StringComparison.Ordinal);
+
+            Assert.IsTrue(tryIndex >= callbackMethod);
+            Assert.IsTrue(catchIndex > tryIndex);
+            Assert.IsTrue(catchOpenBrace > catchIndex);
+            Assert.IsTrue(catchCloseBrace > catchOpenBrace);
+            Assert.IsTrue(successCallback > catchCloseBrace,
+                "The user callback must not be covered by the Steam identity creation exception handler.");
+        }
+
         private static Dictionary<string, string> ReadSources(string root)
         {
             return Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories)
@@ -82,6 +110,24 @@ namespace PlanetaGameLabo.MatchMaker.Test
             Assert.IsTrue(failureCheck >= startIndex, "The Unity Steam Join API must inspect ErrorInfo.");
             Assert.IsTrue(parserCall > failureCheck,
                 "The Unity Steam Join API must propagate an error before parsing the peer ID.");
+        }
+
+        private static int FindMatchingClosingBrace(string source, int openBrace)
+        {
+            var depth = 0;
+            for (var index = openBrace; index < source.Length; ++index)
+            {
+                if (source[index] == '{')
+                {
+                    ++depth;
+                }
+                else if (source[index] == '}' && --depth == 0)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
         }
 
         private static string FindRepositoryRoot()

@@ -85,17 +85,20 @@ namespace PlanetaGameLabo.MatchMaker.Extentions
                         return;
                     }
 
+                    SteamIdentityType steamIdentity;
                     try
                     {
-                        var steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
-                        callback?.Invoke(errorInfo, new JoinRoomWithSteamResult(steamIdentity));
+                        steamIdentity = SteamLibraryHelpers.CreateSteamIdentity(steamId64);
                     }
                     catch (InvalidOperationException e)
                     {
                         Debug.LogException(e);
                         callback?.Invoke(new PlanetaMatchMakerClient.ErrorInfo(ClientErrorCode.InvalidOperation),
                             default);
+                        return;
                     }
+
+                    callback?.Invoke(errorInfo, new JoinRoomWithSteamResult(steamIdentity));
                 });
         }
 
